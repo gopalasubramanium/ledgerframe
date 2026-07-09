@@ -45,6 +45,19 @@ starts from files, not memory.
 - **INFORMATION-ARCHITECTURE.md amended** — Cash flow route resolved to
   `/cash-flow` (D-022 principle), `/planning` redirects; Needs-decision item
   cleared.
+- **docs/specs/SECURITY-BASELINE.md** — threat model (D-001); D-004 gap
+  disposition table (all 14 → fixed-in-v2 / accepted-with-ADR); PIN policy
+  (D-002, access-lock-not-encryption + disk-encryption guidance); sudo helper
+  install-time opt-in + allow-list + graceful degradation (D-003); normative AI
+  validation contract (D-071) + visible fallback (D-070); ingress/egress
+  symmetry (P-8/D-075/D-060); no-egress toggle semantics + Privacy state
+  statement; positive privacy guarantees (D-016, no telemetry, hash-chained
+  audit); CI hardening (dep pinning/CVE, durable rate limiter, CORS assertion);
+  server-side export sanitisation (D-050); preserved baseline measures.
+
+**All six specs in `spec-generation.md` are now written** (GLOSSARY, MASTER-DATA,
+INFORMATION-ARCHITECTURE, PRODUCT-SPEC, DESIGN-SYSTEM, SECURITY-BASELINE) plus
+ROADMAP.md and DESIGN-BRIEF.md.
 
 ## IN-PROGRESS
 
@@ -52,12 +65,12 @@ starts from files, not memory.
 
 ## NEXT
 
-Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
-1. docs/specs/SECURITY-BASELINE.md
-2. **DEF backfill session** — once the app source is available, fill
-   MASTER-DATA §2/§3/§6 (DEF-1..DEF-6) and reconcile the three Review constant
-   names (DEF-7) against `services/review.py`. Also the kitchen-sink review to
-   ratify the PROPOSED design tokens.
+1. **DEF backfill session** — once the app source is available, fill
+   MASTER-DATA §2/§3/§6 (DEF-1..DEF-6), reconcile the three Review constant
+   names (DEF-7) against `services/review.py`, and reconcile the sudo action
+   allow-list against `app/api/v1/routes/system.py` (SECURITY-BASELINE §4).
+2. **Kitchen-sink review** — ratify the PROPOSED design tokens
+   (DESIGN-SYSTEM §2) once the component library is built.
 
 ## Needs decision
 
@@ -66,7 +79,8 @@ Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
   not committed here (currency union, asset_subclass, ACCOUNT_KINDS,
   POLICY_TYPES/FREQUENCIES, DOC_CATEGORIES/CONTACT_ROLES, sector seed). DEF-7
   adds three Review constant *names* (values already recovered, PRODUCT-SPEC §5).
-  All to be handled together in the DEF backfill session. Not product decisions.
+  SECURITY-BASELINE §4 adds the sudo action allow-list (`system.py`). All to be
+  handled together in the DEF backfill session. Not product decisions.
 - **Design token ratification.** The PROPOSED palette/type/spacing/density values
   in DESIGN-SYSTEM §2 are working values until ratified at the kitchen-sink
   review; the UI/serif font choice may need an ADR if self-hosting adds a
