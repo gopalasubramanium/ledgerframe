@@ -6,9 +6,10 @@ references this file; no free-text enums. D-005 completeness rule: **every
 vocabulary must appear here with its complete seed value list — no vocabulary is
 confirmed without its values.** The DEF backfill extracted the pending
 vocabularies verbatim from the legacy v1 source (read-only reference); the two
-items still open in [§9](#9-blocked-extractions) (DEF-2 `asset_subclass`, DEF-6
-sector seed) require an **authoring decision**, not an extraction — they are
-deliberately left unfilled rather than guessed.
+that have no definition in code — `asset_subclass` (§2 †) and the sector seed
+(§6 †) — are **authored proposals** (no extraction was possible), every value
+tagged **PROPOSED** and ratified at review. Nothing is guessed. [§9](#9-blocked-extractions)
+is now empty.
 
 ---
 
@@ -72,6 +73,7 @@ D-010; `02` = from the schema audit.
 | **InsurancePolicy.premium_frequency** | `insurance_policy.premium_frequency` | 4 | `monthly, quarterly, annual, single` | DEF-4 |
 | **EstateDocument.category** | `estate_document.category` | 9 | `will, insurance, property, loan, identity, bank, tax, medical, other` | DEF-5 |
 | **EstateContact roles** | `estate_contact.roles` (JSON list) | 5 | `nominee, beneficiary, executor, emergency, guardian` | DEF-5 |
+| **Instrument.asset_subclass** | `instruments.asset_subclass` | 6 (PROPOSED) | `crypto, derivative, equity, etf, mutual_fund, reit` (authored — per-value table below) | DEF-2 † |
 
 **Notes on specific vocabularies:**
 - `TxnType` — the frontend gains `merger` (previously omitted from the 10-value
@@ -96,13 +98,30 @@ D-010; `02` = from the schema audit.
 - `estate.py` also confirms `WILL_STATUSES` and `DOC_STATUSES` match the D-010
   values already in the table above (bonus confirmation from the same source).
 
-**Still pending — `Instrument.asset_subclass` (DEF-2, partial; see §9).**
-`asset_subclass` has **no enumerated vocabulary in code** — it is a free
-`String(40)`. The only values the code actively assigns are `crypto`,
-`derivative`, `equity`, `mutual_fund`; **routing only reads `derivative`**.
-D-009's asserted "at least `etf`, `reit`" are **not found** as assigned values.
-Finalising this fixed vocabulary is therefore an authoring/decision task
-(D-009), not a clean extraction — it stays in §9.
+### `Instrument.asset_subclass` — authored fixed vocabulary (DEF-2 †)
+
+D-009 specifies `asset_subclass` as a **fixed vocabulary**, but there is **no
+enum in code** — it is a free `String(40)` populated ad hoc. This vocabulary is
+therefore **authored, not extracted** (†): confirmed values come from code, the
+rest are **PROPOSED** and ratified at review. Each value states which consumer
+reads it.
+
+| Value | Status | Consumer (reads it) | Source / justification |
+|-------|--------|---------------------|------------------------|
+| `derivative` | **confirmed** | **PriceSourceRouter** — `lane_for` routes `sub == "derivative"` → the `derivative` lane (`kite → statement → manual`). The **only** subclass value read for behaviour. | assigned `kite.py:94`, `market.py:417/433`; read `router.py:131`, lane `router.py:123` |
+| `crypto` | **confirmed** | display-only (routing keys on `asset_class == crypto`, not the subclass) | assigned `coingecko.py:89` |
+| `equity` | **confirmed** | display-only | assigned `kite.py:97` |
+| `mutual_fund` | **confirmed** | display-only | assigned `amfi.py:75` |
+| `etf` | **PROPOSED** | display-only | named by D-009; distinguishes ETFs from direct equity in taxonomy/reporting. Not assigned anywhere in code. |
+| `reit` | **PROPOSED** | display-only | named by D-009; distinguishes REITs (property-like listed equity) for display. Not assigned anywhere in code. |
+
+**Deliberately excluded:** `bond`, `deposit`/`fixed_deposit`, `retirement`.
+Although D-073's manual lanes exist for these, `lane_for` selects them by
+**`asset_class`** (`bond` / `fixed_deposit` / `retirement`), **not** by
+`asset_subclass` (`router.py:128-145`) — no subclass value is read for them, so
+adding one would be redundant and misleading. The historical migration
+`a3d21f7e5b10:70` backfilled `asset_subclass = asset_class`; a v2 migration
+should normalise any such rows to the vocabulary above (unmapped → null).
 
 ---
 
@@ -187,7 +206,7 @@ maintained standard, served to the picker; not a value list authored here.
 | Master | Referencing columns (FK) | Seed | Uniqueness |
 |--------|--------------------------|------|-----------|
 | **Institution** (D-008) | `accounts.institution`, `insurance_policy.insurer` | none (starts empty; user-populated) | by name; merge dedupes variants ("DBS" vs "DBS Bank") |
-| **Sector** (D-009) | `instruments.sector` | GICS-like seed — **authorship** (DEF-6, §9; no list in code) | by name |
+| **Sector** (D-009) | `instruments.sector` | 11 GICS sectors (authored, PROPOSED — see below) | by name |
 | **Tag** (D-011) | `holding_tag.tags` (JSON list, keyed by `account_id` + `holding_key`) | none | **case-insensitive**, cap **16 tags/holding** |
 
 **Institution (D-008).** One master, FK'd from both `accounts.institution` and
@@ -195,15 +214,37 @@ maintained standard, served to the picker; not a value list authored here.
 text by design** (architectural invariant — the estate register deliberately
 does not FK into other tables; do not "normalise" it).
 
-**Sector (D-009).** User-extensible, seeded GICS-like. There is **no sector
-master or GICS list in the code** — DEF-6 is an **authoring** task, not an
-extraction, and remains open (§9). As a starting reference, the ticker→sector
-fallback map `_SECTOR_MAP` (`portfolio.py:30-51`) uses these 12 distinct
-values: `Technology, Communication Services, Consumer Discretionary, Consumer
-Staples, Financials, Energy, Health Care, Industrials, Utilities, Crypto,
-Index / ETF, Commodities`. That is a **fallback map, not the authored master**;
-the GICS-like seed (e.g. whether to use the 11 GICS sectors and how to treat
-Crypto / Commodities / Index-ETF) is the decision DEF-6 records.
+**Sector (D-009) — authored seed (DEF-6 †).** User-extensible, seeded GICS-like.
+There is **no sector master or GICS list in code** (only the `_SECTOR_MAP`
+ticker→sector fallback, `portfolio.py:30-51`), so the seed is **authored, not
+extracted** (†) and ratified at review. Proposed seed = the **11 standard GICS
+sectors** (all **PROPOSED**); users may add more (extensible):
+
+1. Energy · 2. Materials · 3. Industrials · 4. Consumer Discretionary ·
+5. Consumer Staples · 6. Health Care · 7. Financials ·
+8. Information Technology · 9. Communication Services · 10. Utilities ·
+11. Real Estate.
+
+**Migration mapping — code-observed `_SECTOR_MAP` (12) → seed** (no silent
+merges; unmapped values are flagged, not forced):
+
+| `_SECTOR_MAP` value | → GICS seed sector | Note |
+|---------------------|--------------------|------|
+| `Technology` | **Information Technology** | clean rename to the GICS canonical label |
+| `Communication Services` | Communication Services | exact |
+| `Consumer Discretionary` | Consumer Discretionary | exact |
+| `Consumer Staples` | Consumer Staples | exact |
+| `Financials` | Financials | exact |
+| `Energy` | Energy | exact |
+| `Health Care` | Health Care | exact |
+| `Industrials` | Industrials | exact |
+| `Utilities` | Utilities | exact |
+| `Crypto` | **(no map)** | not a GICS sector — it is an asset class. **Migration:** set `sector = null`; allocation already handled by `asset_class`. Do **not** merge into a sector. |
+| `Index / ETF` | **(no map)** | a fund wrapper, not a sector. **Migration:** `sector = null` (resolve from constituents if ever needed). Do **not** merge. |
+| `Commodities` | **(no map)** | a commodity asset, not a company sector (≠ GICS *Materials*). **Migration:** `sector = null`; handled by `asset_class`. Do **not** merge into Materials. |
+
+GICS **Materials** and **Real Estate** are seeded even though no `_SECTOR_MAP`
+ticker used them (they simply start empty).
 
 **Tag (D-011).** Uniqueness is **case-insensitive**; rename **cascades to all
 tagged holdings**; the 16-tags-per-holding cap is retained. `holding_key` is the
@@ -224,7 +265,7 @@ Each extensible master needs an admin surface. Common requirements:
   row). **Delete blocked while any row references it** (FK guard); offer merge
   instead.
 - **Sector** — create, rename, merge. Delete blocked while any instrument
-  references it. Ships pre-seeded (GICS-like, DEF-6).
+  references it. Ships pre-seeded with the 11 GICS sectors (§6, PROPOSED).
 - **Tag** — create, rename (**cascades** to every tagged holding), **dedupe/merge**
   for case and whitespace variants. Enforce case-insensitive uniqueness and the
   16-per-holding cap at write time.
@@ -254,19 +295,17 @@ change only by code + migration.
 
 ## 9. Blocked extractions
 
-DEF-1, DEF-3, DEF-4, DEF-5 are **resolved** — extracted verbatim from the legacy
-v1 source (`~/Documents/github/LedgerFrame`, read-only reference) and filled into
-§2/§3 in place (cites in the Derived-from footer). Two items remain open, and
-**not** because a value is unreadable — both require a **decision/authoring**, not
-an extraction:
+**None.** All DEF items are closed:
 
-| ID | Item | Why still open | Blocks |
-|----|------|----------------|--------|
-| DEF-2 | **`asset_subclass` fixed vocabulary** | No enum exists in code — `asset_subclass` is a free `String(40)`. Code assigns only `crypto, derivative, equity, mutual_fund` (`amfi.py:75`, `coingecko.py:89`, `kite.py:94,97`, `market.py:417`); routing reads only `derivative` (`router.py:123,131`). D-009's asserted `etf`, `reit` are **not** assigned anywhere. Choosing the final fixed vocab is an **authoring decision** (D-009), not extraction. | Instrument taxonomy (§2); Add flow (D-049) |
-| DEF-6 | **Sector master seed (GICS-like)** | No sector master / GICS list in code (only the `_SECTOR_MAP` ticker fallback, `portfolio.py:30-51`). Seed is **authorship** (D-009/DEF-6), not extraction. §6 lists the 12 fallback values as a starting reference. | Sector picker (D-009) |
-
-DEF-7 (Review threshold constants) is not master data; its values live in
-PRODUCT-SPEC §5 and were reconciled against `services/review.py` in this backfill.
+- **DEF-1, DEF-3, DEF-4, DEF-5** — resolved by verbatim extraction from the
+  legacy v1 source (cites in the footer); filled into §2/§3.
+- **DEF-2** (`asset_subclass`) and **DEF-6** (sector seed) — **authored, not
+  extracted** (no enum / no list exists in code). Both are now proposed in place:
+  DEF-2 as the 6-value per-value table in §2 (†), DEF-6 as the 11 GICS sectors +
+  migration mapping in §6 (†). Every authored value is tagged **PROPOSED** and is
+  ratified at review (same regime as the DESIGN-SYSTEM tokens).
+- **DEF-7** (Review thresholds) — not master data; reconciled against
+  `services/review.py` in PRODUCT-SPEC §5.
 
 ---
 
@@ -282,7 +321,16 @@ PRODUCT-SPEC §5 and were reconciled against `services/review.py` in this backfi
 - DEF-4 `POLICY_TYPES` / `FREQUENCIES` — `app/services/insurance.py:23-25`.
 - DEF-5 `DOC_CATEGORIES` / `CONTACT_ROLES` (+ `WILL_STATUSES`, `DOC_STATUSES`
   confirmation) — `app/services/estate.py:19-22`.
+- DEF-2 `asset_subclass` reads/assignments — `app/providers/market/router.py:123,128-145`,
+  `app/services/market.py:112,417,433`, `app/api/v1/routes/{amfi.py:75,coingecko.py:89,kite.py:94,97}`,
+  migration `a3d21f7e5b10_phase2_identity_taxonomy.py:70`.
 - DEF-6 sector reference (`_SECTOR_MAP`) — `app/services/portfolio.py:30-51`.
+
+**DEF-2 and DEF-6 are authored, not extracted (†):** no `asset_subclass` enum
+and no sector/GICS list exist in code, so their values are **proposed** here
+(§2/§6), each tagged **PROPOSED**, and ratified at review — the code cites above
+are the *observed* values/consumers the authoring builds on, not a definition to
+copy. Everything else in this file is extracted verbatim.
 
 Decision IDs applied: D-005, D-006, D-007, D-008, D-009, D-010, D-011, D-012,
 D-013, D-018, D-049, D-055, D-064, D-073, and the DEFERRED table. Where the audit
@@ -291,7 +339,7 @@ verdicts govern the choice of fixed-vocabulary vs extensible-master.
 
 ## Needs decision
 
-No product decisions outstanding. Two **authoring** items remain (§9): the final
-`asset_subclass` fixed vocabulary (DEF-2) and the GICS-like sector seed (DEF-6) —
-both now with concrete code-observed values to author from, neither blocked on
-missing source.
+No product decisions and no extractions outstanding. DEF-2 (`asset_subclass`, §2)
+and DEF-6 (sector seed, §6) are **authored proposals** awaiting **ratification at
+review** — the same regime as the DESIGN-SYSTEM tokens. Ratify or amend the
+PROPOSED-tagged values there.

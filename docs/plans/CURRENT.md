@@ -73,9 +73,18 @@ ROADMAP.md and DESIGN-BRIEF.md.
     `_CORP_ACTION_RECENT_DAYS`). PRODUCT-SPEC §5.
   - Sudo allow-list — exact `_ADMIN_ACTIONS` set (`system.py:24-36`).
     SECURITY-BASELINE §4.
-  - **Still open (authoring, not extraction):** DEF-2 `asset_subclass` (no enum
-    in code; `etf`/`reit` from D-009 not found) and DEF-6 sector seed (GICS-like
-    authorship; `_SECTOR_MAP` 12-value reference recorded). MASTER-DATA §9.
+- **DEF-2 / DEF-6 AUTHORED** — the two remaining items were authored (PROPOSED,
+  ratify at review), so §9 is now empty:
+  - DEF-2 `asset_subclass` fixed vocab (6): `crypto, derivative, equity, etf,
+    mutual_fund, reit`. Per-value table names each consumer — only `derivative`
+    is read by the router (`router.py:131`); crypto/equity/mutual_fund are
+    code-assigned display-only; etf/reit PROPOSED per D-009. bond/deposit/
+    retirement deliberately excluded (their lanes route by asset_class, not
+    subclass). MASTER-DATA §2.
+  - DEF-6 sector master: 11 GICS sectors seeded (PROPOSED, user-extensible), with
+    the `_SECTOR_MAP` 12→seed migration mapping — Technology→Information
+    Technology; Crypto / Index-ETF / Commodities → no map (sector=null, no silent
+    merge). MASTER-DATA §6.
 
 ## IN-PROGRESS
 
@@ -83,25 +92,22 @@ ROADMAP.md and DESIGN-BRIEF.md.
 
 ## NEXT
 
-1. **Kitchen-sink review** — ratify the PROPOSED design tokens
-   (DESIGN-SYSTEM §2) once the component library is built.
-2. **DEF-2 / DEF-6 authoring** — decide the final `asset_subclass` fixed vocab
-   and the GICS-like sector seed (both now have code-observed values to author
-   from; neither is blocked on missing source).
-3. **App-source milestone** — when the v1 code enters this repo, re-verify the
+1. **Kitchen-sink / ratification review** — ratify the PROPOSED values: the
+   design tokens (DESIGN-SYSTEM §2) and the authored DEF-2/DEF-6 vocabularies
+   (MASTER-DATA §2/§6).
+2. **App-source milestone** — when the v1 code enters this repo, re-verify the
    backfilled values against it (cites already point at the exact lines).
 
 ## Needs decision
 
-- **DEF-2 / DEF-6 (authoring, not blocking).** The final `asset_subclass`
-  vocabulary and the sector master seed need an authoring decision — see
-  MASTER-DATA §9. Not product-blocking; both have concrete starting values.
-- **Design token ratification.** PROPOSED palette/type/spacing/density values
-  (DESIGN-SYSTEM §2) are working values until the kitchen-sink review; the
-  UI/serif font choice may need an ADR if self-hosting adds a dependency.
-- **Design token ratification.** The PROPOSED palette/type/spacing/density values
-  in DESIGN-SYSTEM §2 are working values until ratified at the kitchen-sink
-  review; the UI/serif font choice may need an ADR if self-hosting adds a
-  dependency. Not blocking.
+All open items are **ratification of authored PROPOSED values** (not blocking):
+
+- **DEF-2 `asset_subclass` (MASTER-DATA §2)** — ratify/amend the 6-value vocab;
+  `etf`/`reit` are the two speculative additions (D-009, not in code).
+- **DEF-6 sector seed (MASTER-DATA §6)** — ratify the 11 GICS sectors and the
+  `_SECTOR_MAP` migration mapping (esp. the 3 no-map values left as `sector=null`).
+- **Design tokens (DESIGN-SYSTEM §2)** — ratify PROPOSED palette/type/spacing/
+  density; the UI/serif font choice may need an ADR if self-hosting adds a
+  dependency.
 - ~~Cash flow route~~ — **resolved**: `/cash-flow` canonical, `/planning`
   redirects (D-022 principle applied to D-056).
