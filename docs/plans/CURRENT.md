@@ -182,9 +182,29 @@ ROADMAP.md and DESIGN-BRIEF.md.
 **Backend copy-in milestone COMPLETE** (Phases A/B/C). See
 `docs/plans/backend-copy-in.md` for the full record.
 
+- **Frontend foundation milestone — plan + ADR.** Plan at
+  `docs/plans/design-system-build.md` (Phase A scaffold · B tokens · C
+  components · D kitchen-sink + ratification; acceptance criteria per phase;
+  components only, no templates/pages this milestone). Stack recorded as
+  **ADR-0002** (`docs/adr/0002-frontend-stack-react-vite.md`): React + TS + Vite
+  from scratch, CSS custom properties as the single token source, no CSS
+  framework/charting/webfont dependency without a further ADR.
+- **Frontend foundation — PHASE A DONE (scaffold, all checks green).** `frontend/`
+  app boots; `/health` probe via Vite dev proxy → backend (127.0.0.1:8321)
+  showing ok+version / unreachable (verified end-to-end against the live
+  backend); light→dark→system theme cycle (D-066) wired to the token layer via
+  `<html data-theme>`, per-device localStorage (D-078), flash-free bootstrap.
+  ESLint 9 + `tsc` + Vitest (3 tests). **Token drift check**
+  (`frontend/scripts/check-design-tokens.mjs`, `npm run check:tokens`) fails on
+  any raw hex/px in components outside the token layer — proven green clean and
+  red on a deliberate violation. `npm run check` + `npm run build` pass. Minimal
+  token slice committed; full DESIGN-SYSTEM §2 set is Phase B.
+
 ## IN-PROGRESS
 
-- (none)
+- **Frontend foundation — PHASE B (tokens).** Implement DESIGN-SYSTEM §2 as the
+  full token layer (colour/type/spacing/radius/density + reduced-motion +
+  high-contrast, D-078) and prove tabular figures.
 
 ## NEXT
 

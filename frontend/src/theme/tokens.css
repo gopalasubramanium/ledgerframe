@@ -1,0 +1,73 @@
+/*
+ * Design tokens — the SINGLE source of truth for every colour/size/space.
+ * (design-system-build.md · ADR-0002). Components resolve values through these
+ * custom properties; the token drift check forbids raw hex/px anywhere else.
+ *
+ * PHASE A: a minimal working slice proving theme switching. The full
+ * DESIGN-SYSTEM §2 token set lands in Phase B. Every value here is
+ * PROPOSED — ratify at kitchen-sink review (DESIGN-SYSTEM §2.6).
+ */
+
+:root,
+:root[data-theme="light"] {
+  /* Colour — light (DESIGN-SYSTEM §2.1) */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --gain: #15803d;
+  --loss: #b91c1c;
+  --attention: #b45309;
+  --focus-ring: #2563eb;
+}
+
+:root[data-theme="dark"] {
+  /* Colour — dark (DESIGN-SYSTEM §2.1) */
+  --bg: #020617;
+  --surface: #0f172a;
+  --surface-raised: #1e293b;
+  --border: #1e293b;
+  --border-strong: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --accent: #60a5fa;
+  --accent-contrast: #0f172a;
+  --gain: #4ade80;
+  --loss: #f87171;
+  --attention: #fbbf24;
+  --focus-ring: #60a5fa;
+}
+
+:root {
+  /* Spacing — 4px grid (DESIGN-SYSTEM §2.3) */
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-7: 24px;
+  --space-8: 32px;
+
+  /* Radius + border/focus widths (DESIGN-SYSTEM §2.4 — thin 1px rules) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --border-width: 1px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Type (DESIGN-SYSTEM §2.2) */
+  --font-ui: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-size-14: 14px;
+  --font-size-20: 20px;
+  --font-size-28: 28px;
+  --line-14: 20px;
+  --line-20: 28px;
+  --line-28: 34px;
+}
