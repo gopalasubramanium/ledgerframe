@@ -20,6 +20,12 @@ starts from files, not memory.
   currency master + FX-translatability rule; country/region model; institution,
   sector, tag masters + admin screens; migration dispositions. Blocked
   extractions (DEF-1..DEF-6) flagged, not guessed — app source absent from repo.
+- **docs/specs/INFORMATION-ARCHITECTURE.md** — IA principles P-1..P-8 + Reports
+  Pack exception verbatim; full page map (page/route/nav group/purpose); per-page
+  canonical ownership tables (Owns / Summarises-with-reader / Links); navigation
+  spec (D-043 groups, /snapshot redirect, /global removed, rotation eligibility);
+  Home Simple/Full composition + ticker strip (D-046/D-047); feature-verdict
+  appendix (Batches 7–9) + a killed/dropped safeguard appendix.
 
 ## IN-PROGRESS
 
@@ -28,10 +34,9 @@ starts from files, not memory.
 ## NEXT
 
 Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
-1. docs/specs/INFORMATION-ARCHITECTURE.md (Batches 5–9, D-031..D-069)
-2. docs/specs/PRODUCT-SPEC.md
-3. docs/specs/DESIGN-SYSTEM.md
-4. docs/specs/SECURITY-BASELINE.md
+1. docs/specs/PRODUCT-SPEC.md
+2. docs/specs/DESIGN-SYSTEM.md
+3. docs/specs/SECURITY-BASELINE.md
 
 ## Needs decision
 
@@ -42,3 +47,6 @@ Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
   are left unfilled per the no-guessing rule. To resolve: commit the app code
   here (or run the extraction against it) and fill the seed lists in place.
   These are mechanical, not product decisions.
+- **Cash flow route (D-056).** Page renamed Planning → Cash flow, but whether
+  the route becomes `/cash-flow` (with redirect) or stays `/planning` is not
+  decided. See INFORMATION-ARCHITECTURE.md "Needs decision". Product decision.
