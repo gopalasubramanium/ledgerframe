@@ -251,22 +251,50 @@ out of scope — components only.
   segment palette and `ui/Select` ratified as implemented. DESIGN-SYSTEM §2
   PROPOSED markers flipped to ratified. Record: `docs/plans/RATIFICATION.md`.
 
+- **Page-build framework — plan + first page (PLAN ONLY, not built).**
+  - **`docs/plans/TEMPLATE-page-build.md`** — the reusable plan template every
+    page build follows. Forces, before any code: IDENTITY · OWNERSHIP TABLE ·
+    API SURFACE (with a backend-first *contract delta* list) · COMPONENTS (ratified
+    only; new components forbidden without a DESIGN-SYSTEM amendment) ·
+    VOCABULARIES · DECISIONS IN FORCE · ACCEPTANCE CRITERIA (incl. honesty +
+    theme/density) · BUILD PHASES (deltas first, one commit/phase) · NEEDS
+    DECISION (surfaced pre-build). Each section is *derived from the specs with a
+    section reference*, never re-invented.
+  - **`docs/plans/page-holdings.md`** — first instantiation (Holdings, the
+    canonical data-entry page: D-012 picker · D-019 merger · D-012 import review
+    queue · D-049 soft-delete/undo/one-Add-flow · D-050 server-side CSV). Fully
+    filled from the specs. **Not built — owner reviews first.** Its NEEDS DECISION
+    surfaces real pre-build blockers (below).
+
 ## IN-PROGRESS
 
-- (none)
+- (none) — **page-holdings.md awaits owner review** of its NEEDS DECISION items
+  before any build starts.
 
 ## NEXT
 
-1. **Kitchen-sink / design-system ratification** — **DONE (2026-07-10)**: §2
-   tokens + components ratified with three amendments (see above /
-   `docs/plans/RATIFICATION.md`). Remaining owner re-verify (optional, at
-   `/#/kitchen-sink`): only the three changed values — accent, light gain,
-   treemap magnitude scale. Still open separately: ratify the authored DEF-2/DEF-6
-   vocabularies (MASTER-DATA §2/§6) — data vocab, not design tokens.
-2. **Feature build (post-freeze)** — per the API-CONTRACT delta table, each
-   gated by its own plan file: `/refdata` (D-005), entity CRUD (D-065), holdings
-   CSV export (D-050), the Realised P/L / Review / Ongoing-cost renames (D-026/
-   D-030/D-029), and the route-rename redirects (D-022/D-056).
+1. **Resolve Holdings pre-build blockers (`docs/plans/page-holdings.md` §9)** —
+   found while planning, surfaced before build per the framework:
+   - **Contract reshape:** the frozen `TransactionIn` has **no merger-target
+     field** (`related_instrument_id` / "Absorbed into"), so D-019 mergers can't
+     be submitted through the current API → backend-first reshape, same-commit
+     contract regen.
+   - **Four component-inventory gaps** needing a DESIGN-SYSTEM amendment before
+     Holdings can be built: a **CRUD-editor container** (Dialog/Drawer — the
+     worklist "CRUD editor" has no ratified component), a **FileInput** (CSV
+     import), an **undo Toast/Snackbar** (10s soft-delete undo), and a
+     **PIN-confirm** (purge-deleted). New components are forbidden without a spec
+     amendment, so these gate the build.
+   - Plus confirm the untyped `holdings`/`summary`/`import-preview` reader shapes
+     and the `Select`-over-`/accounts` account picker.
+2. **Kitchen-sink / design-system ratification** — **DONE (2026-07-10)**: §2
+   tokens + components ratified with three amendments (`docs/plans/RATIFICATION.md`).
+   Still open separately: ratify the authored DEF-2/DEF-6 vocabularies
+   (MASTER-DATA §2/§6) — data vocab, not design tokens.
+3. **Feature build (post-freeze)** — per the API-CONTRACT delta table, each gated
+   by its own plan file (page plans use the new template): `/refdata` (D-005),
+   entity CRUD (D-065), holdings CSV export (D-050), the Realised P/L / Review /
+   Ongoing-cost renames (D-026/D-030/D-029), route-rename redirects (D-022/D-056).
 
 ## Needs decision
 
