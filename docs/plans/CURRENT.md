@@ -86,6 +86,18 @@ ROADMAP.md and DESIGN-BRIEF.md.
     Technology; Crypto / Index-ETF / Commodities → no map (sector=null, no silent
     merge). MASTER-DATA §6.
 
+- **docs/plans/REVIEW-GUIDE.md** — plain-language review companion for the
+  project owner (accountant, non-developer). Reads standalone; organized by owner
+  concern (promises/never-does · how money is counted · pages & v1 removals ·
+  dropdown lists with full values · privacy/security · ROADMAP one page). Every
+  item carries an in-practice example, a decision ID, and an Approve/Challenge
+  checkbox. Opens with an ATTENTION shortlist (~11 items: DEF-2 etf/reit, DEF-6
+  GICS seed + three-null migration, Review thresholds, FX/tax posture, insurance
+  exclusion, currency seed, cost-basis fifo/average, region derivation, the two
+  spec interpretations). Includes an auditor's "how the numbers can be trusted"
+  section (extracted/standard/authored trust tiers + 3 file:line spot-checks) and
+  a one-page sign-off summary. Reading aid only — specs stay authoritative.
+
 ## IN-PROGRESS
 
 - (none)
