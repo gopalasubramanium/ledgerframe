@@ -25,6 +25,26 @@ merges — the historical-FX item is a single merged entry (D-020 + D-076).
 | R-12 | Revisit AI validator strictness | D-070 | Only if fallback frequency proves high in practice; the validation contract may not weaken (Product Guarantee 7) | parked |
 | R-13 | Per-lane provider priority editing | D-072 | Only on demonstrated need; no user-editable provider priority in v2 (visibility yes, editability no) | parked |
 | R-14 | FD accrued-interest valuation | D-073 | First post-v2 feature. Plan file **must cover day-count conventions, compounding variants, maturity handling, and provenance labelling of calculated values**. `calculated_accrual` retained in the ValuationMethod vocabulary but no v2 lane emits it | parked |
+| R-15 | User-configurable review thresholds | D-084 | The v2 defaults are owner-set (D-084: runway 3 months, goal 180 days, the rest as audited); this makes them user-editable. Each still a named constant with a rationale | parked |
+
+---
+
+## Themes
+
+### v2.1 — "accounting precision" (D-088)
+
+The first coherent post-v2 milestone bundles three parked items that together
+sharpen the ledger's accounting fidelity. They are grouped for sequencing only —
+**each still requires its own plan file** before any is built, and each keeps its
+individual gate:
+
+| In the theme | Item | Individual gate (unchanged) |
+|---|---|---|
+| R-6 | `spec` (specific-lot) cost-basis method | extends the per-account fifo/average selector |
+| R-8 | Historical FX series (trade-date backfill + per-date realised totals) | native currency stays filing-grade; base totals stay explicitly indicative |
+| R-14 | FD accrued-interest valuation | plan file must cover day-count, compounding, maturity, and provenance labelling of calculated values |
+
+All other R-items remain independent parked breadcrumbs, not part of this theme.
 
 ---
 

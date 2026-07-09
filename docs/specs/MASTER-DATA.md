@@ -86,6 +86,13 @@ D-010; `02` = from the schema audit.
 - `id_type` — the high-confidence subset (globally unique per instrument) is
   `{isin, cusip, figi, sedol, amfi_code, kite_token, coingecko_id}`;
   `provider_symbol` is the non-high-confidence remainder (02 §2.2).
+- **`other` across vocabularies (D-087)** — `other` is **retained** in every
+  fixed vocabulary that carries it (`AssetClass`, `Account.kind`,
+  `InsurancePolicy.policy_type`, `EstateDocument.category`, `Entity.kind`, …) as
+  the **honest escape valve**: a user is never forced into a wrong specific
+  value. Over-use of `other` on holdings is surfaced by the Review signal
+  `_OTHER_CLASS_OVERUSE_PCT = 10` (%) (PRODUCT-SPEC §5), prompting proper
+  reclassification — the value stays, the nudge is separate.
 
 **Notes on the backfilled vocabularies (DEF-3/4/5):**
 - `Account.kind` — extracted from `ACCOUNT_KINDS` verbatim (DEF-3 resolved).
@@ -122,6 +129,15 @@ Although D-073's manual lanes exist for these, `lane_for` selects them by
 adding one would be redundant and misleading. The historical migration
 `a3d21f7e5b10:70` backfilled `asset_subclass = asset_class`; a v2 migration
 should normalise any such rows to the vocabulary above (unmapped → null).
+
+**Classification guidance (D-085).** `asset_class` describes economic
+**exposure**; `asset_subclass` describes the **wrapper**. The two are set
+independently: a listed REIT is `asset_class = property` with
+`asset_subclass = reit` (property exposure, listed-equity wrapper); an equity
+ETF is `asset_class = equity` with `asset_subclass = etf`; a bond fund's class
+stays `bond` regardless of wrapper. This resolves the `etf`/`reit` review
+challenge (REVIEW-GUIDE A1): both PROPOSED values are kept, and this rule governs
+how they are assigned.
 
 ---
 
@@ -177,17 +193,24 @@ country field.** Dropped: `instruments.country` (free text) and
 - **Reference table:** the ISO-3166-1 alpha-2 standard seeds the country picker
   (the seed *is* the published ISO-3166 code list — a standard, not a decision
   to author).
-- **Region is derived, never stored as a separate vocabulary** (D-007):
+- **Region is derived, never stored as a separate vocabulary** (D-007). The
+  bucket set was **expanded from four to six** at review (D-083). The six values
+  below are the complete `region` vocabulary (used as a policy-dimension bucket
+  set, D-055/02 §2.8):
 
-  | `listing_country` | Region |
-  |-------------------|--------|
-  | `IN` | India |
-  | `SG` | Singapore |
-  | `US` | US |
-  | anything else | Global |
+  | Region | `listing_country` members |
+  |--------|---------------------------|
+  | **India** | `IN` |
+  | **Singapore** | `SG` |
+  | **US** | `US` |
+  | **Europe** | `GB, IE, FR, DE, NL, BE, LU, CH, AT, ES, PT, IT, GR, SE, NO, DK, FI, IS, PL, CZ, SK, HU, RO, BG, HR, SI, EE, LV, LT, CY, MT` |
+  | **APAC** | `JP, CN, HK, MO, TW, KR, AU, NZ, MY, TH, ID, PH, VN` (Asia-Pacific excluding `IN`/`SG`) |
+  | **Other** | **catch-all** — any `listing_country` not listed above (e.g. `CA, MX, BR, AR, CL, AE, SA, IL, TR, ZA, RU, …`). |
 
-  These four region values are the complete `region` vocabulary (used as a
-  policy dimension bucket set, D-055/02 §2.8).
+  The derivation is: match `IN`/`SG`/`US` first; then the Europe and APAC
+  membership lists; anything unmatched falls to **Other**. Membership is
+  authored (D-083) and may be extended by amending this table (a code +
+  migration change, not a user action — region is derived, not stored).
 
 **ROADMAP (R-3, D-007):** re-introduce a domicile field for fund-tax display.
 
@@ -245,6 +268,14 @@ merges; unmapped values are flagged, not forced):
 
 GICS **Materials** and **Real Estate** are seeded even though no `_SECTOR_MAP`
 ticker used them (they simply start empty).
+
+**Null-sector display (D-082).** The three no-map rows keep `sector = null` in
+data (no forced merge — the honesty point of the mapping). In **sector views**
+(allocation-by-sector, sector rollups) these null-sector holdings are **not
+hidden**: they are collected into an explicit **"Not sector-classified
+(non-equity)"** bucket (GLOSSARY). Their allocation is already carried by
+`asset_class`; the bucket makes the null visible rather than silently dropping
+rows from a sector chart.
 
 **Tag (D-011).** Uniqueness is **case-insensitive**; rename **cascades to all
 tagged holdings**; the 16-tags-per-holding cap is retained. `holding_key` is the
@@ -333,7 +364,9 @@ are the *observed* values/consumers the authoring builds on, not a definition to
 copy. Everything else in this file is extracted verbatim.
 
 Decision IDs applied: D-005, D-006, D-007, D-008, D-009, D-010, D-011, D-012,
-D-013, D-018, D-049, D-055, D-064, D-073, and the DEFERRED table. Where the audit
+D-013, D-018, D-049, D-055, D-064, D-073, and the DEFERRED table, plus **Batch 12:
+D-082 (non-equity sector bucket, §6), D-083 (six-bucket region mapping, §4),
+D-085 (class=exposure / subclass=wrapper, §2), D-087 (`other` escape valve, §2)**. Where the audit
 flagged free-text fields that "should" reference masters (02 §4), DECISIONS.md's
 verdicts govern the choice of fixed-vocabulary vs extensible-master.
 

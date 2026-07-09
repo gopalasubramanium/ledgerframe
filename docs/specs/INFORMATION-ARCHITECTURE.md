@@ -53,7 +53,7 @@ be removed from the pages that carry them: the not-a-Sharpe disclaimer (D-030),
 the real-vs-ETF-proxy badge (D-051), "reporting, never a trade instruction" on
 Policy (D-055), contributions-don't-reduce-runway and 'once'-obligations-excluded
 (D-057), honest-NULL trade-date FX with excluded-events count (D-020/D-076), the
-insurance-cash-value exclusion lines (D-039), the visible AI-fallback signal
+insurance-cash-value **valued** exclusion lines (D-039/D-081), the visible AI-fallback signal
 (D-070), and the normative validation contract (D-071).
 
 ---
@@ -180,8 +180,10 @@ summary reuses the canonical page's reader, never a second code path.
 - **Owns:** Net worth, Gross assets, Liabilities (D-032); net-worth trend;
   liquidity ladder; cash runway (D-036); the **composition-by-class table**
   (itemised statement incl. liabilities — explicitly *not* a duplicate of
-  Portfolio allocation weight, D-033); the insurance-cash-value exclusion line
-  ("Insurance cash value: not counted — see Insurance", D-039).
+  Portfolio allocation weight, D-033); the insurance-cash-value **valued**
+  exclusion line ("Insurance cash value (excluded): «amount» — see Insurance",
+  D-039/D-081) — the value is shown but **excluded from the headline Net worth
+  total**.
 - **KPI strip:** Net worth / Gross assets / Liabilities / Cash & deposits (D-054).
   The **composition donut is dropped** (D-054).
 - **Summarises:** Portfolio headline (Today's change etc.) with link (D-032);
@@ -193,7 +195,9 @@ summary reuses the canonical page's reader, never a second code path.
 
 - **Owns:** Today's change, Unrealised P/L, Realised P/L, Cost basis, Total
   return (stat rail, D-032); Allocation by class / sector / currency / **tag**
-  (donuts, D-033/D-048); Contributors / Detractors (D-034); the performance
+  (donuts, D-033/D-048) — the sector donut carries an explicit **"Not
+  sector-classified (non-equity)"** bucket for `sector = null` holdings (D-082);
+  Contributors / Detractors (D-034); the performance
   chart with benchmark picker + stats (these live **only** here, D-035);
   Concentration / Largest position / Top-5 / HHI; KeyStats; Attribution (with
   residual); the **Costs** card (recorded fees vs Ongoing cost, **never
@@ -260,7 +264,11 @@ summary reuses the canonical page's reader, never a second code path.
 - **Owns:** section verdicts + attention list; **Mark-reviewed** (records
   `ReviewLog` with note + next review date); review history. Signal thresholds
   are enumerated in the Review spec as **named constants, each with a one-line
-  rationale** (D-059); per-signal try/except resilience preserved.
+  rationale** (D-059); per-signal try/except resilience preserved. Defaults are
+  owner-set (D-084): `_RUNWAY_LOW_MONTHS = 3`, `_GOAL_SOON_DAYS = 180`, the rest
+  as audited; the `_OTHER_CLASS_OVERUSE_PCT = 10%` over-use signal is added
+  (D-087). Full table in PRODUCT-SPEC §5; user-configurable thresholds are
+  ROADMAP R-15 (D-084).
 - **Summarises:** consumes runway (Net worth reader) and drift (Policy reader)
   via the same canonical readers the summaries use; provenance/confidence link
   to Pricing Health (D-038).
@@ -429,7 +437,9 @@ Not in Batches 7–9 but recorded here so they do not resurface via the IA:
 **Derived from:** `docs/audit/01-FEATURE-INVENTORY.md`, `docs/audit/06-UI-AND-TERMINOLOGY-AUDIT.md`
 §(c) and §(d), and `docs/audit/DECISIONS.md`. Decision IDs applied: P-1..P-8,
 D-005, D-012, D-014..D-020, D-022, D-023, D-026, D-030, D-031..D-069, D-072,
-D-075, D-076, D-077, D-078. Where the audit recommended a canonical home
+D-075, D-076, D-077, D-078, plus **Batch 12: D-081 (Net worth valued exclusion
+line), D-082 (non-equity sector bucket), D-084 (owner-set review defaults),
+D-087 (`other` over-use signal)**. Where the audit recommended a canonical home
 (06 §c), DECISIONS.md's Batch-5 assignments (D-032..D-039) govern.
 
 ## Needs decision

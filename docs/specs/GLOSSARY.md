@@ -56,7 +56,7 @@ Liabilities    = Σ (LIABILITY-class holdings, counted negative)
 
 | Term | Canonical definition |
 |------|----------------------|
-| **Instrument** | A tradable/valuable security identified by symbol + exchange, with taxonomy (asset class/subclass, `listing_country`, sector) and linked identifiers (ISIN/AMFI/CoinGecko/Kite/…). Model `Instrument`. |
+| **Instrument** | A tradable/valuable security identified by symbol + exchange, with taxonomy (asset class/subclass, `listing_country`, sector) and linked identifiers (ISIN/AMFI/CoinGecko/Kite/…). Model `Instrument`. **Classification (D-085):** `asset_class` describes economic **exposure**; `asset_subclass` describes the **wrapper** — e.g. a listed REIT is `asset_class = property` with `asset_subclass = reit`. |
 | **Identifier** | A normalized key mapping an instrument to the outside world (`id_type`, `value`): ISIN, CUSIP, FIGI, SEDOL, amfi_code, kite_token, coingecko_id, provider_symbol. High-confidence ids are globally unique. |
 | **Holding** | The row: a quantity of one instrument in one account. **Derived** from the transaction ledger via FIFO (rebuilt on every mutation) — except **manual holdings**, which survive rebuilds. |
 | **Position** | The quantity count within a holding. (Use **Position** for the count, **Holding** for the row.) |
@@ -112,9 +112,9 @@ One concept per word; do not interchange.
 | **Today's change** | The day's change in value. The only term for this concept (D-025). **[Help]** |
 | **Income** | Dividends + interest recorded in the ledger, base currency at today's FX. **[Help]** |
 | **Income yield** | Recorded income ÷ current gross assets (trailing, backward-looking). **[Help]** |
-| **Total return** | Overall % gain/loss vs cost basis, since-inception cumulative. **[Help]** |
-| **1-year return / volatility / max drawdown** | Trailing-12-month figures from the invested performance series; 0.0 can mean "no data". **[Help]** |
-| **XIRR** | Money-weighted return — the IRR of dated cash flows. "Not applicable" on thin history. **[Help]** |
+| **Total return** | Overall % gain/loss vs cost basis, since-inception **cumulative** (non-annualized). Below the minimum-history threshold it is the **only** return shown (D-086). **[Help]** |
+| **1-year return / volatility / max drawdown** | Trailing-12-month figures from the invested performance series; 0.0 can mean "no data". Annualized/trailing figures are **suppressed below the minimum-history threshold** (D-086). **[Help]** |
+| **XIRR** | Money-weighted return — the IRR of dated cash flows. **Appears only from the minimum-history threshold upward**; below it, "Not applicable" — never a fabricated annualized figure (D-086). **[Help]** |
 | **TWR** | Time-weighted return — chain-linked daily returns with external flows removed (for benchmark comparison). **[Help]** |
 | **Return / volatility** | 1Y return ÷ 1Y volatility. **Explicitly NOT a Sharpe ratio** (no risk-free rate subtracted) — this disclaimer is protected copy (D-030). **[Help]** |
 | **Return attribution** | Per-holding contribution (weight × return, signed pp) rolled to class/sector, with an explicit **residual** (income + realised + closed positions) so Σ contributions + residual = headline. Single-period approximation. **[Help]** |
@@ -147,7 +147,8 @@ Home shows one summary of each, linked to its canonical page.
 | **Drift & bands** | Actual − target share; if beyond the band, "over"/"under". **Reporting, never a trade instruction** (protected copy, D-055). **[Help]** |
 | **Dimension** | The policy axis: asset_class / currency / region. |
 | **Bucket** | A value within a dimension (e.g. equity / SGD / India), driven by that dimension's master (D-055). |
-| **Region** | Derived from `listing_country`: IN→India, SG→Singapore, US→US, else Global. |
+| **Region** | Derived from `listing_country`, never stored (D-007). Six buckets (D-083): **India** (IN), **Singapore** (SG), **US** (US), **Europe**, **APAC**, and **Other** (catch-all for any unlisted country). Full membership table in MASTER-DATA §4. |
+| **Not sector-classified (non-equity)** | The explicit sector-view bucket for holdings with `sector = null` — non-company exposures (crypto, index/ETF wrappers, commodities). Shown as its own bucket, not hidden (D-082). |
 
 ---
 
@@ -199,7 +200,7 @@ These two "documents" ideas are distinct and must not be merged in copy:
 |------|----------------------|
 | **Policy documents (checklist)** | Per-policy: "do I hold this policy's papers?" A checklist on the Insurance page. |
 | **Estate documents** | Estate-wide: "is my estate documentation in order?" The document register on the Estate page (`estate_document`, `related_to` free text by design). |
-| **Insurance cash value** | Surrender/cash value of a policy. **Permanently excluded from Net worth** in v2; stated visibly on Insurance and as a labelled line on the Net worth page ("Insurance cash value: not counted — see Insurance", D-039). |
+| **Insurance cash value** | Surrender/cash value of a policy. **Excluded from the headline Net worth total** in v2; shown on the Net worth page as a labelled **valued** line ("Insurance cash value (excluded): «amount» — see Insurance", D-039/D-081) and stated visibly on Insurance. Opt-in inclusion stays parked (R-9). |
 
 ---
 
@@ -248,7 +249,10 @@ copy.
 (sections b, c), and `docs/audit/DECISIONS.md`. Decision IDs applied: D-010,
 D-019, D-020, D-021, D-022, D-023, D-024, D-025, D-026, D-027, D-028, D-029,
 D-030, D-039, D-040, D-046, D-047, D-054, D-055, D-056, D-057, D-058, D-061,
-D-062, D-073, D-074, D-076, D-077 (Product Guarantees block verbatim). Where the
+D-062, D-073, D-074, D-076, D-077 (Product Guarantees block verbatim), plus
+**Batch 12: D-081 (insurance valued line), D-082 (non-equity sector bucket),
+D-083 (six-bucket region), D-085 (class=exposure / subclass=wrapper), D-086
+(no annualized return below minimum history)**. Where the
 audit and DECISIONS.md conflicted, the decision won (notably: "Total value"
 retired for Net worth/Gross assets; the single "movers" canonical replaced by
 two pairs; "Provider/Source" split into Source/Provider/Routing; Entity kind set

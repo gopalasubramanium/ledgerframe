@@ -98,6 +98,30 @@ ROADMAP.md and DESIGN-BRIEF.md.
   section (extracted/standard/authored trust tiers + 3 file:line spot-checks) and
   a one-page sign-off summary. Reading aid only — specs stay authoritative.
 
+- **Batch 12 (D-081–D-088) — review-challenge resolutions** — the owner's
+  REVIEW-GUIDE challenges recorded as a DECISIONS.md addendum and folded into the
+  affected specs:
+  - **D-081** insurance cash value → visible **valued** line on Net worth,
+    excluded from the headline total (amends D-039). GLOSSARY, IA, PRODUCT-SPEC §4a.
+  - **D-082** non-equity `sector=null` shown as an explicit **"Not
+    sector-classified (non-equity)"** bucket. MASTER-DATA §6, GLOSSARY, IA Portfolio.
+  - **D-083** region expanded to **six buckets** (India/Singapore/US/Europe/APAC/
+    Other) with a full listing-country membership table. MASTER-DATA §4, GLOSSARY.
+  - **D-084** review defaults owner-set: `_RUNWAY_LOW_MONTHS = 3` (was 6),
+    `_GOAL_SOON_DAYS = 180` (was 90); rest as audited. These two deliberately
+    diverge from `review.py` — recorded in PRODUCT-SPEC §5 audit trail. ROADMAP R-15.
+  - **D-085** classification guidance: `asset_class` = exposure, `asset_subclass`
+    = wrapper; listed REIT = `property` + `reit`. MASTER-DATA §2, GLOSSARY.
+  - **D-086** no annualized return below a minimum-history threshold; cumulative
+    only; XIRR from threshold upward. GLOSSARY returns, PRODUCT-SPEC §4c.
+  - **D-087** `other` retained as the honest escape valve + Review signal
+    `_OTHER_CLASS_OVERUSE_PCT = 10%`. MASTER-DATA §2, PRODUCT-SPEC §5, IA Review.
+  - **D-088** ROADMAP restructured — R-6/R-8/R-14 bundled as the v2.1 "accounting
+    precision" theme; R-15 (user-configurable thresholds) added. ROADMAP.md.
+  - Affirmed unchanged: A2 (11 GICS sectors), REVIEW-GUIDE §3.3 (v1 removals).
+  - REVIEW-GUIDE annotated with **→ Resolved** lines throughout; Spot-check 1
+    updated for the deliberate D-084 divergence.
+
 ## IN-PROGRESS
 
 - (none)
@@ -115,9 +139,12 @@ ROADMAP.md and DESIGN-BRIEF.md.
 All open items are **ratification of authored PROPOSED values** (not blocking):
 
 - **DEF-2 `asset_subclass` (MASTER-DATA §2)** — ratify/amend the 6-value vocab;
-  `etf`/`reit` are the two speculative additions (D-009, not in code).
-- **DEF-6 sector seed (MASTER-DATA §6)** — ratify the 11 GICS sectors and the
-  `_SECTOR_MAP` migration mapping (esp. the 3 no-map values left as `sector=null`).
+  `etf`/`reit` are the two speculative additions (D-009, not in code). Now carry
+  **D-085 classification guidance** (class=exposure, subclass=wrapper); still
+  PROPOSED pending kitchen-sink ratification.
+- **DEF-6 sector seed (MASTER-DATA §6)** — the 11 GICS sectors were **affirmed at
+  review (A2)**; ratify formally at kitchen-sink. The 3 no-map values stay
+  `sector=null` and now surface as the D-082 "Not sector-classified" bucket.
 - **Design tokens (DESIGN-SYSTEM §2)** — ratify PROPOSED palette/type/spacing/
   density; the UI/serif font choice may need an ADR if self-hosting adds a
   dependency.

@@ -53,6 +53,12 @@ the handful of places where a specification **interpreted** a decision rather
 than copying it. Everything here also appears in full in the body below — this
 is the shortlist to look at first.
 
+> **✔ Round 1 resolved (Batch 12, D-081–D-088).** Your challenges from the first
+> read have been recorded as decisions D-081–D-088 in `docs/audit/DECISIONS.md`
+> and folded into the specs. Each affected item below now carries a **→ Resolved**
+> line. A2 (the 11 GICS sectors) and §3.3 (the v1 removals) were reviewed and
+> **affirmed unchanged**.
+
 ### A1. The two invented subclass values: `etf` and `reit` `[DEF-2 / D-009]`
 
 The instrument "subclass" list has six values. Four (`crypto`, `derivative`,
@@ -63,9 +69,11 @@ calculation depends on them.
 
 - **In practice:** you hold a REIT and an S&P 500 ETF. Today both would just
   read "equity". With these values, reporting can show them as their own
-  categories. If you'd rather REITs sit inside "property", or you don't want
-  these two at all, this is the place to say so.
-- `[ ] Approve  [ ] Challenge: ______`
+  categories.
+- **→ Resolved (D-085):** both values kept, with classification guidance —
+  **asset class = economic exposure, subclass = wrapper.** A listed REIT is
+  therefore `class = property` + `subclass = reit`; the ETF is `class = equity`
+  + `subclass = etf`. `[x] Approved with guidance`
 
 ### A2. The 11 GICS sectors as the starting sector list `[DEF-6 / D-009]`
 
@@ -78,9 +86,9 @@ user-extensible master — you can add your own sectors later.
 
 - **In practice:** when you tag a holding's sector, you pick from these 11
   instead of typing free text. Two of them (Materials, Real Estate) start empty
-  because nothing currently maps to them. If you use a different sector scheme,
-  say so now.
-- `[ ] Approve  [ ] Challenge: ______`
+  because nothing currently maps to them.
+- **→ Resolved: affirmed unchanged.** You accepted the 11 GICS sectors as
+  written. `[x] Approved`
 
 ### A3. The "three-null" sector migration `[DEF-6 / D-009]`
 
@@ -93,9 +101,9 @@ nearest sector. (In particular, Commodities is **not** merged into GICS
 
 - **In practice:** your Bitcoin holding will show sector = blank rather than a
   made-up sector. Your gold ETF will not be miscounted as a "Materials company".
-  This preserves honesty at the cost of some blanks. If you'd prefer a mapping,
-  name it.
-- `[ ] Approve  [ ] Challenge: ______`
+- **→ Resolved (D-082):** the null stays in the data (no forced merge), **and**
+  sector charts now show an explicit **"Not sector-classified (non-equity)"**
+  bucket so those holdings are visible rather than dropped. `[x] Approved with change`
 
 ### A4. One rename in that migration: `Technology` → `Information Technology` `[DEF-6]`
 
@@ -117,18 +125,23 @@ worth your eye:
 | Flag fires when… | Threshold | Rationale |
 |---|---|---|
 | Liquid assets below this share of gross assets | **15%** | below ~1/7 is too thin a cushion |
-| Cash runway below this many months | **6 months** | the common emergency-fund floor |
-| A goal's target date is within | **90 days** | a quarter's notice to act |
+| Cash runway below this many months | **3 months** ✎ | owner-set floor (D-084) |
+| A goal's target date is within | **180 days** ✎ | owner-set half-year notice (D-084) |
 | A cash obligation is due within | **30 days** | one month's notice |
 | An insurance renewal is within (or overdue) | **30 days** | one month to renew before lapse |
 | A split/bonus occurred within | **45 days** | recent corporate action → "verify" |
+| `other`-classed holdings exceed | **10%** of gross assets ✎ | over-use of the escape valve → reclassify (D-087) |
 | A holding's data-confidence score is below | **50 / 100** | poorly-sourced value deserves attention |
 | A market quote is older than | **15 minutes** | flagged stale (NAV/end-of-day use 30 hours) |
 
-- **In practice:** with a 6-month runway floor, if your liquid assets ÷ monthly
-  net burn falls to 5.4 months, Review flags it. These are the numbers that
-  drive every nudge — if any feels wrong for how you run your affairs, change it.
-- `[ ] Approve  [ ] Challenge: ______`
+- **In practice:** with your 3-month runway floor, if liquid assets ÷ monthly
+  net burn falls to 2.8 months, Review flags it.
+- **→ Resolved (D-084 / D-087):** you set **runway = 3 months** (was 6) and
+  **goal = 180 days** (was 90); the rest keep the audited values. These two now
+  *deliberately* differ from the legacy code — noted in the spec's audit trail so
+  the mismatch is honest, not an error (this affects Spot-check 1 below). A new
+  **`other`-over-use signal (10%)** was added (D-087). Making these thresholds
+  user-editable is parked as R-15. `[x] Approved with changes`
 
 ### A6. The FX / tax posture — the product never does jurisdiction tax `[D-077, D-020, D-076, D-004]`
 
@@ -152,18 +165,21 @@ Three linked stances an accountant should sign specifically:
   marked indicative; and because the buy was backdated, that leg is counted in
   the "excluded from trade-date total" tally rather than converted at a
   wrong-but-convenient rate.
-- `[ ] Approve  [ ] Challenge: ______`
+- **→ Resolved: affirmed unchanged.** The FX/tax posture stands as written.
+  `[x] Approved`
 
-### A7. Insurance cash value is permanently excluded from Net worth `[D-039]`
+### A7. Insurance cash value is excluded from the Net worth *total* `[D-039, D-081]`
 
-The surrender/cash value of a policy is **not counted** in Net worth in v2. It
-is stated visibly on the Insurance page and appears as a labelled line on the
-Net worth page: *"Insurance cash value: not counted — see Insurance."*
+The surrender/cash value of a policy is **excluded from the headline Net worth
+total** in v2. It is stated visibly on the Insurance page and appears as a
+labelled line on the Net worth page.
 
-- **In practice:** you have a whole-life policy with ₹8L cash value. Net worth
-  does not include it; a visible line tells you it was deliberately left out and
-  where to see it. (Opt-in inclusion is parked — R-9.)
-- `[ ] Approve  [ ] Challenge: ______`
+- **In practice:** you have a whole-life policy with ₹8L cash value. Net worth's
+  headline does not include it.
+- **→ Resolved (D-081):** you asked that the amount be **shown, not just named**.
+  The Net worth line now reads *"Insurance cash value (excluded): ₹8,00,000 —
+  see Insurance"* — the figure is visible but still excluded from the total.
+  (Opt-in *inclusion* stays parked — R-9.) `[x] Approved with change`
 
 ### A8. The currency list — 22 codes, only 9 usable as base currency `[D-006, DEF-1]`
 
@@ -185,22 +201,24 @@ v2: **FIFO** or **average**. Specific-lot (`spec`) identification is deliberatel
 **not** a v2 option; it is parked (R-6).
 
 - **In practice:** you set a brokerage account to FIFO and a fund account to
-  average. You cannot hand-pick lots on a sale in v2. If specific-lot is
-  essential to you now, flag it.
-- `[ ] Approve  [ ] Challenge: ______`
+  average. You cannot hand-pick lots on a sale in v2.
+- **→ Resolved (D-088):** specific-lot stays out of v2, but it is now bundled
+  with historical FX and FD accrual into a named **v2.1 "accounting precision"**
+  theme (§6) — a clear first post-v2 milestone rather than a loose parked item.
+  `[x] Approved, sequenced to v2.1`
 
-### A10. Region is *derived* from listing country into just four buckets `[D-007]`
+### A10. Region is *derived* from listing country into six buckets `[D-007, D-083]`
 
 There is no editable "region" field. Region is computed from an instrument's
-listing country: `IN`→**India**, `SG`→**Singapore**, `US`→**US**, everything
-else→**Global**. Those four are the entire region vocabulary (used for policy
-targets and drift).
+listing country into **six buckets (D-083): India · Singapore · US · Europe ·
+APAC · Other** (full listing-country membership table in MASTER-DATA §4). "Other"
+is the catch-all for any country not on the Europe or APAC lists.
 
-- **In practice:** a London-listed stock and a Tokyo-listed stock both fall into
-  "Global"; only India, Singapore, and US get their own bucket. If your policy
-  needs finer regions (e.g. a separate "Europe"), this is the constraint to
-  challenge.
-- `[ ] Approve  [ ] Challenge: ______`
+- **In practice:** a London-listed stock now falls into **Europe** and a
+  Tokyo-listed stock into **APAC**, instead of both collapsing to "Global".
+- **→ Resolved (D-083):** the four-bucket model was **expanded to six** at your
+  request, with a full country→region mapping table authored in the spec.
+  `[x] Approved with change`
 
 ### A11. Two interpretations you should bless (specs went beyond copying) `[D-022/D-056, DEF-7]`
 
@@ -315,8 +333,9 @@ outflows are excluded from the *recurring* net burn used for runway. `[D-057]` �
 D-076]` — *In practice:* backdated trades honestly show no trade-date rate and
 are counted, not converted at today's rate. `[ ] Approve  [ ] Challenge: ______`
 
-**H7 — Insurance cash-value exclusion lines.** (See A7.) `[D-039]`
-`[ ] Approve  [ ] Challenge: ______`
+**H7 — Insurance cash-value exclusion lines.** Now a **valued** line — the amount
+is shown on Net worth but excluded from the total (see A7). `[D-039, D-081]`
+`[x] Approved with change`
 
 **H8 — Visible AI-fallback signal.** When an AI answer fails the honesty checks,
 you see *"AI answer didn't pass grounding checks — showing facts directly."*
@@ -415,10 +434,16 @@ allocation percentages.
   headline return*, by construction (nothing silently doesn't add up).
 - **Sharpe and Sortino are deliberately excluded** (they need a risk-free rate
   the product won't assume).
-- **In practice:** your attribution table's parts sum exactly to the headline
-  because any unexplained remainder is shown as a labelled "residual", not
-  hidden.
-- `[ ] Approve  [ ] Challenge: ______`
+- **Short histories (D-086):** below a minimum-history threshold, only the
+  **cumulative (non-annualized) return** is shown — no annualized/CAGR figure and
+  no 1-year trailing return/volatility. **XIRR appears only from that threshold
+  upward** (below it, "Not applicable"). This stops a two-week-old position from
+  showing a wild annualized number.
+- **In practice:** a position you opened three weeks ago shows its plain
+  cumulative return, not a misleading "+380% annualized"; your attribution
+  table's parts still sum exactly to the headline via the labelled "residual".
+- **→ Resolved (D-086):** your challenge — no annualized figures on thin history
+  — is now a calculation-honesty invariant. `[x] Approved`
 
 ## 2.5 Costs are shown as two blocks, never blended `[D-048, D-029]`
 
@@ -482,20 +507,23 @@ A5, in full.)
 | Constant | Value | Fires when | Why this number |
 |---|---|---|---|
 | `_LIQUID_THIN_PCT` | 15% | liquid share of gross assets below 15% | below ~1/7 is too thin a cushion |
-| `_RUNWAY_LOW_MONTHS` | 6 | runway below 6 months | the common emergency-fund floor |
-| `_GOAL_SOON_DAYS` | 90 | goal target date within 90 days | a quarter's notice to act |
+| `_RUNWAY_LOW_MONTHS` | **3** ✎ | runway below 3 months | owner-set floor (D-084; was 6) |
+| `_GOAL_SOON_DAYS` | **180** ✎ | goal target date within 180 days | owner-set half-year notice (D-084; was 90) |
 | `_OBLIGATION_SOON_DAYS` | 30 | an obligation due within 30 days | one month's notice |
 | `_INSURANCE_SOON_DAYS` | 30 | insurance renewal within 30 days (or overdue) | one month to renew before lapse |
 | `_CORP_ACTION_RECENT_DAYS` | 45 | split/bonus within 45 days → "verify" | recent corporate action warrants a check |
+| `_OTHER_CLASS_OVERUSE_PCT` | **10%** ✎ | `other`-classed holdings exceed ~10% of gross assets | over-use of the escape valve → reclassify (D-087, new) |
 | low-confidence band | < 50 | a holding's confidence score under 50/100 | poorly-sourced value deserves attention |
 | `LEDGERFRAME_STALE_AFTER_SECONDS` | 900 (15 min) | a market quote older than 15 min | flagged stale (NAV/EOD use a 30-hour threshold) |
 | policy band / concentration | per-policy | out-of-band buckets; positions over your `max_position_pct` | uses *your own* bands — no fixed number |
 
 Each signal is wrapped so that one failing check never breaks the whole feed.
-- **In practice:** these nine lines are the entire "nagging" logic. If, say, a
-  6-month runway floor is too conservative for a household with strong income,
-  this is the table to challenge.
-- `[ ] Approve  [ ] Challenge: ______`
+- **In practice:** these lines are the entire "nagging" logic.
+- **→ Resolved (D-084 / D-087):** you set **runway = 3 months** and **goal = 180
+  days** (marked ✎), keeping the rest as audited, and added the **`other`
+  over-use (10%)** signal. The two changed defaults deliberately diverge from the
+  legacy code — see the note in Spot-check 1. User-editable thresholds are parked
+  as **R-15**. `[x] Approved with changes`
 
 ## 2.10 "None, not fabricated" and "never overwrite NAV" `[calc honesty]`
 
@@ -588,9 +616,9 @@ Two surfaces are reachable by link only, not in the sidebar: the **Reports Pack*
 | **Frontend copies of dropdown lists** | Retired; the frontend now gets every list from one backend source | D-005/D-049 |
 
 - **In practice:** the app you get back is deliberately *quieter* than v1 — fewer
-  widgets, no "tell us about yourself" step, one place for each fact. If any
-  removal loses something you relied on, flag it here.
-- `[ ] Approve  [ ] Challenge: ______`
+  widgets, no "tell us about yourself" step, one place for each fact.
+- **→ Resolved: affirmed unchanged.** You reviewed the v1 removals and accepted
+  them as written. `[x] Approved`
 
 ## 3.4 How you enter data — the input controls `[DESIGN-SYSTEM §5, §6]`
 
@@ -654,10 +682,13 @@ Points worth an accountant's eye:
   way. `[D-073]`
 - **The product never claims `real-time` for its own data** — that value exists
   only to record what a *source* claims. `[D-027]`
+- **`other` is kept everywhere as the honest escape valve (D-087)** — a user is
+  never forced into a wrong specific value; if none fits, `other` is legitimate.
 - **In practice:** every value above is what a user will be forced to pick from.
-  If, e.g., you want an "endowment" insurance type or a "gift" contribution kind,
-  now is the time.
-- `[ ] Approve  [ ] Challenge: ______`
+- **→ Resolved (D-087):** `other` is retained across the fixed vocabularies, and
+  a Review signal now flags when `other`-classed holdings exceed **10%** of gross
+  assets — the escape valve stays, with a gentle nudge to reclassify if
+  over-used. `[x] Approved with addition`
 
 ## 4.2 User-extensible masters (users *can* add to these) `[MASTER-DATA §6]`
 
@@ -680,14 +711,16 @@ Points worth an accountant's eye:
   authored list). The old free-text `country` and `domicile_country` fields are
   **dropped**; legacy values are mapped to ISO codes with a **manual review list
   for anything that can't be mapped — no silent best-guess**.
-- **Region** — *derived* into four buckets only (India / Singapore / US /
-  Global); see A10.
+- **Region** — *derived* into **six** buckets (India / Singapore / US / Europe /
+  APAC / Other), with a full country→region mapping table; see A10. `[D-083]`
 - **Timezone** — a proper IANA timezone dropdown (seeded from the maintained `tz`
   database standard), replacing free-text entry.
 - **In practice:** you'll pick "IN" from a standard country list, and the app
-  derives "India"; any old free-text country it can't confidently map is put on a
-  review list for you rather than guessed.
-- `[ ] Approve  [ ] Challenge: ______`
+  derives "India"; a London listing derives "Europe", a Tokyo listing "APAC"; any
+  old free-text country it can't confidently map is put on a review list rather
+  than guessed.
+- **→ Resolved (D-083):** region expanded from four buckets to six.
+  `[x] Approved with change`
 
 ---
 
@@ -795,15 +828,22 @@ These are deliberate deferrals, not to-dos for v2. `[ROADMAP.md]`
 | R-12 | Revisit AI validator strictness | only if false-rejections prove frequent; contract may not weaken (G7) | D-070 |
 | R-13 | Per-lane provider priority editing | only on demonstrated need; no user-editable priority in v2 | D-072 |
 | R-14 | **FD accrued-interest valuation** (first post-v2 feature) | plan file **must** cover day-count conventions, compounding, maturity, and provenance labelling | D-073 |
+| R-15 | **User-configurable review thresholds** ✎ | the v2 defaults (§2.9) become user-editable; each still a named constant with a rationale | D-084 |
+
+**The v2.1 "accounting precision" theme (D-088).** Three of the parked items —
+**R-6 (specific-lot cost basis)**, **R-8 (historical FX series)**, and **R-14 (FD
+accrued-interest valuation)** — are now bundled as the first coherent post-v2
+milestone, "accounting precision". They are grouped for sequencing only; each
+still needs its own plan file before it is built.
 
 **Recorded but not on the ROADMAP:** a future **SaaS/PaaS** (multi-user, hosted)
 layer is noted as a design constraint — v2 must not preclude it — but is a
 separate proprietary layer, not a parked v2 item. `[D-001]`
-- **In practice:** R-14 (FD interest accrual) is the item most likely to matter
-  to you soon; note the guardrail that its plan file must nail day-count and
-  compounding before any number is calculated. If your priorities differ, say
-  which parked item should come first.
-- `[ ] Approve  [ ] Challenge: ______`
+- **In practice:** the v2.1 theme gives the FD-accrual, historical-FX, and
+  specific-lot items you cared about a clear home and running order — the first
+  thing built after v2 ships.
+- **→ Resolved (D-088):** ROADMAP restructured into the v2.1 theme; R-15 added
+  for user-configurable thresholds. `[x] Approved with change`
 
 ---
 
@@ -836,17 +876,20 @@ along that chain.
 
 Each takes about two minutes and needs nothing but a text viewer.
 
-**Spot-check 1 — the Review thresholds are the *real* code values.**
+**Spot-check 1 — the Review thresholds trace honestly, including your two
+overrides.**
 1. Open `docs/specs/PRODUCT-SPEC.md` and scroll to **§5 "Review signal
-   thresholds"** (around lines 134–154).
-2. Look at the paragraph just under the table (about line 146–153). It states the
-   values were **reconciled verbatim** against `app/services/review.py:25-30` and
-   lists each: `_LIQUID_THIN_PCT = 15.0`, `_GOAL_SOON_DAYS = 90`,
-   `_OBLIGATION_SOON_DAYS = 30`, `_INSURANCE_SOON_DAYS = 30`,
-   `_RUNWAY_LOW_MONTHS = 6`, `_CORP_ACTION_RECENT_DAYS = 45`.
-3. **What you should see:** the same six numbers in the table above them, and a
-   note that *two names* (not values) were corrected. If the table and the
-   citation ever disagree, that's a finding — they should match exactly.
+   thresholds"**.
+2. Read the paragraph headed **"Value provenance (honest audit trail)"** just
+   under the table. It lists the legacy code values (`_RUNWAY_LOW_MONTHS = 6`,
+   `_GOAL_SOON_DAYS = 90`, etc.) and then states that **D-084 deliberately set two
+   of them away from the code**: runway to **3** and goal to **180**.
+3. **What you should see:** in the table above, `_RUNWAY_LOW_MONTHS = 3` and
+   `_GOAL_SOON_DAYS = 180` (each tagged `(D-084)`), while every *other* value
+   still matches the legacy code, and `_OTHER_CLASS_OVERUSE_PCT = 10` is tagged
+   `(D-087)`. This is the model working as intended: the two owner-set values
+   *should* differ from the code, and the spec says so out loud. A disagreement
+   that is **not** explained by a D-084/D-087 tag would be the finding.
 
 **Spot-check 2 — the currency list is a real union of three legacy lists.**
 1. Open `docs/specs/MASTER-DATA.md` and scroll to **§3 "Currency master"**
@@ -901,15 +944,17 @@ guide is only your reading lens.
    fonts keep everything shippable meanwhile.
 
 **What happens next:**
-1. You mark **Approve / Challenge** on each item above (the ATTENTION shortlist
-   first).
-2. Challenges are folded back into the specifications (and, where relevant,
-   `docs/audit/DECISIONS.md`).
-3. The **kitchen-sink review** ratifies the PROPOSED design tokens and the two
-   authored vocabularies.
-4. **Backend copy-in** — the existing v1 code enters this repository as its own
+1. **Round 1 is complete.** Your challenges from the first read are resolved as
+   **Batch 12 (D-081–D-088)** in `docs/audit/DECISIONS.md` and folded into the
+   specs; each affected item above carries a **→ Resolved** line. Any further
+   challenge you mark starts a round 2, folded back the same way.
+2. The **kitchen-sink review** ratifies the still-PROPOSED design tokens and the
+   authored vocabularies (the `etf`/`reit` values now carry D-085 classification
+   guidance; the sector seed was affirmed).
+3. **Backend copy-in** — the existing v1 code enters this repository as its own
    milestone, and every *extracted* value here is re-verified against it (the
-   `file:line` citations already point at the exact lines to check).
+   `file:line` citations already point at the exact lines to check). Note the two
+   D-084 review defaults are owner-set and *expected* to differ from the code.
 
 **Overall sign-off:**
 

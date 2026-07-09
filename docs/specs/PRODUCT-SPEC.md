@@ -95,7 +95,7 @@ Each rule below was **deliberately decided** and is protected: it may not be
 | **Contributions don't reduce runway** | A contribution builds wealth; it is shown as monthly-equivalent and **never subtracted from cash runway**. | D-057 | Cash flow; Net worth (runway) |
 | **'once' obligations excluded from burn** | One-off obligations are lumpy and **excluded from recurring net burn** (runway). | D-057 | Cash flow; Net worth (runway) |
 | **Honest-NULL trade-date FX + excluded-events count** | Trade-date FX is captured only for same-day trades; backdated trades are honestly `None`, and the trade-date-FX realised total shows an **excluded-events count**. | D-020, D-076 | Reports |
-| **Insurance cash-value exclusion lines** | Insurance cash value is **excluded from Net worth**, stated on Insurance and as a labelled line on Net worth. | D-039 | Insurance; Net worth |
+| **Insurance cash-value exclusion lines** | Insurance cash value is **excluded from the headline Net worth total**, shown on Net worth as a **labelled *valued* line** ("Insurance cash value (excluded): «amount» — see Insurance") and stated on Insurance. | D-039, D-081 | Insurance; Net worth |
 | **Visible AI-fallback signal** | When AI output fails grounding checks: "AI answer didn't pass grounding checks — showing facts directly." | D-070 | Ask panel; any AI surface |
 | **Normative validation contract** | The AI validation contract may improve but **never weaken** (Product Guarantee 7). | D-071 | (SECURITY-BASELINE.md) |
 
@@ -120,6 +120,7 @@ These are enforced in the calculation engine and must be preserved:
 | **Gross-asset denominators** | Allocation weight, concentration, and drift use **gross assets** (positive holdings) as the denominator so a mortgage cannot distort weights. |
 | **Residual reconciliation** | Attribution carries an explicit **residual** so `Σ contributions + residual == headline` by construction. |
 | **Costs never blended** | Recorded fees (a currency fact) and estimated Ongoing cost (a forward %) are shown as **two blocks, never combined** into one total. |
+| **No annualized return below minimum history** (D-086) | Below a **named minimum-history constant**, performance shows **cumulative (non-annualized) return only** — no annualized/CAGR-style figure and no 1Y trailing return/volatility. **XIRR appears from the minimum-history threshold upward**; below it, XIRR is "Not applicable" (a case of "None, not fabricated"). |
 
 ---
 
@@ -128,30 +129,43 @@ These are enforced in the calculation engine and must be preserved:
 The Review feed aggregates signals into "what needs a look" items, each wrapped
 in its own try/except so one failing signal never breaks the feed (D-059). Every
 threshold is a **named constant with a one-line rationale** (D-059). Values are
-those recorded in 04-CALCULATION-ENGINE §13/§10/§11; the canonical home for this
-table is the Review page spec.
+those recorded in 04-CALCULATION-ENGINE §13/§10/§11, **except the two owner-set
+defaults in D-084** (`_RUNWAY_LOW_MONTHS = 3`, `_GOAL_SOON_DAYS = 180`) and the
+signal added in D-087 (`_OTHER_CLASS_OVERUSE_PCT`). The canonical home for this
+table is the Review page spec. **ROADMAP R-15** makes these thresholds
+user-configurable (D-084).
 
 | Constant | Value | Signal | Rationale (one line) |
 |----------|-------|--------|----------------------|
 | `_LIQUID_THIN_PCT` | 15 (%) | Liquidity thin when `liquid_pct` < 15% | Below ~1/7 of gross assets in immediate/short rungs is too little cushion to meet surprises. |
-| `_RUNWAY_LOW_MONTHS` | 6 | Runway low when `runway_months` < 6 | Six months is the common emergency-fund floor; less warrants a look. |
-| `_GOAL_SOON_DAYS` | 90 | Goal target date within 90 days | A quarter's notice is enough to act on an approaching goal. |
+| `_RUNWAY_LOW_MONTHS` | **3** (D-084) | Runway low when `runway_months` < 3 | Owner-set floor (D-084): below three months' recurring net burn warrants a look. |
+| `_GOAL_SOON_DAYS` | **180** (D-084) | Goal target date within 180 days | Owner-set (D-084): a half-year's notice to act on an approaching goal. |
 | `_OBLIGATION_SOON_DAYS` | 30 | Obligation due within 30 days | One month's notice on an upcoming cash obligation. |
 | `_INSURANCE_SOON_DAYS` | 30 | Insurance renewal within 30 days (or overdue) | One month to renew before a policy lapses; overdue always flags. |
 | `_CORP_ACTION_RECENT_DAYS` | 45 | Split/bonus within 45 days → "verify" | Recent corporate actions warrant a manual verification window. |
 | `low` confidence band | < 50 | Low-confidence holding count | Below the medium band (≥50); poorly-sourced values deserve attention. |
 | `LEDGERFRAME_STALE_AFTER_SECONDS` | 900 (default) | Stale holding count | Quotes older than 15 min are flagged stale (EOD/NAV use a longer 30h threshold). |
+| `_OTHER_CLASS_OVERUSE_PCT` | 10 (%) (D-087) | `other`-classed holdings exceed ~10% of gross assets | `other` is the honest escape valve (D-087); over-use signals holdings that should be reclassified. |
 | Policy band / concentration | per-policy | Out-of-band buckets; positions over `max_position_pct` | Uses the user's own policy bands and optional concentration limit — no fixed number. |
 
-All names and values above are **reconciled verbatim** against
-`app/services/review.py:25-30` (legacy v1 source, read-only): `_LIQUID_THIN_PCT
-= 15.0` (:25), `_GOAL_SOON_DAYS = 90` (:26), `_OBLIGATION_SOON_DAYS = 30` (:27),
-`_INSURANCE_SOON_DAYS = 30` (:28), `_RUNWAY_LOW_MONTHS = 6` (:29),
-`_CORP_ACTION_RECENT_DAYS = 45` (:30). Every value matched the audit; two of the
-three previously-proposed names were corrected to the real constants
-(`_INSURANCE_SOON_DAYS`, `_CORP_ACTION_RECENT_DAYS`). Confidence band `<50`
-(`confidence.py`) and `LEDGERFRAME_STALE_AFTER_SECONDS` (900) are per
-04-CALCULATION-ENGINE §10/§11.
+The constant **names** are **reconciled verbatim** against
+`app/services/review.py:25-30` (legacy v1 source, read-only): `_LIQUID_THIN_PCT`
+(:25), `_GOAL_SOON_DAYS` (:26), `_OBLIGATION_SOON_DAYS` (:27),
+`_INSURANCE_SOON_DAYS` (:28), `_RUNWAY_LOW_MONTHS` (:29),
+`_CORP_ACTION_RECENT_DAYS` (:30); two previously-proposed names were corrected to
+the real constants (`_INSURANCE_SOON_DAYS`, `_CORP_ACTION_RECENT_DAYS`).
+
+**Value provenance (honest audit trail):** the legacy code values are
+`_LIQUID_THIN_PCT = 15.0`, `_GOAL_SOON_DAYS = 90`, `_OBLIGATION_SOON_DAYS = 30`,
+`_INSURANCE_SOON_DAYS = 30`, `_RUNWAY_LOW_MONTHS = 6`, `_CORP_ACTION_RECENT_DAYS
+= 45`. In **D-084 the owner set two defaults away from the code**:
+`_RUNWAY_LOW_MONTHS = 3` (was 6) and `_GOAL_SOON_DAYS = 180` (was 90). These two
+are **owner-set product defaults, not code-reconciled values** — the divergence
+is deliberate and recorded here so the table and the legacy source can honestly
+disagree on exactly these two. All other values still match the code.
+`_OTHER_CLASS_OVERUSE_PCT = 10` is added by D-087 (no legacy equivalent).
+Confidence band `<50` (`confidence.py`) and `LEDGERFRAME_STALE_AFTER_SECONDS`
+(900) are per 04-CALCULATION-ENGINE §10/§11.
 
 ---
 
@@ -212,12 +226,18 @@ D-069. Full Settings layout is in INFORMATION-ARCHITECTURE.md §5.)
 `docs/audit/04-CALCULATION-ENGINE.md`, and `docs/audit/DECISIONS.md` throughout.
 Decision IDs applied: D-001, D-002, D-004, D-010, D-016, D-020, D-030, D-039,
 D-045, D-051, D-055, D-057, D-059, D-063, D-065 (P-7), D-066, D-069, D-070,
-D-071, D-075, D-076, D-077, D-080, plus the Product Guarantees block (D-077 +
-accumulated) verbatim. §5 Review thresholds reconciled against the legacy v1
-source `app/services/review.py:25-30` (read-only) in the DEF backfill.
+D-071, D-075, D-076, D-077, D-080, plus **Batch 12: D-081 (insurance valued
+line, amends D-039, §4a), D-084 (owner-set review defaults, §5), D-086 (no
+annualized return below minimum history, §4c), D-087 (`other` over-use signal,
+§5)**, plus the Product Guarantees block (D-077 + accumulated) verbatim. §5
+Review threshold **names** are reconciled against the legacy v1 source
+`app/services/review.py:25-30` (read-only); two **values** (`_RUNWAY_LOW_MONTHS`,
+`_GOAL_SOON_DAYS`) are owner-set overrides per D-084.
 
 ## Needs decision
 
-- (none) — the Review threshold constant names (DEF-7) are reconciled against
-  `app/services/review.py`; all values matched the audit and two names were
-  corrected (§5).
+- (none) — the Review threshold constant **names** (DEF-7) are reconciled against
+  `app/services/review.py`; **values** now include two owner-set overrides
+  (`_RUNWAY_LOW_MONTHS = 3`, `_GOAL_SOON_DAYS = 180`, D-084) that deliberately
+  diverge from the code, plus the `_OTHER_CLASS_OVERUSE_PCT = 10` signal (D-087).
+  The divergence is recorded in §5 (Batch 12).

@@ -1,7 +1,8 @@
 # DECISIONS.md — LedgerFrame v2 Product Decisions
 
-Status: **COMPLETE** — 11 batches, 80 decisions (D-001–D-080). All linkages closed
-(L-1 → D-056, L-2 → D-076).
+Status: **COMPLETE** — 12 batches, 88 decisions (D-001–D-088). All linkages closed
+(L-1 → D-056, L-2 → D-076). Batch 12 (D-081–D-088) resolves the owner's
+review-challenge round recorded in `docs/plans/REVIEW-GUIDE.md`.
 Source audits: OPEN-QUESTIONS.md, 01–09 audit docs. This file is the authoritative
 input for authoring MASTER-DATA.md, GLOSSARY.md, INFORMATION-ARCHITECTURE.md,
 SECURITY-BASELINE.md, ROADMAP.md, and the ADRs named below. Claude Code acts on
@@ -421,6 +422,88 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
 
 ---
 
+## Batch 12 — Review-challenge resolutions (D-081–D-088)
+
+Resolutions of the owner's review challenges recorded in
+`docs/plans/REVIEW-GUIDE.md` (ATTENTION items A1–A11 and body §2.4/§2.9/§3.3/§4.1).
+Each amends the spec(s) noted; Claude Code applies them with zero interpretation.
+
+- **D-081 — Insurance cash value is a visible *valued* line on Net worth**
+  (REVIEW-GUIDE A7/H7). **Amends D-039.** The Net worth page shows insurance
+  cash value as a labelled line with its **actual value**, still **excluded from
+  the headline Net worth total**. The prior "not counted" copy becomes a valued,
+  excluded line — "Insurance cash value (excluded): «amount» — see Insurance."
+  Exclusion from the headline and the on-Insurance statement are unchanged;
+  opt-in *inclusion* stays parked (R-9). Specs: GLOSSARY, INFORMATION-ARCHITECTURE
+  (Net worth Owns), PRODUCT-SPEC §4a.
+
+- **D-082 — Non-equity `sector=null` shows an explicit bucket** (A3). The
+  three-null migration (Crypto / Index-ETF / Commodities → `sector=null`, D-009)
+  **stands**; `sector` stays null in data (no forced merge). Sector views
+  (allocation-by-sector and sector rollups) **display an explicit
+  "Not sector-classified (non-equity)" bucket** rather than dropping null rows.
+  Specs: MASTER-DATA §6, GLOSSARY (bucket label), INFORMATION-ARCHITECTURE
+  (Portfolio allocation).
+
+- **D-083 — Region derivation expanded to six buckets** (A10). The derived
+  `region` vocabulary becomes **India / Singapore / US / Europe / APAC / Other**
+  (was India / Singapore / US / Global). Region stays **derived from
+  `listing_country`, never stored** (D-007 unchanged in that respect). A full
+  membership table is authored in MASTER-DATA §4; any `listing_country` not
+  listed falls to **Other** (catch-all). These six are the complete `region`
+  policy-dimension bucket set. Specs: MASTER-DATA §4, GLOSSARY (Region).
+
+- **D-084 — Review threshold defaults set by the owner** (A5/§2.9). Defaults are
+  the audited values **except** `_RUNWAY_LOW_MONTHS = 3` (was 6) and
+  `_GOAL_SOON_DAYS = 180` (was 90). All other constants keep their audited
+  values. These two now **deliberately diverge from the legacy `review.py`
+  values** — they are owner-set product defaults, not code-reconciled numbers;
+  the divergence is intended and recorded so the audit trail stays honest.
+  **ROADMAP: user-configurable review thresholds** (new R-15). Specs:
+  PRODUCT-SPEC §5, INFORMATION-ARCHITECTURE (Review), REVIEW-GUIDE §2.9.
+
+- **D-085 — Instrument classification guidance** (A1). Resolves etf/reit:
+  **`asset_class` describes economic exposure; `asset_subclass` describes the
+  wrapper.** A listed REIT may be **`asset_class = property` with
+  `asset_subclass = reit`** (property exposure, listed-equity wrapper); likewise
+  `etf`/`mutual_fund` are wrappers over whatever exposure the class states. The
+  6-value subclass vocab (incl. PROPOSED `etf`/`reit`) **stands**; this guidance
+  governs assignment. Specs: MASTER-DATA §2, GLOSSARY (Instrument).
+
+- **D-086 — No annualized returns below a minimum-history threshold** (§2.4).
+  Below a **named minimum-history constant**, performance surfaces show
+  **cumulative (non-annualized) return only**; **no annualized figure**
+  (annualized/CAGR-style return, 1Y trailing return/volatility) is displayed
+  below the threshold. **XIRR appears from the minimum-history threshold
+  upward**; below it XIRR stays "Not applicable" (extends the honest-NULL "None,
+  not fabricated" invariant). The threshold is a named constant defined in the
+  calculation engine (like the D-059 constants), not a value fabricated here.
+  Specs: GLOSSARY (XIRR, Total return, 1-year return), PRODUCT-SPEC §4c,
+  REVIEW-GUIDE §2.4.
+
+- **D-087 — `other` retained as the honest escape valve + over-use signal**
+  (A1/§4.1). `other` stays in the fixed vocabularies (asset_class, account kind,
+  insurance policy_type, estate category, …) as the honest escape valve — never
+  force a wrong specific value. **Adds a Review signal:
+  `_OTHER_CLASS_OVERUSE_PCT = 10` (%)** — fires when `other`-classed holdings
+  exceed ~10% of gross assets, prompting proper reclassification; wrapped in its
+  own try/except like every Review signal (D-059). Specs: MASTER-DATA §2,
+  PRODUCT-SPEC §5, INFORMATION-ARCHITECTURE (Review).
+
+- **D-088 — ROADMAP restructured into a v2.1 "accounting precision" theme**
+  (A9/R-8). **`spec` specific-lot cost basis (R-6), historical FX series (R-8),
+  and FD accrued-interest valuation (R-14)** are bundled as the **v2.1
+  "accounting precision"** theme — the first coherent post-v2 milestone, each
+  still gated on its own plan file (R-14's day-count / compounding / maturity /
+  provenance gate unchanged). Adds **R-15 user-configurable review thresholds**
+  (from D-084). Specs: ROADMAP.md, REVIEW-GUIDE §6.
+
+**Affirmed unchanged (no decision needed):** A2 (the 11 GICS sectors seed) and
+REVIEW-GUIDE §3.3 (the v1 removals) were reviewed and accepted as written;
+clarifying notes recorded in the guide.
+
+---
+
 ## ROADMAP.md register (accumulated breadcrumbs — not v2 work)
 
 | # | Item | Source |
@@ -439,6 +522,13 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
 | R-12 | Revisit AI validator strictness only if fallback frequency proves high | D-070 |
 | R-13 | Per-lane provider priority editing, only on demonstrated need | D-072 |
 | R-14 | **FD accrued-interest valuation — first post-v2 feature; plan file must cover day-count conventions, compounding variants, maturity handling, and provenance labelling of calculated values** | D-073 |
+| R-15 | User-configurable review thresholds (defaults set in D-084) | D-084 |
+
+**v2.1 "accounting precision" theme (D-088).** R-6 (`spec` specific-lot cost
+basis), R-8 (historical FX series), and R-14 (FD accrued-interest valuation) are
+grouped as the v2.1 "accounting precision" milestone — the first coherent
+post-v2 theme; each item keeps its own plan-file gate. The authoritative
+grouping lives in `ROADMAP.md`.
 
 Also recorded (ADR, not ROADMAP): SaaS/PaaS layer is a future proprietary
 layer; v2 must not preclude it (D-001).
