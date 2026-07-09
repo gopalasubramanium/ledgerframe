@@ -266,6 +266,16 @@ Scope:
   a treemap-label distortion found in review (labels moved to a crisp HTML
   overlay). 23 tests (incl. a full-sink render crash-test); check + build green;
   drift clean.
+- **RATIFICATION — DONE (2026-07-10, approved with 3 amendments).** Owner
+  ratified §2 and the full component inventory at the kitchen sink. Applied:
+  (1) accent cobalt→slate-navy (`#24476f`/`#6f9fd4`); (2) light gain desaturated
+  ~15% (`#15803d`→`#1e763e`, dark unchanged); (3) treemap flat fills → a
+  continuous **magnitude scale** (new `--treemap-base` + data-driven
+  `color-mix` intensity, floor 15%→full at ≥5%), with a scale legend added to
+  the kitchen sink. All WCAG AA re-verified both themes; changes done through the
+  token layer (drift green). The 5-tone segment palette and `ui/Select` ratified
+  as implemented. DESIGN-SYSTEM §2 PROPOSED markers flipped to ratified
+  (amended values dated). Record: `docs/plans/RATIFICATION.md`.
 
 ## Needs decision (surfaced in Phase C — non-blocking, for kitchen-sink review)
 

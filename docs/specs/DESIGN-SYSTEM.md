@@ -9,11 +9,25 @@ INFORMATION-ARCHITECTURE.md.
 
 **Ratification.** For this file the token *values* (hex palette, spacing scale,
 type weights/line-heights, font choices) are **authored proposals**, not
-extractions. Every proposed value is marked **PROPOSED — ratify at kitchen-sink
-review**; ratification happens when the component library is built and reviewed
-visually. Until then, proposed values are the working values. Values taken
-verbatim from the brief (e.g. the 12/13/14/16/20/28 type scale) are marked
-**BRIEF** and are not open for re-proposal.
+extractions. Values taken verbatim from the brief (e.g. the 12/13/14/16/20/28
+type scale) are marked **BRIEF** and are not open for re-proposal.
+
+> **RATIFIED 2026-07-10 (kitchen-sink review).** The component library was built
+> and reviewed visually at `/kitchen-sink`; the owner ratified §2 **with three
+> amendments** (below). Every value previously marked *PROPOSED* in §2 is now
+> **ratified as of 2026-07-10** and the PROPOSED markers are superseded. The
+> three amended values carry **ratified (amended at kitchen-sink review)
+> 2026-07-10**:
+>
+> 1. **Accent** — cobalt → deeper slate-tinged navy (§2.1).
+> 2. **Gain, light theme only** — desaturated ~15% to remove neon bleed on light
+>    backgrounds; dark unchanged (§2.1).
+> 3. **Treemap fill intensity** — a continuous magnitude scale via the token
+>    layer (`--treemap-base` + a data-driven intensity), replacing flat
+>    full-saturation fills (§2.1 / §4).
+>
+> Also ratified as implemented: the 5-tone categorical segment palette (§4) and
+> the generic `ui/Select` primitive (§5). Full record: `docs/plans/RATIFICATION.md`.
 
 ---
 
@@ -50,7 +64,7 @@ private-bank client portals) — not a startup dashboard, not default shadcn.
 Tokens are semantic (name = meaning); each theme supplies the value. Consume via
 CSS custom properties; never hard-code a raw hex in a component.
 
-### 2.1 Colour — light & dark (PROPOSED — ratify at kitchen-sink review)
+### 2.1 Colour — light & dark (ratified 2026-07-10)
 
 Near-monochrome slate ramp + one accent + strict semantic gain/loss/attention.
 `system` theme resolves to light or dark via `prefers-color-scheme`; an explicit
@@ -67,28 +81,36 @@ WCAG AA at ratification (§7).
 | `--text-primary` | `#0f172a` | `#f1f5f9` | Figures, headings, body |
 | `--text-secondary` | `#475569` | `#94a3b8` | Labels, captions, secondary cells |
 | `--text-tertiary` | `#94a3b8` | `#64748b` | Placeholder, disabled, footnotes |
-| `--accent` | `#2563eb` | `#60a5fa` | Interactive/selected state, links, primary action |
+| `--accent` | `#24476f` | `#6f9fd4` | Interactive/selected state, links, primary action. **Ratified (amended) 2026-07-10** — cobalt→slate-navy, HSL(212,51%,29%)/(211,54%,63%); AA 9.5:1 (light) / 6.45:1 (dark) |
 | `--accent-contrast` | `#ffffff` | `#0f172a` | Text/icon on an accent fill |
-| `--gain` | `#15803d` | `#4ade80` | Positive change **only** |
+| `--gain` | `#1e763e` | `#4ade80` | Positive change **only**. **Ratified (amended) 2026-07-10** — light desaturated ~15% (HSL 142,72→59%,29%), AA 5.65:1; dark unchanged |
 | `--loss` | `#b91c1c` | `#f87171` | Negative change **only** |
 | `--attention` | `#b45309` | `#fbbf24` | Staleness / attention **only** (amber) |
-| `--focus-ring` | `#2563eb` | `#60a5fa` | Keyboard focus outline |
+| `--focus-ring` | `#24476f` | `#6f9fd4` | Keyboard focus outline (tracks `--accent`) |
+| `--treemap-base` | `#f1f5f9` | `#1e293b` | **Ratified (amended) 2026-07-10** — neutral mix endpoint for the treemap magnitude scale (§4) |
 
 Rules: `--gain`/`--loss` appear only on gain/loss figures and their glyphs;
 `--attention` only on StalenessChip / attention markers; `--accent` is used
 sparingly (selection, primary action, links) — it is not a brand wash.
+
+**Treemap magnitude scale (ratified amended 2026-07-10).** Heatmap tiles encode
+day-move **magnitude** as fill intensity: the tile's `--gain`/`--loss` is blended
+toward `--treemap-base` by a data-driven ratio (`color-mix`) — a soft muted tint
+near 0% reaching full intensity at **≥5%** (floor 15%, cap 5%). Direction stays
+semantic (gain green / loss red); intensity is the only added encoding, and all
+colour still lives in the token layer (the component supplies only the ratio).
 
 ### 2.2 Typography
 
 | Aspect | Value | Status |
 |--------|-------|--------|
 | Type scale (px) | **12 / 13 / 14 / 16 / 20 / 28** | BRIEF |
-| UI family | Quality grotesque with tabular figures — **proposed:** Inter (self-hosted) with fallback `system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif` | PROPOSED |
-| Report-header family (optional) | A serif for report headers — **proposed:** Source Serif 4 (self-hosted) with fallback `Georgia, "Times New Roman", serif` | PROPOSED |
-| Weights | 400 regular · 500 medium · 600 semibold | PROPOSED |
+| UI family | Quality grotesque with tabular figures — **proposed:** Inter (self-hosted) with fallback `system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif` | ratified 2026-07-10 |
+| Report-header family (optional) | A serif for report headers — **proposed:** Source Serif 4 (self-hosted) with fallback `Georgia, "Times New Roman", serif` | ratified 2026-07-10 |
+| Weights | 400 regular · 500 medium · 600 semibold | ratified 2026-07-10 |
 | Numerals | **tabular** (`font-feature-settings: "tnum" 1;`) on every figure | BRIEF |
 
-Type-scale roles (PROPOSED — ratify at kitchen-sink review):
+Type-scale roles (ratified 2026-07-10):
 
 | Size | Role | Line-height | Weight |
 |------|------|-------------|--------|
@@ -103,7 +125,7 @@ Adding a **self-hosted webfont is a bundle change**; if it introduces a package
 dependency it needs an ADR (CLAUDE.md). The fallback stacks above keep the
 system shippable without one.
 
-### 2.3 Spacing scale — 4px grid (PROPOSED — ratify at kitchen-sink review)
+### 2.3 Spacing scale — 4px grid (ratified 2026-07-10)
 
 | Token | px |
 |-------|----|
@@ -120,7 +142,7 @@ system shippable without one.
 | `--space-10` | 48 |
 | `--space-12` | 64 |
 
-### 2.4 Radius, border, elevation (PROPOSED — ratify at kitchen-sink review)
+### 2.4 Radius, border, elevation (ratified 2026-07-10)
 
 Minimal borders and shadows (principle 3). `--radius-sm` 4px · `--radius-md` 6px
 · `--radius-lg` 10px. Borders are 1px `--border` (thin rules). Elevation is
@@ -136,17 +158,19 @@ and cell padding (primarily in DataTable) and the wall-kiosk reading distance.
 
 | Density | Table row height | Cell padding (Y) | Status |
 |---------|------------------|------------------|--------|
-| comfortable | 44px | `--space-4` (12) | PROPOSED |
-| compact | 32px | `--space-3` (8) | PROPOSED |
+| comfortable | 44px | `--space-4` (12) | ratified 2026-07-10 |
+| compact | 32px | `--space-3` (8) | ratified 2026-07-10 |
 
-### 2.6 Ratification checklist
+### 2.6 Ratification checklist — COMPLETE (2026-07-10)
 
-Every value marked PROPOSED above is a working value to be **ratified at the
-kitchen-sink review** (component library built + reviewed visually): §2.1 palette
-(both themes), §2.2 font choices + weights + line-heights, §2.3 spacing, §2.4
-radius/border/elevation, §2.5 density metrics. BRIEF-tagged values (type-scale
-sizes, tabular figures, the semantic-colour rules) are fixed and out of scope for
-re-proposal.
+**Ratified at the kitchen-sink review** (component library built + reviewed
+visually at `/kitchen-sink`): §2.1 palette (both themes), §2.2 font choices +
+weights + line-heights, §2.3 spacing, §2.4 radius/border/elevation, §2.5 density
+metrics — all ratified, with the three amendments recorded at the top of §2 and
+in `docs/plans/RATIFICATION.md`. Font families are ratified as the **fallback
+stacks** shipping today; self-hosting Inter / Source Serif 4 remains a future ADR
+(§2.2). BRIEF-tagged values (type-scale sizes, tabular figures, the
+semantic-colour rules) were fixed and out of scope for re-proposal.
 
 ---
 
@@ -285,13 +309,13 @@ it (D-040/D-066). The **first-run checklist** (D-045) replaces PersonaOnboarding
 `docs/audit/01-FEATURE-INVENTORY.md` (chart/component inventory), and
 `docs/audit/DECISIONS.md`. Decision IDs applied: D-005, D-012, D-019, D-022,
 D-033, D-035, D-040, D-045, D-046, D-047, D-049, D-053, D-054, D-066, D-067,
-D-078, plus P-1 and P-5. Concrete token values are **authored proposals** (§2),
-authorized for this file and marked **PROPOSED — ratify at kitchen-sink review**;
-values taken verbatim from the brief are marked **BRIEF**.
+D-078, plus P-1 and P-5. Concrete token values were authored proposals (§2),
+**ratified at the kitchen-sink review 2026-07-10** (with three amendments — see
+the top of §2); values taken verbatim from the brief are marked **BRIEF**.
 
 ## Needs decision
 
-- (none blocking) — token values are proposed working values pending the
-  kitchen-sink ratification (§2.6). The only external dependency is confirming
-  the UI/serif **font choice** (and whether self-hosting it warrants an ADR per
-  CLAUDE.md); the fallback system stacks keep the system shippable meanwhile.
+- (none) — §2 token values are **ratified** (2026-07-10, §2.6). The only residual
+  item is a **future** ADR if/when the UI/serif fonts are self-hosted (a bundle
+  dependency); the ratified fallback system stacks keep the system shippable
+  meanwhile (§2.2). Not blocking.

@@ -90,24 +90,35 @@
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
-.lf-treemap__cell--gain { fill: var(--gain); }
-.lf-treemap__cell--loss { fill: var(--loss); }
-.lf-treemap__cell--flat { fill: var(--surface-raised); }
+/* Continuous magnitude scale (amended 2026-07-10): fill intensity encodes the
+ * day-move size. --fill-intensity (a data-driven %) blends the gain/loss token
+ * toward the neutral --treemap-base — soft muted tint near zero, full at >=5%.
+ * All colour lives in the token layer; the component supplies only the ratio. */
+.lf-treemap__cell--gain {
+  fill: color-mix(in srgb, var(--gain) var(--fill-intensity, 100%), var(--treemap-base));
+}
+.lf-treemap__cell--loss {
+  fill: color-mix(in srgb, var(--loss) var(--fill-intensity, 100%), var(--treemap-base));
+}
+.lf-treemap__cell--flat { fill: var(--treemap-base); }
 .lf-treemap__labels {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
+/* Translucent surface pill keeps labels legible across the full fill range. */
 .lf-treemap__label {
   position: absolute;
   left: var(--tx);
   top: var(--ty);
-  padding: var(--space-2) var(--space-3);
-  color: var(--accent-contrast);
+  margin: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-12);
   line-height: var(--line-12);
   font-weight: var(--weight-semibold);
   font-family: var(--font-ui);
   white-space: nowrap;
 }
-.lf-treemap__label--flat { color: var(--text-primary); }

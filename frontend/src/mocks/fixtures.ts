@@ -212,15 +212,26 @@ export const QUOTES: Quote[] = [
   { symbol: "USDSGD", name: "US Dollar / Singapore Dollar", price: "1.2842", changePct: "-0.05", currency: "SGD", provenance: PROV_FRESH },
 ];
 
-// --- Treemap nodes (Heatmap; squarified — semantic tone only) ------------------
+// --- Treemap nodes (Heatmap; squarified — tone + day-move magnitude) -----------
+// magnitudePct drives fill intensity: soft tints for small moves, full at >=5%.
 export const TREEMAP_NODES: TreemapNode[] = [
-  { label: "VWRA", value: 159278, tone: "gain" },
-  { label: "DBS", value: 114360, tone: "loss" },
-  { label: "BTC", value: 70590, tone: "gain" },
-  { label: "CLR REIT", value: 24390, tone: "flat" },
-  { label: "INFY", value: 9420, tone: "loss" },
-  { label: "Cash", value: 31500, tone: "flat" },
-  { label: "Gold", value: 18200, tone: "gain" },
+  { label: "VWRA", value: 159278, tone: "gain", magnitudePct: 0.4 },
+  { label: "DBS", value: 114360, tone: "loss", magnitudePct: 1.6 },
+  { label: "BTC", value: 70590, tone: "gain", magnitudePct: 2.3 },
+  { label: "CLR REIT", value: 24390, tone: "flat", magnitudePct: 0 },
+  { label: "INFY", value: 9420, tone: "loss", magnitudePct: 0.9 },
+  { label: "Cash", value: 31500, tone: "flat", magnitudePct: 0 },
+  { label: "Gold", value: 18200, tone: "gain", magnitudePct: 5.2 },
+];
+
+// Sample tiles demonstrating the magnitude scale at 0.5% / 2% / 5%+ (both signs).
+export const TREEMAP_SCALE_SAMPLES: TreemapNode[] = [
+  { label: "+0.5%", value: 1, tone: "gain", magnitudePct: 0.5 },
+  { label: "+2%", value: 1, tone: "gain", magnitudePct: 2 },
+  { label: "+5%", value: 1, tone: "gain", magnitudePct: 5 },
+  { label: "−0.5%", value: 1, tone: "loss", magnitudePct: 0.5 },
+  { label: "−2%", value: 1, tone: "loss", magnitudePct: 2 },
+  { label: "−5%", value: 1, tone: "loss", magnitudePct: 5 },
 ];
 
 // --- Price series (Instrument Detail / Portfolio performance) ------------------

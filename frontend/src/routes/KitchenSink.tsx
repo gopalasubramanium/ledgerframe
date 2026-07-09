@@ -39,6 +39,7 @@ import {
   PROV_UNAVAILABLE,
   QUOTES,
   TREEMAP_NODES,
+  TREEMAP_SCALE_SAMPLES,
 } from "../mocks/fixtures";
 import type { Holding, Provenance } from "../mocks/types";
 import {
@@ -314,8 +315,11 @@ export function KitchenSink() {
           <Specimen label="PriceChart · candles + MA + BB + RSI (Instrument Detail)">
             <PriceChart series={PRICE_SERIES} mode="candles" overlays={["MA", "BB", "RSI"]} interval="1M" />
           </Specimen>
-          <Specimen label="Treemap · squarified heatmap">
+          <Specimen label="Treemap · squarified heatmap (fill intensity = day-move magnitude)">
             <Treemap nodes={TREEMAP_NODES} squarified />
+          </Specimen>
+          <Specimen label="Magnitude scale — soft tint near 0%, full intensity at ≥5% (amended 2026-07-10)">
+            <Treemap nodes={TREEMAP_SCALE_SAMPLES} squarified aria-label="Treemap magnitude scale" />
           </Specimen>
         </div>
       </Section>

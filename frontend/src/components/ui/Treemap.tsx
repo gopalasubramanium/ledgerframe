@@ -19,6 +19,16 @@ interface Item { node: TreemapNode; area: number; }
 const W = 100;
 const H = 60;
 
+// Map a day-move magnitude (%) to a fill-intensity percentage: a soft muted
+// tint near zero (FLOOR), reaching full at CAP% and above (amended 2026-07-10).
+const INTENSITY_FLOOR = 15;
+const INTENSITY_CAP_PCT = 5;
+function intensity(magnitudePct: number | undefined): string {
+  if (magnitudePct === undefined) return "100%";
+  const t = Math.min(Math.abs(magnitudePct), INTENSITY_CAP_PCT) / INTENSITY_CAP_PCT;
+  return `${Math.round(INTENSITY_FLOOR + t * (100 - INTENSITY_FLOOR))}%`;
+}
+
 function worst(areas: number[], side: number): number {
   const s = areas.reduce((a, b) => a + b, 0);
   const max = Math.max(...areas);
@@ -105,6 +115,11 @@ export function Treemap({ nodes, "aria-label": ariaLabel }: TreemapProps) {
             y={t.y}
             width={t.w}
             height={t.h}
+            style={
+              t.node.tone === "flat"
+                ? undefined
+                : ({ "--fill-intensity": intensity(t.node.magnitudePct) } as CSSProperties)
+            }
           />
         ))}
       </svg>

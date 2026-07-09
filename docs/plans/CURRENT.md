@@ -241,18 +241,28 @@ ROADMAP.md and DESIGN-BRIEF.md.
 (overview/entity-detail/worklist/settings) and real pages remain deliberately
 out of scope — components only.
 
+- **Design-system RATIFIED (2026-07-10, approved with 3 amendments).** Owner
+  ratified §2 tokens + the full component inventory at the kitchen sink. Applied
+  through the token layer (drift green, AA re-verified both themes): (1) **accent**
+  cobalt→slate-navy (`#24476f` / `#6f9fd4`); (2) **light gain** desaturated ~15%
+  (`#15803d`→`#1e763e`; dark unchanged); (3) **treemap** flat fills → a continuous
+  **magnitude scale** (`--treemap-base` + data-driven `color-mix` intensity; soft
+  tint near 0%, full at ≥5%) with a scale legend on the kitchen sink. The 5-tone
+  segment palette and `ui/Select` ratified as implemented. DESIGN-SYSTEM §2
+  PROPOSED markers flipped to ratified. Record: `docs/plans/RATIFICATION.md`.
+
 ## IN-PROGRESS
 
 - (none)
 
 ## NEXT
 
-1. **Kitchen-sink / ratification review** — the surface now exists: run
-   `cd frontend && npm run dev`, open `/#/kitchen-sink`, and walk
-   `docs/plans/RATIFICATION.md` to ratify the PROPOSED design tokens
-   (DESIGN-SYSTEM §2), resolve the two open interpretations (segment palette;
-   generic Select), and confirm the authored DEF-2/DEF-6 vocabularies
-   (MASTER-DATA §2/§6). Clear the PROPOSED markers for what is approved.
+1. **Kitchen-sink / design-system ratification** — **DONE (2026-07-10)**: §2
+   tokens + components ratified with three amendments (see above /
+   `docs/plans/RATIFICATION.md`). Remaining owner re-verify (optional, at
+   `/#/kitchen-sink`): only the three changed values — accent, light gain,
+   treemap magnitude scale. Still open separately: ratify the authored DEF-2/DEF-6
+   vocabularies (MASTER-DATA §2/§6) — data vocab, not design tokens.
 2. **Feature build (post-freeze)** — per the API-CONTRACT delta table, each
    gated by its own plan file: `/refdata` (D-005), entity CRUD (D-065), holdings
    CSV export (D-050), the Realised P/L / Review / Ongoing-cost renames (D-026/
@@ -269,16 +279,14 @@ All open items are **ratification of authored PROPOSED values** (not blocking):
 - **DEF-6 sector seed (MASTER-DATA §6)** — the 11 GICS sectors were **affirmed at
   review (A2)**; ratify formally at kitchen-sink. The 3 no-map values stay
   `sector=null` and now surface as the D-082 "Not sector-classified" bucket.
-- **Design tokens (DESIGN-SYSTEM §2)** — ratify PROPOSED palette/type/spacing/
-  density; the UI/serif font choice may need an ADR if self-hosting adds a
-  dependency.
+- ~~Design tokens (DESIGN-SYSTEM §2)~~ — **RATIFIED 2026-07-10** (with 3
+  amendments: accent, light gain, treemap magnitude scale). Only residual: a
+  **future** ADR if the UI/serif fonts are ever self-hosted (fallback stacks ship
+  now). See `docs/plans/RATIFICATION.md`.
 - ~~Cash flow route~~ — **resolved**: `/cash-flow` canonical, `/planning`
   redirects (D-022 principle applied to D-056).
-- **Segment/category chart palette (DESIGN-SYSTEM §4)** — §4 mandates "slate ramp
-  + accent" for allocation/category segments but §2.1 defines no explicit
-  categorical palette. Phase C derived 5 tones from existing tokens (accent +
-  slate lightness ramp); ratify or replace at kitchen-sink.
-- **Generic `Select` primitive** — added in Phase C for non-master view-scope
-  selects (D-046 QuoteCardRow source), since §5 names only MasterSelect and §6
-  bans raw `<select>`. Confirm this is the intended home vs. folding into
-  MasterSelect.
+- ~~Segment/category chart palette~~ — **RESOLVED (ratified 2026-07-10)**: the
+  5-tone slate-ramp+accent palette approved as implemented.
+- ~~Generic `Select` primitive~~ — **RESOLVED (ratified 2026-07-10)**: `ui/Select`
+  is the home for non-master view-scope selects; MasterSelect stays bound to
+  MASTER-DATA vocabularies.

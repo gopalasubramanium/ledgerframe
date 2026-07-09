@@ -29,12 +29,18 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-tertiary: #94a3b8;
-  --accent: #2563eb;
+  /* accent: ratified (amended at kitchen-sink review) 2026-07-10 — cobalt →
+   * deeper slate-tinged navy, HSL(212,51%,29%). Links/button 9.5:1 (AA). */
+  --accent: #24476f;
   --accent-contrast: #ffffff;
-  --gain: #15803d;
+  /* gain (light): ratified (amended 2026-07-10) — desaturated ~15%
+   * HSL(142,72→59%,29%) to remove neon bleed on light backgrounds; AA 5.65:1. */
+  --gain: #1e763e;
   --loss: #b91c1c;
   --attention: #b45309;
-  --focus-ring: #2563eb;
+  --focus-ring: #24476f;
+  /* Treemap neutral mix endpoint (magnitude scale, amended 2026-07-10). */
+  --treemap-base: #f1f5f9;
 }
 
 :root[data-theme="dark"] {
@@ -46,12 +52,16 @@
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
-  --accent: #60a5fa;
+  /* accent: ratified (amended 2026-07-10) — slate-navy family, lighter for dark
+   * surfaces, HSL(211,54%,63%). Links/button 6.45:1 (AA). Dark gain unchanged. */
+  --accent: #6f9fd4;
   --accent-contrast: #0f172a;
   --gain: #4ade80;
   --loss: #f87171;
   --attention: #fbbf24;
-  --focus-ring: #60a5fa;
+  --focus-ring: #6f9fd4;
+  /* Treemap neutral mix endpoint (magnitude scale, amended 2026-07-10). */
+  --treemap-base: #1e293b;
 }
 
 /* High contrast (§7, D-078): boost border + secondary/tertiary text contrast.

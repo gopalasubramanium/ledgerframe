@@ -99,6 +99,9 @@ export interface TreemapNode {
   value: number;
   /** Semantic tone for gain/loss shading (never decorative colour). */
   tone: "gain" | "loss" | "flat";
+  /** Day-move magnitude in percent (unsigned); drives fill intensity. When
+   *  absent, the tile renders at full intensity. */
+  magnitudePct?: number;
 }
 
 export interface PricePoint {
