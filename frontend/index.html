@@ -8,18 +8,43 @@
       // Stamp the resolved theme before first paint to avoid a flash.
       // Mirrors src/theme — kept tiny and value-free (no tokens here).
       (function () {
+        var root = document.documentElement;
+        function mq(q) {
+          try {
+            return window.matchMedia(q).matches;
+          } catch (e) {
+            return false;
+          }
+        }
         try {
-          var choice = localStorage.getItem("lf.theme") || "system";
+          var theme = localStorage.getItem("lf.theme") || "system";
           var dark =
-            choice === "dark" ||
-            (choice === "system" &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches);
-          document.documentElement.setAttribute(
-            "data-theme",
-            dark ? "dark" : "light",
+            theme === "dark" ||
+            (theme === "system" && mq("(prefers-color-scheme: dark)"));
+          root.setAttribute("data-theme", dark ? "dark" : "light");
+
+          var density = localStorage.getItem("lf.density") || "comfortable";
+          root.setAttribute("data-density", density);
+
+          var contrast = localStorage.getItem("lf.contrast") || "system";
+          root.setAttribute(
+            "data-contrast",
+            contrast === "high" ||
+              (contrast === "system" && mq("(prefers-contrast: more)"))
+              ? "high"
+              : "normal",
+          );
+
+          var motion = localStorage.getItem("lf.motion") || "system";
+          root.setAttribute(
+            "data-motion",
+            motion === "reduced" ||
+              (motion === "system" && mq("(prefers-reduced-motion: reduce)"))
+              ? "reduced"
+              : "full",
           );
         } catch (e) {
-          document.documentElement.setAttribute("data-theme", "light");
+          root.setAttribute("data-theme", "light");
         }
       })();
     </script>

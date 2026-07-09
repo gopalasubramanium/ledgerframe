@@ -2,19 +2,24 @@ import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { DisplayProvider } from "./theme/DisplayProvider";
 import App from "./App";
 
 afterEach(() => {
   cleanup();
   localStorage.clear();
-  document.documentElement.removeAttribute("data-theme");
+  for (const a of ["data-theme", "data-density", "data-contrast", "data-motion"]) {
+    document.documentElement.removeAttribute(a);
+  }
   vi.restoreAllMocks();
 });
 
 function renderApp() {
   return render(
     <ThemeProvider>
-      <App />
+      <DisplayProvider>
+        <App />
+      </DisplayProvider>
     </ThemeProvider>,
   );
 }
@@ -67,4 +72,19 @@ test("theme cycle advances light → dark → system and stamps data-theme", asy
 
   await user.click(btn);
   expect(btn).toHaveTextContent(/System/);
+});
+
+test("density toggle stamps data-density and persists per-device", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
+  const user = userEvent.setup();
+  renderApp();
+
+  // Default is comfortable.
+  expect(document.documentElement).toHaveAttribute(
+    "data-density",
+    "comfortable",
+  );
+  await user.click(screen.getByRole("button", { name: /toggle density/i }));
+  expect(document.documentElement).toHaveAttribute("data-density", "compact");
+  expect(localStorage.getItem("lf.density")).toBe("compact");
 });

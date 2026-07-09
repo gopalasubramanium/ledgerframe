@@ -1,16 +1,26 @@
 /*
  * Design tokens — the SINGLE source of truth for every colour/size/space.
- * (design-system-build.md · ADR-0002). Components resolve values through these
- * custom properties; the token drift check forbids raw hex/px anywhere else.
+ * (DESIGN-SYSTEM §2 · design-system-build.md Phase B · ADR-0002).
  *
- * PHASE A: a minimal working slice proving theme switching. The full
- * DESIGN-SYSTEM §2 token set lands in Phase B. Every value here is
- * PROPOSED — ratify at kitchen-sink review (DESIGN-SYSTEM §2.6).
+ * Components resolve values through these custom properties; the token drift
+ * check (scripts/check-design-tokens.mjs) forbids raw hex/px anywhere else.
+ *
+ * Every value here is PROPOSED — ratify at kitchen-sink review
+ * (DESIGN-SYSTEM §2.6). BRIEF-tagged values (type-scale sizes, tabular figures)
+ * are fixed and out of scope for re-proposal.
+ *
+ * Axes applied via <html> data-attributes (see theme/ + display/):
+ *   data-theme    = light | dark            (§2.1, D-066)
+ *   data-density  = comfortable | compact   (§2.5, D-045/D-078)
+ *   data-contrast = normal | high           (§7, D-078)
+ *   data-motion   = full | reduced          (§7, D-078)
  */
 
+/* ---------------------------------------------------------------------------
+ * §2.1 Colour — light (default) & dark  [PROPOSED]
+ * ------------------------------------------------------------------------- */
 :root,
 :root[data-theme="light"] {
-  /* Colour — light (DESIGN-SYSTEM §2.1) */
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-raised: #f1f5f9;
@@ -28,7 +38,6 @@
 }
 
 :root[data-theme="dark"] {
-  /* Colour — dark (DESIGN-SYSTEM §2.1) */
   --bg: #020617;
   --surface: #0f172a;
   --surface-raised: #1e293b;
@@ -45,29 +54,128 @@
   --focus-ring: #60a5fa;
 }
 
+/* High contrast (§7, D-078): boost border + secondary/tertiary text contrast.
+ * Resolved per-device to data-contrast="high" (display/ resolves `system` via
+ * prefers-contrast). Primary text/bg already pass AA; these are the weak pairs. */
+:root[data-contrast="high"][data-theme="light"],
+:root[data-contrast="high"]:not([data-theme="dark"]) {
+  --border: #94a3b8;
+  --border-strong: #475569;
+  --text-secondary: #334155;
+  --text-tertiary: #475569;
+}
+:root[data-contrast="high"][data-theme="dark"] {
+  --border: #475569;
+  --border-strong: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+}
+
+/* ---------------------------------------------------------------------------
+ * §2.2 Typography  [type sizes/tabular = BRIEF; families/weights/LH = PROPOSED]
+ * ------------------------------------------------------------------------- */
 :root {
-  /* Spacing — 4px grid (DESIGN-SYSTEM §2.3) */
+  /* Families. No self-hosted webfont package this milestone (would need an ADR,
+   * §2.2 / CLAUDE.md) — the specified system fallback stacks ship. */
+  --font-ui: "Inter", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  /* Type scale 12/13/14/16/20/28 (BRIEF) with role line-heights (PROPOSED). */
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-20: 20px;
+  --font-size-28: 28px;
+
+  --line-12: 16px;
+  --line-13: 18px;
+  --line-14: 20px;
+  --line-16: 24px;
+  --line-20: 28px;
+  --line-28: 34px;
+
+  /* Weights (PROPOSED). */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * §2.3 Spacing — 4px grid  [PROPOSED]
+ * ------------------------------------------------------------------------- */
+:root {
+  --space-0: 0;
+  --space-1: 2px;
   --space-2: 4px;
   --space-3: 8px;
   --space-4: 12px;
   --space-5: 16px;
+  --space-6: 20px;
   --space-7: 24px;
   --space-8: 32px;
+  --space-9: 40px;
+  --space-10: 48px;
+  --space-12: 64px;
+}
 
-  /* Radius + border/focus widths (DESIGN-SYSTEM §2.4 — thin 1px rules) */
+/* ---------------------------------------------------------------------------
+ * §2.4 Radius, border, elevation  [PROPOSED]
+ * ------------------------------------------------------------------------- */
+:root {
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
+
   --border-width: 1px;
   --focus-width: 2px;
   --focus-offset: 2px;
 
-  /* Type (DESIGN-SYSTEM §2.2) */
-  --font-ui: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-size-14: 14px;
-  --font-size-20: 20px;
-  --font-size-28: 28px;
-  --line-14: 20px;
-  --line-20: 28px;
-  --line-28: 34px;
+  /* Restrained elevation: a single soft shadow for popovers/menus only; cards
+   * use a border, not a shadow (principle 3). */
+  --shadow-1: 0 4px 12px rgba(2, 6, 23, 0.12);
+}
+:root[data-theme="dark"] {
+  --shadow-1: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+ * §2.5 Density — comfortable (default) & compact  [PROPOSED]
+ * Per-device (localStorage, D-045/D-078). Scales table row height + cell pad.
+ * ------------------------------------------------------------------------- */
+:root,
+:root[data-density="comfortable"] {
+  --row-height: 44px;
+  --cell-pad-y: var(--space-4);
+  --cell-pad-x: var(--space-5);
+  --control-height: 36px;
+}
+:root[data-density="compact"] {
+  --row-height: 32px;
+  --cell-pad-y: var(--space-3);
+  --cell-pad-x: var(--space-4);
+  --control-height: 30px;
+}
+
+/* ---------------------------------------------------------------------------
+ * §7 Motion  [PROPOSED]  — reduced-motion per-device (D-078) AND the OS pref.
+ * Components read var(--motion-duration); it collapses to 0 when reduced.
+ * ------------------------------------------------------------------------- */
+:root {
+  --motion-fast: 100ms;
+  --motion-base: 160ms;
+  --motion-duration: var(--motion-base);
+}
+:root[data-motion="reduced"] {
+  --motion-fast: 0ms;
+  --motion-base: 0ms;
+  --motion-duration: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-duration: 0ms;
+  }
 }

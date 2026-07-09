@@ -200,11 +200,22 @@ ROADMAP.md and DESIGN-BRIEF.md.
   red on a deliberate violation. `npm run check` + `npm run build` pass. Minimal
   token slice committed; full DESIGN-SYSTEM §2 set is Phase B.
 
+- **Frontend foundation — PHASE B DONE (tokens).** Full DESIGN-SYSTEM §2 token
+  set in `frontend/src/theme/tokens.css`: colour (light/dark) + high-contrast
+  override; type scale 12/13/14/16/20/28 + line-heights/weights + UI/serif
+  fallback stacks (no webfont dependency, ADR-deferred); 4px spacing scale;
+  radius/border/`--shadow-1`; density (comfortable/compact); motion duration
+  collapsing to 0 when reduced. D-078 axes via `DisplayProvider` stamping
+  resolved `data-density`/`data-contrast`/`data-motion` on `<html>`, per-device
+  localStorage, following `prefers-contrast`/`prefers-reduced-motion` on
+  `system`. Tabular figures proven live. All PROPOSED per §2.6. Checks + build
+  green.
+
 ## IN-PROGRESS
 
-- **Frontend foundation — PHASE B (tokens).** Implement DESIGN-SYSTEM §2 as the
-  full token layer (colour/type/spacing/radius/density + reduced-motion +
-  high-contrast, D-078) and prove tabular figures.
+- **Frontend foundation — PHASE C (components).** Build the full DESIGN-SYSTEM §5
+  inventory in `frontend/src/components/ui/` with realistic mock data from the
+  frozen API-CONTRACT schemas; house-SVG charts only (D-053).
 
 ## NEXT
 

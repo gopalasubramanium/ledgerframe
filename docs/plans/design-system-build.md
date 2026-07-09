@@ -222,6 +222,17 @@ Scope:
   violation. Minimal token slice in `src/theme/tokens.css` (full §2 set is Phase
   B). All of `npm run check` (lint+typecheck+tokens+test) and `npm run build`
   pass; dev-server proxy verified end-to-end against the live backend.
-- PHASE B — NOT STARTED
+- **PHASE B — DONE.** Full DESIGN-SYSTEM §2 token set in `src/theme/tokens.css`:
+  §2.1 colour (light/dark) + a **high-contrast** override layer; §2.2 type scale
+  12/13/14/16/20/28 with role line-heights + weights + UI/serif fallback stacks
+  (no webfont package — ADR-deferred); §2.3 full 4px spacing scale; §2.4
+  radius/border/elevation (`--shadow-1`); §2.5 **density** (comfortable/compact)
+  metrics; §7 **motion** duration token collapsing to 0 when reduced. D-078 axes
+  wired via a `DisplayProvider` (density/contrast/motion) that stamps resolved
+  `data-density`/`data-contrast`/`data-motion` on `<html>`, per-device
+  localStorage, following `prefers-contrast`/`prefers-reduced-motion` when set to
+  `system`; flash-free bootstrap extended to all axes. Tabular figures proven
+  with a live decimal-aligned sample column. Every value carries a PROPOSED
+  marker per §2.6. `npm run check` (now 4 tests) + build green; drift clean.
 - PHASE C — NOT STARTED
 - PHASE D — NOT STARTED
