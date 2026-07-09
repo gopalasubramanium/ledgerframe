@@ -122,17 +122,43 @@ ROADMAP.md and DESIGN-BRIEF.md.
   - REVIEW-GUIDE annotated with **→ Resolved** lines throughout; Spot-check 1
     updated for the deliberate D-084 divergence.
 
+- **Backend copy-in milestone — plan** at `docs/plans/backend-copy-in.md`
+  (Phase A copy · Phase B prune · Phase C OpenAPI freeze; acceptance criteria per
+  phase). Migration strategy ADR: `docs/adr/0001-keep-legacy-alembic-chain.md`.
+- **Backend copy-in — PHASE A DONE (faithful copy, tests green).** Copied the v1
+  backend from the read-only legacy source (`~/Documents/github/LedgerFrame`):
+  `app/` (138 py + Alembic tree, 24 migrations, single head `d1e7a4c02f95`),
+  `alembic.ini`, `tests/` (104 files), `pyproject.toml`, `.env.example`,
+  `scripts/` (12 ops scripts), `systemd/` (4 units), Docker configs. Excluded:
+  frontend, build artifacts, real `.env`, DB files, legacy docs/README, D-079
+  transcripts. Env via **uv** (`python3-venv`/pip unavailable under PEP 668):
+  `uv venv .venv` + `uv pip install -e '.[dev]'`.
+  - **Mechanical fixes only** (recorded per CLAUDE.md): (a) authored a minimal v2
+    `README.md` stub — required by `pyproject.toml`'s `readme=` for the editable
+    install (v2's own, not legacy's); (b) extended `.gitignore` (Python/data/
+    venv/caches); (c) regenerated `docs/openapi.json` from the copied app via the
+    copied `scripts/gen_openapi.py` — the inherited `test_openapi_contract.py`
+    reads that committed artifact, which lives in legacy `docs/` (deliberately not
+    copied); regeneration is deterministic and byte-identical to legacy (121
+    paths). No source file altered otherwise.
+  - **Tests: `pytest -q` → 458 passed, 0 failed** (79.8s). Before the openapi.json
+    regeneration: 456 passed, 2 failed (both the missing-artifact case above);
+    after: fully green. No legacy behaviour changed.
+
 ## IN-PROGRESS
 
-- (none)
+- **Backend copy-in — Phase B (prune) / Phase C (OpenAPI freeze)** next, per the
+  plan file.
 
 ## NEXT
 
-1. **Kitchen-sink / ratification review** — ratify the PROPOSED values: the
+1. **Backend copy-in Phase B** — prune D-014..017 tables (+ data-guarded
+   migration on head `d1e7a4c02f95`), D-080 dead code, D-042 `/global` handling.
+2. **Backend copy-in Phase C** — freeze `docs/specs/API-CONTRACT.json` + delta
+   table + drift check.
+3. **Kitchen-sink / ratification review** — ratify the PROPOSED values: the
    design tokens (DESIGN-SYSTEM §2) and the authored DEF-2/DEF-6 vocabularies
    (MASTER-DATA §2/§6).
-2. **App-source milestone** — when the v1 code enters this repo, re-verify the
-   backfilled values against it (cites already point at the exact lines).
 
 ## Needs decision
 

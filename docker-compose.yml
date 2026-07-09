@@ -1,0 +1,65 @@
+# Run LedgerFrame anywhere with Docker:  docker compose up -d
+# Then open http://localhost:8321  (data persists in the named volume).
+services:
+  api:
+    build: .
+    image: ledgerframe:latest
+    container_name: ledgerframe-api
+    ports:
+      # Secure by default: only the host loopback is published. To reach it from other
+      # machines, put it behind an HTTPS reverse proxy (see the commented block below)
+      # rather than publishing 0.0.0.0. To expose deliberately (e.g. a trusted LAN with a
+      # PIN set), change this to "8321:8321" — and set LEDGERFRAME_ALLOW_LAN=true.
+      - "127.0.0.1:8321:8321"
+    environment:
+      # REQUIRED. Generate one: python -c "import secrets;print(secrets.token_urlsafe(48))"
+      # No insecure default: compose refuses to start if this is unset (§1.4/§1.5).
+      LEDGERFRAME_SECRET_KEY: ${LEDGERFRAME_SECRET_KEY:?Set LEDGERFRAME_SECRET_KEY to a strong random value (python -c "import secrets;print(secrets.token_urlsafe(48))")}
+      LEDGERFRAME_DATA_DIR: /data
+      LEDGERFRAME_BASE_CURRENCY: ${LEDGERFRAME_BASE_CURRENCY:-USD}
+      # DEMO by default. To go live: set these (or use Settings → Data source).
+      LEDGERFRAME_MARKET_PROVIDER: ${LEDGERFRAME_MARKET_PROVIDER:-mock}
+      LEDGERFRAME_MARKET_API_KEY: ${LEDGERFRAME_MARKET_API_KEY:-}
+      # If you expose this beyond localhost, set a PIN in Settings.
+      LEDGERFRAME_ALLOW_LAN: ${LEDGERFRAME_ALLOW_LAN:-false}
+    volumes:
+      - ledgerframe-data:/data
+    restart: unless-stopped
+
+  worker:
+    image: ledgerframe:latest
+    container_name: ledgerframe-worker
+    command: ["python", "-m", "app.worker"]
+    environment:
+      LEDGERFRAME_DATA_DIR: /data
+      LEDGERFRAME_MARKET_PROVIDER: ${LEDGERFRAME_MARKET_PROVIDER:-mock}
+      LEDGERFRAME_MARKET_API_KEY: ${LEDGERFRAME_MARKET_API_KEY:-}
+    volumes:
+      - ledgerframe-data:/data
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# --- Optional: HTTPS reverse proxy (uncomment to expose over TLS) ---------------------
+# The API container binds 0.0.0.0 *inside* the Docker network (needed so the proxy can
+# reach it); the host publishing above is the actual exposure control. Terminate TLS here
+# and set a PIN before exposing anything.
+#
+#  proxy:
+#    image: caddy:2
+#    container_name: ledgerframe-proxy
+#    depends_on: [api]
+#    ports:
+#      - "443:443"
+#      - "80:80"
+#    command: caddy reverse-proxy --from https://your.domain --to api:8321
+#    volumes:
+#      - caddy-data:/data
+#    restart: unless-stopped
+#
+# Then change the api service to publish only to the Docker network (drop the host port),
+# and remember: LEDGERFRAME_ALLOW_LAN=true + a strong LEDGERFRAME_SECRET_KEY are required.
+
+volumes:
+  ledgerframe-data:
+  # caddy-data:   # uncomment with the proxy service above

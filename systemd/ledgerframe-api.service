@@ -1,0 +1,44 @@
+# LedgerFrame API service. Placeholders (@REPO_DIR@/@DATA_DIR@/@USER@) are
+# substituted by scripts/install.sh.
+[Unit]
+Description=LedgerFrame API (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+WorkingDirectory=@REPO_DIR@
+Environment=LEDGERFRAME_ENV=production
+Environment=LEDGERFRAME_DATA_DIR=@DATA_DIR@
+EnvironmentFile=-@REPO_DIR@/.env
+ExecStart=@REPO_DIR@/.venv/bin/uvicorn app.main:app --host @API_HOST@ --port @API_PORT@ --workers 1
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=30
+
+# Resource limits (Pi 5).
+MemoryMax=600M
+CPUQuota=180%
+
+# Hardening — read-only system, writable only where needed.
+# ProtectHome=read-only (not true) so the service can read an app installed under
+# a user's home directory; ReadWritePaths re-grants writes to the data dir.
+# NoNewPrivileges is intentionally NOT set here: the Settings page invokes the
+# scoped `sudo ledgerframe-admin` helper, and NoNewPrivileges would block sudo.
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=@DATA_DIR@ @REPO_DIR@
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ledgerframe-api
+
+[Install]
+WantedBy=multi-user.target

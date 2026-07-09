@@ -1,0 +1,143 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Seed realistic DEMO data: accounts, instruments, transactions, watchlists,
+dashboard rotation config. Idempotent — skips if data already exists.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.money import D
+from app.models import (
+    Account,
+    AssetClass,
+    DashboardConfig,
+    DashboardRotationItem,
+    Holding,
+    Instrument,
+    Transaction,
+    TxnType,
+    Watchlist,
+    WatchlistItem,
+)
+from app.providers.market.mock import _CATALOG
+from app.services.portfolio import rebuild_holdings_from_transactions
+
+# (symbol, type, date, qty, price, fees, ccy)
+_DEMO_TXNS = [
+    ("AAPL", "buy", "2023-02-10", 30, 150.0, 1.0, "USD"),
+    ("AAPL", "buy", "2023-08-15", 20, 175.0, 1.0, "USD"),
+    ("AAPL", "sell", "2024-04-01", 15, 190.0, 1.0, "USD"),
+    ("MSFT", "buy", "2023-03-05", 15, 250.0, 1.0, "USD"),
+    ("NVDA", "buy", "2023-06-20", 40, 45.0, 1.0, "USD"),
+    ("VOO", "buy", "2023-01-12", 25, 360.0, 1.0, "USD"),
+    ("D05", "buy", "2023-09-01", 200, 33.0, 5.0, "SGD"),
+    ("RELIANCE", "buy", "2023-11-10", 50, 2400.0, 10.0, "INR"),
+    ("HDFCNIFTY", "buy", "2023-07-01", 500, 200.0, 0.0, "INR"),
+    ("BTC", "buy", "2023-05-01", 0.15, 28000.0, 5.0, "USD"),
+]
+
+_DEMO_PAGES = ["home", "portfolio", "markets", "heatmap", "news"]
+
+
+SEED_FLAG_KEY = "demo_seed_done"
+
+
+async def seed_demo_data(session: AsyncSession) -> bool:
+    """Seed demo data exactly once. A persistent flag prevents re-seeding after the
+    user clears their data (otherwise an empty DB would re-seed on every boot)."""
+    from app.models import Setting
+
+    flag = (await session.execute(select(Setting).where(Setting.key == SEED_FLAG_KEY))).scalars().first()
+    if flag and flag.value == "1":
+        return False
+    existing = (await session.execute(select(func.count()).select_from(Transaction))).scalar()
+    if existing:
+        return False
+
+    brokerage = Account(name="Demo Brokerage", kind="brokerage", currency="USD")
+    sg_account = Account(name="Demo SG CDP", kind="brokerage", currency="SGD")
+    cash = Account(name="Demo Cash", kind="cash", currency="SGD")
+    session.add_all([brokerage, sg_account, cash])
+    await session.flush()
+
+    from app.services.identity import classify_defaults
+
+    instruments: dict[str, Instrument] = {}
+    for sym, info in _CATALOG.items():
+        ac = AssetClass(info["ac"])
+        manual = bool(info.get("manual_price"))  # catalog may flag manual-priced items
+        instr = Instrument(
+            symbol=sym, name=info["name"], asset_class=ac,
+            currency=info["ccy"], sector=info["sec"], country=info["ctry"],
+            market_cap=D(info["base"]) * D(1_000_000), is_manual_price=manual,
+            # Phase 2: classify demo instruments so taxonomy is populated even on a
+            # fresh create_all boot (before the migration backfill runs). Mirrors the
+            # migration's is_manual_price-based rule so seeded + migrated rows agree.
+            **classify_defaults(ac, is_manual_price=manual, currency=info["ccy"]),
+        )
+        instruments[sym] = instr
+        session.add(instr)
+    await session.flush()
+
+    for sym, ttype, date, qty, price, fees, ccy in _DEMO_TXNS:
+        acc = sg_account if ccy == "SGD" else brokerage
+        session.add(Transaction(
+            account_id=acc.id, instrument_id=instruments[sym].id, type=TxnType(ttype),
+            ts=datetime.fromisoformat(date).replace(tzinfo=UTC),
+            quantity=D(qty), price=D(price), fees=D(fees), currency=ccy,
+            amount=D(qty) * D(price),
+        ))
+    await session.flush()
+
+    # Manual / statement-valued assets across the taxonomy: cash, fixed deposit,
+    # a government bond, a retirement account, property, and a mortgage liability.
+    session.add_all([
+        Holding(account_id=cash.id, label="Emergency cash", asset_class=AssetClass.CASH,
+                quantity=D(1), avg_cost=D(25000), manual_value=D(25000), currency="SGD"),
+        Holding(account_id=cash.id, label="6-month fixed deposit", asset_class=AssetClass.FIXED_DEPOSIT,
+                quantity=D(1), avg_cost=D(50000), manual_value=D(50500), currency="SGD"),
+        Holding(account_id=cash.id, label="Singapore Savings Bond (SSB)", asset_class=AssetClass.BOND,
+                quantity=D(1), avg_cost=D(30000), manual_value=D(30450), currency="SGD"),
+        Holding(account_id=cash.id, label="CPF Ordinary Account", asset_class=AssetClass.RETIREMENT,
+                quantity=D(1), avg_cost=D(65000), manual_value=D(65000), currency="SGD"),
+        Holding(account_id=cash.id, label="Home (est.)", asset_class=AssetClass.PROPERTY,
+                quantity=D(1), avg_cost=D(900000), manual_value=D(980000), currency="SGD"),
+        Holding(account_id=cash.id, label="Home mortgage", asset_class=AssetClass.LIABILITY,
+                quantity=D(1), avg_cost=D(420000), manual_value=D(420000), currency="SGD"),
+    ])
+
+    # Link the demo crypto to canonical CoinGecko ids (metadata only — no price
+    # change) so the per-asset crypto detail view is populated in demo mode.
+    from app.models import CoingeckoCoin
+    from app.services.identity import set_identifier
+
+    now = datetime.now(UTC)
+    session.add_all([
+        CoingeckoCoin(id="bitcoin", symbol="btc", name="Bitcoin (DEMO)", market_cap_usd=D("1300000000000"), updated_at=now),
+        CoingeckoCoin(id="ethereum", symbol="eth", name="Ethereum (DEMO)", market_cap_usd=D("410000000000"), updated_at=now),
+    ])
+    await session.flush()
+    await set_identifier(session, instruments["BTC"].id, "coingecko_id", "bitcoin", provider="coingecko", is_primary=True)
+    await set_identifier(session, instruments["ETH"].id, "coingecko_id", "ethereum", provider="coingecko", is_primary=True)
+
+    wl = Watchlist(name="Core Watchlist", sort_order=0)
+    session.add(wl)
+    await session.flush()
+    for i, sym in enumerate(["AAPL", "MSFT", "NVDA", "VOO", "GLD", "BTC", "ETH", "^STI"]):
+        session.add(WatchlistItem(watchlist_id=wl.id, instrument_id=instruments[sym].id, sort_order=i))
+
+    cfg = DashboardConfig(name="default", rotation_seconds=30)
+    session.add(cfg)
+    await session.flush()
+    for i, page in enumerate(_DEMO_PAGES):
+        session.add(DashboardRotationItem(config_id=cfg.id, page=page, sort_order=i))
+
+    await session.flush()
+    await rebuild_holdings_from_transactions(session)
+    session.add(Setting(key=SEED_FLAG_KEY, value="1"))
+    await session.flush()
+    return True

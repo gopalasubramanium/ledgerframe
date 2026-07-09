@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Account / institution view + management (W7)."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db, require_auth
+from app.services.accounts import (
+    ACCOUNT_KINDS,
+    accounts_report,
+    create_account,
+    delete_account,
+    list_accounts,
+    list_entities,
+    update_account,
+)
+
+router = APIRouter()
+
+
+class AccountIn(BaseModel):
+    name: str = Field(max_length=120)
+    institution: str | None = Field(default=None, max_length=120)
+    kind: str = "brokerage"
+    currency: str | None = Field(default=None, max_length=3)
+
+
+@router.get("/accounts")
+async def get_accounts(entity_id: int | None = Query(default=None),
+                       session: AsyncSession = Depends(get_db)) -> dict:
+    """Wealth grouped by account / institution."""
+    return await accounts_report(session, entity_id=entity_id)
+
+
+@router.get("/accounts/list")
+async def get_accounts_list(session: AsyncSession = Depends(get_db)) -> dict:
+    return {"accounts": await list_accounts(session), "kinds": ACCOUNT_KINDS}
+
+
+@router.get("/entities")
+async def get_entities(session: AsyncSession = Depends(get_db)) -> dict:
+    """§4.7 list ownership entities (id · name · kind) — metadata only, for per-entity report
+    sections in the quarterly pack. No valuation or recompute."""
+    return {"entities": await list_entities(session)}
+
+
+@router.post("/accounts", dependencies=[Depends(require_auth)])
+async def add_account(payload: AccountIn, session: AsyncSession = Depends(get_db)) -> dict:
+    res = await create_account(session, payload.model_dump())
+    await session.commit()
+    return {"ok": True, **res}
+
+
+@router.patch("/accounts/{aid}", dependencies=[Depends(require_auth)])
+async def edit_account(aid: int, payload: AccountIn, session: AsyncSession = Depends(get_db)) -> dict:
+    try:
+        res = await update_account(session, aid, payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    await session.commit()
+    return {"ok": True, **res}
+
+
+@router.delete("/accounts/{aid}", dependencies=[Depends(require_auth)])
+async def remove_account(aid: int, session: AsyncSession = Depends(get_db)) -> dict:
+    try:
+        await delete_account(session, aid)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    await session.commit()
+    return {"ok": True}

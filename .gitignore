@@ -1,8 +1,49 @@
+# --- Secrets & local config (NEVER commit) ---
 .env
-__pycache__/
-node_modules/
+.env.*
+!.env.example
+*.key
+*.pem
+*.age
+
+# --- User data / runtime artifacts ---
+data/
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
+*.sqlite3
+backups/
+*.backup
+logs/
+*.log
+imports/*.csv
+test-results/
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+build/
+dist/
+
+# --- Node / frontend (not part of v2 backend copy-in) ---
+node_modules/
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
 # D-079: transcripts and working notes never enter the repo
 *transcript*.txt
 *session*.txt

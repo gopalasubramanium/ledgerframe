@@ -1,0 +1,14 @@
+Scheme Code;ISIN Div Payout/ ISIN Growth;ISIN Div Reinvestment;Scheme Name;Net Asset Value;Date
+
+Open Ended Schemes(Equity Scheme - Large Cap Fund)
+Aditya Birla Sun Life Mutual Fund
+119551;INF209K01YM2;INF209K01YN0;Aditya Birla Sun Life Frontline Equity Fund - Direct Plan - Growth;512.3456;03-Jul-2026
+119552;INF209K01YO8;INF209K01YP5;Aditya Birla Sun Life Frontline Equity Fund - Direct Plan - IDCW;98.7654;03-Jul-2026
+
+HDFC Mutual Fund
+118989;INF179K01WN9;INF179K01WO7;HDFC Index Fund-NIFTY 50 Plan - Direct Plan - Growth;245.1200;03-Jul-2026
+
+Open Ended Schemes(Debt Scheme - Liquid Fund)
+HDFC Mutual Fund
+100048;INF179K01XY4;INF179K01XZ1;HDFC Liquid Fund - Direct Plan - Growth;4680.9900;03-Jul-2026
+999999;INF000DEFUNCT;INF000DEFUNCT;Some Defunct Scheme - Direct - Growth;N.A.;03-Jul-2026

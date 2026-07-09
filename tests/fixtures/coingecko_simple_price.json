@@ -1,0 +1,5 @@
+{
+  "bitcoin": {"usd": 68000.5, "sgd": 92000.1, "inr": 5680000.0, "usd_market_cap": 1340000000000.0, "last_updated_at": 1751500000},
+  "ethereum": {"usd": 3500.25, "sgd": 4735.0, "inr": 292000.0, "usd_market_cap": 420000000000.0, "last_updated_at": 1751500000},
+  "solana": {"usd": 0, "sgd": 0, "inr": 0, "last_updated_at": 1751500000}
+}

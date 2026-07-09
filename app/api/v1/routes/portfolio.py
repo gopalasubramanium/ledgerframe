@@ -1,0 +1,797 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Portfolio: summary, holdings, transactions, CSV import, net-worth history."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db, require_auth, require_pin
+from app.core.config import get_settings
+from app.core.money import D, money, to_display
+from app.core.provenance import valuation_label
+from app.models import (
+    Account,
+    AssetClass,
+    AuditEvent,
+    Holding,
+    Instrument,
+    NetWorthSnapshot,
+    Transaction,
+    TxnType,
+)
+from app.schemas.common import ValuationMethod
+from app.services import fx
+from app.services.csv_import import (
+    TRANSACTION_TEMPLATE,
+    commit_import,
+    import_transactions_csv,
+    preview_import,
+)
+from app.services.portfolio import (
+    rebuild_holdings_from_transactions,
+    top_movers,
+    value_portfolio,
+)
+
+router = APIRouter()
+
+
+def _hv(h) -> dict:
+    method = getattr(h, "valuation_method", ValuationMethod.MARKET_QUOTE.value)
+    return {
+        "id": h.holding_id, "label": h.label, "name": h.name, "symbol": h.symbol,
+        "asset_class": h.asset_class, "quantity": to_display(h.quantity),
+        "currency": h.native_currency, "price": to_display(h.price),
+        "market_value": to_display(h.market_value_base),
+        "cost_basis": to_display(h.cost_basis_base),
+        "unrealised_pl": to_display(h.unrealised_pl_base),
+        "day_change": to_display(h.day_change_base),
+        "day_change_pct": to_display(h.day_change_pct),
+        "is_stale": h.is_stale, "is_priced": h.is_priced,
+        # Provenance: HOW this value was derived + a concise, honest label.
+        "valuation_method": method,
+        "valuation_label": valuation_label(ValuationMethod(method), is_stale=h.is_stale, price_available=True),
+    }
+
+
+@router.get("/portfolio/summary")
+async def portfolio_summary(entity_id: int | None = Query(default=None),
+                            session: AsyncSession = Depends(get_db)) -> dict:
+    base = get_settings().base_currency
+    val = await value_portfolio(session, base, entity_id=entity_id)  # §4.1
+    gainers, losers = top_movers(val)
+    return {
+        "base_currency": base,
+        "total_value": to_display(val.total_value),
+        "cost_basis": to_display(val.cost_basis),
+        "unrealised_pl": to_display(val.unrealised_pl),
+        "day_change": to_display(val.day_change),
+        "total_return_pct": to_display(val.total_return_pct),
+        "has_stale": val.has_stale,
+        "allocation_by_class": {k: to_display(v) for k, v in val.allocation("asset_class").items()},
+        "allocation_by_currency": {k: to_display(v) for k, v in val.allocation("native_currency").items()},
+        "allocation_by_sector": {k: to_display(v) for k, v in val.sector_allocation().items()},
+        "top_gainers": [_hv(h) for h in gainers],
+        "top_losers": [_hv(h) for h in losers],
+    }
+
+
+@router.get("/portfolio/holdings")
+async def portfolio_holdings(session: AsyncSession = Depends(get_db)) -> dict:
+    base = get_settings().base_currency
+    val = await value_portfolio(session, base)
+    return {"base_currency": base, "holdings": [_hv(h) for h in val.holdings]}
+
+
+@router.get("/portfolio/pricing-health")
+async def pricing_health(session: AsyncSession = Depends(get_db)) -> dict:
+    """Per-holding pricing diagnostics: valuation, method, source, entitlement,
+    timestamp, staleness, status and any failure reason — the honest 'why is this
+    number what it is' view. No secrets; read-only."""
+    from collections import defaultdict
+
+    from app.core.provenance import health_status as _status
+    from app.core.provenance import valuation_label
+    from app.models import Instrument
+    from app.services.market import route_for_instrument
+
+    base = get_settings().base_currency
+    val = await value_portfolio(session, base)
+    syms = [h.symbol for h in val.holdings if h.symbol]
+    instr_by_sym = {
+        i.symbol: i for i in (
+            await session.execute(select(Instrument).where(Instrument.symbol.in_(syms)))
+        ).scalars()
+    } if syms else {}
+    from app.services.confidence import score_holding, summarise
+
+    rows = []
+    counts: dict[str, int] = defaultdict(int)
+    scored: list = []
+    for h in val.holdings:
+        method = ValuationMethod(h.valuation_method)
+        label = valuation_label(method, entitlement=h.entitlement, is_stale=h.is_stale, price_available=True)
+        status = _status(method, entitlement=h.entitlement, is_stale=h.is_stale, price_available=True)
+        reason = None
+        if method is ValuationMethod.ESTIMATED_VALUE:
+            reason = "No live quote from the source — showing cost as a fallback."
+        elif method is ValuationMethod.UNAVAILABLE:
+            reason = "No value available from any configured source."
+        instr = instr_by_sym.get(h.symbol) if h.symbol else None
+        diag = await route_for_instrument(session, instr) if instr is not None else None
+        if diag and diag.reason and not reason:
+            reason = diag.reason
+        counts[status] += 1
+        conf = score_holding(h, mapping_required=bool(diag and diag.mapping_required))
+        scored.append((abs(h.market_value_base), conf["confidence"]))
+        rows.append({
+            "id": h.holding_id, "symbol": h.symbol, "label": h.label,
+            "asset_class": h.asset_class, "sector": h.sector,
+            "exchange": h.exchange, "currency": h.native_currency,
+            "native_price": to_display(h.price), "market_value": to_display(h.market_value_base),
+            "valuation_method": h.valuation_method, "valuation_label": label, "status": status,
+            "source": h.source, "entitlement": h.entitlement,
+            "price_ts": h.price_ts.isoformat() if h.price_ts else None,
+            "is_stale": h.is_stale, "failure_reason": reason,
+            "source_override": h.source_override,
+            # Phase A1: per-instrument routing decision.
+            "route_lane": diag.lane if diag else "manual_only",
+            "route_source": diag.source_selected if diag else "manual",
+            "priority_chain": diag.priority_chain if diag else [],
+            "mapping_required": diag.mapping_required if diag else False,
+            "auth_required": diag.auth_required if diag else False,
+            # Phase 2a: data confidence.
+            **conf,
+        })
+    rows.sort(key=lambda r: (r["status"] != "Unavailable", r["status"] != "Estimated", r["label"]))
+    return {"base_currency": base, "holdings": rows, "summary": dict(counts),
+            "confidence": summarise(scored)}
+
+
+@router.post("/portfolio/pricing-health/{holding_id}/refresh", dependencies=[Depends(require_auth)])
+async def refresh_holding(holding_id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    """Re-fetch one holding's quote through the router (respects its source). Manual
+    holdings have nothing to fetch and report so."""
+    from app.services.market import refresh_quote
+
+    h = await session.get(Holding, holding_id)
+    if h is None:
+        raise HTTPException(404, "holding not found")
+    if h.instrument_id is None:
+        return {"ok": True, "refreshed": False, "reason": "manual holding — value is user-maintained"}
+    instr = await session.get(Instrument, h.instrument_id)
+    assert instr is not None  # FK guarantees the instrument row exists
+    q = await refresh_quote(session, instr.symbol, instr.exchange)
+    await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "refreshed": q.price is not None, "source": q.source,
+            "price": to_display(q.price) if q.price is not None else None,
+            "entitlement": q.entitlement.value if hasattr(q.entitlement, "value") else str(q.entitlement)}
+
+
+@router.get("/portfolio/performance")
+async def portfolio_performance(
+    days: int = 365, benchmark: str = "SPY", include_manual: bool = False,
+    entity_id: int | None = Query(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    from app.services.analytics import performance_series
+
+    base = get_settings().base_currency
+    data = await performance_series(
+        session, base, max(7, min(days, 3650)), benchmark, include_manual=include_manual, entity_id=entity_id
+    )
+    data["base_currency"] = base
+    return data
+
+
+# Benchmarks the picker offers (symbol -> label). ETF proxies so live providers work.
+_BENCHMARKS = {
+    "SPY": "S&P 500", "QQQ": "Nasdaq 100", "DIA": "Dow 30",
+    "EWS": "Singapore", "GLD": "Gold", "BTC": "Bitcoin",
+}
+
+
+@router.get("/portfolio/benchmarks")
+async def list_benchmarks() -> dict:
+    return {"benchmarks": [{"symbol": s, "label": label} for s, label in _BENCHMARKS.items()]}
+
+
+@router.get("/portfolio/stats")
+async def portfolio_stats(benchmark: str = "SPY", entity_id: int | None = Query(default=None),
+                          session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.analytics import key_stats
+
+    return await key_stats(session, get_settings().base_currency, benchmark, entity_id=entity_id)
+
+
+@router.get("/portfolio/attribution")
+async def portfolio_attribution(
+    days: int = 365, benchmark: str = "SPY", entity_id: int | None = Query(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """§4.5 read-only return attribution + risk metrics. Wires the Unit A attribution engine and
+    the Unit B risk metrics; both are entity-scoped and soft-delete-filtered inside those readers,
+    and each returns its own honest 'unavailable' shape on thin data (never a 500). Same
+    days/benchmark/entity_id params and clamping as the sibling readers."""
+    from app.services.analytics import attribution, risk_metrics
+
+    base = get_settings().base_currency
+    window = max(7, min(days, 3650))
+    return {
+        "attribution": await attribution(session, base, window, entity_id=entity_id),
+        "risk": await risk_metrics(session, base, window, benchmark, entity_id=entity_id),
+    }
+
+
+class TransactionIn(BaseModel):
+    account_id: int | None = None
+    symbol: str | None = None
+    type: TxnType
+    ts: datetime
+    quantity: float = 0
+    price: float = 0
+    fees: float = 0
+    taxes: float = 0
+    currency: str = "USD"
+    note: str | None = None
+    # Optional instrument metadata so a newly-created instrument is classified
+    # correctly (asset class / country / display name), not defaulted to US equity.
+    asset_class: AssetClass | None = None
+    name: str | None = None
+    exchange: str | None = None
+    country: str | None = None
+
+
+def _naive_utc(dt: datetime) -> datetime:
+    """Store timestamps as naive UTC for consistency with SQLite reads."""
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC).replace(tzinfo=None)
+    return dt
+
+
+def _txn_cash_impact(t: TransactionIn):
+    """Signed cash impact, mirroring the CSV importer's convention."""
+    gross = D(t.quantity) * D(t.price)
+    costs = D(t.fees) + D(t.taxes)
+    if t.type == TxnType.BUY:
+        return -(gross + costs)
+    if t.type == TxnType.SELL:
+        return gross - costs
+    if t.type in (TxnType.DIVIDEND, TxnType.INTEREST, TxnType.DEPOSIT):
+        return gross - costs if gross else -costs
+    if t.type in (TxnType.WITHDRAWAL, TxnType.FEE):
+        return -(gross + costs) if gross else -costs
+    return D(0)
+
+
+@router.get("/portfolio/transactions")
+async def list_transactions(limit: int = 500, session: AsyncSession = Depends(get_db)) -> dict:
+    rows = (
+        await session.execute(  # §3.5 R9: don't show soft-deleted transactions in the ledger
+            select(Transaction).where(Transaction.deleted_at.is_(None)).order_by(Transaction.ts.desc()).limit(limit))
+    ).scalars().all()
+    out = []
+    for t in rows:
+        symbol = None
+        if t.instrument_id:
+            instr = await session.get(Instrument, t.instrument_id)
+            symbol = instr.symbol if instr else None
+        out.append({
+            "id": t.id, "account_id": t.account_id, "symbol": symbol,
+            "type": t.type.value if hasattr(t.type, "value") else str(t.type),
+            "ts": t.ts.isoformat(),
+            "quantity": to_display(D(t.quantity)), "price": to_display(D(t.price)),
+            "fees": to_display(D(t.fees)), "taxes": to_display(D(getattr(t, "taxes", 0) or 0)),
+            "amount": to_display(D(t.amount)), "currency": t.currency, "note": t.note,
+        })
+    return {"transactions": out}
+
+
+@router.post("/portfolio/transactions", dependencies=[Depends(require_auth)])
+async def add_transaction(payload: TransactionIn, session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.csv_import import _ensure_account, _ensure_instrument
+
+    account = await _ensure_account(session, payload.account_id)
+    instrument = await _ensure_instrument(
+        session, payload.symbol.upper(), asset_class=payload.asset_class, name=payload.name,
+        exchange=payload.exchange, country=payload.country,
+    ) if payload.symbol else None
+    # §4.2 Unit B: capture the live native→base rate as this trade's trade-date FX (write
+    # only — nothing reads it yet). Only when ts is today (proximity guard); NULL for a
+    # backdated trade or an unresolvable rate — never fabricated.
+    ts = _naive_utc(payload.ts)
+    fx_to_base, fx_base = await fx.capture_rate(payload.currency.upper(), get_settings().base_currency, ts)
+    txn = Transaction(
+        account_id=account.id,
+        instrument_id=instrument.id if instrument else None,
+        type=payload.type,
+        ts=ts,
+        quantity=D(payload.quantity), price=D(payload.price),
+        fees=D(payload.fees), taxes=D(payload.taxes),
+        amount=money(_txn_cash_impact(payload)),
+        currency=payload.currency.upper(), note=payload.note,
+        fx_to_base=fx_to_base, fx_base=fx_base,
+    )
+    session.add(txn)
+    session.add(AuditEvent(category="mutation", action="add_transaction",
+                           detail=f"{payload.type.value} {payload.symbol or ''}"))
+    await session.flush()
+    rebuilt = await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "transaction_id": txn.id, "holdings_rebuilt": rebuilt}
+
+
+@router.put("/portfolio/transactions/{txn_id}", dependencies=[Depends(require_auth)])
+async def update_transaction(
+    txn_id: int, payload: TransactionIn, session: AsyncSession = Depends(get_db)
+) -> dict:
+    from app.services.csv_import import _ensure_instrument
+
+    txn = await session.get(Transaction, txn_id)
+    if txn is None:
+        raise HTTPException(404, "transaction not found")
+    instrument = await _ensure_instrument(
+        session, payload.symbol.upper(), asset_class=payload.asset_class, name=payload.name,
+        exchange=payload.exchange, country=payload.country,
+    ) if payload.symbol else None
+    txn.instrument_id = instrument.id if instrument else None
+    txn.type = payload.type
+    txn.ts = _naive_utc(payload.ts)
+    txn.quantity = D(payload.quantity)
+    txn.price = D(payload.price)
+    txn.fees = D(payload.fees)
+    txn.taxes = D(payload.taxes)
+    txn.amount = money(_txn_cash_impact(payload))
+    txn.currency = payload.currency.upper()
+    txn.note = payload.note
+    if payload.account_id:
+        txn.account_id = payload.account_id
+    session.add(AuditEvent(category="mutation", action="edit_transaction", detail=str(txn_id)))
+    await session.flush()
+    rebuilt = await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "holdings_rebuilt": rebuilt}
+
+
+@router.post("/portfolio/reclassify", dependencies=[Depends(require_auth)])
+async def reclassify(session: AsyncSession = Depends(get_db)) -> dict:
+    """Fix asset class / country / mis-scraped names on existing instruments — infers
+    from linked identifiers and a crypto-symbol heuristic. Safe & idempotent."""
+    from app.services.market import reclassify_instruments
+
+    result = await reclassify_instruments(session)
+    session.add(AuditEvent(category="mutation", action="reclassify",
+                           detail=f"reclassified={result['reclassified']} renamed={result['renamed']}"))
+    await rebuild_holdings_from_transactions(session)
+    return result
+
+
+@router.delete("/portfolio/transactions/{txn_id}", dependencies=[Depends(require_auth)])
+async def delete_transaction(txn_id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    txn = await session.get(Transaction, txn_id)
+    if txn is None:
+        raise HTTPException(404, "transaction not found")
+    # §3.5 Unit C: soft-delete (set deleted_at) instead of removing the row, so an undo can
+    # restore it. Unit B's R2 filter excludes it from the rebuild, so derived holdings
+    # recompute exactly as if it had been hard-deleted.
+    txn.deleted_at = datetime.now(UTC)
+    session.add(AuditEvent(category="mutation", action="delete_transaction", detail=str(txn_id)))
+    await session.flush()
+    rebuilt = await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "holdings_rebuilt": rebuilt}
+
+
+@router.post("/portfolio/transactions/{txn_id}/restore", dependencies=[Depends(require_auth)])
+async def restore_transaction(txn_id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    """Undo a soft-delete: clear deleted_at so the txn re-enters the ledger + derived
+    holdings. 404 if the id never existed; a no-op if the row is already live."""
+    txn = await session.get(Transaction, txn_id)
+    if txn is None:
+        raise HTTPException(404, "transaction not found")
+    txn.deleted_at = None
+    session.add(AuditEvent(category="mutation", action="restore_transaction", detail=str(txn_id)))
+    await session.flush()
+    rebuilt = await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "holdings_rebuilt": rebuilt}
+
+
+# --------------------------------------------------------------------------- #
+# Manual assets & liabilities (cash, fixed deposits, property, private, loans).
+# These carry a manual_value and are preserved across holdings rebuilds.
+# --------------------------------------------------------------------------- #
+class ManualHoldingIn(BaseModel):
+    label: str
+    asset_class: AssetClass = AssetClass.OTHER
+    value: float
+    currency: str = "SGD"
+    account_id: int | None = None
+    # Optional per-asset detail (FD rate/maturity, bond coupon, property valuation
+    # date, retirement scheme, insurance policy, private ownership…). Stays null for
+    # the simple "just a value" flow. Only whitelisted keys are persisted.
+    meta: dict | None = None
+
+
+# Optional metadata keys we accept per asset type — everything else is dropped, so a
+# hostile/oversized payload can't bloat the row. Values are coerced to short strings.
+_META_KEYS = {
+    "fixed_deposit": ["principal", "rate", "start_date", "maturity_date", "payout_frequency",
+                      "accrued_interest", "maturity_value", "issuer", "renewal_reminder"],
+    "bond": ["issuer", "coupon", "maturity_date", "face_value", "clean_price", "dirty_price", "accrued_interest"],
+    "property": ["address", "valuation_date", "valuation_source", "next_review_date"],
+    "retirement": ["scheme_name", "statement_date", "contribution_balance", "valuation_source"],
+    "insurance": ["policy_type", "cash_value", "statement_date", "insurer"],
+    "private": ["company", "ownership", "valuation_date", "valuation_source", "next_review_date"],
+    "cash": ["issuer"],
+    "other": ["valuation_date", "valuation_source", "note"],
+}
+
+
+def _clean_meta(asset_class, meta: dict | None) -> str | None:
+    """Keep only whitelisted keys for the asset type, coerce to short strings, JSON."""
+    import json
+
+    if not meta:
+        return None
+    ac = asset_class.value if hasattr(asset_class, "value") else str(asset_class)
+    allowed = set(_META_KEYS.get(ac, [])) | {"issuer", "valuation_date", "valuation_source", "note"}
+    out = {}
+    for k, v in meta.items():
+        if k in allowed and v not in (None, ""):
+            out[k] = str(v)[:120]
+    return json.dumps(out) if out else None
+
+
+async def _ensure_manual_account(session: AsyncSession) -> Account:
+    acc = (
+        await session.execute(select(Account).where(Account.kind == "manual"))
+    ).scalars().first()
+    if acc is None:
+        acc = Account(name="Manual Assets", kind="manual", currency=get_settings().base_currency)
+        session.add(acc)
+        await session.flush()
+    return acc
+
+
+@router.get("/portfolio/manual-holdings")
+async def list_manual_holdings(session: AsyncSession = Depends(get_db)) -> dict:
+    rows = (
+        await session.execute(  # §3.5 R8: don't list soft-deleted manual holdings in the editor
+            select(Holding).where(Holding.manual_value.isnot(None)).where(Holding.deleted_at.is_(None)))
+    ).scalars().all()
+    import json
+
+    def _meta(h):
+        try:
+            return json.loads(h.meta) if h.meta else None
+        except (ValueError, TypeError):
+            return None
+
+    return {"holdings": [
+        {
+            "id": h.id, "label": h.label,
+            "asset_class": h.asset_class.value if hasattr(h.asset_class, "value") else str(h.asset_class),
+            "value": to_display(D(h.manual_value)), "currency": h.currency,
+            "account_id": h.account_id, "meta": _meta(h),
+        }
+        for h in rows
+    ]}
+
+
+@router.post("/portfolio/manual-holdings", dependencies=[Depends(require_auth)])
+async def add_manual_holding(payload: ManualHoldingIn, session: AsyncSession = Depends(get_db)) -> dict:
+    account = (
+        await session.get(Account, payload.account_id) if payload.account_id else None
+    ) or await _ensure_manual_account(session)
+    holding = Holding(
+        account_id=account.id, label=payload.label, asset_class=payload.asset_class,
+        quantity=D(1), avg_cost=D(payload.value), manual_value=D(payload.value),
+        currency=payload.currency.upper(), meta=_clean_meta(payload.asset_class, payload.meta),
+    )
+    session.add(holding)
+    session.add(AuditEvent(category="mutation", action="add_manual_holding", detail=payload.label))
+    await session.flush()
+    return {"ok": True, "id": holding.id}
+
+
+@router.put("/portfolio/manual-holdings/{holding_id}", dependencies=[Depends(require_auth)])
+async def update_manual_holding(
+    holding_id: int, payload: ManualHoldingIn, session: AsyncSession = Depends(get_db)
+) -> dict:
+    h = await session.get(Holding, holding_id)
+    if h is None or h.manual_value is None:
+        raise HTTPException(404, "manual holding not found")
+    h.label = payload.label
+    h.asset_class = payload.asset_class
+    h.avg_cost = D(payload.value)
+    h.manual_value = D(payload.value)
+    h.currency = payload.currency.upper()
+    if payload.meta is not None:
+        h.meta = _clean_meta(payload.asset_class, payload.meta)
+    session.add(AuditEvent(category="mutation", action="edit_manual_holding", detail=str(holding_id)))
+    await session.flush()
+    return {"ok": True}
+
+
+@router.delete("/portfolio/manual-holdings/{holding_id}", dependencies=[Depends(require_auth)])
+async def delete_manual_holding(holding_id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    h = await session.get(Holding, holding_id)
+    if h is None or h.manual_value is None:
+        raise HTTPException(404, "manual holding not found")
+    # §3.5 Unit C: soft-delete so an undo can restore it (Unit B's R1 filter excludes it
+    # from valuation while deleted_at is set).
+    h.deleted_at = datetime.now(UTC)
+    session.add(AuditEvent(category="mutation", action="delete_manual_holding", detail=str(holding_id)))
+    await session.flush()
+    return {"ok": True}
+
+
+@router.post("/portfolio/manual-holdings/{holding_id}/restore", dependencies=[Depends(require_auth)])
+async def restore_manual_holding(holding_id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    """Undo a soft-delete: clear deleted_at so the manual holding is valued again. 404 if
+    it never existed (or isn't a manual holding); a no-op if the row is already live."""
+    h = await session.get(Holding, holding_id)
+    if h is None or h.manual_value is None:
+        raise HTTPException(404, "manual holding not found")
+    h.deleted_at = None
+    session.add(AuditEvent(category="mutation", action="restore_manual_holding", detail=str(holding_id)))
+    await session.flush()
+    return {"ok": True}
+
+
+@router.post("/portfolio/purge-deleted", dependencies=[Depends(require_pin)])
+async def purge_deleted(session: AsyncSession = Depends(get_db)) -> dict:
+    """Permanently hard-delete every soft-deleted holding and transaction ("empty trash").
+
+    PIN-gated (§3.5 Unit D) and irreversible. Only rows with deleted_at set are removed —
+    live rows are never touched. Purged rows were already excluded from every computation
+    (Unit B), so a final rebuild keeps the derived-holdings invariant explicit."""
+    dead_holdings = (await session.execute(
+        select(Holding).where(Holding.deleted_at.isnot(None))
+    )).scalars().all()
+    dead_txns = (await session.execute(
+        select(Transaction).where(Transaction.deleted_at.isnot(None))
+    )).scalars().all()
+    for h in dead_holdings:
+        await session.delete(h)
+    for t in dead_txns:
+        await session.delete(t)
+    session.add(AuditEvent(category="mutation", action="purge_deleted",
+                           detail=f"holdings={len(dead_holdings)} transactions={len(dead_txns)}"))
+    await session.flush()
+    rebuilt = await rebuild_holdings_from_transactions(session)
+    return {"ok": True, "holdings_purged": len(dead_holdings),
+            "transactions_purged": len(dead_txns), "holdings_rebuilt": rebuilt}
+
+
+@router.get("/portfolio/import/template", response_class=PlainTextResponse)
+async def csv_template() -> str:
+    return TRANSACTION_TEMPLATE
+
+
+@router.post("/portfolio/import/csv", dependencies=[Depends(require_auth)])
+async def import_csv(
+    file: UploadFile = File(...),
+    account_id: int | None = None,
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    content = await file.read()
+    try:
+        result = await import_transactions_csv(session, content, account_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    session.add(AuditEvent(category="mutation", action="import_csv",
+                           detail=f"{result['imported']} rows"))
+    result["holdings_rebuilt"] = await rebuild_holdings_from_transactions(session)
+    return result
+
+
+@router.post("/portfolio/import/preview")
+async def import_preview(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Validate + flag duplicates for an upload WITHOUT writing anything, so the user
+    can review before committing. Non-mutating."""
+    content = await file.read()
+    try:
+        return await preview_import(session, content)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/portfolio/import/commit", dependencies=[Depends(require_auth)])
+async def import_commit(
+    file: UploadFile = File(...),
+    account_id: int | None = None,
+    skip_duplicates: bool = True,
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Idempotent, atomic commit (re-importing the same file is a no-op). Skips
+    duplicate rows by default."""
+    content = await file.read()
+    try:
+        result = await commit_import(session, content, account_id, skip_duplicates=skip_duplicates)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if result.get("imported"):
+        result["holdings_rebuilt"] = await rebuild_holdings_from_transactions(session)
+    return result
+
+
+@router.get("/net-worth/history")
+async def net_worth_history(session: AsyncSession = Depends(get_db)) -> dict:
+    rows = (
+        await session.execute(select(NetWorthSnapshot).order_by(NetWorthSnapshot.ts))
+    ).scalars().all()
+    return {
+        "history": [
+            {"ts": r.ts.isoformat(), "assets": to_display(r.assets),
+             "liabilities": to_display(r.liabilities), "net_worth": to_display(r.net_worth),
+             "currency": r.base_currency}
+            for r in rows
+        ]
+    }
+
+
+@router.get("/portfolio/liquidity")
+async def liquidity(entity_id: int | None = Query(default=None),
+                    session: AsyncSession = Depends(get_db)) -> dict:
+    """Graded liquidity ladder (Phase 3a) — how quickly the portfolio turns to cash."""
+    from app.services.liquidity import liquidity_ladder
+
+    return await liquidity_ladder(session, entity_id=entity_id)
+
+
+@router.get("/portfolio/runway")
+async def runway(session: AsyncSession = Depends(get_db)) -> dict:
+    """Cash runway (Phase 4a) — liquid assets ÷ recurring net burn. Honest if no data."""
+    from app.services.runway import runway_report
+
+    return await runway_report(session)
+
+
+@router.get("/portfolio/review")
+async def review(session: AsyncSession = Depends(get_db)) -> dict:
+    """Derived 'what needs a look' feed (Phase 4b) — reporting only, not advice."""
+    from app.services.review import review_report
+
+    return await review_report(session)
+
+
+@router.get("/review/centre")
+async def review_centre_ep(session: AsyncSession = Depends(get_db)) -> dict:
+    """Review Centre (W1) — one consolidated verdict per section. Reporting only."""
+    from app.services.review import review_centre
+
+    return await review_centre(session)
+
+
+@router.get("/review/history")
+async def review_history_ep(session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.review import review_history
+
+    return await review_history(session)
+
+
+class ReviewLogIn(BaseModel):
+    note: str | None = None
+    next_review_date: str | None = None  # ISO yyyy-mm-dd
+
+
+@router.post("/review/log", dependencies=[Depends(require_auth)])
+async def review_log_ep(payload: ReviewLogIn, session: AsyncSession = Depends(get_db)) -> dict:
+    """Record the current state as a review (W1 §4.10)."""
+    from app.services.review import record_review
+
+    res = await record_review(session, payload.note, payload.next_review_date)
+    await session.commit()
+    return {"ok": True, **res}
+
+
+# --------------------------------------------------------------------------- #
+# Phase 2b — realised gains & tax lots (organisation/reporting, NOT tax advice).
+# --------------------------------------------------------------------------- #
+@router.get("/portfolio/realised-gains")
+async def realised_gains(year: int | None = Query(default=None),
+                         long_term_days: int = Query(default=365, ge=0, le=3660),
+                         entity_id: int | None = Query(default=None),
+                         session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.tax import realised_gains_report
+
+    return await realised_gains_report(session, year=year, long_term_days=long_term_days, entity_id=entity_id)
+
+
+@router.get("/portfolio/tax-lots")
+async def tax_lots(long_term_days: int = Query(default=365, ge=0, le=3660),
+                   entity_id: int | None = Query(default=None),
+                   session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.tax import tax_lots_report
+
+    return await tax_lots_report(session, long_term_days=long_term_days, entity_id=entity_id)
+
+
+@router.get("/portfolio/realised-gains.csv", response_class=PlainTextResponse)
+async def realised_gains_export(year: int | None = Query(default=None),
+                                long_term_days: int = Query(default=365, ge=0, le=3660),
+                                entity_id: int | None = Query(default=None),
+                                session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
+    from app.services.tax import realised_gains_csv, realised_gains_report
+
+    report = await realised_gains_report(session, year=year, long_term_days=long_term_days, entity_id=entity_id)
+    csv_text = realised_gains_csv(report)
+    return PlainTextResponse(csv_text, media_type="text/csv", headers={
+        "Content-Disposition": f'attachment; filename="realised-gains-{report["year"]}.csv"'})
+
+
+@router.get("/portfolio/scenarios")
+async def scenarios(entity_id: int | None = Query(default=None),
+                    session: AsyncSession = Depends(get_db)) -> dict:
+    """Factual 'what if' stress scenarios on today's holdings — scenario, not forecast (W6)."""
+    from app.services.scenarios import scenario_report
+
+    return await scenario_report(session, entity_id=entity_id)
+
+
+@router.get("/portfolio/tags")
+async def portfolio_tags(entity_id: int | None = Query(default=None),
+                         session: AsyncSession = Depends(get_db)) -> dict:
+    """Allocation by user tag + every holding's tags (W8). Reporting only."""
+    from app.services.tags import tag_allocation
+
+    return await tag_allocation(session, entity_id=entity_id)
+
+
+class HoldingTagsIn(BaseModel):
+    tags: list[str] = Field(default_factory=list, max_length=16)
+
+
+@router.put("/portfolio/holdings/{holding_id}/tags", dependencies=[Depends(require_auth)])
+async def set_tags(holding_id: int, payload: HoldingTagsIn,
+                   session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.tags import set_holding_tags
+
+    try:
+        res = await set_holding_tags(session, holding_id, payload.tags)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    await session.commit()
+    return {"ok": True, **res}
+
+
+@router.get("/portfolio/statements")
+async def statements(year: int | None = Query(default=None),
+                     entity_id: int | None = Query(default=None),
+                     session: AsyncSession = Depends(get_db)) -> dict:
+    """Income, fees, cash flow and realised-vs-unrealised — from recorded transactions.
+    Organisation for review / your accountant, not tax advice (W5)."""
+    from app.services.statements import statements_report
+
+    return await statements_report(session, year=year, entity_id=entity_id)
+
+
+@router.get("/portfolio/statements.csv", response_class=PlainTextResponse)
+async def statements_export(year: int | None = Query(default=None),
+                            entity_id: int | None = Query(default=None),
+                            session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
+    from app.services.statements import statements_csv, statements_report
+
+    rep = await statements_report(session, year=year, entity_id=entity_id)
+    return PlainTextResponse(statements_csv(rep), media_type="text/csv", headers={
+        "Content-Disposition": 'attachment; filename="ledgerframe-statements.csv"'})
+
+
+@router.get("/portfolio/cost-of-ownership")
+async def cost_of_ownership_report(year: int | None = Query(default=None),
+                                   entity_id: int | None = Query(default=None),
+                                   session: AsyncSession = Depends(get_db)) -> dict:
+    """§4.6 read-only cost of ownership: recorded fees (a currency fact reused from the statements
+    report) and an estimated ongoing cost (each instrument's expense ratio × current value), kept
+    as two separate blocks with no blended total. Entity-scoped and soft-delete-filtered like the
+    sibling readers; null-rate holdings are surfaced as unavailable, never counted as 0."""
+    from app.services.cost_of_ownership import cost_of_ownership
+
+    return await cost_of_ownership(session, get_settings().base_currency, year=year, entity_id=entity_id)
