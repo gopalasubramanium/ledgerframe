@@ -206,7 +206,24 @@ feature work (each gated by its own plan file, per CLAUDE.md scope rule):
 ## Status
 
 - Plan written; **Phase A DONE** (copy, 458 green); **Phase B DONE** (prune,
-  455 green). Phase C next.
+  455 green); **Phase C DONE** (OpenAPI freeze). Milestone complete.
+
+### Phase C result (OpenAPI freeze)
+
+- **`docs/specs/API-CONTRACT.json`** — frozen v2 baseline (OpenAPI 3.1, **121
+  paths**), generated from the post-prune app, sorted-keys deterministic.
+  `docs/openapi.json` holds the same bytes for the inherited contract test.
+- **`docs/specs/API-CONTRACT.md`** — states the baseline, the **delta table**
+  (add/rename/remove/reshape/present — each row a decision ID: `/refdata` D-005,
+  entity CRUD D-065, holdings.csv D-050, review/centre→review D-030,
+  cost-of-ownership→ongoing-cost D-029, realised-gains→realised-P/L D-026, meta→
+  refdata D-005, plus already-present tokens/watchlists/pricing-health), and the
+  same-commit update rule. Frontend-route redirects (`/snapshot`,`/planning`,
+  `/global`) are recorded as *not* API paths.
+- **Drift check** — `scripts/check_api_contract.py` + `make api-contract-check`:
+  regenerates from the live app and exits non-zero on any difference. Verified:
+  passes on the committed contract; fails on a synthetic injected path.
+- **Suite:** `pytest -q` → 455 passed, 0 failed.
 
 ### Phase B result (deletions, exhaustive)
 

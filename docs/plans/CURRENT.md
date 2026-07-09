@@ -166,17 +166,35 @@ ROADMAP.md and DESIGN-BRIEF.md.
   - **Suite: `pytest -q` → 455 passed, 0 failed** (was 458; −3 removed tests).
     OpenAPI unchanged; inherited contract test still matches.
 
+- **Backend copy-in — PHASE C DONE (OpenAPI freeze).** Froze the inherited HTTP
+  contract as the v2 baseline:
+  - **`docs/specs/API-CONTRACT.json`** (OpenAPI 3.1, 121 paths) generated from
+    the post-prune app, deterministic (sorted keys); `docs/openapi.json` mirrors
+    it for the inherited contract test.
+  - **`docs/specs/API-CONTRACT.md`** — baseline statement + **delta table** of
+    endpoints the specs will add/rename/remove (each row a decision ID) + the
+    same-commit update rule. Frontend-route redirects noted as not-API-paths.
+  - **Drift check** `scripts/check_api_contract.py` + `make api-contract-check`
+    (regenerate and fail on any diff). Verified: passes clean, fails on a
+    synthetic injected path.
+  - **Suite: 455 passed, 0 failed.**
+
+**Backend copy-in milestone COMPLETE** (Phases A/B/C). See
+`docs/plans/backend-copy-in.md` for the full record.
+
 ## IN-PROGRESS
 
-- **Backend copy-in — Phase C (OpenAPI freeze)** next, per the plan file.
+- (none)
 
 ## NEXT
 
-1. **Backend copy-in Phase C** — freeze `docs/specs/API-CONTRACT.json` +
-   `API-CONTRACT.md` delta table (each row a decision ID) + a drift check.
-2. **Kitchen-sink / ratification review** — ratify the PROPOSED values: the
+1. **Kitchen-sink / ratification review** — ratify the PROPOSED values: the
    design tokens (DESIGN-SYSTEM §2) and the authored DEF-2/DEF-6 vocabularies
    (MASTER-DATA §2/§6).
+2. **Feature build (post-freeze)** — per the API-CONTRACT delta table, each
+   gated by its own plan file: `/refdata` (D-005), entity CRUD (D-065), holdings
+   CSV export (D-050), the Realised P/L / Review / Ongoing-cost renames (D-026/
+   D-030/D-029), and the route-rename redirects (D-022/D-056).
 
 ## Needs decision
 
