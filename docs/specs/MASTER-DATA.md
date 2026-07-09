@@ -4,10 +4,11 @@
 and reference master in v2. CLAUDE.md hard rule: every categorical field
 references this file; no free-text enums. D-005 completeness rule: **every
 vocabulary must appear here with its complete seed value list — no vocabulary is
-confirmed without its values.** Vocabularies whose authoritative values live in
-application code that is **not present in this repository** are marked
-`EXTRACTION REQUIRED` and listed in [§9 Blocked extractions](#9-blocked-extractions);
-they are deliberately left unfilled rather than guessed.
+confirmed without its values.** The DEF backfill extracted the pending
+vocabularies verbatim from the legacy v1 source (read-only reference); the two
+items still open in [§9](#9-blocked-extractions) (DEF-2 `asset_subclass`, DEF-6
+sector seed) require an **authoring decision**, not an extraction — they are
+deliberately left unfilled rather than guessed.
 
 ---
 
@@ -66,6 +67,11 @@ D-010; `02` = from the schema audit.
 | **PolicyTarget.dimension** | `policy_targets.dimension` | 3 | `asset_class, currency, region` | 02 §2.8 |
 | **InstrumentIdentifier.id_type** | `instrument_identifiers.id_type` | 8 | `isin, cusip, figi, sedol, amfi_code, kite_token, coingecko_id, provider_symbol` | 02 §2.2 |
 | **cost_basis_method** | `accounts.cost_basis_method` | 2 (v2) | `fifo, average` (v2 lanes; `spec` is ROADMAP R-6, D-018 — not a v2 value) | D-018 |
+| **Account.kind** | `accounts.kind` | 7 | `brokerage, bank, retirement, wallet, property, manual, other` | DEF-3 |
+| **InsurancePolicy.policy_type** | `insurance_policy.policy_type` | 10 | `term_life, whole_life, health, critical_illness, disability, personal_accident, property, motor, travel, other` | DEF-4 |
+| **InsurancePolicy.premium_frequency** | `insurance_policy.premium_frequency` | 4 | `monthly, quarterly, annual, single` | DEF-4 |
+| **EstateDocument.category** | `estate_document.category` | 9 | `will, insurance, property, loan, identity, bank, tax, medical, other` | DEF-5 |
+| **EstateContact roles** | `estate_contact.roles` (JSON list) | 5 | `nominee, beneficiary, executor, emergency, guardian` | DEF-5 |
 
 **Notes on specific vocabularies:**
 - `TxnType` — the frontend gains `merger` (previously omitted from the 10-value
@@ -79,12 +85,24 @@ D-010; `02` = from the schema audit.
   `{isin, cusip, figi, sedol, amfi_code, kite_token, coingecko_id}`;
   `provider_symbol` is the non-high-confidence remainder (02 §2.2).
 
-**EXTRACTION REQUIRED fixed vocabularies** (values in un-extracted service code
-— see §9): `Account.kind` (`ACCOUNT_KINDS`, DEF-3), `Instrument.asset_subclass`
-(DEF-2), `InsurancePolicy.policy_type` / `premium_frequency` (`POLICY_TYPES`,
-`FREQUENCIES`, DEF-4), `EstateDocument.category` / contact roles
-(`DOC_CATEGORIES`, `CONTACT_ROLES`, DEF-5). Each is a fixed vocabulary by D-010;
-only its value list is pending.
+**Notes on the backfilled vocabularies (DEF-3/4/5):**
+- `Account.kind` — extracted from `ACCOUNT_KINDS` verbatim (DEF-3 resolved).
+- `InsurancePolicy.premium_frequency` — the value set is `..., single` (a
+  paid-once policy), **not** `once`; distinct from `Contribution.frequency`
+  (`..., once`). Do not conflate them.
+- `EstateContact roles` — this is the `CONTACT_ROLES` vocabulary into which the
+  former free-text `relationship` field is **folded** (D-010); the separate
+  `relationship` field is dropped. Stored as a JSON list on `estate_contact.roles`.
+- `estate.py` also confirms `WILL_STATUSES` and `DOC_STATUSES` match the D-010
+  values already in the table above (bonus confirmation from the same source).
+
+**Still pending — `Instrument.asset_subclass` (DEF-2, partial; see §9).**
+`asset_subclass` has **no enumerated vocabulary in code** — it is a free
+`String(40)`. The only values the code actively assigns are `crypto`,
+`derivative`, `equity`, `mutual_fund`; **routing only reads `derivative`**.
+D-009's asserted "at least `etf`, `reit`" are **not found** as assigned values.
+Finalising this fixed vocabulary is therefore an authoring/decision task
+(D-009), not a clean extraction — it stays in §9.
 
 ---
 
@@ -105,14 +123,27 @@ service cannot translate is not admitted.
 (Settings → base currency). Transaction/holding currency fields draw from the
 full master.
 
-**Seed = `EXTRACTION REQUIRED` (DEF-1).** The seed is the **union** of three
-divergent legacy lists — `config.SUPPORTED_CURRENCIES` (9, the base-eligible
-set), `refdata.ts` `CURRENCIES` (14), and the PortfolioEditor inline list (22) —
-**each member re-validated against the FX-translatability rule**; members the FX
-service cannot translate are dropped, not carried. The base-eligible flag is set
-`true` for the 9 `SUPPORTED_CURRENCIES` members and `false` for the remainder
-that survive validation. The three source lists are in application code not
-present in this repo; the concrete codes cannot be enumerated here (§9).
+**Seed (DEF-1, extracted).** The seed is the **union** of three divergent legacy
+lists, deduplicated (`HKD` appears twice in the PortfolioEditor list):
+
+| Group | Codes | `is_base_eligible` | Source |
+|-------|-------|--------------------|--------|
+| Base-eligible (`config.SUPPORTED_CURRENCIES`, 9) | `SGD, USD, INR, EUR, GBP, JPY, AUD, CNY, HKD` | **true** | `config.py:18` |
+| + adds from `refdata.ts CURRENCIES` (14) | `CAD, CHF, AED, MYR, THB` | false | `refdata.ts:8` |
+| + adds from PortfolioEditor inline (21 unique) | `KRW, TWD, SEK, NOK, DKK, ZAR, BRL, NZD` | false | `PortfolioEditor.tsx:22` |
+
+**Full seed = 22 unique codes**, `is_base_eligible = true` for exactly the 9
+`SUPPORTED_CURRENCIES`, `false` for the other 13.
+
+**FX-translatability validation is operational, not a static list.** The FX
+service holds no hard-coded translatable set: `ecb_fx._RATES` is loaded at
+runtime from the ECB daily reference feed (`ecb_fx.py:24,71-73`) and `fx.py`
+triangulates cross rates through USD with ECB as fallback (`fx.py:51`). So D-006's
+rule is enforced **at admission time against the live FX service**, not by a code
+constant. The 9 base-eligible codes are FX-supported by definition
+(`config.SUPPORTED_CURRENCIES`); the 13 wider codes must be confirmed
+translatable when the currency master is seeded (any that the FX service cannot
+translate are dropped per D-006, not carried).
 
 **ROADMAP (R-2, D-006):** user-requestable transaction currencies, FX-validated.
 
@@ -156,7 +187,7 @@ maintained standard, served to the picker; not a value list authored here.
 | Master | Referencing columns (FK) | Seed | Uniqueness |
 |--------|--------------------------|------|-----------|
 | **Institution** (D-008) | `accounts.institution`, `insurance_policy.insurer` | none (starts empty; user-populated) | by name; merge dedupes variants ("DBS" vs "DBS Bank") |
-| **Sector** (D-009) | `instruments.sector` | GICS-like seed list — `EXTRACTION REQUIRED` **authorship** (DEF-6, §9) | by name |
+| **Sector** (D-009) | `instruments.sector` | GICS-like seed — **authorship** (DEF-6, §9; no list in code) | by name |
 | **Tag** (D-011) | `holding_tag.tags` (JSON list, keyed by `account_id` + `holding_key`) | none | **case-insensitive**, cap **16 tags/holding** |
 
 **Institution (D-008).** One master, FK'd from both `accounts.institution` and
@@ -164,8 +195,15 @@ maintained standard, served to the picker; not a value list authored here.
 text by design** (architectural invariant — the estate register deliberately
 does not FK into other tables; do not "normalise" it).
 
-**Sector (D-009).** User-extensible, seeded GICS-like. The seed list is
-authorship (not code extraction) and is not yet written — DEF-6.
+**Sector (D-009).** User-extensible, seeded GICS-like. There is **no sector
+master or GICS list in the code** — DEF-6 is an **authoring** task, not an
+extraction, and remains open (§9). As a starting reference, the ticker→sector
+fallback map `_SECTOR_MAP` (`portfolio.py:30-51`) uses these 12 distinct
+values: `Technology, Communication Services, Consumer Discretionary, Consumer
+Staples, Financials, Energy, Health Care, Industrials, Utilities, Crypto,
+Index / ETF, Commodities`. That is a **fallback map, not the authored master**;
+the GICS-like seed (e.g. whether to use the 11 GICS sectors and how to treat
+Crypto / Commodities / Index-ETF) is the decision DEF-6 records.
 
 **Tag (D-011).** Uniqueness is **case-insensitive**; rename **cascades to all
 tagged holdings**; the 16-tags-per-holding cap is retained. `holding_key` is the
@@ -216,37 +254,44 @@ change only by code + migration.
 
 ## 9. Blocked extractions
 
-The application source is **not present in this repository** (docs-only). The
-following vocabularies have their authoritative values in service-layer code that
-cannot be read here; per the SHARED RULES they are **not guessed**. Each must be
-extracted verbatim from the named source before it is "confirmed" and before the
-dependent spec/UI is built. References are the DEF items in DECISIONS.md.
+DEF-1, DEF-3, DEF-4, DEF-5 are **resolved** — extracted verbatim from the legacy
+v1 source (`~/Documents/github/LedgerFrame`, read-only reference) and filled into
+§2/§3 in place (cites in the Derived-from footer). Two items remain open, and
+**not** because a value is unreadable — both require a **decision/authoring**, not
+an extraction:
 
-| ID | Vocabulary / master | Authoritative source | Partial info available | Blocks |
-|----|---------------------|----------------------|------------------------|--------|
-| DEF-1 | **Currency master seed** | `config.SUPPORTED_CURRENCIES` (9, base-eligible) ∪ `refdata.ts CURRENCIES` (14) ∪ PortfolioEditor inline (22), FX-validated | Counts (9/14/22); the 9 are base-eligible; defaults seen: SGD, USD | Currency master (§3); base-currency picker |
-| DEF-2 | **`asset_subclass`** | Instrument taxonomy code usage | Known members (incomplete): `etf, reit, mutual_fund, derivative` — routing reads `derivative` | Instrument taxonomy (§2); Add flow (D-049) |
-| DEF-3 | **`Account.kind` (`ACCOUNT_KINDS`)** | `app/services/accounts.py` | Known members (incomplete): `brokerage` (default), `manual` (auto-created) | Account form (D-064) |
-| DEF-4 | **`policy_type` / `premium_frequency` (`POLICY_TYPES`, `FREQUENCIES`)** | Insurance service (`/insurance/meta`) | Defaults seen: `other` (policy_type), `annual` (premium_frequency) | Insurance form (D-062) |
-| DEF-5 | **`category` / contact roles (`DOC_CATEGORIES`, `CONTACT_ROLES`)** | Estate service (`/estate/meta`); `estate_contact.relationship` **folds into roles** and the separate field is dropped (D-010) | Default seen: `other` (category) | Estate forms (D-063) |
-| DEF-6 | **Sector master seed (GICS-like)** | Authorship (not extraction) | — | Sector picker (D-009) |
+| ID | Item | Why still open | Blocks |
+|----|------|----------------|--------|
+| DEF-2 | **`asset_subclass` fixed vocabulary** | No enum exists in code — `asset_subclass` is a free `String(40)`. Code assigns only `crypto, derivative, equity, mutual_fund` (`amfi.py:75`, `coingecko.py:89`, `kite.py:94,97`, `market.py:417`); routing reads only `derivative` (`router.py:123,131`). D-009's asserted `etf`, `reit` are **not** assigned anywhere. Choosing the final fixed vocab is an **authoring decision** (D-009), not extraction. | Instrument taxonomy (§2); Add flow (D-049) |
+| DEF-6 | **Sector master seed (GICS-like)** | No sector master / GICS list in code (only the `_SECTOR_MAP` ticker fallback, `portfolio.py:30-51`). Seed is **authorship** (D-009/DEF-6), not extraction. §6 lists the 12 fallback values as a starting reference. | Sector picker (D-009) |
 
-DEF-7 (Review threshold constants) is not master data; it belongs to the Review
-page spec (D-059).
+DEF-7 (Review threshold constants) is not master data; its values live in
+PRODUCT-SPEC §5 and were reconciled against `services/review.py` in this backfill.
 
 ---
 
 **Derived from:** `docs/audit/02-DATA-MODEL.md`, `docs/audit/06-UI-AND-TERMINOLOGY-AUDIT.md`
-§(a), and `docs/audit/DECISIONS.md`. Decision IDs applied: D-005, D-006, D-007,
-D-008, D-009, D-010, D-011, D-012, D-013, D-018, D-049, D-055, D-064, D-073, and
-the DEFERRED table (DEF-1..DEF-6). Where the audit flagged free-text fields that
-"should" reference masters (02 §4), DECISIONS.md's verdicts govern the choice of
-fixed-vocabulary vs extensible-master.
+§(a), `docs/audit/DECISIONS.md`, and the **legacy v1 source**
+(`~/Documents/github/LedgerFrame`, read-only) for the DEF backfill:
+
+- DEF-1 currency union — `app/core/config.py:18` (`SUPPORTED_CURRENCIES`, 9,
+  base-eligible); `frontend/src/lib/refdata.ts:8` (`CURRENCIES`, 14);
+  `frontend/src/components/PortfolioEditor.tsx:22` (inline list, 21 unique);
+  FX-translatability behaviour `app/services/ecb_fx.py:24,71-73`, `app/services/fx.py:51`.
+- DEF-3 `ACCOUNT_KINDS` — `app/services/accounts.py:24`.
+- DEF-4 `POLICY_TYPES` / `FREQUENCIES` — `app/services/insurance.py:23-25`.
+- DEF-5 `DOC_CATEGORIES` / `CONTACT_ROLES` (+ `WILL_STATUSES`, `DOC_STATUSES`
+  confirmation) — `app/services/estate.py:19-22`.
+- DEF-6 sector reference (`_SECTOR_MAP`) — `app/services/portfolio.py:30-51`.
+
+Decision IDs applied: D-005, D-006, D-007, D-008, D-009, D-010, D-011, D-012,
+D-013, D-018, D-049, D-055, D-064, D-073, and the DEFERRED table. Where the audit
+flagged free-text fields that "should" reference masters (02 §4), DECISIONS.md's
+verdicts govern the choice of fixed-vocabulary vs extensible-master.
 
 ## Needs decision
 
-None outstanding as product decisions — all vocabularies received a verdict in
-DECISIONS.md. The open items are **mechanical extractions/authorship** (DEF-1..DEF-6,
-§9), blocked solely because the application source is not in this repository.
-Resolve by running the extraction against the codebase (or committing the code
-here) and filling the seed lists in §2/§3/§6 in place.
+No product decisions outstanding. Two **authoring** items remain (§9): the final
+`asset_subclass` fixed vocabulary (DEF-2) and the GICS-like sector seed (DEF-6) —
+both now with concrete code-observed values to author from, neither blocked on
+missing source.

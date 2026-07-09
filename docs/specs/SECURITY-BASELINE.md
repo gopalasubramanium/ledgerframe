@@ -90,13 +90,28 @@ In-app `.env` writes and the sudo admin helper are **kept**, guardrailed:
   gracefully**: System controls are hidden/disabled with an explanation — no
   errors, no partial privileged actions.
 
-**Action allow-list (documented set, from the audit).** The System-tab controls
-covered are: LAN toggle, voice toggle, AI toggle, kiosk toggle, and maintenance
-actions restart / status / doctor / backup / update (01-FEATURE-INVENTORY
-Settings·System; 07 §Admin surface). **The authoritative allow-list lives in
-`app/api/v1/routes/system.py` and must be reconciled verbatim when the
-application source is available** (see §11 / CURRENT.md) — the exact
-enumeration is not derivable from the audit alone.
+**Action allow-list (exact, extracted).** `_ADMIN_ACTIONS`
+(`app/api/v1/routes/system.py:24-36`, legacy v1 source, read-only) is the
+complete allow-list — action → permitted argument set (`None` = no argument;
+any action or argument not listed is rejected `400` before `sudo` is invoked):
+
+| Action | Allowed arguments |
+|--------|-------------------|
+| `status` | — (none) |
+| `restart` | — (none) |
+| `restart-worker` | — (none) |
+| `doctor` | — (none) |
+| `backup` | — (none) |
+| `update` | — (none) |
+| `lan` | `on`, `off` |
+| `voice` | `on`, `off` |
+| `ai` | `on`, `off` |
+| `kiosk` | `on`, `off` |
+
+Invocation is `sudo -n /usr/local/sbin/ledgerframe-admin <action> [arg]`
+(`system.py:37,565-573`); an unknown action or invalid argument is a `400`, and a
+missing binary / missing sudoers rule surfaces an actionable hint rather than a
+password prompt. **No free-form input ever reaches the shell.**
 
 ---
 
@@ -237,12 +252,11 @@ rebuild must preserve, not regress, these:
 Batches 1 and 10. Decision IDs applied: D-001, D-002, D-003, D-004, D-016, D-050,
 D-060, D-066, D-068, D-069, D-070, D-071, D-074, D-075, plus P-1, P-5, P-6, P-8
 and Product Guarantees 5–7. Gap severities and current-measure detail are from
-the audits; dispositions are from D-004.
+the audits; dispositions are from D-004. §4 sudo allow-list extracted verbatim
+from the legacy v1 source `app/api/v1/routes/system.py:24-36` (read-only) in the
+DEF backfill.
 
 ## Needs decision
 
-- **Sudo action allow-list (extraction).** §4 records the documented control set
-  from the audit, but the **authoritative allow-list** is in
-  `app/api/v1/routes/system.py`, which is not in this repo. Reconcile it verbatim
-  in the DEF backfill session (alongside DEF-1..DEF-7 — see MASTER-DATA §9 /
-  CURRENT.md). Mechanical, not a product decision.
+- (none) — the sudo action allow-list is extracted verbatim into §4 from
+  `app/api/v1/routes/system.py`. No product decisions outstanding.

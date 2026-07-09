@@ -18,8 +18,8 @@ starts from files, not memory.
   /refdata + DB CHECK vs user-extensible masters via DB tables, frontend zero
   copies); every fully-decided fixed vocabulary with complete seed values;
   currency master + FX-translatability rule; country/region model; institution,
-  sector, tag masters + admin screens; migration dispositions. Blocked
-  extractions (DEF-1..DEF-6) flagged, not guessed — app source absent from repo.
+  sector, tag masters + admin screens; migration dispositions. (DEF backfill
+  since completed — see below; only DEF-2/DEF-6 authoring items remain.)
 - **docs/specs/INFORMATION-ARCHITECTURE.md** — IA principles P-1..P-8 + Reports
   Pack exception verbatim; full page map (page/route/nav group/purpose); per-page
   canonical ownership tables (Owns / Summarises-with-reader / Links); navigation
@@ -59,28 +59,46 @@ starts from files, not memory.
 INFORMATION-ARCHITECTURE, PRODUCT-SPEC, DESIGN-SYSTEM, SECURITY-BASELINE) plus
 ROADMAP.md and DESIGN-BRIEF.md.
 
+- **DEF backfill DONE** — extracted verbatim from the legacy v1 source
+  (`~/Documents/github/LedgerFrame`, read-only reference; app source enters this
+  repo later as its own milestone). Filled in place with file:line cites:
+  - DEF-1 currency master seed — 22-code union, base-eligible 9 (`config.py:18`),
+    +5 (`refdata.ts:8`), +8 (`PortfolioEditor.tsx:22`); FX-translatability noted
+    as runtime-validated (no static list). MASTER-DATA §3.
+  - DEF-3 `ACCOUNT_KINDS` (7, `accounts.py:24`); DEF-4 `POLICY_TYPES` (10) /
+    `premium_frequency` (4, `insurance.py:23-25`); DEF-5 `DOC_CATEGORIES` (9) /
+    `CONTACT_ROLES` (5, `estate.py:19-20`). MASTER-DATA §2.
+  - DEF-7 Review constants reconciled against `review.py:25-30` — all values
+    matched the audit; two proposed names corrected (`_INSURANCE_SOON_DAYS`,
+    `_CORP_ACTION_RECENT_DAYS`). PRODUCT-SPEC §5.
+  - Sudo allow-list — exact `_ADMIN_ACTIONS` set (`system.py:24-36`).
+    SECURITY-BASELINE §4.
+  - **Still open (authoring, not extraction):** DEF-2 `asset_subclass` (no enum
+    in code; `etf`/`reit` from D-009 not found) and DEF-6 sector seed (GICS-like
+    authorship; `_SECTOR_MAP` 12-value reference recorded). MASTER-DATA §9.
+
 ## IN-PROGRESS
 
 - (none)
 
 ## NEXT
 
-1. **DEF backfill session** — once the app source is available, fill
-   MASTER-DATA §2/§3/§6 (DEF-1..DEF-6), reconcile the three Review constant
-   names (DEF-7) against `services/review.py`, and reconcile the sudo action
-   allow-list against `app/api/v1/routes/system.py` (SECURITY-BASELINE §4).
-2. **Kitchen-sink review** — ratify the PROPOSED design tokens
+1. **Kitchen-sink review** — ratify the PROPOSED design tokens
    (DESIGN-SYSTEM §2) once the component library is built.
+2. **DEF-2 / DEF-6 authoring** — decide the final `asset_subclass` fixed vocab
+   and the GICS-like sector seed (both now have code-observed values to author
+   from; neither is blocked on missing source).
+3. **App-source milestone** — when the v1 code enters this repo, re-verify the
+   backfilled values against it (cites already point at the exact lines).
 
 ## Needs decision
 
-- **App source not in repo → DEF-1..DEF-7 blocked (mechanical).** MASTER-DATA §9
-  lists six vocabularies whose authoritative values live in service-layer code
-  not committed here (currency union, asset_subclass, ACCOUNT_KINDS,
-  POLICY_TYPES/FREQUENCIES, DOC_CATEGORIES/CONTACT_ROLES, sector seed). DEF-7
-  adds three Review constant *names* (values already recovered, PRODUCT-SPEC §5).
-  SECURITY-BASELINE §4 adds the sudo action allow-list (`system.py`). All to be
-  handled together in the DEF backfill session. Not product decisions.
+- **DEF-2 / DEF-6 (authoring, not blocking).** The final `asset_subclass`
+  vocabulary and the sector master seed need an authoring decision — see
+  MASTER-DATA §9. Not product-blocking; both have concrete starting values.
+- **Design token ratification.** PROPOSED palette/type/spacing/density values
+  (DESIGN-SYSTEM §2) are working values until the kitchen-sink review; the
+  UI/serif font choice may need an ADR if self-hosting adds a dependency.
 - **Design token ratification.** The PROPOSED palette/type/spacing/density values
   in DESIGN-SYSTEM §2 are working values until ratified at the kitchen-sink
   review; the UI/serif font choice may need an ADR if self-hosting adds a

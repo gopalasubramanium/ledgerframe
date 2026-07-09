@@ -136,16 +136,22 @@ table is the Review page spec.
 | `_LIQUID_THIN_PCT` | 15 (%) | Liquidity thin when `liquid_pct` < 15% | Below ~1/7 of gross assets in immediate/short rungs is too little cushion to meet surprises. |
 | `_RUNWAY_LOW_MONTHS` | 6 | Runway low when `runway_months` < 6 | Six months is the common emergency-fund floor; less warrants a look. |
 | `_GOAL_SOON_DAYS` | 90 | Goal target date within 90 days | A quarter's notice is enough to act on an approaching goal. |
-| `_OBLIGATION_SOON_DAYS` *(proposed name; literal from audit)* | 30 | Obligation due within 30 days | One month's notice on an upcoming cash obligation. |
-| `_INSURANCE_RENEWAL_DAYS` *(proposed name; literal from audit)* | 30 | Insurance renewal within 30 days (or overdue) | One month to renew before a policy lapses; overdue always flags. |
-| `_CORP_ACTION_VERIFY_DAYS` *(proposed name; literal from audit)* | 45 | Split/bonus within 45 days → "verify" | Recent corporate actions warrant a manual verification window. |
+| `_OBLIGATION_SOON_DAYS` | 30 | Obligation due within 30 days | One month's notice on an upcoming cash obligation. |
+| `_INSURANCE_SOON_DAYS` | 30 | Insurance renewal within 30 days (or overdue) | One month to renew before a policy lapses; overdue always flags. |
+| `_CORP_ACTION_RECENT_DAYS` | 45 | Split/bonus within 45 days → "verify" | Recent corporate actions warrant a manual verification window. |
 | `low` confidence band | < 50 | Low-confidence holding count | Below the medium band (≥50); poorly-sourced values deserve attention. |
 | `LEDGERFRAME_STALE_AFTER_SECONDS` | 900 (default) | Stale holding count | Quotes older than 15 min are flagged stale (EOD/NAV use a longer 30h threshold). |
 | Policy band / concentration | per-policy | Out-of-band buckets; positions over `max_position_pct` | Uses the user's own policy bands and optional concentration limit — no fixed number. |
 
-Named constants marked *proposed* had only their literal value recorded in the
-audit; the name is authored here per D-059 and should be reconciled against
-`services/review.py` when the code is available. See CURRENT.md.
+All names and values above are **reconciled verbatim** against
+`app/services/review.py:25-30` (legacy v1 source, read-only): `_LIQUID_THIN_PCT
+= 15.0` (:25), `_GOAL_SOON_DAYS = 90` (:26), `_OBLIGATION_SOON_DAYS = 30` (:27),
+`_INSURANCE_SOON_DAYS = 30` (:28), `_RUNWAY_LOW_MONTHS = 6` (:29),
+`_CORP_ACTION_RECENT_DAYS = 45` (:30). Every value matched the audit; two of the
+three previously-proposed names were corrected to the real constants
+(`_INSURANCE_SOON_DAYS`, `_CORP_ACTION_RECENT_DAYS`). Confidence band `<50`
+(`confidence.py`) and `LEDGERFRAME_STALE_AFTER_SECONDS` (900) are per
+04-CALCULATION-ENGINE §10/§11.
 
 ---
 
@@ -207,13 +213,11 @@ D-069. Full Settings layout is in INFORMATION-ARCHITECTURE.md §5.)
 Decision IDs applied: D-001, D-002, D-004, D-010, D-016, D-020, D-030, D-039,
 D-045, D-051, D-055, D-057, D-059, D-063, D-065 (P-7), D-066, D-069, D-070,
 D-071, D-075, D-076, D-077, D-080, plus the Product Guarantees block (D-077 +
-accumulated) verbatim.
+accumulated) verbatim. §5 Review thresholds reconciled against the legacy v1
+source `app/services/review.py:25-30` (read-only) in the DEF backfill.
 
 ## Needs decision
 
-- **Review threshold constant names.** Three thresholds (`obligation`,
-  `insurance renewal`, `corporate action`) were recorded in the audit as bare
-  literals (30 / 30 / 45 days). Their **named constants are proposed here** per
-  D-059 and must be reconciled against `services/review.py` when the application
-  source is available (the code is not in this repo — see MASTER-DATA.md §9 /
-  DEF-7). The **values** are not in doubt; only the constant names are pending.
+- (none) — the Review threshold constant names (DEF-7) are reconciled against
+  `app/services/review.py`; all values matched the audit and two names were
+  corrected (§5).
