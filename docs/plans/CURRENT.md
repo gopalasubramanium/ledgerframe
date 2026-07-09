@@ -26,6 +26,13 @@ starts from files, not memory.
   spec (D-043 groups, /snapshot redirect, /global removed, rotation eligibility);
   Home Simple/Full composition + ticker strip (D-046/D-047); feature-verdict
   appendix (Batches 7–9) + a killed/dropped safeguard appendix.
+- **docs/specs/PRODUCT-SPEC.md** — what LedgerFrame is + who it's for; deployment
+  posture (loopback default, LAN+PIN, VPN/Tailscale, SaaS out-of-scope-not-
+  precluded); Product Guarantees verbatim; deliberate-semantics register (honesty
+  features, architectural invariants, calculation honesty invariants incl.
+  never-overwrite-NAV, honest-NULL FX, no-FK isolation); Review threshold
+  named-constants table w/ rationale (D-059, values from 04 §13); scope principle
+  (D-065/P-7); first-run checklist (D-045); Settings Privacy section (D-069).
 
 ## IN-PROGRESS
 
@@ -34,9 +41,8 @@ starts from files, not memory.
 ## NEXT
 
 Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
-1. docs/specs/PRODUCT-SPEC.md
-2. docs/specs/DESIGN-SYSTEM.md
-3. docs/specs/SECURITY-BASELINE.md
+1. docs/specs/DESIGN-SYSTEM.md
+2. docs/specs/SECURITY-BASELINE.md
 
 ## Needs decision
 
@@ -50,3 +56,7 @@ Remaining specs, one per session, in `docs/plans/spec-generation.md` order:
 - **Cash flow route (D-056).** Page renamed Planning → Cash flow, but whether
   the route becomes `/cash-flow` (with redirect) or stays `/planning` is not
   decided. See INFORMATION-ARCHITECTURE.md "Needs decision". Product decision.
+- **Review threshold constant names (DEF-7, partial).** The threshold *values*
+  were recovered from 04-CALCULATION-ENGINE §13 and are written into
+  PRODUCT-SPEC.md §5; three constant *names* are proposed and need reconciling
+  against `services/review.py` when the app source is available. Mechanical.
