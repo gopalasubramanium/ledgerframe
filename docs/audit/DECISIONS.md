@@ -1,0 +1,458 @@
+# DECISIONS.md — LedgerFrame v2 Product Decisions
+
+Status: **COMPLETE** — 11 batches, 80 decisions (D-001–D-080). All linkages closed
+(L-1 → D-056, L-2 → D-076).
+Source audits: OPEN-QUESTIONS.md, 01–09 audit docs. This file is the authoritative
+input for authoring MASTER-DATA.md, GLOSSARY.md, INFORMATION-ARCHITECTURE.md,
+SECURITY-BASELINE.md, ROADMAP.md, and the ADRs named below. Claude Code acts on
+this file with zero interpretation; anything not decided here goes to
+docs/plans/CURRENT.md under "Needs decision".
+
+---
+
+## Product Guarantees (D-077 + accumulated)
+
+Destined verbatim for the glossary guarantee block, the Legal page, and README:
+
+1. **No trades.** LedgerFrame never places or executes trades. No order
+   endpoints exist (Kite is market-data read-only).
+2. **No advice.** Never gives buy/sell/hold, tax, or financial advice. Every
+   AI answer ends with the fixed information-only disclaimer.
+3. **No fabrication.** Never fabricates a price, headline, or figure.
+   Insufficient inputs produce "—"/None with a reason, never a made-up number.
+4. **No jurisdiction tax logic — ever** (D-077). `long_term_days` is a
+   neutral user-set threshold with no jurisdiction presets. Statements and
+   Realised P/L outputs are "for your accountant".
+5. **No egress (opt-in)** (D-004). With the no-egress toggle enabled the
+   device makes zero outbound network calls — version check, feeds, and
+   banner included (D-066, D-075).
+6. **No stored AI conversations** (D-016). AI questions and answers are
+   never persisted.
+7. **The validation contract never weakens** (D-071). Implementation may
+   improve; the contract (below, §8) may not be loosened.
+
+## General principles
+
+- **P-1 (Canonical home + summaries).** Each piece of information has ONE
+  canonical page where it is authoritative and fully explained. Other pages
+  may show a summary produced by the same backend reader (never recomputed,
+  never a second code path) with a link to the canonical page. Home is
+  entirely composed of such summaries and owns nothing. Enforcement
+  corollary: **a summary widget may not add figures its canonical page does
+  not show.**
+- **P-2 (Answers, not ingredients).** Canonical home = where the answer is
+  explained, not where its ingredients are typed.
+- **P-3 (Scoped views are not duplicates).** Entity-scoped or
+  instrument-scoped views of a canonical reader are a filter, not a
+  duplicate.
+- **P-4 (Guessable groups).** Navigation group names must be guessable from
+  their contents.
+- **P-5 (Server-side exports).** All exports are server-side; the client
+  never generates files. (Inherits formula-injection sanitisation.)
+- **P-6 (One AI pipeline).** All AI surfaces ride the single
+  grounded+validated pipeline; no feature may ever add a direct model call.
+- **P-7 (Scope test).** The rebuild adds no new capabilities, but UI for
+  existing capabilities that decided features depend on is in scope.
+  (Entity CRUD D-065 and token UI D-069 pass this test.)
+- **P-8 (One path in, one path out).** One sanitised path in
+  (sanitise-at-ingest, D-075) and one validated path out (P-6); no feature
+  may bypass either.
+
+**Deliberate honesty features (protected — not removable copy):**
+the "not a Sharpe ratio" disclaimer (D-030); the real-indices vs ETF-proxy
+badge (D-051); "reporting, never a trade instruction" on Policy (D-055);
+contributions-don't-reduce-runway and 'once'-obligations-excluded-from-burn
+(D-057); honest-NULL trade-date FX with excluded-events count (D-020,
+D-076); insurance-cash-value exclusion lines (D-039); the visible
+AI-fallback signal (D-070); the normative validation contract (D-071).
+
+**Architectural invariants:**
+- Estate/insurance registers deliberately do NOT FK into portfolio tables;
+  `estate_document.related_to` is free text by design. Protected from future
+  schema "normalisation". (D-063)
+- All money math is backend `decimal.Decimal`; the frontend never computes
+  financial values. Downstream reports consume canonical readers
+  (`value_portfolio`, `fifo_report`); they never re-derive money. (Carried
+  from 04; reaffirmed by P-1.)
+- A single shared datetime-normalisation utility handles all naive/aware
+  UTC handling; the scattered per-module fixes (`_sort_ts`, `_naive`,
+  `_carry_forward`) are retired. (D-080)
+
+---
+
+## 1. Deployment target & security posture
+
+- **D-001 — Target exposure: single-user, local-first + optional LAN**
+  (OQ 15). v2 core is a single-user local appliance: loopback bind by
+  default, LAN opt-in requires a PIN. No TLS, CSRF tokens, or multi-user
+  isolation in v2 core. ADR must record: (a) SaaS/PaaS hardening is
+  explicitly out of scope for v2 core and will be handled in a future
+  proprietary layer — v2 must not make choices that preclude that layer;
+  (b) VPN/Tailscale is the sanctioned remote-access answer.
+- **D-002 — PIN policy: numeric PIN, minimum 6 digits** (OQ 16). Argon2 +
+  exponential lockout retained. SECURITY-BASELINE.md must state the PIN is
+  an access lock, not data-at-rest protection — users rely on OS disk
+  encryption. ROADMAP: optional passphrase mode (8–64 chars).
+- **D-003 — Keep in-app `.env` writes and the sudo admin helper** (OQ 17).
+  Guardrails retained: fixed action allow-list, never free-form shell,
+  write-only key API (values never readable back), `.env` chmod 0600. The
+  sudo helper is a documented **install-time opt-in**; the app degrades
+  gracefully when absent (System controls hidden/disabled with explanation).
+- **D-004 — 07 gaps disposition.**
+  **Fix in v2:** #4 durable rate-limiter state (survives restart); #11
+  hash-chained audit log (tamper-evidence); #12 dependency pinning + CVE
+  scanning in CI; #14 assert CORS-credentials cannot ship in production
+  builds; plus the **no-egress toggle** (Product Guarantee 5; surfaced in
+  first-run per D-045; wired per D-066/D-069/D-075).
+  **Explicitly accept, record in ADR:** #1 multi-user, #2 TLS/secure
+  cookies, #3 CSRF token, #5 (per D-003), #6 (per D-002), #7
+  no-PIN-open-local, #8 OS keyring, #9 heuristic AI validator (posture set
+  by D-070/D-071), #13 restore-trusts-backup.
+
+## 2. Master data
+
+- **D-005 — Architecture: hybrid** (OQ 1). Fixed vocabularies = code-defined
+  enums, served via a single `/refdata` endpoint, enforced with DB CHECK
+  constraints. User-extensible masters = DB reference tables, FK-enforced.
+  **The frontend carries zero local vocabulary copies** — `refdata.ts`,
+  `policyTemplates.ts`, and all inline lists are retired. Rule: **every
+  vocabulary (fixed or extensible) must have its complete seed value list
+  enumerated in MASTER-DATA.md; no vocabulary is confirmed without values.**
+- **D-006 — Currency master** with `is_base_eligible` flag
+  (base/reporting-eligible subset vs. wider transaction-currency set).
+  Governing rule: **a currency may exist in the master only if the FX
+  service can translate it.** Seed values: EXTRACTION REQUIRED — union of
+  `config.SUPPORTED_CURRENCIES` (9, base-eligible), `refdata.ts` CURRENCIES
+  (14), PortfolioEditor inline list (22), validated against the rule.
+  ROADMAP: user-requestable transaction currencies, FX-validated.
+- **D-007 — `listing_country` (ISO-3166 alpha-2) is the single authoritative
+  country field** (OQ 4). Drop `instruments.country` (free text) and
+  `instruments.domicile_country`. Region derived: IN→India, SG→Singapore,
+  US→US, else Global. ISO-3166 reference table seeds the picker. Migration:
+  map legacy free-text values to ISO2 with a **manual review list for
+  unmappables — no silent best-guess.** ROADMAP: domicile for fund-tax
+  display.
+- **D-008 — One user-extensible Institution master** (OQ 2), FK'd from
+  `accounts.institution` and `insurance_policy.insurer`. Estate `related_to`
+  stays free text (architectural invariant, §0).
+- **D-009 — Instrument taxonomy.** `asset_class`: fixed enum (13 values,
+  D-010). `asset_subclass`: fixed vocab (values EXTRACTION REQUIRED from
+  code usage; at least `etf, reit, mutual_fund, derivative` — routing reads
+  `derivative`). `liquidity_profile`: fixed enum (D-010). `sector`:
+  user-extensible master, seeded GICS-like (seed list to be authored —
+  see DEFERRED). **Drop `asset_category`**; migration moves surviving
+  `asset_category` values into tags before the column drops.
+- **D-010 — Fixed-vocabulary sweep confirmed.** All below are fixed
+  vocabularies per D-005. EXTRACTION REQUIRED items must be copied verbatim
+  from the named source before MASTER-DATA.md is written.
+  - `TxnType` (11): `buy, sell, dividend, interest, deposit, withdrawal,
+    fee, split, bonus, merger, transfer`. Frontend gains `merger`.
+  - `AssetClass` (13): `equity, etf, mutual_fund, bond, cash, fixed_deposit,
+    commodity, crypto, property, private, retirement, liability, other`.
+  - `liquidity_profile` (5): `listed, redeemable, locked, illiquid, manual`.
+  - `Entity.kind` (5): `self, spouse, trust, company, other`.
+  - `Goal.basis` (3): `net_worth, liquid, none`.
+  - `Obligation.recurrence` (4): `once, monthly, quarterly, annual`.
+  - `Obligation.kind` (2): `expense, income`.
+  - `Contribution.frequency` (4): `monthly, quarterly, annual, once`.
+  - `Contribution.kind` (3): `invest, withdraw, prepay`.
+  - `EstateProfile.will_status` (4): `none, draft, executed, needs_update`.
+  - `EstateDocument.status` (3): `present, missing, outdated`.
+  - `ValuationMethod` (9): `market_quote, official_nav, broker_quote,
+    manual_valuation, statement_import, calculated_accrual, estimated_value,
+    fx_reference, unavailable`. (All values retained in the enum per D-073;
+    no v2 lane emits `calculated_accrual` or `statement_import`.)
+  - `EntitlementStatus` (5): `real-time, delayed, end-of-day, cached,
+    unavailable` (LedgerFrame never claims real-time).
+  - `Account.kind`: EXTRACTION REQUIRED — `ACCOUNT_KINDS`,
+    `app/services/accounts.py`.
+  - `InsurancePolicy.policy_type` / `premium_frequency`: EXTRACTION
+    REQUIRED — `POLICY_TYPES`, `FREQUENCIES` (insurance service, served by
+    `/insurance/meta`).
+  - `EstateDocument.category` / contact roles: EXTRACTION REQUIRED —
+    `DOC_CATEGORIES`, `CONTACT_ROLES` (served by `/estate/meta`).
+    **`estate_contact.relationship` is folded into the roles vocabulary**
+    and the separate field dropped.
+- **D-011 — Tag master: user-extensible, dedupe/rename** (rename cascades to
+  all tagged holdings). Tag uniqueness is **case-insensitive**; migration
+  includes a dedupe/merge pass for case and whitespace variants. Cap of 16
+  tags/holding retained.
+- **D-012 — Instrument picker replaces free-text symbol entry.** Typeahead
+  over existing instruments + provider search; picking sets currency/asset
+  class from the instrument. Explicit "create new instrument" path replaces
+  silent auto-creation. **Bulk imports use the same resolution logic with a
+  review queue for unresolved symbols — imports never silently auto-create
+  instruments.** Also removes `_get_or_create_instrument` side effects from
+  GET paths.
+- **D-013 — IANA timezone select** replaces free-text timezone input.
+
+## 3. Dead tables & schema-only features
+
+- **D-014 — Drop `ProviderConfig`.** Provider config lives in `.env` (D-003).
+- **D-015 — Drop `Note`.** Per-record note fields cover the need. ROADMAP:
+  instrument notes.
+- **D-016 — Drop `AIConversation`/`AIMessage`; AI chat is ephemeral**
+  (OQ 13). Recorded as Product Guarantee 6 in SECURITY-BASELINE.md.
+  ROADMAP: opt-in chat history.
+- **D-017 — Drop `DashboardConfig`/`DashboardRotationItem`.** Rotation/focus
+  config persisted server-side in settings rows only (kiosk behaviour must
+  survive a browser wipe); v1's write-only allow-listed keys become
+  read-back-and-consumed (reconciliation rule in D-078). localStorage is not
+  a store for rotation config.
+- **D-018 — Per-account cost-basis method selector (fifo/average)** (OQ 5).
+  New accounts default to `fifo`; help text states the method is
+  per-account. Changing method on an account with history triggers a
+  holdings rebuild with a restatement warning (realised/unrealised figures
+  will change). Selector lives on the account form (D-064). `spec`
+  (specific-lot) → ROADMAP.
+- **D-019 — Merger recording in the transaction form** (OQ 6). Fields:
+  "Absorbed into" (instrument picker per D-012) and "Ratio", mapping to the
+  existing schema (`related_instrument_id`; ratio in `price`). No schema
+  change. ROADMAP: audit whether other corporate actions (spin-offs, symbol
+  changes) need first-class recording; splits/bonuses already
+  engine-covered.
+- **D-020 — Trade-date FX: keep honest-NULL behaviour** (OQ 7). Same-day
+  capture only; backdated trades show the secondary "trade-date FX" realised
+  total with an excluded-events count. Historical backfill → ROADMAP (merged
+  entry, see D-076).
+
+## 4. Terminology (canonical term → retired synonyms)
+
+- **D-021 — Two headline concepts** (OQ 10): **Net worth** = Gross assets −
+  Liabilities (glossary states the formula explicitly); **Gross assets** =
+  sum of positive holdings. Rule: **Net worth is the only headline total;
+  Gross assets appears only as a labelled component.** Retired: "Total
+  value", "Portfolio value".
+- **D-022 — Page: Net worth.** Nav label = H1 = route `/net-worth`.
+  `/snapshot` redirects during migration (D-042). Retired: "Snapshot".
+- **D-023 — Portfolio = analytics page; Holdings = management page.** Each
+  page's subtitle states the split; cross-links both ways.
+- **D-024 — Two movers pairs.** **Gainers / Losers** for price-move lists;
+  **Contributors / Detractors** for contribution-weighted lists. GLOSSARY.md
+  defines both pairs and states which list type uses which. Retired: "Top
+  movers" as a label.
+- **D-025 — Today's change.** Retired from UI copy: "Today" (alone), "Day",
+  "day_change".
+- **D-026 — Realised P/L and Unrealised P/L** (symmetric). Report heading is
+  "Realised P/L report". Retired: "Realised gain(s)" including headings,
+  "Realised" (alone), "paper gain" (glossary may explain it as the
+  colloquialism).
+- **D-027 — Freshness structure confirmed:** **Entitlement** (grade a source
+  claims: real-time/delayed/end-of-day/cached/unavailable) · **Stale**
+  (cached older than threshold; flagged, never hidden) · **Status** (one-word
+  Pricing Health chip: Fresh/Delayed/End-of-day/Cached/Manual/Estimated/
+  Unavailable). Loose "as_of"/"delayed" usage outside these definitions
+  retired.
+- **D-028 — Source / Provider / Routing.** **Source** = user-facing
+  provenance term (what owns this price). **Provider** = adapter/config
+  concept, Settings only. **Routing/route** = internal + Pricing Health
+  diagnostics only.
+- **D-029 — Four confirms:** **Ongoing cost (expense ratio)** (retired as a
+  figure label: "cost of ownership"; a card may be titled "Costs") ·
+  Concentration terms stay distinct (Concentration, Largest position, Top-5,
+  HHI — never interchanged) · **Entity** ("Household" is an entity name, not
+  a term) · **Account** (name) + **Institution** (retired: "platform").
+- **D-030 — Three confirms:** control label **"Detail level: Simple/Expert"**
+  wherever the control appears (scope per D-040) · page/concept **Review**
+  (retired as labels: "Review Centre", "Needs a look", "What needs
+  attention"; "what needs a look" may survive as body copy) · **the
+  not-a-Sharpe disclaimer is protected** (honesty list, §0).
+
+## 5. Information architecture (item → canonical page)
+
+- **D-031 — Mechanism = P-1**, including the enforcement corollary.
+- **D-032 — Headline split.** **Net worth page** canonical for: Net worth,
+  Gross assets, Liabilities. **Portfolio page** canonical for investment
+  analytics figures: Today's change, Unrealised P/L, Realised P/L, Cost
+  basis, Total return. Each page summarizes the other's headline with a
+  link.
+- **D-033 — Allocation canonical on Portfolio** (by class / sector /
+  currency / tag). The Net worth page keeps its **composition-by-class
+  table** — recorded explicitly: allocation weight (share of gross assets)
+  and the net-worth composition table (itemised statement incl. liabilities)
+  answer different questions and are not duplicates. Home: one summary
+  donut, linked.
+- **D-034 — Contributors/Detractors canonical on Portfolio;
+  Gainers/Losers canonical on Markets.** Home shows one summary of each,
+  linked.
+- **D-035 — Performance chart canonical on Portfolio** (benchmark picker +
+  stats live only there). Home and Net worth show linked sparkline
+  summaries.
+- **D-036 — Net-worth trend, liquidity ladder, cash runway: canonical on
+  Net worth** (P-2). Scenarios/Review consume runway via the same reader as
+  summaries. Cash flow page links to the runway result; Net worth page links
+  to "edit obligations".
+- **D-037 — News canonical for briefing + grouped headlines; Markets
+  canonical for quotes/indices/market status.** Home: briefing summary + top
+  headlines + compact quote cards, linked. InstrumentDetail news/quote =
+  scoped view per P-3.
+- **D-038 — Drift → Policy; Review/attention → Review; Provenance/confidence
+  → Pricing Health.** Home/Net worth show ReviewCard as summary-with-link.
+  **Reports Pack = the one sanctioned duplication**: a print/export artifact
+  composed from canonical readers, disclaimers preserved — not a page in the
+  IA sense.
+- **D-039 — Insurance cash value stays excluded from Net worth** (OQ 12),
+  permanently in v2. Stated visibly on the Insurance page **and** as a
+  labelled line on the Net worth page ("Insurance cash value: not counted —
+  see Insurance"). ROADMAP: opt-in inclusion.
+
+## 6. Navigation & view modes
+
+- **D-040 — Detail level scoped to Home** (OQ 8). Settings control "Home
+  layout: Simple / Full"; global top-bar toggle removed. Rotation
+  interaction: rotating to Home uses the configured Home layout — one
+  setting, no special case. ROADMAP: app-wide detail level, gated on
+  per-page specs.
+- **D-041 — Reports and Pricing Health enter the sidebar** (OQ 9). Reports
+  Pack stays reachable from Reports only (artifact per D-038).
+- **D-042 — Route dispositions (deliberate asymmetry):** `/global` removed,
+  no legacy redirect. `/snapshot` → `/net-worth` redirect kept for
+  migration.
+- **D-043 — Sidebar: grouped, fixed order** (not user-reorderable). Groups:
+  **Overview** (Home) · **Wealth** (Net worth, Portfolio, Holdings,
+  Accounts) · **Markets** (Markets, Heatmap, News) · **Planning** (Review,
+  Policy, Cash flow, Scenarios, Insurance, Estate) · **Reports** (Reports,
+  Pricing Health) · **System** (Settings, Help, Legal). Principle P-4
+  applies; "Stewardship" rejected as a group name. Nav-customization control
+  removed.
+- **D-044 — Rotation kept, fully configurable.** Page set (any nav page
+  eligible) + interval set in Settings, server-persisted (D-017); top-bar
+  toggle stays. **Rotation skips pages that error or are empty.**
+- **D-045 — PersonaOnboarding killed.** Replaced by a minimal first-run
+  checklist against real settings: base currency, timezone, PIN, data
+  provider, **and the no-egress toggle** (privacy posture is an explicit
+  first-run choice) — each step skippable, each linking to its Settings
+  home. Density becomes a plain Settings→Appearance option.
+
+## 7. Features (verdicts)
+
+| ID | Feature | Verdict | Notes |
+|----|---------|---------|-------|
+| D-046 | Home | SIMPLIFY | Fixed set of linked summary widgets: Net worth + Today's change lines, perf sparkline, one allocation donut, both movers summaries, ReviewCard, briefing summary + top headlines, compact quote cards (one row, source select). Dropped: top-holdings widget; the 3 separate market rows. Simple layout = headline + ReviewCard + briefing; Full = the set above. |
+| D-047 | Ticker strip | KEEP (scoped) | **Home Full layout only** — never Simple, never other pages. Grounds: wall-appliance identity (D-017/D-040/D-044). |
+| D-048 | Portfolio page | KEEP | Stat rail = D-032 analytics figures; donuts gain by-tag view; Contributors/Detractors labels; Costs card never blends recorded fees with ongoing cost; not-Sharpe disclaimer. |
+| D-049 | Holdings + editor + add flow | KEEP (reshaped) | Instrument picker (D-012), merger type (D-019), all vocab from `/refdata` (the 6-value TXN_ASSET_CLASSES subset dies), import preview→commit + unresolved-symbol review queue, soft-delete + 10s undo + purge-deleted [PIN]. **AddAssetWizard folds into one Add flow** (branch: listed instrument vs manual asset; per-type meta kept, whitelisted). |
+| D-050 | Holdings CSV export | MERGE | Into server-side `/portfolio/holdings.csv` (P-5). |
+| D-051 | Markets page | SIMPLIFY | Keep region tabs, search, indices, Gainers/Losers, instrument grid, Global tab, real-vs-ETF-proxy badge (honesty feature, §0). **Drop region-news blocks** — link to News region groups. |
+| D-052 | Watchlists | KEEP | Management on Markets only; Home shows watchlist quotes via source select; InstrumentDetail keeps add-to-watchlist. |
+| D-053 | Heatmap | KEEP (re-implemented) | Rebuild treemap on the house SVG chart layer (squarified algorithm), **dropping ECharts**. Escape hatch: if parity isn't reached within the plan-file scope, fall back to ECharts with an ADR documenting the single-dependency exception. |
+| D-054 | Net worth page | KEEP (reshaped) | KPI strip (Net worth / Gross assets / Liabilities / Cash & deposits), trend, composition table, liquidity ladder, runway, ReviewCard summary, insurance-exclusion line (D-039), linked perf sparkline. **Composition donut dropped.** |
+| D-055 | Policy page | KEEP | `bucket` becomes a select driven by the dimension's master. Drift computed live, never stored. "Reporting, never a trade instruction" protected (§0). |
+| D-056 | Planning page | KEEP, renamed **Cash flow** | Closes L-1. Nav group Planning = Review, Policy, Cash flow, Scenarios, Insurance, Estate. |
+| D-057 | Goals / Obligations / Contributions | KEEP | Semantics protected (§0): contributions don't reduce runway; 'once' obligations excluded from burn. Vocab/currency from masters. |
+| D-058 | Scenarios | KEEP | Fixed shock set; "scenario, never a forecast" preserved; runway what-ifs via canonical reader. ROADMAP: user-defined shocks (gated on a proper plan file). |
+| D-059 | Review page | KEEP | Verdicts + attention + Mark-reviewed (ReviewLog) + history. Signal thresholds enumerated in spec as **named constants, each with a one-line rationale**. Per-signal try/except resilience preserved. |
+| D-060 | Reports page | KEEP (reshaped) | Headings per D-026; both realised totals (current-FX caveated + trade-date-FX with excluded count); exports server-side; long-term-days stays a neutral user-set threshold (Product Guarantee 4); AI helper rides P-6 pipeline only. |
+| D-061 | Reports Pack | KEEP | Sanctioned artifact (D-038): consolidated + per-entity sections (P-3), print-optimised, composed from canonical readers, disclaimers preserved, reachable from Reports only. |
+| D-062 | Insurance page | KEEP (reshaped) | Insurer from Institution master; policy_type/frequency from `/refdata`; net-worth exclusion stated on-page; `insured_person`/`nominee` stay free text (names, not vocabulary). Glossary distinguishes the per-policy documents checklist ("do I hold this policy's papers") from Estate documents ("is my estate documentation in order"). |
+| D-063 | Estate page | KEEP (reshaped) | Roles/category/statuses from `/refdata`; relationship folded into roles; `related_to` free text; **no-FK isolation invariant** (§0). |
+| D-064 | Accounts page | KEEP (reshaped) | Institution from master; kind from `/refdata`; **cost-basis method selector here** (D-018); **entity assignment on the account form**; rollups are P-1 summaries, linked. |
+| D-065 | Entity CRUD | KEEP (UI added) | Minimal CRUD (name, kind from vocab) as a card on Accounts; delete blocked while accounts reference the entity. Passes P-7. |
+| D-066 | Global chrome | KEEP (reshaped) | Detail toggle leaves top bar; rotation toggle stays; sidebar per D-043; StaleBanner kept; **UpdateBanner respects no-egress: no-egress enabled = zero outbound calls, version check and banner included**; DemoBadge, theme cycle, clock kept. |
+| D-067 | Ask panel | KEEP | SSE streaming; fact-pack shown before answer (trust UX); validated-before-display; ephemeral (D-016); privacy-mode label always visible; P-6. |
+| D-068 | Briefing + instrument explainers | KEEP | Deterministic template + optional validated narration (model may add no numbers); stored + worker-refreshed; canonical on News. Instrument explainer rides P-6. |
+| D-069 | Settings | KEEP (reshaped) | 4 tabs. Adds: **Privacy section** (no-egress toggle, "AI never persists" statement, privacy-mode indicator, **current egress state shown as a plain statement — "This device makes no network calls" when enabled — state shown, not merely offered**); **API-token management card** (create/name/revoke, token shown once, [S]-gated; passes P-7). Appearance gains density, loses persona. Nav-customization dies (D-043). System tab degrades gracefully sans sudo helper (D-003). |
+
+## 8. AI, providers & routing
+
+- **D-070 — Validator strictness kept as-is** (OQ 14). False rejections are
+  the accepted cost (fallback is a correct deterministic template). Add a
+  **user-visible fallback signal**: "AI answer didn't pass grounding checks —
+  showing facts directly." ROADMAP: revisit strictness only if fallback
+  frequency proves high in practice.
+- **D-071 — Validation contract is normative spec** (goes into
+  SECURITY-BASELINE.md with protected status; Product Guarantee 7):
+  model output is **buffered, never streamed raw**; every significant
+  money/% number must trace to a fact; unknown tickers rejected;
+  recommendation / real-time-claim / secret-like content rejected; failure →
+  deterministic template; the same contract gates chat, briefing, and
+  instrument explainers (P-6). **Implementation may improve; the contract
+  may not weaken.**
+- **D-072 — No user-editable provider priority** (OQ 18). Hard-coded lane
+  chains + per-instrument `source_override` (validated) retained. Pricing
+  Health shows the chain per holding — visibility yes, editability no.
+  ROADMAP: per-lane priority editing only on demonstrated need.
+- **D-073 — Bond / deposit / retirement lanes: manual is the honest,
+  specified v2 behaviour** (OQ 19). Per-type meta (FD rate, coupon…) kept as
+  **reference fields, not calculation inputs**. `calculated_accrual` and
+  `statement_import` are removed from the lane chains but **retained in the
+  ValuationMethod vocabulary** (no v2 lane emits them). ROADMAP (verbatim):
+  "FD accrued-interest valuation — first post-v2 feature; plan file must
+  cover day-count conventions, compounding variants, maturity handling, and
+  provenance labelling of calculated values."
+- **D-074 — `ecb_fx` is a translation-reference source only** (OQ 20).
+  Never prices a holding; feeds FX conversion fallback only. Enforced in the
+  router capability matrix (quote=✗) and recorded as spec.
+- **D-075 — One cached feed reader.** Worker fetches RSS on the refresh
+  interval into the `market_news` cache table; all endpoints read the cache;
+  per-instrument news is a P-3 scoped view. `sanitize_untrusted` applied
+  **once at ingest** (P-8), not per-read. Manual refresh button stays.
+  No-egress ON = no feed fetches; cache served with honest staleness
+  marking.
+
+## 9. Reporting/tax & housekeeping
+
+- **D-076 — Native-currency is the filing-grade output** (OQ 21; closes
+  L-2). Base-currency realised totals remain explicitly indicative — both
+  variants shown per D-060 with caveats preserved. ROADMAP (merged with
+  D-020): "Historical FX series (enables trade-date backfill + per-date
+  realised totals)."
+- **D-077 — No jurisdiction tax logic, permanently** (OQ 22). Product
+  Guarantee 4. `long_term_days` stays a neutral user-set threshold with no
+  jurisdiction presets; statements/realised outputs are "for your
+  accountant". Appears in the glossary guarantee block and Legal page.
+- **D-078 — Settings persistence split by nature** (08 §2).
+  **Per-device (localStorage):** theme, density, sidebar-collapsed,
+  reduced-motion, high-contrast — properties of the display.
+  **Server-persisted (settings rows):** Home layout (per D-040/D-044
+  linkage — it defines what rotation shows), language, rotation/focus
+  (D-017), and everything already server-side. Each setting's home is listed
+  in the spec. **Hard requirement: the v1 write-only allow-list keys are
+  reconciled — every allow-listed key is either consumed or removed.**
+- **D-079 — Stray repo files removed** (OQ 23). The two session-transcript
+  `.txt` files and `09-Jul-2026` leave the repo; gitignore patterns added
+  for transcript/working-note artifacts. Content worth keeping belongs in
+  spec files, not the root.
+- **D-080 — Dead code confirmed deletable** (OQ 24): `verify_token()` (no
+  callers), the commented-out `_carry_forward` duplicate, the no-op
+  `account` fetch in `portfolio.py`. Spec requirement: v2 ships **one shared
+  datetime-normalisation utility** addressing the naive/aware bug class
+  (architectural invariant, §0).
+
+---
+
+## ROADMAP.md register (accumulated breadcrumbs — not v2 work)
+
+| # | Item | Source |
+|---|------|--------|
+| R-1 | Optional passphrase mode (8–64 chars) | D-002 |
+| R-2 | User-requestable transaction currencies, FX-validated | D-006 |
+| R-3 | Domicile for fund-tax display | D-007 |
+| R-4 | Instrument notes | D-015 |
+| R-5 | Opt-in AI chat history | D-016 |
+| R-6 | `spec` (specific-lot) cost-basis method | D-018 |
+| R-7 | Corporate-actions audit: spin-offs, symbol changes as first-class recordings | D-019 |
+| R-8 | Historical FX series (enables trade-date backfill + per-date realised totals) | D-020, D-076 |
+| R-9 | Insurance cash value: opt-in inclusion in Net worth | D-039 |
+| R-10 | App-wide Detail level, gated on per-page specs | D-040 |
+| R-11 | User-defined scenario shocks, gated on a proper plan file | D-058 |
+| R-12 | Revisit AI validator strictness only if fallback frequency proves high | D-070 |
+| R-13 | Per-lane provider priority editing, only on demonstrated need | D-072 |
+| R-14 | **FD accrued-interest valuation — first post-v2 feature; plan file must cover day-count conventions, compounding variants, maturity handling, and provenance labelling of calculated values** | D-073 |
+
+Also recorded (ADR, not ROADMAP): SaaS/PaaS layer is a future proprietary
+layer; v2 must not preclude it (D-001).
+
+## DEFERRED (mechanical, not product decisions — with what each blocks)
+
+| Item | What it is | Blocks |
+|------|-----------|--------|
+| DEF-1 | EXTRACTION REQUIRED — currency union (SUPPORTED_CURRENCIES 9 ∪ refdata 14 ∪ PortfolioEditor 22), validated against the FX-translatable rule | MASTER-DATA.md (D-005 completeness rule); currency master seed |
+| DEF-2 | EXTRACTION REQUIRED — `asset_subclass` values from code usage | MASTER-DATA.md; instrument taxonomy vocab (D-009) |
+| DEF-3 | EXTRACTION REQUIRED — `ACCOUNT_KINDS` (`app/services/accounts.py`) | MASTER-DATA.md; account form (D-064) |
+| DEF-4 | EXTRACTION REQUIRED — `POLICY_TYPES`, `FREQUENCIES` (insurance service) | MASTER-DATA.md; Insurance form (D-062) |
+| DEF-5 | EXTRACTION REQUIRED — `DOC_CATEGORIES`, `CONTACT_ROLES` (estate service), incl. the relationship→roles fold | MASTER-DATA.md; Estate forms (D-063) |
+| DEF-6 | Sector master seed list (GICS-like) — authorship, not extraction | MASTER-DATA.md; sector picker (D-009) |
+| DEF-7 | Review threshold constants table with per-value rationale — authorship from `services/review.py` values | Review page spec (D-059) |
+
+No product decisions were deferred: all 80 items received a verdict.

@@ -1,0 +1,8 @@
+.env
+__pycache__/
+node_modules/
+*.db
+*.sqlite
+# D-079: transcripts and working notes never enter the repo
+*transcript*.txt
+*session*.txt
