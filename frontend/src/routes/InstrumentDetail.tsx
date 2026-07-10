@@ -32,6 +32,18 @@ import { formatMoney, formatPrice, formatSignedMoney } from "../format/number";
 // every figure is rendered by its canonical reader and links to its canonical page.
 // The AI "explain this instrument" (D-068, P-6) is DEFERRED to the AI-surfaces
 // milestone (ND-2/ND-5) — this page ships without it, D-068 intact.
+// PriceChart amendment — the period selector (PROPOSED). Days are the server-side
+// history window; YTD is computed live. "Max" is capped by the backend (≤ 3650).
+const PERIODS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "Max"];
+function periodToDays(p: string): number {
+  if (p === "YTD") {
+    const now = new Date();
+    return Math.max(1, Math.round((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000));
+  }
+  const base: Record<string, number> = { "1D": 1, "5D": 5, "1M": 30, "3M": 90, "6M": 180, "1Y": 365, "5Y": 1825, "Max": 3650 };
+  return base[p] ?? 180;
+}
+
 export function InstrumentDetail() {
   const { symbol = "" } = useParams();
   const sym = symbol.toUpperCase();
@@ -40,6 +52,7 @@ export function InstrumentDetail() {
 
   const [detail, setDetail] = useState<Detail | null>(null);
   const [candles, setCandles] = useState<Candle[]>([]);
+  const [period, setPeriod] = useState("6M");
   const [news, setNews] = useState<NewsItem[]>([]);
   const [position, setPosition] = useState<HoldingRow | null>(null);
   const [baseCcy, setBaseCcy] = useState("");
@@ -51,15 +64,13 @@ export function InstrumentDetail() {
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [d, h, n, p] = await Promise.all([
+    const [d, n, p] = await Promise.all([
       getInstrument(sym),
-      getInstrumentHistory(sym),
       getInstrumentNews(sym),
       getInstrumentPosition(sym),
     ]);
     if (d.ok) setDetail(d.data);
     else setError(d.error);
-    setCandles(h.ok ? h.data.candles : []);
     setNews(n.ok ? n.data.items : []);
     if (p.ok) {
       setBaseCcy(p.data.base_currency);
@@ -72,10 +83,28 @@ export function InstrumentDetail() {
     reload();
   }, [reload]);
 
+  // Price history refetches when the period changes (server slices the range).
+  useEffect(() => {
+    let live = true;
+    getInstrumentHistory(sym, periodToDays(period)).then((h) => {
+      if (live) setCandles(h.ok ? h.data.candles : []);
+    });
+    return () => { live = false; };
+  }, [sym, period]);
+
   const series = useMemo<PricePoint[]>(
-    () => candles.map((c) => ({ t: c.ts.slice(0, 10), open: c.open, high: c.high, low: c.low, close: c.close })),
+    () => candles.map((c) => ({ t: c.ts.slice(0, 10), open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume })),
     [candles],
   );
+  // Honest short-history: label when the data covers less than the requested period.
+  const coverageNote = useMemo(() => {
+    if (series.length < 2) return undefined;
+    const wanted = periodToDays(period);
+    const first = new Date(series[0].t).getTime();
+    const last = new Date(series[series.length - 1].t).getTime();
+    const haveDays = Math.round((last - first) / 86400000);
+    return haveDays < wanted * 0.9 ? `Only ${haveDays} day${haveDays === 1 ? "" : "s"} of history available` : undefined;
+  }, [series, period]);
 
   const meta = detail?.instrument;
   const quote = detail?.quote;
@@ -171,14 +200,21 @@ export function InstrumentDetail() {
             </section>
           )}
 
-          {/* Price history — house-SVG chart (D-053), or an honest reason. */}
+          {/* Price history — house-SVG chart (D-053). Simple default; period selector
+              + Simple/Advanced toggle + crosshair (PROPOSED amendment). Honest short
+              history: shows only what exists, labelled, never stretched. */}
           <section className="ins__section">
             <h2 className="ins__h2">Price history</h2>
-            {series.length > 1 ? (
-              <PriceChart series={series} interval="1d" />
-            ) : (
-              <EmptyState message="No price history" reason={historyReason} />
-            )}
+            <PriceChart
+              series={series}
+              interval="1d"
+              controls
+              defaultView="simple"
+              periods={PERIODS}
+              activePeriod={period}
+              onPeriodChange={setPeriod}
+              coverageNote={series.length < 2 ? historyReason : coverageNote}
+            />
           </section>
 
           {/* Position if held — the canonical holdings reader, scoped (ND-1, P-3). */}

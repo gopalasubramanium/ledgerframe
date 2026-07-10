@@ -73,6 +73,58 @@
 .lf-pricechart__overlay { fill: none; stroke: var(--attention); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .lf-candle--up { stroke: var(--gain); fill: var(--gain); }
 .lf-candle--down { stroke: var(--loss); fill: var(--loss); }
+
+/* Amendment (PROPOSED) — controls, crosshair + tooltip, volume, honest note. */
+.lf-pricechart__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.lf-pricechart__toggle,
+.lf-pricechart__periods { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.lf-chartbtn {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-12);
+  cursor: pointer;
+}
+.lf-chartbtn--on {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  font-weight: var(--weight-semibold);
+}
+.lf-pricechart__plot { position: relative; }
+.lf-pricechart__vol { fill: var(--text-tertiary); opacity: 0.4; }
+.lf-pricechart__cross { stroke: var(--text-tertiary); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lf-pricechart__dot { fill: var(--accent); }
+.lf-pricechart__tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  font-size: var(--font-size-12);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lf-pricechart__tipdate { color: var(--text-secondary); }
+.lf-pricechart__tipohlc { color: var(--text-secondary); }
+.lf-pricechart__note { color: var(--attention); }
+.lf-pricechart__empty { color: var(--text-secondary); font-size: var(--font-size-13); padding: var(--space-5) 0; }
 .lf-pricechart__legend {
   display: flex;
   gap: var(--space-4);

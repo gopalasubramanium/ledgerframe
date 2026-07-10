@@ -348,6 +348,17 @@ export function KitchenSink() {
           <Specimen label="PriceChart · candles + MA + BB + RSI (Instrument Detail)">
             <PriceChart series={PRICE_SERIES} mode="candles" overlays={["MA", "BB", "RSI"]} interval="1M" />
           </Specimen>
+          <Specimen label="PriceChart · AMENDMENT (PROPOSED): Simple/Advanced toggle · period selector · hover crosshair + tooltip · honest short-history">
+            <PriceChart
+              series={PRICE_SERIES}
+              interval="1d"
+              controls
+              defaultView="simple"
+              periods={["1M", "3M", "6M", "1Y", "Max"]}
+              activePeriod="6M"
+              onPeriodChange={() => {}}
+            />
+          </Specimen>
           <Specimen label="Treemap · squarified heatmap (fill intensity = day-move magnitude)">
             <Treemap nodes={TREEMAP_NODES} squarified />
           </Specimen>

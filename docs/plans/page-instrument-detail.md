@@ -228,3 +228,31 @@ Name is free text → **TextInput** (not categorical).
 
 **Sign-off to start build:** ND-1..ND-5 resolved · §3b deltas approved · no §4
 component needs an unresolved amendment · no affordance left mock-backed (§4).
+
+---
+
+## Phase-3 acceptance walk — findings batch 1 (owner, 2026-07-10)
+
+Implemented + **verified rendered** (Chromium), committed in three batches.
+
+- **§I-1 — D-098 symbol links (DONE).** The Holdings symbol is a direct link to
+  `/instrument/{symbol}`; row-menu Details stays discoverable. Template rule added.
+  DECISIONS.md D-098.
+- **§I-2 — PriceChart amendment (PROPOSED, mini-ratify).** Simple/Advanced toggle
+  (Simple = line, default here), hover crosshair + tooltip (date/close, OHLCV in
+  Advanced), period selector (1D..Max) with **honest short-history** (`coverageNote`,
+  e.g. "Only 4 days of history available" — never stretched), volume band in
+  Advanced. Kitchen-sink specimen added; DESIGN-SYSTEM §5.2 amended (PROPOSED).
+  **Verified live.**
+- **§I-3 — Formatting (DONE).** (a) position figures right-aligned + tabular, text
+  left. (b) **Item 3b served display labels** — `/refdata` serves `{value,label}`
+  (authored once, D-005); `useLabelFor` applied everywhere raw enums leaked
+  (Holdings class chips + txn-type, Instrument identity). Verified live.
+- **§I-4 — Layout (DONE).** The AI/explainer deferred-note sits ABOVE News; News
+  caps at ~5 items with internal scroll.
+- **§I-5 — D-099 class-scoped ongoing cost (DONE).** Expense ratio is fund-only
+  (mutual_fund/etf); equity pages show no field/card; PUT rejects a non-fund bps; a
+  Review signal surfaces existing non-fund rows (never deleted). MASTER-DATA §11,
+  DECISIONS.md D-099. Verified live.
+
+Owner continues the walk after this batch.

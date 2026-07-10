@@ -34,7 +34,7 @@ export interface InstrumentDetail {
   quote: InstrumentQuote;
   instrument: InstrumentMeta;
 }
-export interface Candle { ts: string; open: number; high: number; low: number; close: number; }
+export interface Candle { ts: string; open: number; high: number; low: number; close: number; volume?: number | null; }
 export interface NewsItem {
   headline: string;
   summary?: string | null;

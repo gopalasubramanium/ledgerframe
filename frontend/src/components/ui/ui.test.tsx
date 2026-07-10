@@ -8,6 +8,7 @@ import {
   InstrumentPicker,
   MasterSelect,
   MoneyInput,
+  PriceChart,
   ProvenanceBadge,
   StalenessChip,
   Treemap,
@@ -16,6 +17,7 @@ import type { Column } from "./index";
 import {
   ALLOCATION_BY_CLASS,
   HOLDINGS,
+  PRICE_SERIES,
   PROV_STALE,
   TREEMAP_NODES,
 } from "../../mocks/fixtures";
@@ -68,6 +70,26 @@ test("MasterSelect offers create only for extensible masters", () => {
     <MasterSelect master="asset_class" value="equity" allowCreate onChange={() => {}} />,
   );
   expect(screen.queryByRole("option", { name: /Create new/ })).toBeNull();
+});
+
+test("PriceChart amendment: Simple default, Advanced shows candles, period fires (PROPOSED)", async () => {
+  const onPeriod = vi.fn();
+  const { container } = render(
+    <PriceChart series={PRICE_SERIES} interval="1d" controls defaultView="simple"
+      periods={["1M", "6M", "Max"]} activePeriod="6M" onPeriodChange={onPeriod}
+      coverageNote="Only 4 days of history available" />,
+  );
+  // Simple default → a line, no candles.
+  expect(container.querySelector(".lf-pricechart__line")).not.toBeNull();
+  expect(container.querySelectorAll(".lf-candle--up, .lf-candle--down").length).toBe(0);
+  // Toggle to Advanced → candles appear.
+  await userEvent.click(screen.getByRole("button", { name: "Advanced" }));
+  expect(container.querySelectorAll(".lf-candle--up, .lf-candle--down").length).toBeGreaterThan(0);
+  // Period buttons fire the callback (page refetches server-side).
+  await userEvent.click(screen.getByRole("button", { name: "1M" }));
+  expect(onPeriod).toHaveBeenCalledWith("1M");
+  // Honest short-history note is shown, never hidden.
+  expect(screen.getByText(/Only 4 days of history available/)).toBeInTheDocument();
 });
 
 test("InstrumentPicker exposes an explicit create path (no silent auto-create)", async () => {

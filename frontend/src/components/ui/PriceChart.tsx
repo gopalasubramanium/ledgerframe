@@ -1,10 +1,13 @@
+import { useMemo, useRef, useState } from "react";
 import "./charts.css";
 import type { PricePoint } from "../../mocks/types";
 
-// House-SVG price/performance chart (DESIGN-SYSTEM §5.2, D-035): candles +
-// MA/BB/RSI on Instrument Detail; line + benchmark for the Portfolio performance
-// panel. No ECharts. All maths here are chart geometry / technical indicators
-// (visualization), never a reported financial figure.
+// House-SVG price/performance chart (DESIGN-SYSTEM §5.2, D-035). No ECharts. All
+// maths here are chart geometry / technical indicators (visualization), never a
+// reported financial figure. AMENDMENT (PROPOSED 2026-07-10, mini-ratify): a
+// Simple/Advanced view toggle, a hover crosshair + tooltip, and a period selector
+// with HONEST short-history behaviour (shows only what exists, labels it, never
+// stretches or fabricates).
 export type Overlay = "MA" | "BB" | "RSI";
 
 export interface PriceChartProps {
@@ -14,11 +17,18 @@ export interface PriceChartProps {
   /** Comparison index series (normalized to the price range for overlay). */
   benchmark?: number[];
   interval: string;
+  /** Show the Simple/Advanced toggle + period selector (Instrument Detail). */
+  controls?: boolean;
+  defaultView?: "simple" | "advanced";
+  periods?: string[];
+  activePeriod?: string;
+  onPeriodChange?: (p: string) => void;
+  /** Honest label when the fetched history covers less than the requested period. */
+  coverageNote?: string;
 }
 
 const VW = 100;
 const PLOT_TOP = 2;
-const PLOT_BOT = 46;
 const RSI_TOP = 50;
 const RSI_BOT = 60;
 const X0 = 2;
@@ -71,21 +81,40 @@ export function PriceChart({
   mode = "line",
   benchmark,
   interval,
+  controls = false,
+  defaultView = "simple",
+  periods,
+  activePeriod,
+  onPeriodChange,
+  coverageNote,
 }: PriceChartProps) {
+  const [view, setView] = useState<"simple" | "advanced">(defaultView);
+  const [hover, setHover] = useState<{ i: number; x: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Controls drive the presets; without controls, honour the passed mode/overlays.
+  const advanced = controls ? view === "advanced" : mode === "candles";
+  const effMode: "candles" | "line" = advanced ? "candles" : "line";
+  const effOverlays: Overlay[] = controls ? (advanced ? ["MA", "BB", "RSI"] : []) : overlays;
+  const showVolume = advanced && series.some((p) => p.volume != null);
+
   const closes = series.map((p) => p.close);
   const lows = series.map((p) => p.low);
   const highs = series.map((p) => p.high);
-  const ma = sma(closes, 5);
-  const sd = stddev(closes, 5);
+  const ma = useMemo(() => sma(closes, 5), [closes]);
+  const sd = useMemo(() => stddev(closes, 5), [closes]);
 
   const priceMin = Math.min(...lows);
   const priceMax = Math.max(...highs);
   const span = priceMax - priceMin || 1;
-
   const n = series.length;
-  const xAt = (i: number) => X0 + (i / (n - 1)) * (X1 - X0);
-  const yAt = (v: number) =>
-    PLOT_BOT - ((v - priceMin) / span) * (PLOT_BOT - PLOT_TOP);
+
+  const showRsi = effOverlays.includes("RSI");
+  const plotBot = showVolume ? 40 : 46; // leave room for the volume band
+  const height = showRsi ? RSI_BOT : plotBot + 2;
+
+  const xAt = (i: number) => X0 + (i / Math.max(n - 1, 1)) * (X1 - X0);
+  const yAt = (v: number) => plotBot - ((v - priceMin) / span) * (plotBot - PLOT_TOP);
 
   const linePath = (vals: (number | null)[]) =>
     vals
@@ -95,21 +124,16 @@ export function PriceChart({
       .join(" ")
       .trim();
 
-  // Benchmark normalized into the same price band for visual comparison.
   let benchPath = "";
   if (benchmark && benchmark.length === n) {
     const bMin = Math.min(...benchmark);
     const bMax = Math.max(...benchmark);
     const bSpan = bMax - bMin || 1;
     benchPath = benchmark
-      .map((v, i) => {
-        const y = PLOT_BOT - ((v - bMin) / bSpan) * (PLOT_BOT - PLOT_TOP);
-        return `${i === 0 ? "M" : "L"}${xAt(i).toFixed(2)} ${y.toFixed(2)}`;
-      })
+      .map((v, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(2)} ${(plotBot - ((v - bMin) / bSpan) * (plotBot - PLOT_TOP)).toFixed(2)}`)
       .join(" ");
   }
 
-  const showRsi = overlays.includes("RSI");
   const rsiVals = showRsi ? rsi(closes) : [];
   const rsiPath = showRsi
     ? rsiVals
@@ -120,72 +144,141 @@ export function PriceChart({
         .trim()
     : "";
 
-  const height = showRsi ? 60 : 48;
+  const volMax = showVolume ? Math.max(...series.map((p) => p.volume ?? 0), 1) : 1;
+
+  function onMove(e: React.MouseEvent) {
+    const el = wrapRef.current;
+    if (!el || n === 0) return;
+    const r = el.getBoundingClientRect();
+    const frac = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+    setHover({ i: Math.round(frac * (n - 1)), x: e.clientX - r.left });
+  }
+
+  const hp = hover ? series[hover.i] : null;
 
   return (
     <div className="lf-pricechart">
-      <svg
-        className="lf-pricechart__svg"
-        viewBox={`0 0 ${VW} ${height}`}
-        preserveAspectRatio="none"
-        role="img"
-        aria-label={`Price chart, ${interval}`}
-      >
-        <line className="lf-pricechart__axis" x1={X0} y1={PLOT_BOT} x2={X1} y2={PLOT_BOT} />
+      {controls && (
+        <div className="lf-pricechart__controls">
+          <div className="lf-pricechart__toggle" role="group" aria-label="Chart view">
+            {(["simple", "advanced"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`lf-chartbtn${view === v ? " lf-chartbtn--on" : ""}`}
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+              >
+                {v === "simple" ? "Simple" : "Advanced"}
+              </button>
+            ))}
+          </div>
+          {periods && onPeriodChange && (
+            <div className="lf-pricechart__periods" role="group" aria-label="Period">
+              {periods.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`lf-chartbtn${activePeriod === p ? " lf-chartbtn--on" : ""}`}
+                  aria-pressed={activePeriod === p}
+                  onClick={() => onPeriodChange(p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-        {overlays.includes("BB") &&
-          ["up", "down"].map((side) => (
-            <path
-              key={side}
-              className="lf-pricechart__overlay"
-              d={linePath(
-                ma.map((m, i) =>
-                  m === null || sd[i] === null
-                    ? null
-                    : m + (side === "up" ? 2 : -2) * (sd[i] as number),
-                ),
-              )}
-            />
-          ))}
+      {n < 2 ? (
+        <p className="lf-pricechart__empty">{coverageNote ?? "No price history for the selected period."}</p>
+      ) : (
+      <div className="lf-pricechart__plot" ref={wrapRef} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+        <svg
+          className="lf-pricechart__svg"
+          viewBox={`0 0 ${VW} ${height}`}
+          preserveAspectRatio="none"
+          role="img"
+          aria-label={`Price chart, ${interval}, ${effMode}`}
+        >
+          <line className="lf-pricechart__axis" x1={X0} y1={plotBot} x2={X1} y2={plotBot} />
 
-        {overlays.includes("MA") && (
-          <path className="lf-pricechart__overlay" d={linePath(ma)} />
+          {effOverlays.includes("BB") &&
+            ["up", "down"].map((side) => (
+              <path
+                key={side}
+                className="lf-pricechart__overlay"
+                d={linePath(ma.map((m, i) => (m === null || sd[i] === null ? null : m + (side === "up" ? 2 : -2) * (sd[i] as number))))}
+              />
+            ))}
+
+          {effOverlays.includes("MA") && <path className="lf-pricechart__overlay" d={linePath(ma)} />}
+
+          {showVolume &&
+            series.map((p, i) => {
+              const vh = ((p.volume ?? 0) / volMax) * (46 - plotBot);
+              return <rect key={`v${i}`} className="lf-pricechart__vol" x={xAt(i) - 0.3} y={46 - vh} width={0.6} height={Math.max(vh, 0.1)} />;
+            })}
+
+          {effMode === "candles"
+            ? series.map((p, i) => {
+                const up = p.close >= p.open;
+                const x = xAt(i);
+                const bw = ((X1 - X0) / n) * 0.5;
+                return (
+                  <g key={i} className={up ? "lf-candle--up" : "lf-candle--down"}>
+                    <line x1={x} y1={yAt(p.high)} x2={x} y2={yAt(p.low)} strokeWidth="0.4" />
+                    <rect x={x - bw / 2} y={yAt(Math.max(p.open, p.close))} width={bw} height={Math.max(Math.abs(yAt(p.open) - yAt(p.close)), 0.4)} />
+                  </g>
+                );
+              })
+            : <path className="lf-pricechart__line" d={linePath(closes)} />}
+
+          {benchPath && <path className="lf-pricechart__bench" d={benchPath} />}
+
+          {showRsi && (
+            <>
+              <line className="lf-pricechart__axis" x1={X0} y1={RSI_TOP} x2={X1} y2={RSI_TOP} />
+              <path className="lf-pricechart__overlay" d={rsiPath} />
+            </>
+          )}
+
+          {/* Hover crosshair — vertical line + close marker at the nearest point. */}
+          {hp && (
+            <>
+              <line className="lf-pricechart__cross" x1={xAt(hover!.i)} y1={PLOT_TOP} x2={xAt(hover!.i)} y2={plotBot} />
+              <circle className="lf-pricechart__dot" cx={xAt(hover!.i)} cy={yAt(hp.close)} r={0.8} />
+            </>
+          )}
+        </svg>
+
+        {hp && (
+          <div
+            className="lf-pricechart__tip"
+            style={{ left: `${hover!.x}px` }}
+            role="status"
+          >
+            <span className="lf-pricechart__tipdate">{hp.t}</span>
+            <span>{hp.close.toLocaleString()}</span>
+            {advanced && (
+              <span className="lf-pricechart__tipohlc">
+                O {hp.open.toLocaleString()} · H {hp.high.toLocaleString()} · L {hp.low.toLocaleString()}
+                {hp.volume != null ? ` · V ${hp.volume.toLocaleString()}` : ""}
+              </span>
+            )}
+          </div>
         )}
-
-        {mode === "candles"
-          ? series.map((p, i) => {
-              const up = p.close >= p.open;
-              const x = xAt(i);
-              const bw = ((X1 - X0) / n) * 0.5;
-              return (
-                <g key={i} className={up ? "lf-candle--up" : "lf-candle--down"}>
-                  <line x1={x} y1={yAt(p.high)} x2={x} y2={yAt(p.low)} strokeWidth="0.4" />
-                  <rect
-                    x={x - bw / 2}
-                    y={yAt(Math.max(p.open, p.close))}
-                    width={bw}
-                    height={Math.max(Math.abs(yAt(p.open) - yAt(p.close)), 0.4)}
-                  />
-                </g>
-              );
-            })
-          : <path className="lf-pricechart__line" d={linePath(closes)} />}
-
-        {benchPath && <path className="lf-pricechart__bench" d={benchPath} />}
-
-        {showRsi && (
-          <>
-            <line className="lf-pricechart__axis" x1={X0} y1={RSI_TOP} x2={X1} y2={RSI_TOP} />
-            <path className="lf-pricechart__overlay" d={rsiPath} />
-          </>
-        )}
-      </svg>
+      </div>
+      )}
 
       <div className="lf-pricechart__legend">
         <span>Interval: {interval}</span>
-        <span>Mode: {mode}</span>
-        {overlays.length > 0 && <span>Overlays: {overlays.join(" · ")}</span>}
+        <span>View: {advanced ? "Advanced" : "Simple"}</span>
+        {effOverlays.length > 0 && <span>Overlays: {effOverlays.join(" · ")}</span>}
         {benchmark && <span>Benchmark overlaid (indexed)</span>}
+        {/* Honest short-history: never stretched or fabricated. */}
+        {coverageNote && <span className="lf-pricechart__note">{coverageNote}</span>}
       </div>
     </div>
   );
