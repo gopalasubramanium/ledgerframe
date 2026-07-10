@@ -48,6 +48,9 @@
      this scroll container. Overridable via --table-max-h per table. */
   max-height: var(--table-max-h, 60vh);
   overflow: auto;
+  /* D-101 — reserve the scrollbar gutter so the thumb sits INSIDE the bordered
+     area, never on top of the right border/rounded corner. */
+  scrollbar-gutter: stable;
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
 }

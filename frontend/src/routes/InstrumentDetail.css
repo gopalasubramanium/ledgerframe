@@ -23,12 +23,7 @@
   font-size: var(--font-size-16);
   font-weight: var(--weight-semibold);
 }
-.ins__quote {
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-raised);
-}
+/* Quote card — border/background/padding come from the .lf-card primitive (D-100). */
 .ins__price {
   display: flex;
   align-items: baseline;

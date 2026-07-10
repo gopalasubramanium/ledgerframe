@@ -149,6 +149,24 @@ Minimal borders and shadows (principle 3). `--radius-sm` 4px · `--radius-md` 6p
 restrained: `--shadow-1` a single soft shadow for popovers/menus only; cards use
 a border, not a shadow.
 
+**D-100 — card/section primitive (PROPOSED 2026-07-10, ratify at next look).** The
+`.lf-card` primitive (`components/ui/structure.css`) gives every card/section/panel
+a soft `--border` on `--surface-raised` (not shadow-heavy) so sections read as
+distinct objects. Applied via the one class so it lands everywhere; the DataTable
+and Dialog keep their own bordered surfaces. Both themes + high-contrast follow
+automatically (border/surface are tokens). Instrument Detail sections + the Holdings
+Net-worth summary adopt it; kitchen-sink specimen added.
+
+**D-101 — themed scrollbars (PROPOSED 2026-07-10, ratify at next look).** All
+scrollbars (page, table internal, dialog internal, news list, popovers) are styled
+in `index.css` via standards `scrollbar-width: thin` + `scrollbar-color` and the
+WebKit equivalents, using tokens (`--scrollbar-size`, `--scrollbar-thumb` =
+`--border-strong`, hover = `--text-tertiary`; track transparent) — so they follow
+both themes + high-contrast. The WebKit thumb uses a transparent border + content-
+box clip so it sits **inset**, and scroll containers with a border use
+`scrollbar-gutter: stable` (e.g. `.lf-table-wrap`) so the thumb never overlaps the
+border. Kitchen-sink scrollable-panel specimen added.
+
 ### 2.5 Density modes (D-045 / D-078)
 
 Two modes: **comfortable** (default) and **compact**. Density is a **per-device**

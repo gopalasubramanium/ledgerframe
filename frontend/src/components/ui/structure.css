@@ -1,3 +1,13 @@
+/* D-100 (PROPOSED) — the section/panel primitive: a soft 1px --border card on
+   --surface-raised (not shadow-heavy) so sections read as distinct objects in both
+   themes + high-contrast. Applied via this one class so it lands everywhere. */
+.lf-card {
+  background: var(--surface-raised);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
 /* PageHeader (DESIGN-SYSTEM §5.4) */
 .lf-pageheader {
   display: flex;

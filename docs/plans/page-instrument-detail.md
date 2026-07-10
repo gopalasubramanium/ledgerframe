@@ -256,3 +256,21 @@ Implemented + **verified rendered** (Chromium), committed in three batches.
   DECISIONS.md D-099. Verified live.
 
 Owner continues the walk after this batch.
+
+## Phase-3 acceptance walk — findings batch 2 (owner, 2026-07-10) — platform-wide, PROPOSED
+
+Token/component-layer polish; **verified rendered** at light/dark/high-contrast.
+
+- **§I-6 — D-100 card/section border primitive (PROPOSED).** `.lf-card`
+  (structure.css) — soft `--border` on `--surface-raised`; applied to Instrument
+  Detail sections (6 cards) + the Holdings Net-worth summary; DataTable/Dialog keep
+  their own surfaces. Kitchen-sink specimen. Verified: correct border/surface tokens
+  in all three modes (high-contrast → stronger `--border`).
+- **§I-7 — D-101 themed scrollbars (PROPOSED).** Global themed scrollbars
+  (`index.css`, standards + WebKit, token-coloured; both themes + high-contrast).
+  The Holdings table-scrollbar-overlaps-border defect fixed via
+  `scrollbar-gutter: stable` + an inset thumb — verified: the table's right border
+  is clean. Kitchen-sink scrollable-panel specimen. (Scrollbar thumb not visible in
+  headless element screenshots — overlay-scrollbar rendering; owner ratifies live.)
+
+Both are **PROPOSED pending the owner's visual ratify** at the next look.

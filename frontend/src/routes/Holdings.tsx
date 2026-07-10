@@ -351,8 +351,10 @@ export function Holdings() {
       />
 
       {/* Value/positions header — a linked P-1 summary. The figure is net of
-          liabilities, i.e. Net worth (GLOSSARY; D-021 retires "Total value"). */}
-      <div className="hold__section">
+          liabilities, i.e. Net worth (GLOSSARY; D-021 retires "Total value").
+          D-100: the summary reads as a distinct card (the tables below carry their
+          own DataTable border). */}
+      <div className="hold__section lf-card">
         <TrendStat
           label={`Net worth · ${holdings.length} position${holdings.length === 1 ? "" : "s"}`}
           value={summary ? `${baseCcy} ${formatMoney(summary.total_value)}` : "—"}

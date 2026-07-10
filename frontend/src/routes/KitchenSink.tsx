@@ -384,6 +384,20 @@ export function KitchenSink() {
       {/* ---------------------------------------------------------------- */}
       <Section title="Structure & chrome (§5.4)">
         <div className="ks__stack">
+          <Specimen label="Card / panel (D-100, PROPOSED) — soft --border on --surface-raised, both themes + high-contrast">
+            <div className="lf-card">
+              A section reads as a distinct object: a soft <code>--border</code> on
+              <code> --surface-raised</code>, not shadow-heavy. Applied via the
+              <code> .lf-card</code> primitive so it lands everywhere at once.
+            </div>
+          </Specimen>
+          <Specimen label="Scrollable panel (D-101, PROPOSED) — themed scrollbar; thumb sits inset within the border, both themes">
+            <div className="lf-card ks__scrollpanel">
+              {Array.from({ length: 20 }, (_, i) => (
+                <span key={i}>Row {i + 1} — the themed scrollbar thumb sits inside the bordered card, never on the border.</span>
+              ))}
+            </div>
+          </Specimen>
           <Specimen label="PageHeader · with subtitle + actions">
             <PageHeader
               title="Portfolio"

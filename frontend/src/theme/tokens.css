@@ -145,6 +145,11 @@
   --border-width: 1px;
   --focus-width: 2px;
   --focus-offset: 2px;
+  /* D-101 — themed scrollbars: track = transparent, thumb = --border-strong (both
+     tokens flip per theme + high-contrast, so scrollbars follow automatically). */
+  --scrollbar-size: 10px;
+  --scrollbar-thumb: var(--border-strong);
+  --scrollbar-thumb-hover: var(--text-tertiary);
 
   /* Restrained elevation: a single soft shadow for popovers/menus only; cards
    * use a border, not a shadow (principle 3). */

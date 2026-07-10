@@ -151,7 +151,7 @@ export function InstrumentDetail() {
       ) : (
         <>
           {/* Quote — the canonical Markets reader, scoped. Unpriced → "—" + reason. */}
-          <section className="ins__section ins__quote">
+          <section className="ins__section lf-card ins__quote">
             <div className="ins__price">
               {quote?.price != null ? (
                 <span className="ins__pricenum">{quote.currency} {formatPrice(quote.price)}</span>
@@ -175,7 +175,7 @@ export function InstrumentDetail() {
           </section>
 
           {/* Identity / taxonomy. */}
-          <section className="ins__section">
+          <section className="ins__section lf-card">
             <h2 className="ins__h2">Identity</h2>
             <dl className="ins__facts">
               <Fact label="Class" value={meta?.asset_class ? labelFor("asset_class", meta.asset_class) : null} chip />
@@ -190,7 +190,7 @@ export function InstrumentDetail() {
 
           {/* Class-conditional provider detail (never fabricated — only if linked). */}
           {detailPanel && (
-            <section className="ins__section">
+            <section className="ins__section lf-card">
               <h2 className="ins__h2">{detailPanel[0].replace(/_/g, " ")} detail</h2>
               <dl className="ins__facts">
                 {Object.entries(detailPanel[1]).map(([k, v]) => (
@@ -203,7 +203,7 @@ export function InstrumentDetail() {
           {/* Price history — house-SVG chart (D-053). Simple default; period selector
               + Simple/Advanced toggle + crosshair (PROPOSED amendment). Honest short
               history: shows only what exists, labelled, never stretched. */}
-          <section className="ins__section">
+          <section className="ins__section lf-card">
             <h2 className="ins__h2">Price history</h2>
             <PriceChart
               series={series}
@@ -218,7 +218,7 @@ export function InstrumentDetail() {
           </section>
 
           {/* Position if held — the canonical holdings reader, scoped (ND-1, P-3). */}
-          <section className="ins__section">
+          <section className="ins__section lf-card">
             <h2 className="ins__h2">Your position</h2>
             {position ? (
               <dl className="ins__facts">
@@ -236,7 +236,7 @@ export function InstrumentDetail() {
           {/* Ongoing cost (expense ratio) — D-029, CLASS-SCOPED to fund wrappers
               (D-099). Not rendered for equity/crypto/manual. Shown as bps (no math). */}
           {isFundWrapped && (
-            <section className="ins__section">
+            <section className="ins__section lf-card">
               <h2 className="ins__h2">Ongoing cost (expense ratio)</h2>
               <p className="ins__cost">
                 {meta?.annual_cost_bps != null ? `${meta.annual_cost_bps} bps / year` : "— (not set)"}
@@ -247,7 +247,7 @@ export function InstrumentDetail() {
 
           {/* AI explainer — DEFERRED to the AI-surfaces milestone (ND-2/ND-5); D-068
               intact. Item-4 layout: sits ABOVE News. */}
-          <section className="ins__section ins__pending">
+          <section className="ins__section lf-card ins__pending">
             <h2 className="ins__h2">Explain this instrument</h2>
             <p className="ins__reason">
               The AI explainer (grounded + validated, D-068/P-6) arrives with the
@@ -256,7 +256,7 @@ export function InstrumentDetail() {
           </section>
 
           {/* News — scoped reader (D-037, P-3). Caps at ~5 visible; scrolls internally. */}
-          <section className="ins__section">
+          <section className="ins__section lf-card">
             <div className="ins__bar">
               <h2 className="ins__h2">News</h2>
               <Link className="ins__link" to="/news">News ↗</Link>

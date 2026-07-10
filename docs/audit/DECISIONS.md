@@ -654,6 +654,21 @@ clarifying notes recorded in the guide.
   bps are **surfaced for review** (a Review signal), **never silently deleted** — the
   owner clears or reclassifies. Recorded in MASTER-DATA §11. page-instrument-detail §I-4.
 
+- **D-100 — Card/section border primitive** (owner, 2026-07-10; Instrument Detail
+  walk; **PROPOSED, visual ratify at next look**). Cards/sections/panels get a soft
+  1px `--border` on `--surface-raised` (not shadow-heavy) so sections read as
+  distinct objects in both themes + high-contrast. Applied via a single `.lf-card`
+  primitive (component layer) so it lands everywhere at once; DataTable/Dialog keep
+  their own surfaces. DESIGN-SYSTEM §2.4 (PROPOSED).
+- **D-101 — Themed scrollbars** (owner, 2026-07-10; Instrument Detail walk;
+  **PROPOSED, visual ratify at next look**). All scrollbars (page, table internal,
+  dialog internal, news list, popovers) styled via tokens — thin; track transparent;
+  thumb `--border-strong` with a `--text-tertiary` hover — following both themes +
+  high-contrast. Standards `scrollbar-width`/`scrollbar-color` + WebKit; the thumb
+  is **inset** (transparent-border + content-box clip), and bordered scroll
+  containers use `scrollbar-gutter: stable` so the thumb never overlaps the border
+  (fixes the Holdings table defect). DESIGN-SYSTEM §2.4 (PROPOSED).
+
 **Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
 after the 12-batch spec close (D-001–D-088); they change no earlier decision.
 **D-090 and D-091 were ratified 2026-07-10** (D-090 with the ETF-Bonus amendment);

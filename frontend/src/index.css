@@ -4,6 +4,34 @@
   box-sizing: border-box;
 }
 
+/* D-101 — themed scrollbars everywhere (page, table, dialog, news, popovers).
+   Standards-based (Firefox) + WebKit. Colours are tokens, so they follow both
+   themes and high-contrast automatically. The WebKit thumb uses a transparent
+   border + content-box clip so the thumb sits INSET (never flush over a border). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-lg);
+  border: var(--space-1) solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html,
 body {
   margin: 0;
