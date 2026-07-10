@@ -583,16 +583,25 @@ are now platform-wide primitives.
   backend change yet** — Phase 1 after ratify. Checks: lint/typecheck/drift + **70
   frontend tests** (8 new) + build all green.
 
+- **Page-chrome Phase 1 (shell) + Phase 2 (tests) — DONE (2026-07-11).** `AppShell`
+  (`components/AppShell.tsx`) composes Sidebar + slim TopBar + status strips + lock gate
+  once around every route via `AppRoutes` (`AppRoutes.tsx`); kitchen-sink stays outside
+  the shell. DisplayControls moved out of Holdings/InstrumentDetail/App into the TopBar
+  (D-066). Redirects wired (D-042/D-022/D-056); unbuilt routes → honest `NotBuilt`. Chrome
+  data via `api/system` (auth-state→lock, version-check→UpdateBanner) + `api/chrome`
+  (settings→Clock/DemoBadge, summary→StaleBanner). **C-3:** backend no-egress guard added
+  to `GET /system/version-check` (zero outbound under `privacy_mode`) + network-trace
+  acceptance test; summary gained `stale_count`. Commits `93b717c` (Phase 1) + Phase 2
+  tests. **Frontend 79 · backend 479 · drift/typecheck/lint/contract green.**
+
 ## NEXT
 
-1. **Page-chrome Phase 1 — shell assembly (AFTER owner ratifies Phase 0a).** Mount
-   Sidebar+TopBar+banners+lock gate around `<Routes>`; move DisplayControls out of the
-   page into the TopBar; wire redirects (D-042/D-022/D-056: `/snapshot`→`/net-worth`,
-   `/planning`→`/cash-flow`, `/global` removed); add the C-3 no-egress network-trace
-   acceptance test; verify the four templates render inside the shell. Then Phase 2
-   (tests) + Phase 3 (owner live acceptance walk). First-run checklist (D-045) is its
-   own small plan afterward. Ask panel (D-067) stays deferred to the AI-surfaces
-   milestone. See `page-chrome.md` §8/§10.
+1. **Page-chrome Phase 3 — owner LIVE acceptance walk (PENDING, owner-driven).** NOT
+   self-certified. Owner drives the real app (both themes + high-contrast + a narrow
+   width): sidebar collapse (D-102), top-bar wrap, banners pushing content, lock gate,
+   redirects, the four templates inside the shell. Each finding → numbered `page-chrome.md`
+   §-entry, re-verified live. First-run checklist (D-045) remains its own small later plan;
+   Ask panel (D-067) stays deferred to the AI-surfaces milestone. See `page-chrome.md` §8/§10.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price

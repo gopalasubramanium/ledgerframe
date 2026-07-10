@@ -118,10 +118,10 @@ panels. The **four page templates** render inside the shell's main region.
 ## 8. BUILD PHASES
 
 - **Phase 0 — Contract deltas (§3b):** verify/add version-check (+ no-egress guard), rotation config, lock/unlock; regenerate contract same commit.
-- **Phase 0a — §5 amendments:** ratify the new chrome components (Sidebar/TopBar/StaleBanner/UpdateBanner/DemoBadge/Clock/LockScreen) at `/kitchen-sink` before assembly (new components forbidden without amendment). **← BUILT 2026-07-11, AWAITING OWNER RATIFICATION (see §10).**
-- **Phase 1 — Shell assembly:** sidebar + top bar + banners + lock gate wrap `<Routes>`; move `DisplayControls` into the top bar; wire redirects.
-- **Phase 2 — Tests:** nav/lock/redirect/no-egress render tests; drift/typecheck/lint green.
-- **Phase 3 — Owner acceptance walk (LIVE):** drive the real app (both themes + high-contrast + a narrow width), each finding → numbered §-entry, re-verified live. Done only after this walk.
+- **Phase 0a — §5 amendments:** ratify the new chrome components at `/kitchen-sink` before assembly. **✅ RATIFIED 2026-07-11 (see §10).**
+- **Phase 1 — Shell assembly: ✅ DONE (`93b717c`).** `AppShell` composes Sidebar + slim TopBar + status strips + lock gate once around every route (`AppRoutes`); kitchen-sink stays outside. `DisplayControls` moved out of pages into the TopBar. Redirects wired (`/snapshot`→`/net-worth`, `/planning`→`/cash-flow`, `/global` removed); unbuilt routes → honest `NotBuilt`. **C-3:** patched the missing no-egress guard on `GET /system/version-check` (zero outbound under no-egress) + backend network-trace acceptance test; summary gained `stale_count`.
+- **Phase 2 — Tests: ✅ DONE.** Shell integration (`AppShell.test.tsx`, 7): chrome composed once; a page from each of the four templates renders inside the shell; lock gate; UpdateBanner-on-update; redirects; NotBuilt fallback. Backend C-3 network-trace test. **Frontend 79 tests · backend 479 · drift/typecheck/lint/contract all green.**
+- **Phase 3 — Owner acceptance walk (LIVE): ⏳ PENDING — the owner drives this.** Not self-certified. Owner drives the real app (both themes + high-contrast + a narrow width); each finding → numbered §-entry, re-verified live.
 
 ---
 
