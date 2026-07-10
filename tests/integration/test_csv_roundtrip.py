@@ -63,3 +63,48 @@ async def test_holdings_snapshot_is_guided_not_garbled(app_client):
     assert "snapshot" in preview["format_error"].lower()
     assert preview["rows"] == []
     assert preview["summary"]["errors"] == 0  # no per-row garbage
+
+
+async def test_generated_template_is_comprehensive_and_importable(app_client):
+    """D-096 — the downloadable template is generated from the D-090 matrix (one row
+    per asset_class × permitted type) and is itself importable (round-trips clean)."""
+    r = await app_client.get("/api/v1/portfolio/import/template")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
+    text = r.text
+    assert text.splitlines()[0] == "date,symbol,type,quantity,price,fees,taxes,currency,note,asset_class,country"
+
+    # Matches the matrix exactly (no drift): every offered combination has a row.
+    matrix = (await app_client.get("/api/v1/refdata/txn-applicability")).json()
+    import csv
+    import io
+    rows = list(csv.DictReader(io.StringIO(text)))
+    combos = {(x["asset_class"], x["type"]) for x in rows}
+    expected = {(ac, t) for ac, types in matrix.items() for t in types}
+    assert combos == expected
+    assert ("etf", "bonus") in combos          # the ratified ETF-bonus amendment
+    assert ("fixed_deposit", "interest") in combos
+
+    # The template re-imports with zero errors (round-trip contract).
+    preview = (await app_client.post(
+        "/api/v1/portfolio/import/preview", files={"file": ("t.csv", text.encode(), "text/csv")}
+    )).json()
+    assert "format_error" not in preview
+    assert preview["summary"]["errors"] == 0
+
+
+async def test_commit_reports_skipped_duplicates(app_client):
+    """A commit of rows already in the ledger imports 0 and reports the skip count —
+    the frontend uses this to warn honestly instead of a success 'Imported 0'."""
+    csv_text = ("date,symbol,type,quantity,price,fees,taxes,currency,note,asset_class,country\n"
+                "2022-02-02,ZDUP,buy,3,50,0,0,USD,,equity,US\n")
+    first = (await app_client.post(
+        "/api/v1/portfolio/import/commit", files={"file": ("t.csv", csv_text.encode(), "text/csv")}
+    )).json()
+    assert first["imported"] == 1
+    # Re-commit the same content-as-rows (different file bytes so not the batch guard).
+    csv2 = csv_text + "2022-02-03,ZNEW2,buy,1,10,0,0,USD,,equity,US\n"
+    second = (await app_client.post(
+        "/api/v1/portfolio/import/commit", files={"file": ("t2.csv", csv2.encode(), "text/csv")}
+    )).json()
+    assert second["imported"] == 1                 # only the new row
+    assert second["skipped_duplicates"] == 1       # the duplicate reported, not silent

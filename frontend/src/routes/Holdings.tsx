@@ -268,7 +268,9 @@ export function Holdings() {
         render: (h) => <span className="hold__chip">{h.asset_class}</span>,
       },
       { key: "quantity", label: "Position", format: "quantity", sortable: true },
-      { key: "price", label: "Price", format: "price" },
+      // Price dropped from the table to fit a 1366px laptop (item 2): it is "—" for
+      // every manual holding, and Value is the decision figure. Price lives in the
+      // row's Details (instrument page).
       { key: "market_value", label: `Value (${baseCcy})`, format: "money", sortable: true },
       { key: "unrealised_pl", label: "Unrealised P/L", format: "signed-money", sortable: true },
       { key: "day_change", label: "Today's change", format: "signed-money" },
@@ -468,16 +470,28 @@ export function Holdings() {
       {importOpen && (
         <ImportDialog
           onClose={() => setImportOpen(false)}
-          onDone={async (n) => {
+          onDone={async ({ imported, skipped }) => {
             setImportOpen(false);
-            // Imported rows are often historical-dated and would sink below the
-            // most-recent-first window. Surface them: sort the ledger by "recently
-            // added" and jump to the first page, then refresh the core reads.
-            setTxnSort({ key: "added", dir: "desc" });
-            setTxnOffset(0);
-            setTxnReloadTick((t) => t + 1);
-            await reloadCore();
-            toast.show({ message: `Imported ${n} transaction${n === 1 ? "" : "s"} — showing most recently added.` });
+            if (imported > 0) {
+              // Imported rows are often historical-dated and would sink below the
+              // most-recent-first window. Surface them: sort by "recently added",
+              // jump to page 1, then refresh the core reads.
+              setTxnSort({ key: "added", dir: "desc" });
+              setTxnOffset(0);
+              setTxnReloadTick((t) => t + 1);
+              await reloadCore();
+              const dupNote = skipped > 0 ? ` (${skipped} duplicate${skipped === 1 ? "" : "s"} skipped)` : "";
+              toast.show({
+                tone: "success",
+                message: `Imported ${imported} transaction${imported === 1 ? "" : "s"}${dupNote} — showing most recently added.`,
+              });
+            } else {
+              // Zero committed is never a success — say so honestly, with the why.
+              const why = skipped > 0
+                ? `all ${skipped} row${skipped === 1 ? " was" : "s were"} already in your ledger (duplicates)`
+                : "no new valid rows to commit";
+              toast.show({ tone: "warning", message: `No rows were committed — ${why}.` });
+            }
           }}
           onError={(m) => toast.show({ message: m })}
         />
@@ -1171,7 +1185,7 @@ function ImportDialog({
   onError,
 }: {
   onClose: () => void;
-  onDone: (imported: number) => void;
+  onDone: (r: { imported: number; skipped: number }) => void;
   onError: (msg: string) => void;
 }) {
   const [rows, setRows] = useState<ReviewRow[] | null>(null);
@@ -1209,7 +1223,10 @@ function ImportDialog({
     const res = await importCommit(file);
     setBusy(false);
     if (!res.ok) return onError(`Import failed: ${res.error}`);
-    onDone(res.data.imported ?? included.length);
+    onDone({
+      imported: res.data.imported ?? 0,
+      skipped: res.data.skipped_duplicates ?? 0,
+    });
   }
 
   return (
@@ -1231,7 +1248,14 @@ function ImportDialog({
     >
       {!rows ? (
         <div className="hold__form">
-          <FileInput accept=".csv" aria-label="Import CSV" label="Choose CSV" onChange={(fs) => doPreview(fs[0])} />
+          <div className="imp__actions">
+            <FileInput accept=".csv" aria-label="Import CSV" label="Choose CSV" onChange={(fs) => doPreview(fs[0])} />
+            {/* D-096: a sample CSV generated from the D-090 matrix (one example row
+                per asset-class × permitted type), server-side. */}
+            <button type="button" className="lf-btn" onClick={() => apiDownload("/portfolio/import/template")}>
+              Download template
+            </button>
+          </div>
           {formatError ? (
             <EmptyState message="That file isn’t a transactions ledger" reason={formatError} />
           ) : (

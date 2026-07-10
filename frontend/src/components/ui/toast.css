@@ -26,6 +26,10 @@
   pointer-events: auto;
   animation: lf-toast-in var(--motion-duration) ease-out;
 }
+/* Semantic tones — a left accent bar so success/warning read at a glance without
+   colouring the whole surface (keeps text contrast). */
+.lf-toast[data-tone="warning"] { border-left: var(--space-1) solid var(--attention); }
+.lf-toast[data-tone="success"] { border-left: var(--space-1) solid var(--gain); }
 
 .lf-toast__msg {
   flex: 1;

@@ -410,7 +410,26 @@ out of scope — components only.
   - **470 backend** (+1 recently-added) + **49 frontend** (+1 import-visibility)
     tests; ruff/contract-drift/tokens/lint/typecheck/build green.
   - **Committing this batch together with findings #7** (owner: "commit everything
-    pending").
+    pending"). — committed `98f1dc2`.
+
+- **Confirmation-pass findings #9 (owner, 2026-07-10) — verified with REAL flows.**
+  page-holdings §9-35..37; DECISIONS.md D-096. **Not yet committed** (owner does one
+  more confirmation pass first).
+  - **Import "Imported 0" (item 1)** — diagnosed via a real browser + real-API flow:
+    *not* a payload bug (committed CSV contains exactly the included rows, proven by
+    a payload-guard test); cause is duplicate-skip. `Toast` gains a **`tone`**; a
+    zero-import commit now shows a **warning** ("No rows were committed — …
+    duplicates"), never success. Verified in Chromium (amber toast screenshot).
+  - **Holdings table 1366px (item 2)** — verified by screenshots that it still
+    overflowed (`1184 > 1110`, ⋯ clipped). Fix: **dropped the Price column** (it's
+    "—" for manual holdings; Value is the decision figure; price → row Details). Now
+    `overflowX: false` at 1366 & 1920, both themes; ⋯ fully visible.
+  - **D-096 (item 3)** — Import dialog "Download template" → generated from the
+    D-090 matrix (one row per class × permitted type; can't drift; self-importable).
+    Verified in Chromium (downloads `ledgerframe-import-template.csv`).
+  - **472 backend** (+2: template round-trip, duplicate-skip report) + **52 frontend**
+    (+3: payload guard, warning toast, template button) tests; contract 126 paths,
+    drift green; ruff/tokens/lint/typecheck/build green.
 
 - **D-090 / D-091 — PROPOSED spec tables (owner, 2026-07-10; SUPERSEDED — see the
   ratified+shipped entry above), + compact picker fixed now.**

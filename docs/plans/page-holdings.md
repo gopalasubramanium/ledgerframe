@@ -563,6 +563,35 @@ reshaped. **No engine changes.**
 - **§9-34 — Picker tile order (item 4).** **"Other"** moved to the **last** tile,
   after Insurance — the escape valve reads sensibly at the end.
 
+### Confirmation-pass findings #9 (2026-07-10, owner) — verified with real flows
+
+- **§9-35 — Import "Imported 0" bug (confirmed, then diagnosed with a REAL browser
+  + real-API flow, not just unit tests).** *Not a payload bug:* the reconstructed
+  commit CSV contains **exactly the included rows** (new rows import fine;
+  proven by a frontend payload-guard test that reads the committed File). Root
+  cause: the committed rows were **duplicates** already in the ledger, which
+  `commit_import` skips (`skip_duplicates`) → `{imported: 0, skipped_duplicates: N}`
+  with success styling. Fix: the `Toast` gains a **`tone`**; a commit that imports
+  zero now shows a **warning** — *"No rows were committed — all N … were already in
+  your ledger (duplicates)"* (or "no new valid rows") — and the "recently added"
+  jump only happens when rows actually landed. A success import now also notes any
+  duplicates skipped. **Verified in Chromium:** the warning toast renders with the
+  amber accent (screenshot).
+- **§9-36 — Holdings table fits 1366px (verified by rendering, not tests).**
+  Screenshots at 1366 & 1920 in both themes showed the old table at
+  `scrollWidth 1184 > clientWidth 1110` → horizontal scroll, ⋯ column clipped. The
+  page content caps at ~1110px regardless of viewport, so the fix is to narrow the
+  table: **the Price column is dropped** (it is "—" for every manual holding, and
+  Value is the decision figure; price lives in the row's Details). Now
+  `scrollWidth == clientWidth`, **`overflowX: false`** at both widths/themes, ⋯
+  fully visible. The StalenessChip renders compact ("⚠ Stale · 10 Jul").
+- **§9-37 — D-096 generated import template (DONE).** The Import dialog gains a
+  **"Download template"** action → `GET /portfolio/import/template`, now generated
+  from the **D-090 matrix** (one row per asset_class × permitted txn_type, valid
+  vocab, real dates/symbols, exact import schema) — can't drift, and is itself
+  importable. Verified in Chromium: the button downloads
+  `ledgerframe-import-template.csv`.
+
 **Sign-off:** all §9 items resolved (2026-07-10). Build proceeds per §8; the
 Phase 0a component amendment pauses at `/kitchen-sink` for the owner's
 ratification look before Phase 1 assembly.

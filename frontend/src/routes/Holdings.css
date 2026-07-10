@@ -257,6 +257,12 @@
   font-size: var(--font-size-13);
   color: var(--text-secondary);
 }
+.imp__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
 .imp__grid {
   display: flex;
   flex-direction: column;

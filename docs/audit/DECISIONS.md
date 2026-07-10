@@ -607,11 +607,28 @@ clarifying notes recorded in the guide.
   Holdings table (merged identity cell, class chip, provenance chip), and a
   one-step-denser compact density. Contract +1 → **126 paths**.
 
+- **D-096 — Generated import template** (owner, 2026-07-10; confirmation pass). The
+  Import dialog gains a **"Download template"** action serving a sample CSV
+  **generated at request time from the D-090 applicability matrix** — one example
+  row per (asset_class × permitted txn_type), valid vocabulary values, real ISO
+  dates, example symbols per class, the exact import schema. Generated from the
+  spec table so it **can never drift from the contract**, and is itself importable
+  (round-trips with zero errors). `GET /portfolio/import/template` now returns this
+  (was a static 5-row sample). page-holdings §9-37.
+  - **Also this pass (bug + polish, not new decisions):** the import "Imported 0"
+    bug was diagnosed via a **real browser + real-API flow** — *not* a payload bug
+    (the committed CSV contains exactly the included rows, proven by test); the
+    cause is duplicate-skip. Fix: a commit that imports zero now shows a **warning**
+    toast ("No rows were committed — …duplicates"), never success styling (the
+    Toast gains a `tone`). The Holdings table now **fits 1366px** with the ⋯ column
+    fully visible (Price column dropped — it is "—" for manual holdings and Value is
+    the decision figure; verified by rendered screenshots, `overflowX: false`).
+
 **Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
 after the 12-batch spec close (D-001–D-088); they change no earlier decision.
 **D-090 and D-091 were ratified 2026-07-10** (D-090 with the ETF-Bonus amendment);
 **D-094** records the table dataset-size posture; **D-095** the CSV round-trip
-contract. None changes an earlier decision.
+contract; **D-096** the generated import template. None changes an earlier decision.
 
 ---
 

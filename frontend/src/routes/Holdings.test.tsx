@@ -227,7 +227,7 @@ test("D-093 import review grid gates Commit until errors are fixed or excluded",
   });
   const user = userEvent.setup();
   renderPage();
-  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await screen.findByRole("button", { name: "Import" });
   await user.click(screen.getByRole("button", { name: "Import" }));
   const dialog = screen.getByRole("dialog");
   await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "t.csv", { type: "text/csv" }));
@@ -250,7 +250,7 @@ test("post-import: the ledger jumps to 'recently added' so imports are visible (
   vi.mocked(api.importCommit).mockResolvedValue({ ok: true, data: { ok: true, imported: 1 } });
   const user = userEvent.setup();
   renderPage();
-  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await screen.findByRole("button", { name: "Import" });
   await user.click(screen.getByRole("button", { name: "Import" }));
   const dialog = screen.getByRole("dialog");
   await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "t.csv", { type: "text/csv" }));
@@ -340,7 +340,7 @@ test("round-trip: importing a holdings snapshot is guided, not garbled", async (
   });
   const user = userEvent.setup();
   renderPage();
-  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await screen.findByRole("button", { name: "Import" });
   await user.click(screen.getByRole("button", { name: "Import" }));
   const dialog = screen.getByRole("dialog");
   await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "snap.csv", { type: "text/csv" }));
@@ -366,6 +366,76 @@ test("round-trip: the ledger Export downloads the server-side transactions.csv",
   const exports = screen.getAllByRole("button", { name: /Export \(server-side\)/ });
   await user.click(exports[exports.length - 1]);
   expect(vi.mocked(client.apiDownload)).toHaveBeenCalledWith("/portfolio/transactions.csv");
+});
+
+test("commit request body contains exactly the included rows (payload guard)", async () => {
+  vi.mocked(api.importPreview).mockResolvedValue({
+    ok: true,
+    data: {
+      summary: { total: 2, valid: 2, errors: 0, duplicates: 0, new: 2 },
+      rows: [
+        { row: 2, ok: true, date: "2024-01-01", type: "buy", symbol: "KEEPME", quantity: "10", price: "100", currency: "USD" },
+        { row: 3, ok: true, date: "2024-01-02", type: "buy", symbol: "DROPME", quantity: "5", price: "200", currency: "USD" },
+      ],
+    },
+  });
+  let committedText = "";
+  vi.mocked(api.importCommit).mockImplementation(
+    (file: File) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          committedText = String(reader.result);
+          resolve({ ok: true, data: { ok: true, imported: 1, skipped_duplicates: 0 } });
+        };
+        reader.readAsText(file);
+      }),
+  );
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByRole("button", { name: "Import" });
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  const dialog = screen.getByRole("dialog");
+  await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "t.csv", { type: "text/csv" }));
+  await waitFor(() => expect(within(dialog).getAllByRole("button", { name: "Exclude" })).toHaveLength(2));
+  // Exclude the second row → the committed CSV must contain ONLY the first.
+  await user.click(within(dialog).getAllByRole("button", { name: "Exclude" })[1]);
+  await user.click(within(dialog).getByRole("button", { name: /Commit/ }));
+  await waitFor(() => expect(committedText).toContain("KEEPME"));
+  expect(committedText).not.toContain("DROPME");
+  expect(committedText.split("\n").filter((l) => l.trim()).length).toBe(2); // header + 1 row
+});
+
+test("a commit that imports zero shows a WARNING toast, never success styling", async () => {
+  vi.mocked(api.importPreview).mockResolvedValue({
+    ok: true,
+    data: {
+      summary: { total: 1, valid: 1, errors: 0, duplicates: 0, new: 1 },
+      rows: [{ row: 2, ok: true, date: "2024-01-01", type: "buy", symbol: "DUP", quantity: "1", price: "1", currency: "USD" }],
+    },
+  });
+  vi.mocked(api.importCommit).mockResolvedValue({ ok: true, data: { ok: true, imported: 0, skipped_duplicates: 1 } });
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByRole("button", { name: "Import" });
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  const dialog = screen.getByRole("dialog");
+  await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "t.csv", { type: "text/csv" }));
+  await waitFor(() => expect(within(dialog).getByRole("button", { name: /Commit/ })).toBeEnabled());
+  await user.click(within(dialog).getByRole("button", { name: /Commit/ }));
+  expect(await screen.findByText(/No rows were committed/)).toBeInTheDocument();
+  expect(screen.getByText(/already in your ledger/)).toBeInTheDocument();
+  expect(document.querySelector('.lf-toast[data-tone="warning"]')).not.toBeNull();
+});
+
+test("D-096 the import dialog offers a Download template action (server-generated)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByRole("button", { name: "Import" });
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByRole("button", { name: "Download template" }));
+  expect(vi.mocked(client.apiDownload)).toHaveBeenCalledWith("/portfolio/import/template");
 });
 
 test("D-094 transactions ledger is server-side: window stated, sort/filter/page hit the API", async () => {

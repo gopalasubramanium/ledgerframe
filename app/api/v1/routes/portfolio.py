@@ -29,7 +29,7 @@ from app.models import (
 from app.schemas.common import ValuationMethod
 from app.services import fx
 from app.services.csv_import import (
-    TRANSACTION_TEMPLATE,
+    build_import_template,
     commit_import,
     export_transactions_csv,
     import_transactions_csv,
@@ -716,8 +716,13 @@ async def deleted_count(session: AsyncSession = Depends(get_db)) -> dict:
 
 
 @router.get("/portfolio/import/template", response_class=PlainTextResponse)
-async def csv_template() -> str:
-    return TRANSACTION_TEMPLATE
+async def csv_template() -> PlainTextResponse:
+    """D-096 — a downloadable sample CSV generated from the D-090 applicability
+    matrix at request time (one example row per asset_class × permitted txn_type,
+    valid vocabulary values, the exact import schema); can never drift from the
+    contract, and is itself importable."""
+    return PlainTextResponse(build_import_template(), media_type="text/csv", headers={
+        "Content-Disposition": 'attachment; filename="ledgerframe-import-template.csv"'})
 
 
 @router.post("/portfolio/import/csv", dependencies=[Depends(require_auth)])

@@ -10,6 +10,9 @@ export interface ToastAction {
 export interface ToastSpec {
   message: string;
   action?: ToastAction;
+  /** Semantic tone (default "info"). "warning" is used for honest non-success
+   *  outcomes — e.g. an import that committed zero rows. */
+  tone?: "info" | "success" | "warning";
   /** Auto-dismiss after this many ms (default 10000 — the soft-delete window). */
   durationMs?: number;
 }

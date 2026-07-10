@@ -178,4 +178,7 @@ export const setHoldingTags = (id: number, tags: string[]) =>
 export const importPreview = (file: File) =>
   apiUpload<ImportPreview>("/portfolio/import/preview", file);
 export const importCommit = (file: File) =>
-  apiUpload<{ ok: boolean; imported?: number }>("/portfolio/import/commit", file);
+  apiUpload<{ ok: boolean; imported?: number; skipped_duplicates?: number }>(
+    "/portfolio/import/commit",
+    file,
+  );

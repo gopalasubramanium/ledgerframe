@@ -58,6 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={t.id}
               className="lf-toast"
+              data-tone={t.tone ?? "info"}
               role="status"
               aria-live="polite"
               style={{ "--toast-ms": `${t.durationMs}ms` } as CSSProperties}

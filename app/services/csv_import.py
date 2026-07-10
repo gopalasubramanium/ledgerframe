@@ -62,6 +62,75 @@ def sanitize_cell(value: str) -> str:
     return value
 
 
+# D-096 — example symbol + country per asset class for the generated template.
+# Blank symbol for pure-balance classes (their permitted types are instrument-less
+# cash flows). Symbols are illustrative; the importer creates the instruments.
+_TEMPLATE_EXAMPLE: dict[str, tuple[str, str]] = {
+    "equity": ("AAPL", "US"),
+    "etf": ("VOO", "US"),
+    "mutual_fund": ("0P0001ABCD", "IN"),
+    "bond": ("USTB-2030", "US"),
+    "commodity": ("XAU", ""),
+    "crypto": ("BTC", ""),
+    "property": ("FLAT-01", ""),
+    "private": ("ACME-PVT", ""),
+    "other": ("MISC-01", ""),
+    "cash": ("", ""),
+    "fixed_deposit": ("", ""),
+    "retirement": ("", ""),
+    "liability": ("", ""),
+}
+
+
+def _template_qty_price(t: str) -> tuple[str, str]:
+    """Sensible example quantity/price per txn type (mirrors the Add-flow mapping)."""
+    if t in ("buy", "sell"):
+        return "10", "100"
+    if t == "split":
+        return "0", "2"        # ratio lives in price
+    if t == "bonus":
+        return "5", "0"        # extra units, zero cost
+    if t == "merger":
+        return "0", "1"        # ratio in price
+    if t in ("dividend", "interest", "fee", "deposit", "withdrawal"):
+        return "1", "50"       # single amount lives in price
+    if t == "transfer":
+        return "1", "0"
+    return "0", "0"
+
+
+def build_import_template() -> str:
+    """D-096 — a comprehensive sample CSV: one example row per (asset_class ×
+    permitted txn_type) drawn from the **D-090 applicability matrix at request time**
+    (so it can never drift from the contract), with valid vocabulary values and the
+    exact import schema. The template is itself importable (round-trips with zero
+    errors)."""
+    from datetime import date as _date
+    from datetime import timedelta as _td
+
+    # Lazy import avoids a route↔service import cycle at module load.
+    from app.api.v1.routes.refdata import _TXN_APPLICABILITY
+
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(IMPORT_COLUMNS)
+    base = _date(2024, 1, 1)
+    i = 0
+    for asset_class, types in _TXN_APPLICABILITY.items():
+        symbol, country = _TEMPLATE_EXAMPLE.get(asset_class, ("", ""))
+        for t in types:
+            qty, price = _template_qty_price(t)
+            # Pure cash-flow types need no instrument; leave symbol blank there.
+            sym = "" if (t in ("interest", "deposit", "withdrawal") and not symbol) else symbol
+            w.writerow([
+                (base + _td(days=i)).isoformat(),
+                sanitize_cell(sym), t, qty, price, "0", "0", "USD",
+                f"example: {asset_class} {t}", asset_class, country,
+            ])
+            i += 1
+    return buf.getvalue()
+
+
 async def export_transactions_csv(session: AsyncSession) -> str:
     """Server-side transactions export (D-050 / P-5). Columns are EXACTLY the import
     schema (`IMPORT_COLUMNS`), so the app's own export re-imports with zero errors

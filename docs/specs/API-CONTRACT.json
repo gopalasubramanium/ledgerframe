@@ -8586,6 +8586,7 @@
     },
     "/api/v1/portfolio/import/template": {
       "get": {
+        "description": "D-096 \u2014 a downloadable sample CSV generated from the D-090 applicability\nmatrix at request time (one example row per asset_class \u00d7 permitted txn_type,\nvalid vocabulary values, the exact import schema); can never drift from the\ncontract, and is itself importable.",
         "operationId": "csv_template_api_v1_portfolio_import_template_get",
         "parameters": [
           {
