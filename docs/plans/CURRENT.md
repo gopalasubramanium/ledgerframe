@@ -300,6 +300,18 @@ out of scope — components only.
     API for sub-float crypto exactness (parked-worthy).
   - 38 frontend tests + build green; backend 459 unchanged; ruff clean.
 
+- **D-089 — Type-first Add flow (owner, 2026-07-10; recorded in DECISIONS.md).**
+  The Add entry step is now a **grid of asset-type tiles in user vocabulary**
+  (Stocks & ETFs · Mutual fund · Crypto · Cash · Fixed deposit · Bond · Property ·
+  Retirement · Private · Liability · Other), each with a plain-language subtitle;
+  choosing a tile routes to the **existing single D-049 flow** with branch +
+  fields preselected. Listed/Manual mechanism tabs are no longer the front door;
+  the flow underneath is unchanged. Tile→branch/asset-class from MASTER-DATA
+  `AssetClass` (no new vocabulary); Listed tiles classify new instruments
+  (crypto→CoinGecko, mutual_fund→AMFI). **No backend/engine/contract change.**
+  Verified in headless Chromium; 39 frontend tests + build green (also fixed a
+  ToastProvider timer leak on unmount). page-holdings §9-16.
+
 - **Corporate-actions gap — RECORDED (owner-identified 2026-07-10; not built).**
   1. **ROADMAP R-7 enriched** into the v2.1 "accounting precision" theme:
      **de-merger / spin-off** (merger-in-reverse — cost-basis apportionment per

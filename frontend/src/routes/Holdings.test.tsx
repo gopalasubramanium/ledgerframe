@@ -104,14 +104,22 @@ test("Export triggers the server-side download (client never builds the file)", 
   expect(vi.mocked(client.apiDownload)).toHaveBeenCalledWith("/portfolio/holdings.csv");
 });
 
-test("Add opens the one Add flow with listed / manual branches", async () => {
+test("Add opens the D-089 type-first grid; a type routes to the flow", async () => {
   const user = userEvent.setup();
   renderPage();
   await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
   await user.click(screen.getByRole("button", { name: "Add" }));
   const dialog = screen.getByRole("dialog");
-  expect(within(dialog).getByRole("button", { name: "Listed instrument" })).toBeInTheDocument();
-  expect(within(dialog).getByRole("button", { name: "Manual asset" })).toBeInTheDocument();
+  // Type-first grid in user vocabulary (no Listed/Manual front door).
+  expect(within(dialog).getByText("Stocks & ETFs")).toBeInTheDocument();
+  expect(within(dialog).getByText("Crypto")).toBeInTheDocument();
+  expect(within(dialog).getByText("Cash & deposits")).toBeInTheDocument();
+  expect(within(dialog).queryByRole("button", { name: "Listed instrument" })).toBeNull();
+  // A manual type routes to the manual branch with asset class preselected.
+  await user.click(within(dialog).getByText("Cash & deposits"));
+  expect(within(dialog).getByLabelText("Label")).toBeInTheDocument();
+  const cls = within(dialog).getByLabelText("Asset class") as HTMLSelectElement;
+  expect(cls.value).toBe("cash");
 });
 
 test("split and bonus get purpose-labelled fields (D-019 way, §4.3 mapping)", async () => {
@@ -120,6 +128,7 @@ test("split and bonus get purpose-labelled fields (D-019 way, §4.3 mapping)", a
   await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
   await user.click(screen.getByRole("button", { name: "Add" }));
   const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByText("Stocks & ETFs")); // D-089 listed tile
   const typeSelect = within(dialog).getByLabelText("Transaction type");
 
   await user.selectOptions(typeSelect, "split");
@@ -138,6 +147,7 @@ test("dividend/interest/fee use a single Amount field (total-cash types)", async
   await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
   await user.click(screen.getByRole("button", { name: "Add" }));
   const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByText("Stocks & ETFs")); // D-089 listed tile
   const typeSelect = within(dialog).getByLabelText("Transaction type");
 
   await user.selectOptions(typeSelect, "dividend");
@@ -157,6 +167,7 @@ test("dividend submits its Amount as quantity 1 × price (engine total-cash map)
   await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
   await user.click(screen.getByRole("button", { name: "Add" }));
   const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByText("Stocks & ETFs")); // D-089 listed tile
   await user.selectOptions(within(dialog).getByLabelText("Transaction type"), "dividend");
   // Symbol via the instrument picker's explicit create path.
   await user.type(within(dialog).getByLabelText("Instrument"), "AAPL");
@@ -167,6 +178,24 @@ test("dividend submits its Amount as quantity 1 × price (engine total-cash map)
   await user.click(within(dialog).getByRole("button", { name: "Save" }));
   expect(vi.mocked(api.addTransaction)).toHaveBeenCalledWith(
     expect.objectContaining({ type: "dividend", quantity: 1, price: 125.5, symbol: "AAPL" }),
+  );
+});
+
+test("a Listed tile classifies the new instrument by type (D-089: crypto → crypto)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByText("Crypto"));
+  await user.type(within(dialog).getByLabelText("Instrument"), "BTC");
+  await user.click(within(dialog).getByText(/Create new instrument/));
+  const qty = within(dialog).getByLabelText("Quantity");
+  await user.clear(qty);
+  await user.type(qty, "0.75"); // fractional
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  expect(vi.mocked(api.addTransaction)).toHaveBeenCalledWith(
+    expect.objectContaining({ asset_class: "crypto", symbol: "BTC", quantity: 0.75 }),
   );
 });
 

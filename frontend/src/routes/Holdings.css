@@ -52,6 +52,47 @@
   gap: var(--space-2);
   margin-bottom: var(--space-2);
 }
+
+/* D-089 type-first entry grid */
+.hold__typegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--space-3);
+}
+.hold__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+.hold__tile:hover {
+  border-color: var(--accent);
+  background: var(--surface-raised);
+}
+.hold__tile-title {
+  font-size: var(--font-size-14);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.hold__tile-sub {
+  font-size: var(--font-size-12);
+  line-height: var(--line-16);
+  color: var(--text-secondary);
+}
+.hold__chosen {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
 .hold__tab {
   font: inherit;
   font-size: var(--font-size-13);

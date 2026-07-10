@@ -504,6 +504,37 @@ clarifying notes recorded in the guide.
 
 ---
 
+## Holdings page-build addendum (D-089)
+
+- **D-089 — Type-first Add flow** (owner, 2026-07-10; Holdings acceptance walk).
+  The Add-to-holdings entry step becomes **type-first**: a **grid of asset-type
+  tiles in user vocabulary** — *Stocks & ETFs, Mutual fund, Crypto, Cash, Fixed
+  deposit, Bond, Property, Retirement, Private, Liability, Other* — each with a
+  one-line plain-language subtitle. Choosing a tile **routes to the existing
+  single D-049 Add flow** with the correct branch and per-type fields
+  preselected. The **Listed/Manual mechanism tabs stop being the front door**
+  (the mechanism becomes an implementation detail of routing); **the single flow
+  underneath is unchanged**.
+  - **Branch routing** (owner clarification, help copy): **Listed** = all
+    provider-quoted assets — **equities, ETFs, crypto (CoinGecko), mutual funds
+    (AMFI)**; **Manual** = manually-valued types — **property, FD, retirement,
+    private, cash, liabilities** (per D-073 manual lanes; bond routes Manual as
+    it carries no live quote here). **Insurance is never in this flow** (its own
+    register, D-062).
+  - **Type → branch/asset-class mapping comes from the existing MASTER-DATA
+    `AssetClass` vocabulary — no new vocabulary.** The Listed tiles pass their
+    asset class to the new-instrument classification (so crypto→CoinGecko,
+    mutual_fund→AMFI route correctly); the Manual tiles preselect
+    `ManualHoldingIn.asset_class`.
+  - Specs: page-holdings.md §9-16; GLOSSARY branch clarification implicit in the
+    per-type help copy. **No backend/engine/contract change** (routing + preselect
+    only).
+
+**Post-spec note:** D-089 is a Holdings page-build decision recorded after the
+12-batch spec close (D-001–D-088); it changes no earlier decision.
+
+---
+
 ## ROADMAP.md register (accumulated breadcrumbs — not v2 work)
 
 | # | Item | Source |

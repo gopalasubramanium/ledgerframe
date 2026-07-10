@@ -366,6 +366,24 @@ reshaped. **No engine changes.**
     is Decimal **strings** at the API boundary for quantity/price (schema change,
     no engine change) — parked-worthy, not needed for v2.
 
+### Add-flow type-first entry — acceptance walk #3 (2026-07-10, owner) — D-089
+
+- **§9-16 — Type-first Add flow (D-089; recorded in DECISIONS.md).** The Add
+  entry step becomes a **grid of asset-type tiles in user vocabulary** — Stocks &
+  ETFs · Mutual fund · Crypto · Cash · Fixed deposit · Bond · Property ·
+  Retirement · Private · Liability · Other — each with a one-line subtitle.
+  Choosing a tile routes to the **existing single D-049 flow** with the correct
+  **branch** and per-type fields preselected; the Listed/Manual mechanism tabs
+  **stop being the front door** (mechanism becomes routing detail), the flow
+  underneath **unchanged**. Branch map (owner clarification): **Listed** =
+  provider-quoted (equity/ETF, mutual fund via AMFI, crypto via CoinGecko);
+  **Manual** = manually-valued (cash, FD, bond, property, retirement, private,
+  liability). **Insurance is never in this flow** (D-062). Tile → branch/asset
+  class comes from the existing **MASTER-DATA `AssetClass`** — no new vocabulary;
+  Listed tiles pass their asset class to new-instrument classification (crypto →
+  CoinGecko, mutual_fund → AMFI), Manual tiles preselect
+  `ManualHoldingIn.asset_class`. **No backend/engine/contract change.**
+
 ### Surfaced during Phase 1 assembly (2026-07-10) — for the Holdings look
 
 - **§9-8 — free-text input gap → `TextInput`.** Assembly found the manual-asset

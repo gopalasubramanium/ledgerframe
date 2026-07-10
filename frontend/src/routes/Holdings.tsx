@@ -338,7 +338,32 @@ function PageHeaderHoldings({
 // Total-cash transaction types: entered as a single "Amount", not qty × price.
 const AMOUNT_TYPES = ["dividend", "interest", "fee"];
 
-// --- Add flow: one dialog, branch listed vs manual (D-049) --------------------
+// D-089 — type-first entry: asset-type tiles in user vocabulary route to the
+// existing single D-049 flow. branch + assetClass come from MASTER-DATA
+// AssetClass (no new vocabulary). Listed = provider-quoted; Manual =
+// manually-valued (D-073). Insurance is never here (D-062).
+interface AssetTile {
+  id: string;
+  label: string;
+  subtitle: string;
+  branch: "listed" | "manual";
+  assetClass: string; // MASTER-DATA AssetClass value
+}
+const ASSET_TILES: AssetTile[] = [
+  { id: "stock_etf", label: "Stocks & ETFs", subtitle: "Exchange-listed shares and funds, priced from your market-data provider.", branch: "listed", assetClass: "equity" },
+  { id: "mutual_fund", label: "Mutual fund", subtitle: "Units priced from the fund's official NAV (AMFI).", branch: "listed", assetClass: "mutual_fund" },
+  { id: "crypto", label: "Crypto", subtitle: "Coins and tokens priced via CoinGecko.", branch: "listed", assetClass: "crypto" },
+  { id: "cash", label: "Cash & deposits", subtitle: "Bank balances and cash you value yourself.", branch: "manual", assetClass: "cash" },
+  { id: "fixed_deposit", label: "Fixed deposit", subtitle: "A term deposit valued at its principal (interest recorded separately).", branch: "manual", assetClass: "fixed_deposit" },
+  { id: "bond", label: "Bond", subtitle: "A bond you value manually (no live quote here).", branch: "manual", assetClass: "bond" },
+  { id: "property", label: "Property", subtitle: "Real estate valued at your own estimate.", branch: "manual", assetClass: "property" },
+  { id: "retirement", label: "Retirement", subtitle: "Pension / retirement balances you value yourself.", branch: "manual", assetClass: "retirement" },
+  { id: "private", label: "Private asset", subtitle: "Unlisted or private holdings valued manually.", branch: "manual", assetClass: "private" },
+  { id: "liability", label: "Liability", subtitle: "A debt (mortgage, loan) — counts against net worth.", branch: "manual", assetClass: "liability" },
+  { id: "other", label: "Other", subtitle: "Anything that doesn't fit — the honest escape valve.", branch: "manual", assetClass: "other" },
+];
+
+// --- Add flow: type-first entry (D-089) → single listed/manual flow (D-049) ---
 function AddDialog({
   accounts,
   baseCcy,
@@ -352,6 +377,7 @@ function AddDialog({
   onDone: () => void;
   onError: (msg: string) => void;
 }) {
+  const [tile, setTile] = useState<AssetTile | null>(null); // D-089 entry step
   const [mode, setMode] = useState<"listed" | "manual">("listed");
   const [accountId, setAccountId] = useState("");
   const accountOptions = [
@@ -410,6 +436,9 @@ function AddDialog({
         quantity,
         price: priceOrRatio,
         currency,
+        // D-089: classify a newly-created instrument by the chosen type so it
+        // routes correctly (crypto → CoinGecko, mutual_fund → AMFI).
+        asset_class: tile?.assetClass ?? null,
         related_instrument_id: type === "merger" ? absorbedInto : null,
       });
       if (!res.ok) return onError(`Couldn't add transaction: ${res.error}`);
@@ -431,36 +460,54 @@ function AddDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Add to holdings"
+      title={tile === null ? "What are you adding?" : "Add to holdings"}
       footer={
-        <>
+        tile === null ? (
           <button type="button" className="lf-btn" onClick={onClose}>
             Cancel
           </button>
-          <button type="button" className="lf-btn lf-btn--primary" onClick={submit}>
-            Save
-          </button>
-        </>
+        ) : (
+          <>
+            <button type="button" className="lf-btn" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="button" className="lf-btn lf-btn--primary" onClick={submit}>
+              Save
+            </button>
+          </>
+        )
       }
     >
-      <div className="hold__tabs">
-        <button
-          type="button"
-          className={`hold__tab${mode === "listed" ? " hold__tab--active" : ""}`}
-          onClick={() => setMode("listed")}
-        >
-          Listed instrument
-        </button>
-        <button
-          type="button"
-          className={`hold__tab${mode === "manual" ? " hold__tab--active" : ""}`}
-          onClick={() => setMode("manual")}
-        >
-          Manual asset
-        </button>
-      </div>
-
-      <div className="hold__form">
+      {tile === null ? (
+        // D-089 type-first entry: pick an asset type; it routes to the single
+        // D-049 flow with the branch + fields preselected.
+        <div className="hold__typegrid">
+          {ASSET_TILES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="hold__tile"
+              onClick={() => {
+                setTile(t);
+                setMode(t.branch);
+                if (t.branch === "manual") setAssetClass(t.assetClass);
+              }}
+            >
+              <span className="hold__tile-title">{t.label}</span>
+              <span className="hold__tile-sub">{t.subtitle}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="hold__form">
+          <div className="hold__chosen">
+            <button type="button" className="hold__linkbtn" onClick={() => setTile(null)}>
+              ← Change type
+            </button>
+            <span className="hold__sub">
+              Adding <strong>{tile.label}</strong>
+            </span>
+          </div>
         <div className="hold__field">
           <span className="hold__label">Account</span>
           <Select value={accountId} onChange={setAccountId} options={accountOptions} aria-label="Account" />
@@ -580,7 +627,8 @@ function AddDialog({
             </div>
           </>
         )}
-      </div>
+        </div>
+      )}
     </Dialog>
   );
 }
