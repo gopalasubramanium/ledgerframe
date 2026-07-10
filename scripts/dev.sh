@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# scripts/dev.sh — the one command to run LedgerFrame in development.
+#
+# Starts the backend (uvicorn on 127.0.0.1:8321) and the frontend (Vite) together
+# with prefixed logs; Ctrl+C stops both. On first run it creates a dev-appropriate
+# .env from .env.example (a local data dir under your home + a generated strong
+# SECRET_KEY) and says so. It NEVER touches the appliance data dir (/mnt/...);
+# real deployments keep their own .env unchanged.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+DEV_DATA="${LEDGERFRAME_DEV_DATA_DIR:-$HOME/.local/share/ledgerframe-dev}"
+
+# 1) First run: create a dev .env with safe local defaults (never /mnt).
+if [ ! -f .env ]; then
+  echo "[dev] no .env found — creating one from .env.example with dev defaults"
+  cp .env.example .env
+  SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+  python3 - "$DEV_DATA" "$SECRET" <<'PY'
+import pathlib, re, sys
+data_dir, secret = sys.argv[1], sys.argv[2]
+p = pathlib.Path(".env"); t = p.read_text()
+def setkey(t, k, v):
+    if re.search(rf'^{k}=', t, re.M):
+        return re.sub(rf'^{k}=.*$', f'{k}={v}', t, flags=re.M)
+    return t.rstrip("\n") + f"\n{k}={v}\n"
+t = setkey(t, "LEDGERFRAME_DATA_DIR", data_dir)
+t = setkey(t, "LEDGERFRAME_SECRET_KEY", secret)
+p.write_text(t)
+PY
+  echo "[dev] wrote .env — LEDGERFRAME_DATA_DIR=$DEV_DATA (under your home, not /mnt); strong SECRET_KEY generated"
+fi
+
+mkdir -p "$DEV_DATA"
+
+if [ ! -x .venv/bin/uvicorn ]; then
+  echo "[dev] .venv not found — set it up first:  uv venv .venv && uv pip install -e '.[dev]'" >&2
+  exit 1
+fi
+
+# 2) Start backend + frontend with prefixed logs; Ctrl+C (or any exit) stops both.
+PIDS=()
+cleanup() {
+  echo
+  echo "[dev] stopping…"
+  for p in "${PIDS[@]:-}"; do kill "$p" 2>/dev/null || true; done
+  # also reap uvicorn --reload / vite children in our process group
+  pkill -P $$ 2>/dev/null || true
+  wait 2>/dev/null || true
+}
+trap cleanup INT TERM EXIT
+
+echo "[dev] backend  → http://127.0.0.1:8321   (uvicorn --reload)"
+( .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8321 --reload 2>&1 \
+    | awk '{ print "[backend]  " $0; fflush() }' ) &
+PIDS+=($!)
+
+echo "[dev] frontend → http://127.0.0.1:5173   (vite)"
+( cd frontend && npm run dev 2>&1 | awk '{ print "[frontend] " $0; fflush() }' ) &
+PIDS+=($!)
+
+echo "[dev] both running — press Ctrl+C to stop both."
+wait

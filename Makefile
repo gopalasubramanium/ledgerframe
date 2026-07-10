@@ -1,10 +1,13 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: help test lint api-contract api-contract-check migrate
+.PHONY: help dev test lint api-contract api-contract-check migrate
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	  awk 'BEGIN{FS=":.*?## "}{printf "  %-20s %s\n", $$1, $$2}'
+
+dev: ## Run backend + frontend together (dev; creates a local .env on first run)
+	@bash scripts/dev.sh
 
 test: ## Run the backend test suite
 	$(PYTHON) -m pytest -q
