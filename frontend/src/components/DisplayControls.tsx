@@ -4,11 +4,21 @@ import { useDisplay } from "../theme/display-context";
 
 // App chrome (not a §5 design component): the per-device display axis toggles
 // (theme/density/contrast/motion, D-066/D-078). Recomposed 2026-07-11 (page-chrome
-// Phase 0a re-ratify) as ICON-ONLY buttons with tooltips for the slim top bar — the
-// glyph is decorative, the accessible name is the aria-label, the current value is
-// the tooltip. Reused by the boot screen and the kitchen-sink control bar.
+// Phase 0a re-ratify) as ICON-ONLY buttons with tooltips for the slim top bar.
+//
+// STATEFUL-GLYPH RULE (DESIGN-SYSTEM §5.5, re-ratify 2026-07-11): a stateful toggle
+// renders a STATE-DISTINCT glyph per state — the icon shows the current state, the
+// tooltip names it — and no glyph collides with another bar control (☰ is reserved
+// for the sidebar/menu toggle). Theme = celestial; density = line-stacks; contrast =
+// squares; motion = waves.
 const THEME_ICON: Record<string, string> = { light: "☀", dark: "☾", system: "◐" };
 const THEME_LABEL: Record<string, string> = { light: "Light", dark: "Dark", system: "System" };
+// comfortable = loose rows, compact = tight rows (NOT ☰).
+const DENSITY_ICON: Record<string, string> = { comfortable: "≡", compact: "≣" };
+// system = patterned (auto), normal = half, high = solid (max contrast).
+const CONTRAST_ICON: Record<string, string> = { system: "▨", normal: "◧", high: "■" };
+// full = waves (animated), reduced = flat line (still), system = follows OS.
+const MOTION_ICON: Record<string, string> = { full: "≈", reduced: "—", system: "≋" };
 
 export function DisplayControls() {
   const { choice, resolved, cycle } = useTheme();
@@ -47,7 +57,7 @@ export function DisplayControls() {
         title={`Density: ${density} — click to change`}
         aria-label={`Density: ${density}. Click to change density.`}
       >
-        ☰
+        {DENSITY_ICON[density]}
       </button>
       <button
         type="button"
@@ -60,7 +70,7 @@ export function DisplayControls() {
           )
         }
       >
-        ◧
+        {CONTRAST_ICON[contrastPref]}
       </button>
       <button
         type="button"
@@ -73,7 +83,7 @@ export function DisplayControls() {
           )
         }
       >
-        ≈
+        {MOTION_ICON[motionPref]}
       </button>
     </div>
   );

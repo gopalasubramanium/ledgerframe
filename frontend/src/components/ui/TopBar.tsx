@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 import "./chrome.css";
 import "./structure.css";
 
+// Stateful-glyph rule (DESIGN-SYSTEM §5.5): each toggle shows a state-distinct glyph;
+// the tooltip names the state. Rotation = arrows(on)/slashed(off); Detail = line(simple)
+// vs candlestick(full). No collision with ☰ (sidebar/menu toggle).
+const ROTATION_ICON = { on: "↻", off: "⊘" } as const;
+const DETAIL_ICON = { simple: "╱", full: "╪" } as const;
+
 // Global chrome (DESIGN-SYSTEM §5.5, D-066) — recomposed 2026-07-11 (page-chrome
 // Phase 0a re-ratify). The ONE top bar, composed once above every page. A slim
 // (~48px) calm register: NO banners live here (StaleBanner/UpdateBanner render as
@@ -70,7 +76,7 @@ export function TopBar({
             title={`Rotation: ${rotationOn ? "On" : "Off"}`}
             onClick={onToggleRotation}
           >
-            ↻
+            {rotationOn ? ROTATION_ICON.on : ROTATION_ICON.off}
           </button>
         )}
         {onToggleDetail && (
@@ -81,7 +87,7 @@ export function TopBar({
             title={`Detail: ${detailLevel === "full" ? "Full" : "Simple"}`}
             onClick={onToggleDetail}
           >
-            ⊕
+            {detailLevel === "full" ? DETAIL_ICON.full : DETAIL_ICON.simple}
           </button>
         )}
         {clock}

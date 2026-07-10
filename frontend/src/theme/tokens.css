@@ -43,6 +43,11 @@
   --treemap-base: #f1f5f9;
   /* Modal backdrop scrim (Dialog, amended 2026-07-10 — Holdings page-build §5). */
   --scrim: rgba(15, 23, 42, 0.45);
+  /* LockScreen dim (D-002). --lock-scrim pairs with --lock-blur (frosted look);
+     --lock-scrim-opaque is the near-opaque fallback when backdrop-filter is
+     unsupported, so ambient content is unreadable regardless of blur. */
+  --lock-scrim: rgba(15, 23, 42, 0.55);
+  --lock-scrim-opaque: rgba(15, 23, 42, 0.95);
 }
 
 :root[data-theme="dark"] {
@@ -66,6 +71,9 @@
   --treemap-base: #1e293b;
   /* Modal backdrop scrim (Dialog, amended 2026-07-10 — Holdings page-build §5). */
   --scrim: rgba(0, 0, 0, 0.6);
+  /* LockScreen dim (D-002) — see the light block for the pairing rationale. */
+  --lock-scrim: rgba(0, 0, 0, 0.6);
+  --lock-scrim-opaque: rgba(0, 0, 0, 0.96);
 }
 
 /* High contrast (§7, D-078): boost border + secondary/tertiary text contrast.
@@ -148,6 +156,11 @@
   /* Active nav-item rail (Sidebar is-active) — bolder than a hairline border so the
      active page reads at a glance (page-chrome Phase 0a re-ratify, 2026-07-11). */
   --nav-rail-width: 3px;
+  /* LockScreen backdrop blur radius (D-002). Strong enough to smear all text/figures
+     to illegibility; paired with a heavy --lock-scrim so content stays unreadable
+     even where backdrop-filter is unsupported (see LockScreen.tsx @supports fallback).
+     page-chrome Phase 0a re-ratify, 2026-07-11. */
+  --lock-blur: 24px;
   /* D-101 — themed scrollbars: track = transparent, thumb = --border-strong (both
      tokens flip per theme + high-contrast, so scrollbars follow automatically). */
   --scrollbar-size: 10px;

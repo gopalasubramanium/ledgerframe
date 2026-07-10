@@ -201,7 +201,15 @@
   color: var(--text-tertiary);
 }
 
-/* ---- LockScreen (D-002 access lock) ---------------------------------------- */
+/* ---- LockScreen (D-002 access lock) ----------------------------------------
+   Renders over a BLURRED, dimmed snapshot of the current screen (the live app
+   painted behind it), PIN gate centered. Security (D-002): content underneath must
+   be genuinely unreadable at any zoom — a wall appliance must not leak net worth to
+   an ambient shoulder-view. Two independent guarantees stack:
+     1. strong backdrop blur (--lock-blur, 24px) smears all text/figures, and
+     2. a heavy --lock-scrim dim on top;
+   and where backdrop-filter is UNSUPPORTED, the @supports fallback swaps to a
+   near-opaque --lock-scrim-opaque so illegibility never depends on blur. */
 .lf-lock {
   position: fixed;
   inset: 0;
@@ -210,7 +218,15 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-5);
-  background: var(--bg);
+  background: var(--lock-scrim);
+  backdrop-filter: blur(var(--lock-blur));
+  -webkit-backdrop-filter: blur(var(--lock-blur));
+}
+@supports not ((backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0))) {
+  /* No backdrop blur available — dim to near-opaque so content is unreadable. */
+  .lf-lock {
+    background: var(--lock-scrim-opaque);
+  }
 }
 .lf-lock__panel {
   width: 22rem;

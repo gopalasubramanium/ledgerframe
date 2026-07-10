@@ -340,6 +340,32 @@ built pages appear as entries). Display axes, rotation, and Detail are rendered 
 **icon-only** `.lf-iconbtn` buttons (tooltip + aria-label carry state); rotation and
 Detail are plain buttons owned by TopBar, not separate components.
 
+**Stateful-glyph rule (re-ratify 2026-07-11).** A **stateful** toggle MUST render a
+**state-distinct glyph per state** — the glyph *shows* the current state, the tooltip
+*names* it (like theme's ☀/☾/◐). A single fixed glyph for a control that has states is
+forbidden. **No glyph may collide with another bar control**; `☰` is **reserved** for
+the sidebar/menu toggle (narrow widths) and is used nowhere else. Current bar assignments
+(each family is visually distinct so the row never reads as ambiguous):
+
+| Control | States → glyphs | Family |
+|---------|-----------------|--------|
+| Theme | light `☀` · dark `☾` · system `◐` | celestial |
+| Density | comfortable `≡` (loose) · compact `≣` (tight) | line-stacks |
+| Contrast | system `▨` · normal `◧` · high `■` | squares |
+| Motion | full `≈` · reduced `—` · system `≋` | waves / flat |
+| Rotation | on `↻` · off `⊘` | arrows |
+| Detail | simple `╱` (line) · full `╪` (candlestick) | chart motif |
+| Menu/nav toggle | `☰` (reserved) | — |
+
+**LockScreen blur (D-002, re-ratify 2026-07-11).** The lock renders over a **blurred,
+dimmed snapshot** of the live screen (`backdrop-filter: blur(--lock-blur)`, 24px), PIN
+gate centered. Illegibility is a **security requirement** (a wall appliance must not
+leak net worth to an ambient shoulder-view), so it does **not** rely on blur alone:
+a heavy `--lock-scrim` dims on top, and an `@supports` fallback swaps to a near-opaque
+`--lock-scrim-opaque` wherever `backdrop-filter` is unsupported — content is genuinely
+unreadable on every browser regardless of blur. `--lock-blur` is a token; verify the
+illegibility at the kitchen sink.
+
 **Toast / Snackbar** *(amended 2026-07-10 — Holdings page-build §9-4).* A
 transient, timed, dismissible notification with an optional action slot, provided
 via a `ToastProvider` + `useToast()` `show(spec)`. Auto-dismisses after

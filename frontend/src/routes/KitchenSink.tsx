@@ -564,7 +564,7 @@ export function KitchenSink() {
       {/* ---------------------------------------------------------------- */}
       <Section
         title="Global chrome (§5.5) — PROPOSED 2026-07-11 (recomposed at re-ratify)"
-        note="page-chrome Phase 0a (C-1): the app SHELL. Slim calm TopBar (D-066) with ICON-ONLY display controls (theme/density/contrast/motion) + rotation (D-044) + Detail (D-040) toggles right-aligned, Clock + DemoBadge; brand shows in the bar only at narrow widths (sidebar carries it at laptop+ — one brand at a time). StaleBanner/UpdateBanner are full-width status strips BELOW the bar, only when active. Sidebar shows all six D-043 group headers, with only BUILT pages as entries. LockScreen = D-002 access lock. Ratify in both themes/densities/contrast + a narrow width; hover the icon buttons for tooltips."
+        note="page-chrome Phase 0a (C-1): the app SHELL. Slim calm TopBar (D-066) with ICON-ONLY display controls (theme/density/contrast/motion) + rotation (D-044) + Detail (D-040) toggles right-aligned, Clock + DemoBadge; brand shows in the bar only at narrow widths (sidebar carries it at laptop+ — one brand at a time). StaleBanner/UpdateBanner are full-width status strips BELOW the bar, only when active. Sidebar shows all six D-043 group headers, with only BUILT pages as entries. LockScreen = D-002 access lock. STATEFUL-GLYPH RULE: click each icon toggle — the glyph itself changes per state (theme ☀/☾/◐, density ≡/≣, contrast ▨/◧/■, motion ≈/—/≋, rotation ↻/⊘, Detail ╱/╪), tooltip names it. Ratify in both themes/densities/contrast + a narrow width; hover for tooltips."
       >
         <div className="ks__stack">
           <Specimen label="App shell — slim TopBar (icon controls, right) + status strips BELOW the bar pushing content">
@@ -631,11 +631,11 @@ export function KitchenSink() {
             <Specimen label="Clock · timezone (D-013)">
               <Clock timezone="Asia/Singapore" />
             </Specimen>
-            <Specimen label="LockScreen · full-screen PIN gate (D-002)">
+            <Specimen label="LockScreen · PIN gate over BLURRED snapshot (D-002)">
               <button type="button" className="lf-btn" onClick={() => { setLockError(null); setLockOpen(true); }}>
                 Show lock screen
               </button>
-              <span className="ks__label">PIN 000000 shows the error state; any other 6+ digits unlocks</span>
+              <span className="ks__label">Verify: NOTHING behind is legible (strong blur + heavy scrim). PIN 000000 shows the error; any other 6+ digits unlocks.</span>
             </Specimen>
           </div>
         </div>

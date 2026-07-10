@@ -9,6 +9,7 @@ import {
   NAV_GROUPS,
   Sidebar,
   StaleBanner,
+  TopBar,
   UpdateBanner,
 } from "./index";
 
@@ -54,6 +55,31 @@ test("Sidebar activePath overrides router location for previews", () => {
     </MemoryRouter>,
   );
   expect(screen.getByRole("link", { name: "Holdings" }).className).toContain("is-active");
+});
+
+// --- TopBar stateful glyphs (state-distinct icon rule) ----------------------
+test("TopBar rotation and Detail toggles render a distinct glyph per state", () => {
+  const { rerender } = render(
+    <TopBar
+      rotationOn={false}
+      onToggleRotation={() => {}}
+      detailLevel="simple"
+      onToggleDetail={() => {}}
+    />,
+  );
+  expect(screen.getByRole("button", { name: /Rotation: Off/ }).textContent).toBe("⊘");
+  expect(screen.getByRole("button", { name: /Detail level: Simple/ }).textContent).toBe("╱");
+
+  rerender(
+    <TopBar
+      rotationOn
+      onToggleRotation={() => {}}
+      detailLevel="full"
+      onToggleDetail={() => {}}
+    />,
+  );
+  expect(screen.getByRole("button", { name: /Rotation: On/ }).textContent).toBe("↻");
+  expect(screen.getByRole("button", { name: /Detail level: Full/ }).textContent).toBe("╪");
 });
 
 // --- StaleBanner (honest: hidden at 0) --------------------------------------

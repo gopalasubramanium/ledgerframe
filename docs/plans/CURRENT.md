@@ -554,14 +554,20 @@ are now platform-wide primitives.
   (`system/version-check`, `system/update-status`) → verify no-egress + network-trace
   test in Phase 1; C-4 first-run checklist is its own later plan (chrome reserves the
   gate slot only); C-5 session contract reconciles against existing `auth/*` endpoints.
-- **Phase 0a — RATIFIED WITH AMENDMENTS (2026-07-11), RECOMPOSED, awaiting RE-RATIFY.**
-  Owner amendments applied: (1) slim TopBar, **icon-only** display/rotation/Detail controls,
-  brand narrow-only (one brand at a time); (2) StaleBanner/UpdateBanner as **full-width
-  status strips BELOW the bar**, not inside; (3) Sidebar **progressive reveal** — all six
-  D-043 headers, only built pages as entries (Holdings today; `NavItem.built`; `showAll`
-  preview); (4) **bolder active rail** (`--nav-rail-width: 3px`). Checks + build green, **71
-  frontend tests**. Awaiting owner re-ratify at `/kitchen-sink` → then Phase 1. Below is the
-  component set (unchanged surface).
+- **Phase 0a — RATIFIED WITH AMENDMENTS + ICON RE-RATIFY (2026-07-11), awaiting a final
+  quick look → then Phase 1.** Re-ratify amendments: (1) slim TopBar, **icon-only**
+  display/rotation/Detail controls, brand narrow-only; (2) StaleBanner/UpdateBanner as
+  **full-width status strips BELOW the bar**; (3) Sidebar **progressive reveal** (all six
+  D-043 headers, only built pages as entries — Holdings today; `NavItem.built`; `showAll`);
+  (4) **bolder active rail** (`--nav-rail-width`). **Icon re-ratify:** (a) **stateful-glyph
+  rule** (DESIGN-SYSTEM §5.5) — every stateful toggle shows a state-distinct glyph (theme
+  ☀/☾/◐, density ≡/≣, contrast ▨/◧/■, motion ≈/—/≋, rotation ↻/⊘, Detail ╱/╪; `☰` reserved
+  for the menu toggle); (b) **LockScreen over a blurred snapshot** — `backdrop-filter:
+  blur(--lock-blur=24px)` + heavy `--lock-scrim`, `@supports` fallback to near-opaque
+  `--lock-scrim-opaque` so content is unreadable on any browser (D-002). Checks + build
+  green, **72 frontend tests**. Owner does a quick kitchen-sink look at the icons + lock
+  blur (illegibility check is visual/theirs — no headless browser here), then Phase 1.
+  Below is the component set (unchanged surface).
 - **Phase 0a components** in `frontend/src/components/ui/`:
   **Sidebar** (D-043 six groups from `ui/nav.ts`; D-102 responsive; router-driven
   active + `activePath` preview override), **TopBar** (D-066 layout container;

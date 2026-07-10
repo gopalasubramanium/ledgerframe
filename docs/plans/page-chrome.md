@@ -167,17 +167,27 @@ yet** — Phase 1 does that after re-ratify.
 4. **Bolder active rail** — new `--nav-rail-width: 3px` token (tokens.css); Sidebar `is-active`
    uses it.
 
-**Checks:** lint · typecheck · token-drift · **71 frontend tests** (9 chrome + updated
-App/DisplayControls tests) · build — all green.
+**Icon re-ratify amendments applied (2026-07-11):**
+- **Stateful-glyph rule** (recorded in DESIGN-SYSTEM §5.5): every stateful toggle now
+  renders a **state-distinct glyph per state** (theme ☀/☾/◐, density ≡/≣, contrast
+  ▨/◧/■, motion ≈/—/≋, rotation ↻/⊘, Detail ╱-line/╪-candlestick); tooltip names it;
+  no glyph collisions — `☰` reserved for the sidebar/menu toggle.
+- **LockScreen over a blurred snapshot** — `backdrop-filter: blur(--lock-blur)` (24px
+  token) + heavy `--lock-scrim`, with an `@supports` fallback to near-opaque
+  `--lock-scrim-opaque` where blur is unsupported, so content is genuinely unreadable
+  on every browser (D-002 — no ambient shoulder-view). Blur radius recorded as a token.
 
-**Re-ratify at `/kitchen-sink` (both themes · both densities · high-contrast · a narrow
-width for D-102; hover the icon buttons for tooltips), then tell me to start Phase 1:**
+**Checks:** lint · typecheck · token-drift · **72 frontend tests** · build — all green.
 
-- [ ] **App-shell specimen** — slim TopBar reads calm; icon controls legible + tooltips clear; status strips sit below the bar and push content; brand rule (narrow only in bar).
-- [ ] **Sidebar** — six headers, fixed order (D-043); only Holdings as an entry (header-only elsewhere); bolder active rail reads at a glance; `showAll` preview looks right; off-canvas at narrow width (toggle + scrim live).
-- [ ] **StaleBanner / UpdateBanner** — full-width strips; amber / accent; correct links; hidden at 0 / null; UpdateBanner dismissible.
-- [ ] **DemoBadge** — warning tone; hidden when not demo. **Clock** — timezone label; tabular figures.
-- [ ] **LockScreen** — full-screen PIN gate; access-lock hint; Unlock gated at 6+ digits; error state (try PIN `000000`).
+**Owner's quick kitchen-sink look (icons + lock blur), then Phase 1:**
+
+- [ ] **Icon toggles** — clicking each changes the *glyph*, not just the tooltip; the six
+  controls read as distinct; `☰` only ever the menu toggle.
+- [ ] **LockScreen** — open it and confirm **nothing behind is legible** at any zoom
+  (blur + scrim); access-lock hint; Unlock gated at 6+ digits; error on PIN `000000`.
+  *(No headless browser is installed, so this visual illegibility check is the owner's;
+  illegibility is engineered not to depend on blur — the heavy/opaque scrim guarantees it.)*
+- [ ] Rest re-ratified as committed (slim TopBar, status strips, Sidebar reveal, active rail).
 
 **On re-ratify → Phase 1** (shell assembly): mount Sidebar + slim TopBar + status strips +
 lock gate around `<Routes>`, move DisplayControls out of the page into the TopBar, wire
