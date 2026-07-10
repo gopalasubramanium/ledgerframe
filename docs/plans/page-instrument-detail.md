@@ -1,7 +1,26 @@
 # page-instrument-detail.md — Instrument Detail build plan
 
-**Status: BUILD APPROVED (owner, 2026-07-10) — ND-1..ND-5 resolved.** Second
-instantiation of `TEMPLATE-page-build.md`; first **entity-detail** variant.
+**Status: BUILT — Phases 0/1/2 DONE (2026-07-10); awaiting owner Phase-3 acceptance
+walk.** Second instantiation of `TEMPLATE-page-build.md`; first **entity-detail**
+variant.
+
+**Build progress (2026-07-10):**
+- **Phase 0 (contract deltas) DONE** — ND-1 holdings `?symbol=`, ND-3 `/refdata`
+  `source_override`, ND-4 typed `GET /instruments/{symbol}`. Contract 127 paths,
+  drift green; +2 backend tests. Commit `2eb656b`.
+- **Phase 1 (assembly) DONE** — `/instrument/:symbol` route + `InstrumentDetail`
+  page: scoped quote/provenance, identity/taxonomy, class-conditional provider
+  panel, house-SVG price history (D-053), **position-if-held via the scoped reader
+  (ND-1)**, ongoing-cost (D-029), scoped news (D-037), edit dialog (name/asset_class/
+  source_override). The AI explainer is a **deferred note** (D-068 intact).
+  **Self-verified live in Chromium** (AAPL: real quote, chart, position matching
+  Holdings, real news) — the owner Phase-3 walk is the acceptance bar.
+- **Phase 2 (tests) DONE** — 6 render tests incl. honest unpriced/not-held states
+  and a **request-body assertion** on the edit PATCH; 59 frontend + 476 backend
+  green.
+- **Deferred (non-blocking, honest):** the edit form omits **country** — there is
+  no `country` master in `/refdata` (only `region`); exposing it needs a country
+  vocab (a `/refdata` follow-up). Recorded here, not silently dropped.
 
 **ND resolutions (owner, 2026-07-10):**
 - **ND-1 — position-if-held:** a **`symbol` filter param on the existing holdings

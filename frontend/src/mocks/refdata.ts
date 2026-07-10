@@ -70,6 +70,12 @@ const FIXED: Record<string, string[]> = {
     "medical", "other",
   ],
   contact_role: ["nominee", "beneficiary", "executor", "emergency", "guardian"],
+  // ND-3 — per-instrument source-override routing (offline fallback; live values
+  // from /refdata, sourced from the market-router CAPABILITIES). `auto` clears it.
+  source_override: [
+    "auto", "alphavantage", "amfi_nav", "coingecko", "csv", "ecb_fx", "eodhd",
+    "kite", "mock", "yahoo",
+  ],
 };
 
 const FIXED_LABELS: Record<string, string> = {
@@ -87,6 +93,7 @@ const FIXED_LABELS: Record<string, string> = {
   estate_doc_status: "Document status",
   valuation_method: "Valuation method",
   entitlement: "Entitlement",
+  source_override: "Source override",
   policy_dimension: "Policy dimension",
   cost_basis_method: "Cost-basis method",
   account_kind: "Account kind",

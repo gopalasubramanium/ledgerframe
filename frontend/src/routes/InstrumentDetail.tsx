@@ -1,0 +1,354 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import "./InstrumentDetail.css";
+import {
+  Dialog,
+  EmptyState,
+  MasterSelect,
+  PageHeader,
+  PriceChart,
+  QuantityInput,
+  StalenessChip,
+  TextInput,
+  useToast,
+} from "../components/ui";
+import type { PricePoint } from "../mocks/types";
+import { DisplayControls } from "../components/DisplayControls";
+import {
+  getInstrument,
+  getInstrumentHistory,
+  getInstrumentNews,
+  getInstrumentPosition,
+  patchInstrument,
+  setOngoingCost,
+} from "../api/instruments";
+import type { Candle, InstrumentDetail as Detail, NewsItem } from "../api/instruments";
+import type { HoldingRow } from "../api/holdings";
+import { formatMoney, formatPrice, formatSignedMoney } from "../format/number";
+
+// Instrument Detail (IA §360; entity-detail template) — a scoped view (P-3) of the
+// quote / history / news / portfolio readers for ONE instrument. It owns nothing;
+// every figure is rendered by its canonical reader and links to its canonical page.
+// The AI "explain this instrument" (D-068, P-6) is DEFERRED to the AI-surfaces
+// milestone (ND-2/ND-5) — this page ships without it, D-068 intact.
+export function InstrumentDetail() {
+  const { symbol = "" } = useParams();
+  const sym = symbol.toUpperCase();
+  const toast = useToast();
+
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [position, setPosition] = useState<HoldingRow | null>(null);
+  const [baseCcy, setBaseCcy] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [costOpen, setCostOpen] = useState(false);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const [d, h, n, p] = await Promise.all([
+      getInstrument(sym),
+      getInstrumentHistory(sym),
+      getInstrumentNews(sym),
+      getInstrumentPosition(sym),
+    ]);
+    if (d.ok) setDetail(d.data);
+    else setError(d.error);
+    setCandles(h.ok ? h.data.candles : []);
+    setNews(n.ok ? n.data.items : []);
+    if (p.ok) {
+      setBaseCcy(p.data.base_currency);
+      setPosition(p.data.holdings[0] ?? null);
+    }
+    setLoading(false);
+  }, [sym]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const series = useMemo<PricePoint[]>(
+    () => candles.map((c) => ({ t: c.ts.slice(0, 10), open: c.open, high: c.high, low: c.low, close: c.close })),
+    [candles],
+  );
+
+  const meta = detail?.instrument;
+  const quote = detail?.quote;
+  const historyReason =
+    typeof meta?.history_status === "string" ? meta.history_status : "No price history from the source.";
+  const assetDetail = meta?.asset_detail ?? {};
+  const detailPanel = Object.entries(assetDetail)[0]; // class-conditional: mutual_fund / crypto / derivative
+
+  return (
+    <div className="ins">
+      <div className="ins__bar">
+        <Link className="lf-btn" to="/holdings">← Holdings</Link>
+        <DisplayControls />
+      </div>
+
+      <PageHeader
+        title={sym}
+        subtitle={
+          meta?.name
+            ? `${meta.name} — a scoped view (P-3); canonical on Markets & Portfolio`
+            : "A scoped view (P-3) — this page owns nothing; canonical on Markets & Portfolio"
+        }
+        actions={
+          <>
+            <button type="button" className="lf-btn" onClick={() => setCostOpen(true)}>Ongoing cost</button>
+            <button type="button" className="lf-btn lf-btn--primary" onClick={() => setEditOpen(true)}>Edit</button>
+          </>
+        }
+      />
+
+      {loading ? (
+        <EmptyState message="Loading…" reason="Fetching from the market & portfolio readers." />
+      ) : error ? (
+        <EmptyState
+          message="Couldn't load this instrument"
+          reason={`The reader is unreachable (${error}). Values are withheld, never guessed.`}
+          action={<button type="button" className="lf-btn" onClick={reload}>Retry</button>}
+        />
+      ) : (
+        <>
+          {/* Quote — the canonical Markets reader, scoped. Unpriced → "—" + reason. */}
+          <section className="ins__section ins__quote">
+            <div className="ins__price">
+              {quote?.price != null ? (
+                <span className="ins__pricenum">{quote.currency} {formatPrice(quote.price)}</span>
+              ) : (
+                <span className="ins__pricenum ins__muted">—</span>
+              )}
+              {quote?.change != null && (
+                <span className={`ins__change ${Number(quote.change) >= 0 ? "ins__up" : "ins__down"}`}>
+                  {formatSignedMoney(quote.change)}
+                  {quote.change_pct != null ? ` (${Number(quote.change_pct).toFixed(2)}%)` : ""}
+                </span>
+              )}
+            </div>
+            <div className="ins__prov">
+              {quote?.price == null && <span className="ins__reason">No live quote from the source — value withheld, never fabricated.</span>}
+              {quote?.source && <span className="ins__tag">Source: {quote.source}</span>}
+              {quote?.entitlement && <span className="ins__tag">{quote.entitlement}</span>}
+              {quote?.is_stale && <StalenessChip isStale asOf={quote.received_at ?? ""} />}
+              <Link className="ins__link" to="/markets">Markets ↗</Link>
+            </div>
+          </section>
+
+          {/* Identity / taxonomy. */}
+          <section className="ins__section">
+            <h2 className="ins__h2">Identity</h2>
+            <dl className="ins__facts">
+              <Fact label="Class" value={meta?.asset_class} chip />
+              <Fact label="Subclass" value={meta?.asset_subclass} chip />
+              <Fact label="Exchange" value={meta?.exchange} />
+              <Fact label="Sector" value={meta?.sector} />
+              <Fact label="Country" value={meta?.listing_country ?? meta?.country} />
+              <Fact label="Currency" value={meta?.currency} />
+              {meta?.source_override && <Fact label="Source override" value={meta.source_override} chip />}
+            </dl>
+          </section>
+
+          {/* Class-conditional provider detail (never fabricated — only if linked). */}
+          {detailPanel && (
+            <section className="ins__section">
+              <h2 className="ins__h2">{detailPanel[0].replace(/_/g, " ")} detail</h2>
+              <dl className="ins__facts">
+                {Object.entries(detailPanel[1]).map(([k, v]) => (
+                  <Fact key={k} label={k.replace(/_/g, " ")} value={v == null ? null : String(v)} />
+                ))}
+              </dl>
+            </section>
+          )}
+
+          {/* Price history — house-SVG chart (D-053), or an honest reason. */}
+          <section className="ins__section">
+            <h2 className="ins__h2">Price history</h2>
+            {series.length > 1 ? (
+              <PriceChart series={series} interval="1d" />
+            ) : (
+              <EmptyState message="No price history" reason={historyReason} />
+            )}
+          </section>
+
+          {/* Position if held — the canonical holdings reader, scoped (ND-1, P-3). */}
+          <section className="ins__section">
+            <h2 className="ins__h2">Your position</h2>
+            {position ? (
+              <dl className="ins__facts">
+                <Fact label="Quantity" value={position.quantity != null ? String(position.quantity) : "—"} />
+                <Fact label={`Value (${baseCcy})`} value={position.market_value != null ? formatMoney(position.market_value) : "—"} />
+                <Fact label="Cost basis" value={position.cost_basis != null ? formatMoney(position.cost_basis) : "—"} />
+                <Fact label="Unrealised P/L" value={position.unrealised_pl != null ? formatSignedMoney(position.unrealised_pl) : "—"} signed={position.unrealised_pl} />
+                <span className="ins__factlink"><Link className="ins__link" to="/holdings">Holdings ↗</Link></span>
+              </dl>
+            ) : (
+              <EmptyState message="Not in your portfolio" reason="You hold no position in this instrument." action={<Link className="lf-btn" to="/holdings">Go to Holdings</Link>} />
+            )}
+          </section>
+
+          {/* Ongoing cost (expense ratio) — D-029. Stored in bps; shown as bps (no frontend math). */}
+          <section className="ins__section">
+            <h2 className="ins__h2">Ongoing cost (expense ratio)</h2>
+            <p className="ins__cost">
+              {meta?.annual_cost_bps != null ? `${meta.annual_cost_bps} bps / year` : "— (not set)"}
+              <button type="button" className="lf-btn ins__inline" onClick={() => setCostOpen(true)}>Set</button>
+            </p>
+          </section>
+
+          {/* News — scoped reader (D-037, P-3). */}
+          <section className="ins__section">
+            <div className="ins__bar">
+              <h2 className="ins__h2">News</h2>
+              <Link className="ins__link" to="/news">News ↗</Link>
+            </div>
+            {news.length > 0 ? (
+              <ul className="ins__news">
+                {news.map((n, i) => (
+                  <li key={i} className="ins__newsitem">
+                    <a href={n.url ?? "#"} target="_blank" rel="noreferrer" className="ins__newshead">{n.headline}</a>
+                    <span className="ins__newsmeta">{n.source} · {n.published_at.slice(0, 10)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState message="No recent news" reason="No provider or feed headlines mention this instrument." />
+            )}
+          </section>
+
+          {/* AI explainer — DEFERRED to the AI-surfaces milestone (ND-2/ND-5); D-068 intact. */}
+          <section className="ins__section ins__pending">
+            <h2 className="ins__h2">Explain this instrument</h2>
+            <p className="ins__reason">
+              The AI explainer (grounded + validated, D-068/P-6) arrives with the
+              AI-surfaces milestone (shared Ask panel). Deferred, not dropped.
+            </p>
+          </section>
+        </>
+      )}
+
+      {editOpen && meta && (
+        <EditDialog
+          meta={meta}
+          onClose={() => setEditOpen(false)}
+          onDone={async () => { setEditOpen(false); await reload(); toast.show({ message: "Saved." }); }}
+          onError={(m) => toast.show({ tone: "warning", message: m })}
+        />
+      )}
+      {costOpen && meta && (
+        <CostDialog
+          symbol={sym}
+          current={meta.annual_cost_bps ?? null}
+          onClose={() => setCostOpen(false)}
+          onDone={async () => { setCostOpen(false); await reload(); toast.show({ message: "Ongoing cost updated." }); }}
+          onError={(m) => toast.show({ tone: "warning", message: m })}
+        />
+      )}
+    </div>
+  );
+}
+
+function Fact({ label, value, chip, signed }: { label: string; value?: string | null; chip?: boolean; signed?: number | null }) {
+  const shown = value == null || value === "" ? "—" : value;
+  const tone = signed == null ? "" : Number(signed) > 0 ? " ins__up" : Number(signed) < 0 ? " ins__down" : "";
+  return (
+    <div className="ins__fact">
+      <dt className="ins__factlabel">{label}</dt>
+      <dd className={`ins__factval${tone}`}>{chip && shown !== "—" ? <span className="ins__chip">{shown}</span> : shown}</dd>
+    </div>
+  );
+}
+
+function EditDialog({
+  meta, onClose, onDone, onError,
+}: {
+  meta: { symbol: string; name?: string | null; asset_class?: string | null; source_override?: string | null };
+  onClose: () => void; onDone: () => void; onError: (m: string) => void;
+}) {
+  const [name, setName] = useState(meta.name ?? "");
+  const [assetClass, setAssetClass] = useState(meta.asset_class ?? "equity");
+  const [source, setSource] = useState(meta.source_override ?? "auto");
+
+  async function save() {
+    const res = await patchInstrument(meta.symbol, {
+      name: name.trim() || null,
+      asset_class: assetClass,
+      // "auto" clears the override on the backend.
+      source_override: source,
+    });
+    if (!res.ok) return onError(`Couldn't save: ${res.error}`);
+    onDone();
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={`Edit ${meta.symbol}`}
+      size="lg"
+      footer={
+        <>
+          <button type="button" className="lf-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="lf-btn lf-btn--primary" onClick={save}>Save</button>
+        </>
+      }
+    >
+      <div className="ins__form ins__form--grid">
+        <div className="ins__field ins__field--full">
+          <span className="ins__label">Display name</span>
+          <TextInput value={name} onChange={setName} aria-label="Display name" placeholder="e.g. Apple Inc." />
+        </div>
+        <div className="ins__field">
+          <span className="ins__label">Asset class</span>
+          <MasterSelect master="asset_class" value={assetClass} onChange={setAssetClass} />
+        </div>
+        <div className="ins__field">
+          <span className="ins__label">Source override</span>
+          <MasterSelect master="source_override" value={source} onChange={setSource} />
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+function CostDialog({
+  symbol, current, onClose, onDone, onError,
+}: {
+  symbol: string; current: number | null;
+  onClose: () => void; onDone: () => void; onError: (m: string) => void;
+}) {
+  const [bps, setBps] = useState(current != null ? String(current) : "");
+
+  async function save() {
+    const v = bps.trim() === "" ? null : Number(bps);
+    if (v != null && (Number.isNaN(v) || v < 0)) return onError("Ongoing cost (bps) must be zero or more.");
+    const res = await setOngoingCost(symbol, v);
+    if (!res.ok) return onError(`Couldn't save: ${res.error}`);
+    onDone();
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={`Ongoing cost — ${symbol}`}
+      footer={
+        <>
+          <button type="button" className="lf-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="lf-btn lf-btn--primary" onClick={save}>Save</button>
+        </>
+      }
+    >
+      <div className="ins__form">
+        <div className="ins__field">
+          <span className="ins__label">Annual cost (bps)</span>
+          <QuantityInput value={bps} onChange={setBps} aria-label="Annual cost (bps)" />
+          <span className="ins__sub">Basis points per year (e.g. 20 = 0.20%). Leave blank to clear.</span>
+        </div>
+      </div>
+    </Dialog>
+  );
+}

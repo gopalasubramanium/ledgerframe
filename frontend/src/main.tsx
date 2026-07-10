@@ -8,6 +8,7 @@ import { RefdataProvider } from "./refdata/RefdataProvider";
 import App from "./App";
 import { KitchenSink } from "./routes/KitchenSink";
 import { Holdings } from "./routes/Holdings";
+import { InstrumentDetail } from "./routes/InstrumentDetail";
 import "./index.css";
 
 const root = document.getElementById("root");
@@ -23,6 +24,7 @@ createRoot(root).render(
               <Routes>
                 <Route path="/" element={<App />} />
                 <Route path="/holdings" element={<Holdings />} />
+                <Route path="/instrument/:symbol" element={<InstrumentDetail />} />
                 <Route path="/kitchen-sink" element={<KitchenSink />} />
               </Routes>
             </HashRouter>

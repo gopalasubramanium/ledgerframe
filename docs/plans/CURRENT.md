@@ -520,16 +520,17 @@ template is the next task. No open Holdings blockers remain.
 
 ## NEXT
 
-1. **Instrument Detail — build the drafted plan** (`docs/plans/page-instrument-detail.md`,
-   **PLAN ONLY, owner reviews first**). Second template instantiation + first
-   **entity-detail** variant; closes the Holdings Details / D-097 cross-class links
-   that dead-end today. **Pre-build blockers ND-1..ND-5** (position-if-held read,
-   explainer pipeline P-6, source_override vocab, response typing, Ask-panel
-   component) must clear first. The **template retrospective is DONE** — six edits
-   folded into `TEMPLATE-page-build.md` (wired≠rendered≠accepted rule, §4 data-source
-   + row-actions + picker + popover rules, §4b per-variant specs, §7 request-body +
-   rendered-layout + picker checks, §8 Phase-3 acceptance walk, §9 mock-backed
-   category).
+1. **Instrument Detail — Phases 0/1/2 BUILT; owner Phase-3 acceptance walk NEXT.**
+   (`docs/plans/page-instrument-detail.md`.) ND-1..ND-5 resolved by owner (ND-2/ND-5
+   AI explainer deferred to the AI-surfaces milestone, D-068 intact — page ships
+   without it). Phase 0 contract deltas (`2eb656b`): holdings `?symbol=` (ND-1),
+   `/refdata` `source_override` (ND-3), typed `GET /instruments/{symbol}` (ND-4).
+   Phase 1 assembly: `/instrument/:symbol` page (scoped quote/identity/class-panel/
+   house-SVG chart/position-via-scoped-reader/ongoing-cost/news/edit; explainer
+   deferred-note), **self-verified live in Chromium**. Phase 2: 6 render tests incl.
+   a request-body assertion. **59 frontend + 476 backend green; 127 paths.** Owner
+   drives the **Phase-3 acceptance walk** (the acceptance bar). The **template
+   retrospective is DONE** — six edits folded into `TEMPLATE-page-build.md`.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price
