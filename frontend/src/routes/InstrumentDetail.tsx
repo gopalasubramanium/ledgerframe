@@ -5,6 +5,7 @@ import {
   Dialog,
   EmptyState,
   MasterSelect,
+  MetaStrip,
   PageHeader,
   PriceChart,
   QuantityInput,
@@ -34,6 +35,10 @@ import { formatMoney, formatPrice, formatSignedMoney } from "../format/number";
 // milestone (ND-2/ND-5) — this page ships without it, D-068 intact.
 // PriceChart amendment — the period selector (PROPOSED). Days are the server-side
 // history window; YTD is computed live. "Max" is capped by the backend (≤ 3650).
+// A vocab value → chip (MetaStrip), or "—" when absent.
+function chipVal(v: string | null | undefined | false) {
+  return v ? <span className="lf-chip">{v}</span> : "—";
+}
 const PERIODS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "Max"];
 function periodToDays(p: string): number {
   if (p === "YTD") {
@@ -182,26 +187,35 @@ export function InstrumentDetail() {
           {/* Identity / taxonomy. */}
           <section className="ins__section lf-card">
             <h2 className="ins__h2">Identity</h2>
-            <dl className="ins__facts lf-card__body">
-              <Fact label="Class" value={meta?.asset_class ? labelFor("asset_class", meta.asset_class) : null} chip />
-              <Fact label="Subclass" value={meta?.asset_subclass ? labelFor("asset_subclass", meta.asset_subclass) : null} chip />
-              <Fact label="Exchange" value={meta?.exchange} />
-              <Fact label="Sector" value={meta?.sector} />
-              <Fact label="Country" value={meta?.listing_country ?? meta?.country} />
-              <Fact label="Currency" value={meta?.currency} />
-              {meta?.source_override && <Fact label="Source override" value={labelFor("source_override", meta.source_override)} chip />}
-            </dl>
+            {/* Compact metadata strip (DESIGN-SYSTEM §5.2): one row on desktop,
+                2-col grid on narrow. Vocab values render as chips. */}
+            <div className="lf-card__body">
+              <MetaStrip
+                items={[
+                  { label: "Class", value: chipVal(meta?.asset_class && labelFor("asset_class", meta.asset_class)) },
+                  { label: "Subclass", value: chipVal(meta?.asset_subclass && labelFor("asset_subclass", meta.asset_subclass)) },
+                  { label: "Exchange", value: meta?.exchange || "—" },
+                  { label: "Sector", value: meta?.sector || "—" },
+                  { label: "Country", value: meta?.listing_country ?? meta?.country ?? "—" },
+                  { label: "Currency", value: meta?.currency || "—" },
+                  ...(meta?.source_override ? [{ label: "Source", value: chipVal(labelFor("source_override", meta.source_override)) }] : []),
+                ]}
+              />
+            </div>
           </section>
 
           {/* Class-conditional provider detail (never fabricated — only if linked). */}
           {detailPanel && (
             <section className="ins__section lf-card">
               <h2 className="ins__h2">{detailPanel[0].replace(/_/g, " ")} detail</h2>
-              <dl className="ins__facts lf-card__body">
-                {Object.entries(detailPanel[1]).map(([k, v]) => (
-                  <Fact key={k} label={k.replace(/_/g, " ")} value={v == null ? null : String(v)} />
-                ))}
-              </dl>
+              <div className="lf-card__body">
+                <MetaStrip
+                  items={Object.entries(detailPanel[1]).map(([k, v]) => ({
+                    label: k.replace(/_/g, " "),
+                    value: v == null ? "—" : String(v),
+                  }))}
+                />
+              </div>
             </section>
           )}
 

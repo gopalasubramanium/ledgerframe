@@ -15,6 +15,7 @@ import {
   GlossaryTerm,
   InstrumentPicker,
   MasterSelect,
+  MetaStrip,
   MoneyInput,
   PageHeader,
   PercentInput,
@@ -281,6 +282,25 @@ export function KitchenSink() {
           />
           <TrendStat label="Unrealised P/L" value={formatSignedMoney("71398.13")} delta="71398.13" unit="SGD" />
           <TrendStat label="Cash runway" value="—" deltaDisplay="No data" delta={null} unit="months" />
+        </div>
+        <div className="ks__stack">
+          <Specimen label="MetaStrip · compact metadata (desktop: one row; narrow: 2-col grid). Vocab values as chips.">
+            <div className="lf-card">
+              <h3 className="ks__cardhead">Identity</h3>
+              <div className="lf-card__body">
+                <MetaStrip
+                  items={[
+                    { label: "Class", value: <span className="lf-chip">Equity</span> },
+                    { label: "Subclass", value: <span className="lf-chip">ETF</span> },
+                    { label: "Exchange", value: "NASDAQ" },
+                    { label: "Sector", value: "Information Technology" },
+                    { label: "Country", value: "US" },
+                    { label: "Currency", value: "USD" },
+                  ]}
+                />
+              </div>
+            </div>
+          </Specimen>
         </div>
       </Section>
 

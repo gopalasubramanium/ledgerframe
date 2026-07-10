@@ -518,19 +518,40 @@ template is the next task. No open Holdings blockers remain.
     id needs it); per-holding tags read-back; purge PIN→session-auth binding;
     `summary`/`import-preview` response typing.
 
+## INSTRUMENT DETAIL — DONE ✅ (page ACCEPTED, Phase-3 walk complete, 2026-07-11)
+
+**`/instrument/:symbol` is complete and owner-accepted** — the first **entity-detail**
+template variant (`docs/plans/page-instrument-detail.md`). Phases 0/1/2 built +
+Phase-3 acceptance walk resolved across three finding batches, all verified rendered:
+- **Phase 0 (`2eb656b`)** contract deltas: holdings `?symbol=` scoped reader (ND-1),
+  `/refdata` `source_override` (ND-3), typed `GET /instruments/{symbol}` (ND-4).
+- **Phases 1/2 (`45c243a`)**: the page (scoped quote/identity/class-panel/house-SVG
+  chart/position/ongoing-cost/news/edit); the **AI explainer is DEFERRED** to the
+  AI-surfaces milestone (ND-2/ND-5; D-068 intact — page ships without it).
+- **Walk batch 1 (`9e90b60`)**: D-098 symbol links, D-099 class-scoped ongoing cost,
+  layout. **Batch 2 (`df60600`)**: served display labels (item 3b). **Batch 3
+  (`61dfa41`)**: PriceChart amendment (RATIFIED). **Surfaces (`7cb8066`,`1271ce7`)**:
+  D-100 layered cards, D-101 themed scrollbars + header-outside-scroll. **Refinements
+  (`b374765`)**: canonical link in card header, header-owns-gutter. **Close-out**:
+  the **MetaStrip** primitive (Identity compact metadata; verified desktop 1-row /
+  mobile 2-col).
+- **Cosmetic backlog (D-101, parked → chrome polish pass):** the themed scrollbar
+  *thumb* doesn't paint in headless captures (overlay-scrollbar rendering); the
+  structural fix (header-owns-gutter, track below header) is verified. Revisit the
+  thumb-pixel polish at the chrome pass. **Not blocking.**
+
+No open Instrument Detail blockers remain. `MetaStrip`, `PriceChart` amendment,
+`.lf-card`/`.lf-card__body`, and the themed-scrollbar/header-outside-scroll patterns
+are now platform-wide primitives.
+
 ## NEXT
 
-1. **Instrument Detail — Phases 0/1/2 BUILT; owner Phase-3 acceptance walk NEXT.**
-   (`docs/plans/page-instrument-detail.md`.) ND-1..ND-5 resolved by owner (ND-2/ND-5
-   AI explainer deferred to the AI-surfaces milestone, D-068 intact — page ships
-   without it). Phase 0 contract deltas (`2eb656b`): holdings `?symbol=` (ND-1),
-   `/refdata` `source_override` (ND-3), typed `GET /instruments/{symbol}` (ND-4).
-   Phase 1 assembly: `/instrument/:symbol` page (scoped quote/identity/class-panel/
-   house-SVG chart/position-via-scoped-reader/ongoing-cost/news/edit; explainer
-   deferred-note), **self-verified live in Chromium**. Phase 2: 6 render tests incl.
-   a request-body assertion. **59 frontend + 476 backend green; 127 paths.** Owner
-   drives the **Phase-3 acceptance walk** (the acceptance bar). The **template
-   retrospective is DONE** — six edits folded into `TEMPLATE-page-build.md`.
+1. **Page-chrome — plan then build.** Draft `docs/plans/page-chrome.md` (PLAN ONLY,
+   owner reviews first): D-043 grouped sidebar, D-066 top bar (theme/density/contrast/
+   motion controls move INTO it; StaleBanner; rotation toggle; clock; DemoBadge;
+   UpdateBanner respecting no-egress), LockScreen, and the four-template shell
+   integration. The brief entity-detail template retrospective is folded into
+   `TEMPLATE-page-build.md` this commit.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price

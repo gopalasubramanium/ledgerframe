@@ -1,0 +1,52 @@
+/* MetaStrip (DESIGN-SYSTEM §5.2) — dense label/value metadata.
+   Desktop: one row of equal-width label-over-value pairs.
+   Narrow (< 40rem): wraps to a tight 2-column grid. */
+.lf-metastrip {
+  margin: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+}
+.lf-metastrip__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.lf-metastrip__label {
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+}
+.lf-metastrip__value {
+  margin: 0;
+  font-size: var(--font-size-14);
+  line-height: var(--line-14);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 40rem) {
+  .lf-metastrip {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3) var(--space-4);
+  }
+}
+
+/* Shared vocab chip primitive (used by MetaStrip values, Holdings/Instrument
+   class chips, …) — a compact bordered pill on --surface-raised. */
+.lf-chip {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  border: var(--border-width) solid var(--border);
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}

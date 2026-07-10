@@ -26,6 +26,8 @@ export { DataTable } from "./DataTable";
 export type { DataTableProps, Column, ColumnFormat, SortState } from "./DataTable";
 export { TrendStat } from "./TrendStat";
 export type { TrendStatProps } from "./TrendStat";
+export { MetaStrip } from "./MetaStrip";
+export type { MetaStripProps, MetaItem } from "./MetaStrip";
 export { Sparkline } from "./Sparkline";
 export type { SparklineProps } from "./Sparkline";
 export { AllocationDonut } from "./AllocationDonut";

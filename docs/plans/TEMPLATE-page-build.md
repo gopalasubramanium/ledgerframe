@@ -76,6 +76,13 @@ re-derived. "Owns" = canonical here. "Summarises" MUST name the canonical page
 **Enforcement corollary (P-1/D-031):** a summary widget may not add a figure its
 canonical page does not show. State how this page honours it.
 
+**Scoped-view pages (entity-detail, P-3 — the Instrument Detail lesson):** an
+entity-detail page typically **owns nothing** — every figure is a *filter* of a
+canonical reader (quote/news/position…), a scoped **endpoint param** (`?symbol=`) or
+a documented client-side filter, **never a recompute / second code path**. State
+this explicitly, and prove it in acceptance (the scoped numbers match the canonical
+page's).
+
 ---
 
 ## 3. API SURFACE
@@ -132,6 +139,21 @@ affordance is a **§9 NEEDS DECISION** ("mock-backed affordance").
   list **portals to the viewport** (fixed + `max-height` + internal scroll) and
   overlays; it never expands a dialog or adds dialog-level scroll. Verified open
   **inside a dialog** at `/kitchen-sink`.
+- **Cards are LAYERED (D-100)** — sections/panels use `.lf-card` (outer border on
+  `--surface-raised`); a section with a headline nests its content in a
+  `.lf-card__body` panel (`--surface` + border) for depth, not a flat fill. A card's
+  **canonical-home cross-link lives in the card HEADER, top-right** (the News
+  pattern), for every summary-with-link card — never in the body.
+- **Scroll = content only, header outside (D-101)** — a scroll region is the content
+  below the section/card header (header outside the scroll container); `DataTable`
+  keeps the toolbar outside the scroll and only the rows scroll. All scrollbars are
+  themed via tokens.
+- **Dense label/value metadata → `MetaStrip`** (DESIGN-SYSTEM §5.2) — identity /
+  taxonomy strips (one row desktop, 2-col narrow), not a bespoke grid.
+- **A second template variant reveals reusable primitives** — Instrument Detail (the
+  entity-detail variant) surfaced `MetaStrip`, `.lf-card__body`, the card-header
+  link, and the PriceChart amendment. **Extract page-local patterns that recur into
+  the component layer + DESIGN-SYSTEM; do not leave them page-local.**
 
 **Tables — dataset-size posture (D-094, required for every `DataTable`):** for
 each table on the page, state (a) its **dataset-size assumption** (bounded / small
@@ -170,6 +192,14 @@ account kind, document category…). The Holdings build learned this the hard wa
   detail is a low-priority Review signal, **never a hard wall**.
 - **Backend-served, frontend zero-copy (D-005).** The matrix / field-spec is served
   from the backend (e.g. `/refdata/*`), never hardcoded in the frontend.
+- **Display variants too (Instrument Detail lesson).** Variants also drive
+  **class-conditional display panels** (e.g. mutual_fund NAV / crypto cap / F&O
+  identity) — shown **only when actually present/linked, never fabricated**
+  (Guarantee 3).
+- **Deferred cross-milestone dependency.** If a section depends on a future milestone
+  (e.g. an AI surface), it is **DEFERRED with a visible placeholder note + a recorded
+  pending decision**, never silently dropped (D-068 stayed intact when the Instrument
+  Detail explainer was deferred).
 
 | Variant | Actions/types offered | REQUIRED fields | OPTIONAL-PROMPTED fields | Served by |
 |---------|-----------------------|-----------------|--------------------------|-----------|
