@@ -546,12 +546,15 @@ are now platform-wide primitives.
 
 ## NEXT
 
-1. **Page-chrome — plan then build.** Draft `docs/plans/page-chrome.md` (PLAN ONLY,
-   owner reviews first): D-043 grouped sidebar, D-066 top bar (theme/density/contrast/
-   motion controls move INTO it; StaleBanner; rotation toggle; clock; DemoBadge;
-   UpdateBanner respecting no-egress), LockScreen, and the four-template shell
-   integration. The brief entity-detail template retrospective is folded into
-   `TEMPLATE-page-build.md` this commit.
+1. **Page-chrome — plan DRAFTED, owner reviews before build.**
+   `docs/plans/page-chrome.md` (PLAN ONLY): the app SHELL — D-043 grouped sidebar,
+   D-066 top bar (theme/density/contrast/motion move INTO it; StaleBanner; rotation
+   toggle; Clock; DemoBadge; UpdateBanner respecting no-egress), LockScreen (D-002),
+   four-template shell integration. Surfaces **C-1..C-6** blockers: new chrome
+   components need a §5 amendment (Phase 0a); the **Ask panel (D-067) is DEFERRED**
+   to the AI-surfaces milestone (like the explainer); version-check + no-egress
+   guard; first-run checklist scope; LockScreen↔session contract; sidebar responsive
+   behaviour. The entity-detail retrospective is folded into `TEMPLATE-page-build.md`.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price
