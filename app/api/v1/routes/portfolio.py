@@ -117,10 +117,20 @@ class HoldingsResponse(BaseModel):
 
 
 @router.get("/portfolio/holdings", response_model=HoldingsResponse)
-async def portfolio_holdings(session: AsyncSession = Depends(get_db)) -> dict:
+async def portfolio_holdings(
+    symbol: Annotated[str | None, Query()] = None,
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    # ND-1 (Instrument Detail): `symbol` scopes the SAME canonical reader to one
+    # instrument (P-3 — a scoped view is a filter of the reader, never a second code
+    # path / no recompute). Empty list when the symbol is not held.
     base = get_settings().base_currency
     val = await value_portfolio(session, base)
-    return {"base_currency": base, "holdings": [_hv(h) for h in val.holdings]}
+    holdings = val.holdings
+    if symbol:
+        s = symbol.strip().upper()
+        holdings = [h for h in holdings if (h.symbol or "").upper() == s]
+    return {"base_currency": base, "holdings": [_hv(h) for h in holdings]}
 
 
 @router.get("/portfolio/holdings.csv", response_class=PlainTextResponse)

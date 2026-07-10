@@ -104,6 +104,32 @@ async def test_txn_applicability_matrix(app_client):
     assert "buy" not in m["cash"] and "buy" not in m["fixed_deposit"]
 
 
+async def test_holdings_symbol_filter_is_a_scoped_view(app_client):
+    """ND-1 (Instrument Detail) — `?symbol=` scopes the SAME holdings reader to one
+    instrument (P-3 filter, not a second code path). Unknown symbol → empty."""
+    await app_client.post("/api/v1/portfolio/transactions", json={
+        "symbol": "AAPL", "type": "buy", "ts": "2024-05-01T09:30:00",
+        "quantity": 3, "price": 100, "currency": "USD",
+    })
+    scoped = (await app_client.get("/api/v1/portfolio/holdings?symbol=AAPL")).json()["holdings"]
+    assert scoped and all((h.get("symbol") or "").upper() == "AAPL" for h in scoped)
+    # Same reader, same numbers as the full list (P-3: a filter, never recomputed).
+    full = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    aapl_full = next(h for h in full if (h.get("symbol") or "") == "AAPL")
+    assert scoped[0]["market_value"] == aapl_full["market_value"]
+    # Not held → empty, honestly (no fabricated row).
+    assert (await app_client.get("/api/v1/portfolio/holdings?symbol=ZNOPE")).json()["holdings"] == []
+
+
+async def test_refdata_serves_source_override_vocab(app_client):
+    """ND-3 — per-instrument source-override routing options, sourced from the
+    market-router CAPABILITIES (never drifts)."""
+    data = (await app_client.get("/api/v1/refdata")).json()
+    so = data["source_override"]
+    assert so[0] == "auto"                       # clears the override
+    assert "coingecko" in so and "amfi_nav" in so and "kite" in so
+
+
 async def test_meta_keys_gaps_persist(app_client):
     """D-091 — property `cost` and private `round` are now whitelisted."""
     await app_client.post("/api/v1/portfolio/manual-holdings", json={

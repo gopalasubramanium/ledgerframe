@@ -898,6 +898,211 @@
         "title": "HoldingsResponse",
         "type": "object"
       },
+      "InstrumentDetailResponse": {
+        "properties": {
+          "instrument": {
+            "$ref": "#/components/schemas/InstrumentMeta"
+          },
+          "quote": {
+            "additionalProperties": true,
+            "title": "Quote",
+            "type": "object"
+          }
+        },
+        "required": [
+          "quote",
+          "instrument"
+        ],
+        "title": "InstrumentDetailResponse",
+        "type": "object"
+      },
+      "InstrumentMeta": {
+        "description": "ND-4 \u2014 the typed footprint of one instrument's metadata (contract hygiene,\nlike the Holdings \u00a79-6 reshape). Fields are nullable at the JSON boundary; the\nclass-conditional `asset_detail` (AMFI NAV / CoinGecko cap / F&O identity) and\n`history_status` (why history is unavailable) stay open dicts.",
+        "properties": {
+          "annual_cost_bps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Cost Bps"
+          },
+          "asset_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Category"
+          },
+          "asset_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Class"
+          },
+          "asset_detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Detail"
+          },
+          "asset_subclass": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Subclass"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange"
+          },
+          "exchange_mic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Mic"
+          },
+          "history_status": {
+            "title": "History Status"
+          },
+          "identifiers": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifiers"
+          },
+          "liquidity_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liquidity Profile"
+          },
+          "listing_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listing Country"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "source_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Override"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "InstrumentMeta",
+        "type": "object"
+      },
       "InstrumentPatch": {
         "properties": {
           "asset_class": {
@@ -5398,9 +5603,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Instrument Detail Api V1 Instruments  Symbol  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/InstrumentDetailResponse"
                 }
               }
             },
@@ -8191,6 +8394,22 @@
       "get": {
         "operationId": "portfolio_holdings_api_v1_portfolio_holdings_get",
         "parameters": [
+          {
+            "in": "query",
+            "name": "symbol",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Symbol"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",

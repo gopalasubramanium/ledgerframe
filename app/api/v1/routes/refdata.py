@@ -44,6 +44,14 @@ _REGION = ["India", "Singapore", "US", "Europe", "APAC", "Other"]  # §4 (D-083)
 _ID_TYPE = ["isin", "cusip", "figi", "sedol", "amfi_code", "kite_token",
             "coingecko_id", "provider_symbol"]  # §2
 
+
+def _source_override_values() -> list[str]:
+    """ND-3 — per-instrument source-override routing options. `auto` clears the
+    override; the rest are the market-router providers (sourced from CAPABILITIES so
+    the vocab can never drift from the router)."""
+    from app.providers.market.router import CAPABILITIES
+    return ["auto", *sorted(CAPABILITIES.keys())]
+
 # D-090 (ratified 2026-07-10) — AssetClass → the TxnTypes the Add-flow Type
 # dropdown OFFERS for that class. MASTER-DATA §10 is the canonical statement; this
 # is its backend home so the frontend carries no copy (D-005). Form-level filtering
@@ -99,6 +107,7 @@ async def refdata() -> dict[str, list[str]]:
         "policy_type": list(POLICY_TYPES),
         "premium_frequency": list(PREMIUM_FREQUENCIES),
         "id_type": _ID_TYPE,
+        "source_override": _source_override_values(),
     }
 
 

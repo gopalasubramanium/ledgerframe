@@ -333,7 +333,36 @@ async def set_instrument_ongoing_cost(symbol: str, payload: OngoingCostPatch,
             "annual_cost_bps": float(instr.annual_cost_bps) if instr.annual_cost_bps is not None else None}
 
 
-@router.get("/instruments/{symbol}")
+class InstrumentMeta(BaseModel):
+    """ND-4 — the typed footprint of one instrument's metadata (contract hygiene,
+    like the Holdings §9-6 reshape). Fields are nullable at the JSON boundary; the
+    class-conditional `asset_detail` (AMFI NAV / CoinGecko cap / F&O identity) and
+    `history_status` (why history is unavailable) stay open dicts."""
+    symbol: str
+    name: str | None = None
+    asset_class: str | None = None
+    currency: str | None = None
+    exchange: str | None = None
+    sector: str | None = None
+    country: str | None = None
+    asset_subclass: str | None = None
+    asset_category: str | None = None
+    liquidity_profile: str | None = None
+    listing_country: str | None = None
+    exchange_mic: str | None = None
+    source_override: str | None = None
+    annual_cost_bps: float | None = None
+    identifiers: list[dict] | None = None
+    asset_detail: dict | None = None
+    history_status: Any = None  # a dict OR a plain "why unavailable" string, or None
+
+
+class InstrumentDetailResponse(BaseModel):
+    quote: dict  # a typed Quote at source (`Quote.model_dump`)
+    instrument: InstrumentMeta
+
+
+@router.get("/instruments/{symbol}", response_model=InstrumentDetailResponse)
 async def instrument_detail(symbol: str, session: AsyncSession = Depends(get_db)) -> dict:
     q = await refresh_quote(session, symbol)
     # Prefer stored instrument metadata (covers held/watchlisted symbols); fall back

@@ -1,9 +1,19 @@
 # page-instrument-detail.md — Instrument Detail build plan
 
-**Status: PLAN ONLY — owner reviews before build** (drafted 2026-07-10, the second
-instantiation of `TEMPLATE-page-build.md` after Holdings; first use of the
-**entity-detail** template variant). Derived from the specs with section refs;
-nothing invented. Open blockers are in §9 — build does not start until they clear.
+**Status: BUILD APPROVED (owner, 2026-07-10) — ND-1..ND-5 resolved.** Second
+instantiation of `TEMPLATE-page-build.md`; first **entity-detail** variant.
+
+**ND resolutions (owner, 2026-07-10):**
+- **ND-1 — position-if-held:** a **`symbol` filter param on the existing holdings
+  reader** (`GET /portfolio/holdings?symbol=`) — P-3: a scoped view is a *filter of
+  the canonical reader*, **no new endpoint**. Contract delta, same commit.
+- **ND-2 + ND-5 — AI explainer DEFERRED to the AI-surfaces milestone.** The
+  **Ask-panel** component is built there (serving chat + instrument explainer +
+  report helper) with its own DESIGN-SYSTEM amendment + ratification. **This page
+  ships without the explainer section.** D-068 stays intact — recorded as
+  **explicitly pending**, not dropped.
+- **ND-3 — approved:** add a `source_override` vocab to `/refdata`.
+- **ND-4 — approved:** type `GET /instruments/{symbol}`, same-commit contract regen.
 
 ---
 
