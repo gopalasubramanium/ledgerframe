@@ -192,6 +192,14 @@ Notes:
   the four — it is the sanctioned artifact (D-038/D-061).
 - Every template opens with **PageHeader** (§5) and routes empty regions through
   **EmptyState** (§5).
+- **Worklist row actions (standard affordance, added 2026-07-10).** Every
+  worklist DataTable row carries its per-row actions (details / edit / delete,
+  and any row-scoped action like tags) in a compact **`RowMenu`** (⋯) overflow
+  menu (§5.4), wired to the existing edit + soft-delete behaviours. This keeps
+  data-dense tables narrow so they **degrade gracefully at laptop widths** (a
+  single icon column instead of wide text buttons); long text columns truncate
+  (DataTable `truncate`) rather than forcing horizontal scroll. Interactive
+  open states (the ⋯ menu) are verified manually in both themes (§7).
 
 ---
 
@@ -269,6 +277,7 @@ props are backend-computed `Decimal` strings (never client-computed).
 | **GlossaryTerm** | `term` (`term-*` id), `children` | Popover linking a shown term to its GLOSSARY entry; term spelling must match GLOSSARY exactly. |
 | **Dialog** *(amended)* | `open`, `onClose`, `title`, `children`, `footer?`, `variant?` (`center`\|`drawer`), `dismissOnBackdrop?` | The worklist **CRUD-editor** container (Add flow, edit forms, import wizard) and the base for ConfirmDialog. Focus-trapped, Esc-to-close, backdrop-dismiss, restores focus on close; portal + `--scrim` backdrop + `--shadow-1`. **Amended 2026-07-10 (Holdings page-build §9-2).** |
 | **ConfirmDialog** *(amended)* | `open`, `title`, `message`, `confirmLabel?`, `destructive?`, `requirePin?`, `onCancel`, `onConfirm` | Confirm overlay for destructive actions; **reuses Dialog**. `requirePin` gates confirmation on a masked PIN (purge-deleted, D-002/D-049). **Amended 2026-07-10 (Holdings page-build §9-5).** |
+| **RowMenu** *(amended)* | `items` (`{label,onClick,danger?,disabled?}`), `aria-label?` | Compact per-row overflow menu (⋯) for **worklist row actions** — details / edit / delete / tags. Closes on outside-click / Esc. Keeps data-dense tables narrow (§3 worklist note). **Amended 2026-07-10 (Holdings page-build §9-22).** |
 
 ### 5.5 Global chrome (D-066) — composed, not per-page
 

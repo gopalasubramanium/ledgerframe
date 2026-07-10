@@ -409,6 +409,37 @@ reshaped. **No engine changes.**
   (3–4 columns as width allows), still usable on phone. Presentational only —
   independent of the D-090/D-091 ratification.
 
+### Final findings batch — acceptance walk #5 (2026-07-10, owner)
+
+- **§9-20 — D-092 Insurance signpost tile (DONE).** The type picker gains an
+  **Insurance** tile that **navigates to `/insurance`** and never branches the
+  Add form (D-062 register unchanged). Visually distinct (dashed, accent title,
+  "→"). DECISIONS.md D-092.
+- **§9-21 — D-093 editable import review grid (DONE).** Import preview → an
+  **editable grid**: per-cell highlighting of invalid type/date, duplicate rows
+  flagged (excluded by default), rows fixable **inline** (date/symbol/type/qty/
+  price/currency) or **excluded**; **Commit disabled until every included row is
+  valid**. Commit reconstructs a corrected CSV from the included rows and
+  re-uploads (`commit_import` re-validates). No engine change. DECISIONS.md D-093.
+- **§9-22 — Tags-clip fix + row quick actions (DONE).** The clipped "Tags"
+  column is gone: per-row actions now live in a compact **`RowMenu`** (⋯) —
+  Holdings: Details (→ instrument) · Tags · Delete (manual holdings soft-delete +
+  undo; derived → a note to delete its transactions); Transactions: Edit
+  (`TxnEditDialog` → PUT) · Delete (soft-delete + undo). DataTable gains a
+  **`truncate`** column option (Name/Source/Note) so long text ellipsises instead
+  of forcing horizontal scroll. Verified no clipped headers / no mandatory
+  h-scroll at **1366px and 1920px**, both densities. DESIGN-SYSTEM §3 worklist
+  note + §5.4 RowMenu.
+- **§9-23 — Purge polish + `deleted-count` endpoint (DONE).** New read-only
+  `GET /portfolio/deleted-count` (contract delta, +1 path → 124); the "Purge N
+  deleted [PIN]" control is **hidden at zero** and shows the count when present.
+- **§9-24 — 500 resolution (CLOSED).** Root cause was **environmental** (the
+  owner's dev setup started only Vite, not the backend); with the backend up,
+  holdings/summary/CSV all work and no valuation warnings appear. The per-holding
+  resilience + `fx.convert`/`native_ccy` guards from the prior fix **stay as
+  legitimate defence-in-depth** (`test_valuation_resilience`). See the `make dev`
+  ergonomics work so this can't recur.
+
 ### Surfaced during Phase 1 assembly (2026-07-10) — for the Holdings look
 
 - **§9-8 — free-text input gap → `TextInput`.** Assembly found the manual-asset

@@ -281,6 +281,27 @@ out of scope — components only.
   verified 200. **Owner: if it still misbehaves, the warning log now names the
   offending holding + reason — share that line to fix the root cause at source.**
 
+- **Holdings final-batch (owner greenlight, 2026-07-10).**
+  - **500 CLOSED** — environmental (backend wasn't running); resilience +
+    fx/native_ccy guards stay as defence-in-depth (§9-24).
+  - **Tags clipping fixed + row quick actions** — per-row actions moved to a
+    compact **`RowMenu`** (⋯); Holdings: Details/Tags/Delete, Transactions:
+    Edit(`TxnEditDialog`)/Delete; DataTable gains a **`truncate`** column option.
+    No clipped headers / no mandatory h-scroll at laptop widths (§9-22).
+  - **D-092** — Insurance signpost tile (navigates to `/insurance`, never
+    branches the form; D-062) (§9-20).
+  - **D-093** — editable import review grid (per-cell error highlighting, inline
+    fix or exclude, Commit gated until all rows resolved; commit re-uploads a
+    reconstructed CSV) (§9-21).
+  - **Purge polish** — new `GET /portfolio/deleted-count` (contract +1 → 124
+    paths); purge control hidden at zero, shows the count (§9-23).
+  - **Dev ergonomics** — `make dev` / `scripts/dev.sh` runs backend + frontend
+    together (creates a local dev `.env` on first run, never `/mnt`); README
+    documents it.
+  - 42 frontend + 460 backend tests; drift/ruff/lint/typecheck/build green.
+  - **PROPOSED for ratification:** D-090 (matrix, now with the import-bypass
+    clause) + D-091 (per-class fields) in MASTER-DATA §10/§11.
+
 ## IN-PROGRESS
 
 - **Holdings acceptance walk — 4 findings fixed 2026-07-10; owner to resume the

@@ -546,9 +546,23 @@ clarifying notes recorded in the guide.
   Incomplete optional details → a **low-priority Review signal**
   ("N holdings have incomplete details"), **never a hard wall**. page-holdings §9-18.
 
-**Post-spec note:** D-089 is a Holdings page-build decision recorded after the
-12-batch spec close (D-001–D-088); it changes no earlier decision. D-090 and
-D-091 are **PROPOSED** (awaiting owner ratification before the form reshape).
+- **D-092 — Insurance signpost tile** (owner, 2026-07-10). The Add type-picker
+  gains an **Insurance** tile that **navigates to the Insurance register and
+  never branches the Add form** — insurance policies stay their own register
+  (D-062 unchanged). Subtitle: "Policies live in their own register — we'll take
+  you there." page-holdings §9-20.
+- **D-093 — Editable import review grid** (owner, 2026-07-10). Import preview
+  becomes an **editable review grid**: per-cell error highlighting (malformed
+  values / invalid type; unresolved symbols per D-012; invalid type-for-class per
+  D-090 once ratified), fixable **inline** or the row **excluded**; **Commit is
+  disabled until every row is resolved or excluded**. Fixed rows commit by
+  reconstructing a corrected CSV from the included rows and re-uploading (the
+  commit path re-validates). No engine change. page-holdings §9-21.
+
+**Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
+after the 12-batch spec close (D-001–D-088); they change no earlier decision.
+D-090 and D-091 are **PROPOSED** (awaiting owner ratification before the form
+reshape).
 
 ---
 

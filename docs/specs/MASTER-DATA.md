@@ -346,7 +346,11 @@ change only by code + migration.
 2026-07-10; Holdings page-build §9-17). This table states which `TxnType`s the
 Add-flow **Type dropdown offers per `AssetClass`**. It is **form-level filtering
 only — the engine is unchanged** (`compute_fifo` processes every type
-regardless; this narrows what the UI *offers*). Derived from (a) engine behaviour
+regardless; this narrows what the UI *offers*). **The matrix governs what the
+FORM OFFERS, not what the engine ACCEPTS** (owner, 2026-07-10): **CSV imports of
+odd-but-real historical events are NOT rejected by UI opinion** — the importer
+validates and commits them regardless of this matrix; only the manual Add
+dropdown is filtered. Derived from (a) engine behaviour
 and (b) financial reality, with the owner's guidance folded in (Indian mutual
 funds have splits + bonus units; interest → FD/bond/cash; dividend →
 equity/ETF/MF; merger/split/bonus → provider-quoted securities).
