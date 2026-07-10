@@ -592,6 +592,27 @@ reshaped. **No engine changes.**
   importable. Verified in Chromium: the button downloads
   `ledgerframe-import-template.csv`.
 
+### Final findings #10 (2026-07-10, owner) — picker + popover, verified live
+
+- **§9-38 — D-097 class-aware instrument picker (DONE, verified live).** The picker
+  was mock-backed and class-blind ("Mutual fund offered equities and BTC"). Now it
+  takes the Add-flow `assetClass` and is wired to a new backend
+  `GET /instruments/search?q=&asset_class=` returning **`existing`** (this class,
+  selectable), **`other_class`** (a match under a different class → *"Found in
+  {class}: SYM →"* navigate link, **never** selectable), and **`suggestions`**
+  (provider search routed to the class's provider — AMFI / CoinGecko / market,
+  never a mix). **Verified in Chromium:** a mutual-fund add with query "AAP" shows
+  AAPL only as *"Found in equity: AAPL →"*, plus Create — no equity/crypto results.
+- **§9-39 — Universal popover overlay rule (DONE, verified live).** `.lf-dialog__body`
+  is `overflow-y:auto`, so an in-flow/absolute dropdown expanded the dialog / added
+  dialog scroll. The InstrumentPicker menu now **portals to `document.body`**
+  (`position:fixed` anchored to the field, `max-height: min(18rem,40vh)`, internal
+  scroll) — it overlays within the viewport. Native `select`/`date` controls already
+  overlay. **Verified in Chromium:** `portaledOutsideDialog: true`,
+  `dialogScroll: false` with the picker open inside the Add dialog. Recorded as a
+  **universal component rule** (DESIGN-SYSTEM §6) + an open-inside-dialog case at
+  `/kitchen-sink`.
+
 **Sign-off:** all §9 items resolved (2026-07-10). Build proceeds per §8; the
 Phase 0a component amendment pauses at `/kitchen-sink` for the owner's
 ratification look before Phase 1 assembly.

@@ -63,6 +63,7 @@ new path; still **125 paths** (row below).
 |------|-------------------------------|----------|------|
 | **add ✅** | `GET /api/v1/refdata` | **D-005** | **Delivered 2026-07-10.** Single fixed-vocabulary endpoint (22 vocabs). Retires the per-master meta endpoints and all frontend inline lists. |
 | **add ✅** | `GET /api/v1/refdata/txn-applicability` | **D-090** | **Delivered 2026-07-10.** AssetClass → offered TxnTypes for the Add-flow Type dropdown (MASTER-DATA §10). Form-level filter only; frontend zero-copy (D-005). |
+| **add ✅** | `GET /api/v1/instruments/search` | **D-097** | **Delivered 2026-07-10.** Class-aware picker search: `existing` (picked class) · `other_class` (navigate-only cross-class) · `suggestions` (provider routed by class). +1 path → **127**. |
 | **reshape ✅** | `GET /api/v1/portfolio/transactions` (+ sort/dir/filter/offset/limit + total) | **D-094** | **Delivered 2026-07-10.** Server-side sort/filter/windowing over the full dataset (never the loaded page); default most-recent-first; response carries `total` so the UI states "Showing X–Y of Z" and never silently truncates. Numeric columns cast for value-sort. CSV export stays full-dataset server-side (D-050). |
 | **remove** | `GET /api/v1/insurance/meta` → (into `/refdata`) | **D-005** | Insurance vocab moves to `/refdata`; endpoint removed once `/refdata` lands. |
 | **remove** | `GET /api/v1/estate/meta` → (into `/refdata`) | **D-005** | Estate vocab (doc categories, contact roles) moves to `/refdata`. |

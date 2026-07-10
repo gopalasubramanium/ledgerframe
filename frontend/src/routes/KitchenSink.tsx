@@ -519,6 +519,25 @@ export function KitchenSink() {
           <Specimen label="Amount">
             <MoneyInput value="1000.00" currency="SGD" onChange={() => {}} aria-label="Amount" />
           </Specimen>
+          {/* §6 popover rule — open these INSIDE the dialog: each must OVERLAY within
+              the viewport, never expand the dialog or add dialog-level scroll. */}
+          <Specimen label="Instrument (open — portaled overlay, class-aware D-097)">
+            <InstrumentPicker assetClass="mutual_fund" allowCreate onSelect={() => {}} />
+          </Specimen>
+          <Specimen label="Date (native picker overlays)">
+            <DateInput value={date} onChange={setDate} aria-label="Date in dialog" />
+          </Specimen>
+          <Specimen label="Select (native overlays)">
+            <Select
+              value={scope}
+              onChange={setScope}
+              options={[
+                { value: "markets", label: "Markets" },
+                { value: "holdings", label: "Holdings" },
+              ]}
+              aria-label="Scope in dialog"
+            />
+          </Specimen>
         </div>
       </Dialog>
 

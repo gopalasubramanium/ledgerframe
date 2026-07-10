@@ -311,6 +311,15 @@ still fires). It carries **no figure and no provenance** — status only.
 - Styling is via tokens (§2) and templates (§3); components own their look. A
   page that needs a new visual affordance adds/extends a **component**, it does
   not inline styles.
+- **Popover overlay rule (universal, all components).** Any open dropdown /
+  result list / popover — `InstrumentPicker`, `ui/Select`, `MasterSelect`,
+  `DateInput` — must **overlay within the viewport**, never expand its container or
+  create dialog-level scroll. Native controls (`select`, `input[type=date]`)
+  satisfy this by construction; **custom popovers** (e.g. the InstrumentPicker
+  result list) **must portal to `document.body`** with `position: fixed` anchored
+  to the field, a viewport-relative `max-height`, and internal scroll. Verified by
+  an **open-state-inside-a-dialog** case at `/kitchen-sink` (§5.4 Dialog demo).
+  Recorded from the Holdings final walk (page-holdings §9-39).
 
 ---
 

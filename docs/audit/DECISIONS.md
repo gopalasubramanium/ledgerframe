@@ -624,11 +624,27 @@ clarifying notes recorded in the guide.
     fully visible (Price column dropped — it is "—" for manual holdings and Value is
     the decision figure; verified by rendered screenshots, `overflowX: false`).
 
+- **D-097 — Instrument picker respects the picked asset class** (owner, 2026-07-10;
+  confirmation pass). The Add-flow class (from the D-089 tile) filters **both** the
+  picker's pools: **existing instruments** by stored `asset_class`, and **provider
+  search routed to that class's provider only** (AMFI for mutual_fund, CoinGecko for
+  crypto, the market provider for equity/etf) — never a cross-provider mix. A typed
+  symbol that exists in the ledger under a **different** class appears under a
+  separator (*"Found in equity: D05 →"*) as a **navigate-to link, never a selectable
+  result** into the wrong flow (upholds D-012/D-089). New backend
+  `GET /instruments/search?q=&asset_class=` returns three honest buckets
+  (`existing` / `other_class` / `suggestions`); the picker is wired to it (was
+  mock-backed). **Verified live** in a mutual-fund add (AAPL shows only as a
+  cross-class link, not a mutual-fund result). Also this pass: the **universal
+  popover overlay rule** (custom popovers portal to the viewport; DESIGN-SYSTEM §6).
+  page-holdings §9-38/39. Contract +1 → **127 paths**.
+
 **Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
 after the 12-batch spec close (D-001–D-088); they change no earlier decision.
 **D-090 and D-091 were ratified 2026-07-10** (D-090 with the ETF-Bonus amendment);
 **D-094** records the table dataset-size posture; **D-095** the CSV round-trip
-contract; **D-096** the generated import template. None changes an earlier decision.
+contract; **D-096** the generated import template; **D-097** the class-aware
+instrument picker. None changes an earlier decision.
 
 ---
 

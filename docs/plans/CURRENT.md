@@ -429,7 +429,24 @@ out of scope — components only.
     Verified in Chromium (downloads `ledgerframe-import-template.csv`).
   - **472 backend** (+2: template round-trip, duplicate-skip report) + **52 frontend**
     (+3: payload guard, warning toast, template button) tests; contract 126 paths,
-    drift green; ruff/tokens/lint/typecheck/build green.
+    drift green; ruff/tokens/lint/typecheck/build green. — committed `af50f6c`.
+
+- **Final findings #10 (owner, 2026-07-10) — picker + popover, verified LIVE.**
+  page-holdings §9-38/39; DECISIONS.md D-097.
+  - **D-097 class-aware picker** — was mock-backed & class-blind. New
+    `GET /instruments/search?q=&asset_class=` (contract +1 → **127**) returns
+    `existing`/`other_class`/`suggestions`; the picker takes the Add-flow class,
+    filters existing by it, routes provider search (AMFI/CoinGecko/market), and
+    shows cross-class matches as **navigate links, never selectable**. Verified in
+    Chromium (mutual-fund add shows AAPL only as "Found in equity: AAPL →").
+  - **Universal popover rule** — custom popovers portal to the viewport
+    (`position:fixed` + max-height + internal scroll); the InstrumentPicker menu
+    now portals to `document.body`. Verified in Chromium (`portaledOutsideDialog:
+    true`, `dialogScroll: false`). Recorded in DESIGN-SYSTEM §6 + kitchen-sink
+    open-inside-dialog case.
+  - **474 backend** (+2 instruments-search) + **53 frontend** (+1 class-aware
+    picker) tests; contract 127 paths, drift green; ruff/tokens/lint/typecheck/
+    build green. **Committing now** (owner: "commit … then I do the true final pass").
 
 - **D-090 / D-091 — PROPOSED spec tables (owner, 2026-07-10; SUPERSEDED — see the
   ratified+shipped entry above), + compact picker fixed now.**

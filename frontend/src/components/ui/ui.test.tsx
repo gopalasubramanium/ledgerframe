@@ -20,6 +20,13 @@ import {
   TREEMAP_NODES,
 } from "../../mocks/fixtures";
 
+// The InstrumentPicker searches the backend; keep it offline in unit tests (the
+// explicit create path renders regardless of search results).
+vi.mock("../../api/instruments", () => ({
+  searchInstruments: vi.fn(async () => ({ ok: false, error: "no server" })),
+}));
+import { searchInstruments } from "../../api/instruments";
+
 afterEach(cleanup);
 
 test("MoneyInput shows the currency and passes the raw string up (no math)", async () => {
@@ -68,8 +75,30 @@ test("InstrumentPicker exposes an explicit create path (no silent auto-create)",
   render(<InstrumentPicker onSelect={onSelect} allowCreate />);
   const input = screen.getByRole("combobox");
   await userEvent.type(input, "Zzz New Co");
-  await userEvent.click(screen.getByText(/Create new instrument/));
+  await userEvent.click(await screen.findByText(/Create new instrument/));
   expect(onSelect).toHaveBeenCalledWith({ kind: "create", query: "Zzz New Co" });
+});
+
+test("InstrumentPicker is class-aware: same-class selectable, cross-class navigates (D-097)", async () => {
+  vi.mocked(searchInstruments).mockResolvedValueOnce({
+    ok: true,
+    data: {
+      existing: [{ id: 1, symbol: "0P0001", name: "Acme Fund", asset_class: "mutual_fund", currency: "INR" }],
+      other_class: [{ id: 2, symbol: "D05", name: "DBS Group", asset_class: "equity", currency: "SGD" }],
+      suggestions: [{ symbol: "0P0002", name: "Beta Fund" }],
+    },
+  });
+  const onSelect = vi.fn();
+  render(<InstrumentPicker onSelect={onSelect} allowCreate assetClass="mutual_fund" />);
+  await userEvent.type(screen.getByRole("combobox"), "fund");
+  // Same-class existing + provider suggestion for THIS class appear.
+  expect(await screen.findByText("Acme Fund")).toBeInTheDocument();
+  expect(screen.getByText("Beta Fund")).toBeInTheDocument();
+  // A symbol under a different class appears as a navigate link, not a result.
+  const cross = screen.getByText(/Found in equity: D05/);
+  await userEvent.click(cross);
+  expect(window.location.hash).toContain("/instrument/D05");
+  expect(onSelect).not.toHaveBeenCalled(); // never selectable into the wrong flow
 });
 
 test("DataTable marks sortable headers with aria-sort and exports server-side", async () => {

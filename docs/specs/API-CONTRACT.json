@@ -5252,6 +5252,101 @@
         ]
       }
     },
+    "/api/v1/instruments/search": {
+      "get": {
+        "description": "D-097 \u2014 class-aware instrument search for the Add-flow picker. Returns three\nhonest buckets so an autocomplete can never misclassify:\n  \u00b7 `existing`     \u2014 ledger instruments of the picked class (selectable),\n  \u00b7 `other_class`  \u2014 ledger instruments matching under a DIFFERENT class\n                     (navigate-to links only, never selectable into this flow),\n  \u00b7 `suggestions`  \u2014 provider search routed to the picked class's provider\n                     (AMFI for mutual_fund, CoinGecko for crypto, the market\n                     provider otherwise) \u2014 never a cross-provider mix.",
+        "operationId": "instruments_search_api_v1_instruments_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_class",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asset Class"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Instruments Search Api V1 Instruments Search Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Instruments Search",
+        "tags": [
+          "markets"
+        ]
+      }
+    },
     "/api/v1/instruments/{symbol}": {
       "get": {
         "operationId": "instrument_detail_api_v1_instruments__symbol__get",

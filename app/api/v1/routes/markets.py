@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_auth
@@ -167,6 +167,54 @@ async def markets_global(session: AsyncSession = Depends(get_db)) -> dict:
 async def markets_search(q: str = Query(min_length=1, max_length=40)) -> dict:
     results = await get_provider().search_instruments(q)
     return {"results": [r.model_dump(mode="json") for r in results]}
+
+
+@router.get("/instruments/search")
+async def instruments_search(
+    q: str = Query(min_length=1, max_length=40),
+    asset_class: str | None = Query(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """D-097 — class-aware instrument search for the Add-flow picker. Returns three
+    honest buckets so an autocomplete can never misclassify:
+      · `existing`     — ledger instruments of the picked class (selectable),
+      · `other_class`  — ledger instruments matching under a DIFFERENT class
+                         (navigate-to links only, never selectable into this flow),
+      · `suggestions`  — provider search routed to the picked class's provider
+                         (AMFI for mutual_fund, CoinGecko for crypto, the market
+                         provider otherwise) — never a cross-provider mix.
+    """
+    ql = q.strip().lower()
+    like = f"%{ql}%"
+    rows = (await session.execute(
+        select(Instrument).where(or_(
+            func.lower(Instrument.symbol).like(like),
+            func.lower(Instrument.name).like(like),
+        )).limit(30)
+    )).scalars().all()
+    existing: list[dict] = []
+    other_class: list[dict] = []
+    for r in rows:
+        ac = r.asset_class.value if hasattr(r.asset_class, "value") else str(r.asset_class)
+        item = {"id": r.id, "symbol": r.symbol, "name": r.name or "", "asset_class": ac, "currency": r.currency}
+        (other_class if (asset_class and ac != asset_class) else existing).append(item)
+
+    suggestions: list[dict] = []
+    try:
+        if asset_class == "mutual_fund":
+            from app.services import amfi as amfi_svc
+            suggestions = [{"symbol": s["code"], "name": s["name"]} for s in await amfi_svc.search_schemes(session, q)]
+        elif asset_class == "crypto":
+            from app.services import coingecko as cg
+            suggestions = [{"symbol": (c["symbol"] or "").upper(), "name": c["name"]} for c in await cg.search_coins(session, q)]
+        else:
+            # equity / etf / everything else → the general market provider.
+            suggestions = [{"symbol": i.symbol, "name": getattr(i, "name", "") or ""}
+                           for i in await get_provider().search_instruments(q)]
+    except Exception:  # noqa: BLE001 — a provider outage must not break the picker
+        suggestions = []
+
+    return {"existing": existing, "other_class": other_class, "suggestions": suggestions}
 
 
 async def _asset_detail(session: AsyncSession, identifiers: list[dict]) -> dict:

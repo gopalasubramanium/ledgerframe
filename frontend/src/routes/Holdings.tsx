@@ -880,6 +880,7 @@ function AddDialog({
               </span>
               <InstrumentPicker
                 allowCreate
+                assetClass={activeClass}
                 onSelect={(p) =>
                   setSymbol(p.kind === "create" ? p.query : p.instrument.symbol)
                 }
@@ -896,6 +897,7 @@ function AddDialog({
                   <span className="hold__label">Absorbed into (target instrument)</span>
                   <InstrumentPicker
                     allowCreate={false}
+                    assetClass={activeClass}
                     onSelect={(p) =>
                       setAbsorbedInto(p.kind === "existing" ? Number(p.instrument.id.replace(/\D/g, "")) || null : null)
                     }

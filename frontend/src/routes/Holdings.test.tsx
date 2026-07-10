@@ -175,7 +175,7 @@ test("dividend submits its Amount as quantity 1 × price (engine total-cash map)
   await user.selectOptions(within(dialog).getByLabelText("Transaction type"), "dividend");
   // Symbol via the instrument picker's explicit create path.
   await user.type(within(dialog).getByLabelText("Instrument"), "AAPL");
-  await user.click(within(dialog).getByText(/Create new instrument/));
+  await user.click(await screen.findByText(/Create new instrument/));
   const amount = within(dialog).getByLabelText("Amount received");
   await user.clear(amount);
   await user.type(amount, "125.50");
@@ -193,7 +193,7 @@ test("a Listed tile classifies the new instrument by type (D-089: crypto → cry
   const dialog = screen.getByRole("dialog");
   await user.click(within(dialog).getByText("Crypto"));
   await user.type(within(dialog).getByLabelText("Instrument"), "BTC");
-  await user.click(within(dialog).getByText(/Create new instrument/));
+  await user.click(await screen.findByText(/Create new instrument/));
   const qty = within(dialog).getByLabelText("Quantity");
   await user.clear(qty);
   await user.type(qty, "0.75"); // fractional
