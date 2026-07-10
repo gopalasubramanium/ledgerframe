@@ -340,6 +340,92 @@ change only by code + migration.
 
 ---
 
+## 10. Transaction-type applicability matrix (D-090 — **PROPOSED**)
+
+**Status: every cell is PROPOSED — ratify before enforcement** (owner,
+2026-07-10; Holdings page-build §9-17). This table states which `TxnType`s the
+Add-flow **Type dropdown offers per `AssetClass`**. It is **form-level filtering
+only — the engine is unchanged** (`compute_fifo` processes every type
+regardless; this narrows what the UI *offers*). Derived from (a) engine behaviour
+and (b) financial reality, with the owner's guidance folded in (Indian mutual
+funds have splits + bonus units; interest → FD/bond/cash; dividend →
+equity/ETF/MF; merger/split/bonus → provider-quoted securities).
+
+Legend: ✓ = offered · — = not offered. Columns: Buy · Sell · Div(idend) ·
+Int(erest) · Dep(osit) · W(ithdrawal) · Fee · Spl(it) · Bon(us) · M(erger) ·
+X(fer/transfer).
+
+| AssetClass | Buy | Sell | Div | Int | Dep | W | Fee | Spl | Bon | M | X |
+|------------|:---:|:----:|:---:|:---:|:---:|:-:|:---:|:---:|:---:|:-:|:-:|
+| equity | ✓ | ✓ | ✓ | — | — | — | ✓ | ✓ | ✓ | ✓ | ✓ |
+| etf | ✓ | ✓ | ✓ | — | — | — | ✓ | ✓ | — | ✓ | ✓ |
+| mutual_fund | ✓ | ✓ | ✓ | — | — | — | ✓ | ✓ | ✓ | ✓ | ✓ |
+| bond | ✓ | ✓ | — | ✓ | — | — | ✓ | — | — | — | ✓ |
+| cash | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| fixed_deposit | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| commodity | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | ✓ |
+| crypto | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | ✓ |
+| property | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | ✓ |
+| private | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | ✓ |
+| retirement | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| liability | — | — | — | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| other | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+**Rationale + judgment calls to ratify:**
+- **Dividend** → equity/ETF/mutual_fund only (owner). **Interest** → bond, cash,
+  fixed_deposit (owner) + retirement, liability (debts/accounts accrue interest)
+  — *the last two are judgment calls to confirm*.
+- **Split/Bonus/Merger** → provider-quoted securities. Bonus is **on** for
+  mutual_fund (Indian MF bonus units, owner) and equity, **off** for ETF.
+  **Crypto corporate actions are OFF** (a judgment call — crypto is
+  provider-quoted but token redenominations are atypical; enable on request).
+- **Buy/Sell** → acquirable/tradeable classes; **off** for pure balances
+  (cash, FD, retirement, liability). **Fee/Transfer** → all (any holding can
+  incur a standalone charge or move between accounts).
+- **Implementation note:** the Type dropdown lives in the **Listed** Add branch
+  (equity/ETF, mutual_fund, crypto today). Rows for **manually-valued** classes
+  (FD/bond/cash interest, retirement/liability flows) imply a **transaction path
+  on the Manual branch** that does not exist yet — **ratifying those rows also
+  approves adding that path** (still no engine change).
+
+## 11. Per-class creation-time fields (D-091 — **PROPOSED**)
+
+**Status: PROPOSED — ratify before enforcement** (owner, 2026-07-10;
+page-holdings §9-18). **REQUIRED** = only what valuation/honesty need;
+**OPTIONAL-PROMPTED** = offered at creation, never a hard wall. The optional set
+starts from the existing D-049 backend whitelist `_META_KEYS`
+(`app/api/v1/routes/portfolio.py:466`); **verified present** unless flagged
+**(gap)**.
+
+| AssetClass | REQUIRED | OPTIONAL-PROMPTED (from `_META_KEYS` unless noted) |
+|------------|----------|----------------------------------------------------|
+| equity / etf / mutual_fund / crypto *(Listed)* | instrument, txn fields (qty/price or amount) | instrument-level taxonomy lives on the instrument, not here |
+| bond *(Manual)* | label, value, currency | issuer, **coupon**, **maturity_date**, face_value, clean/dirty_price, accrued_interest |
+| fixed_deposit | label, value, currency | **rate**, **maturity_date**, start_date, payout_frequency, principal, accrued_interest, maturity_value, issuer, renewal_reminder |
+| property | label (name), value, currency | address, valuation_date, valuation_source, next_review_date, **cost (gap — add to `_META_KEYS`)** |
+| retirement | label, value, currency | scheme_name, statement_date, contribution_balance, valuation_source |
+| private | label (name), value, currency | company, ownership, valuation_date, valuation_source, next_review_date, **round (gap — add to `_META_KEYS`)** |
+| cash | label, value, currency | issuer |
+| commodity / liability / other | label, value, currency | valuation_date, valuation_source, note (base keys, always allowed) |
+
+**Findings (owner's verification list):**
+- **Already present** in the backend whitelist: FD rate/maturity, bond
+  coupon/maturity, property address/valuation-date, retirement scheme,
+  private company/ownership, cash issuer. Property/private **name** = the
+  holding `label`.
+- **Missing (gaps to add to `_META_KEYS`):** property **`cost`** (acquisition
+  cost) and private-asset **`round`** (funding round). Backend whitelist change,
+  no schema change (`meta` is JSON).
+- **Frontend gap:** the Manual Add form currently collects **none** of these
+  (label/class/value/currency only). The D-091 reshape adds the per-class
+  OPTIONAL-PROMPTED fields; the backend already persists them (minus the 2 gaps).
+- **Review signal (PROPOSED, new):** incomplete optional details surface as a
+  **low-priority** Review item — *"N holdings have incomplete details"* — **never
+  a hard wall** (proposed constant `_INCOMPLETE_DETAILS_MIN = 1`; on ratification
+  it joins PRODUCT-SPEC §5, per-signal try/except like the rest, D-059).
+
+---
+
 **Derived from:** `docs/audit/02-DATA-MODEL.md`, `docs/audit/06-UI-AND-TERMINOLOGY-AUDIT.md`
 §(a), `docs/audit/DECISIONS.md`, and the **legacy v1 source**
 (`~/Documents/github/LedgerFrame`, read-only) for the DEF backfill:

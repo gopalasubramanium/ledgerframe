@@ -530,8 +530,25 @@ clarifying notes recorded in the guide.
     per-type help copy. **No backend/engine/contract change** (routing + preselect
     only).
 
+- **D-090 — Transaction-type applicability matrix** (owner, 2026-07-10;
+  **PROPOSED — ratify before enforcement**). A table of **AssetClass × TxnType**
+  stating which types the Add-flow Type dropdown offers per class (MASTER-DATA
+  §10, every cell PROPOSED). **Form-level filtering only — the engine is
+  unchanged.** Guidance folded in: Indian mutual funds have splits + bonus units;
+  interest → FD/bond/cash; dividend → equity/ETF/MF; merger/split/bonus →
+  provider-quoted securities. The dropdown filters by the picked class after
+  ratification. page-holdings §9-17.
+- **D-091 — Per-class creation-time field spec** (owner, 2026-07-10; **PROPOSED —
+  ratify before enforcement**). A per-`AssetClass` table of **REQUIRED** (only
+  what valuation/honesty need) vs **OPTIONAL-PROMPTED** creation fields
+  (MASTER-DATA §11), seeded from the existing D-049 `_META_KEYS` whitelist.
+  Verified present vs missing (gaps: property `cost`, private `round`).
+  Incomplete optional details → a **low-priority Review signal**
+  ("N holdings have incomplete details"), **never a hard wall**. page-holdings §9-18.
+
 **Post-spec note:** D-089 is a Holdings page-build decision recorded after the
-12-batch spec close (D-001–D-088); it changes no earlier decision.
+12-batch spec close (D-001–D-088); it changes no earlier decision. D-090 and
+D-091 are **PROPOSED** (awaiting owner ratification before the form reshape).
 
 ---
 

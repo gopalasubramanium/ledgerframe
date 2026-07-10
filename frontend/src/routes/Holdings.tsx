@@ -350,17 +350,17 @@ interface AssetTile {
   assetClass: string; // MASTER-DATA AssetClass value
 }
 const ASSET_TILES: AssetTile[] = [
-  { id: "stock_etf", label: "Stocks & ETFs", subtitle: "Exchange-listed shares and funds, priced from your market-data provider.", branch: "listed", assetClass: "equity" },
-  { id: "mutual_fund", label: "Mutual fund", subtitle: "Units priced from the fund's official NAV (AMFI).", branch: "listed", assetClass: "mutual_fund" },
-  { id: "crypto", label: "Crypto", subtitle: "Coins and tokens priced via CoinGecko.", branch: "listed", assetClass: "crypto" },
-  { id: "cash", label: "Cash & deposits", subtitle: "Bank balances and cash you value yourself.", branch: "manual", assetClass: "cash" },
-  { id: "fixed_deposit", label: "Fixed deposit", subtitle: "A term deposit valued at its principal (interest recorded separately).", branch: "manual", assetClass: "fixed_deposit" },
-  { id: "bond", label: "Bond", subtitle: "A bond you value manually (no live quote here).", branch: "manual", assetClass: "bond" },
-  { id: "property", label: "Property", subtitle: "Real estate valued at your own estimate.", branch: "manual", assetClass: "property" },
-  { id: "retirement", label: "Retirement", subtitle: "Pension / retirement balances you value yourself.", branch: "manual", assetClass: "retirement" },
-  { id: "private", label: "Private asset", subtitle: "Unlisted or private holdings valued manually.", branch: "manual", assetClass: "private" },
-  { id: "liability", label: "Liability", subtitle: "A debt (mortgage, loan) — counts against net worth.", branch: "manual", assetClass: "liability" },
-  { id: "other", label: "Other", subtitle: "Anything that doesn't fit — the honest escape valve.", branch: "manual", assetClass: "other" },
+  { id: "stock_etf", label: "Stocks & ETFs", subtitle: "Exchange-listed shares & funds (live quotes).", branch: "listed", assetClass: "equity" },
+  { id: "mutual_fund", label: "Mutual fund", subtitle: "Priced from official NAV (AMFI).", branch: "listed", assetClass: "mutual_fund" },
+  { id: "crypto", label: "Crypto", subtitle: "Coins & tokens (CoinGecko).", branch: "listed", assetClass: "crypto" },
+  { id: "cash", label: "Cash & deposits", subtitle: "Bank balances & cash you value.", branch: "manual", assetClass: "cash" },
+  { id: "fixed_deposit", label: "Fixed deposit", subtitle: "Term deposit valued at principal.", branch: "manual", assetClass: "fixed_deposit" },
+  { id: "bond", label: "Bond", subtitle: "Valued manually (no live quote).", branch: "manual", assetClass: "bond" },
+  { id: "property", label: "Property", subtitle: "Real estate at your own estimate.", branch: "manual", assetClass: "property" },
+  { id: "retirement", label: "Retirement", subtitle: "Pension / retirement balances.", branch: "manual", assetClass: "retirement" },
+  { id: "private", label: "Private asset", subtitle: "Unlisted holdings valued manually.", branch: "manual", assetClass: "private" },
+  { id: "liability", label: "Liability", subtitle: "A debt — counts against net worth.", branch: "manual", assetClass: "liability" },
+  { id: "other", label: "Other", subtitle: "Doesn't fit — the honest escape valve.", branch: "manual", assetClass: "other" },
 ];
 
 // --- Add flow: type-first entry (D-089) → single listed/manual flow (D-049) ---

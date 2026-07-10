@@ -384,6 +384,31 @@ reshaped. **No engine changes.**
   CoinGecko, mutual_fund → AMFI), Manual tiles preselect
   `ManualHoldingIn.asset_class`. **No backend/engine/contract change.**
 
+### Type drives the form — acceptance walk #4 (2026-07-10, owner)
+
+- **§9-17 — Transaction-type applicability matrix (D-090, PROPOSED).** Authored a
+  PROPOSED **AssetClass × TxnType** matrix — MASTER-DATA **§10**, every cell
+  PROPOSED — from engine behaviour + financial reality (Indian MF splits/bonus;
+  interest → FD/bond/cash; dividend → equity/ETF/MF; corporate actions →
+  provider-quoted). After ratification the Type dropdown filters by the picked
+  class (**form-level only, engine unchanged**). Judgment calls flagged (crypto
+  corporate actions off; retirement/liability interest). **Reshape deferred to
+  the owner's ratification.**
+- **§9-18 — Per-class creation-time field spec (D-091, PROPOSED).** Authored a
+  PROPOSED per-class **REQUIRED vs OPTIONAL-PROMPTED** table — MASTER-DATA
+  **§11** — seeded from the existing D-049 `_META_KEYS` whitelist. **Verified:**
+  FD rate/maturity, bond coupon/maturity, property address/valuation-date,
+  retirement scheme, private company/ownership already exist in the backend
+  whitelist; **gaps** = property `cost`, private `round` (whitelist additions,
+  no schema change). The frontend Manual form collects none of these yet.
+  Incomplete optional details → a **low-priority Review signal** (never a hard
+  wall; proposed `_INCOMPLETE_DETAILS_MIN`). **Reshape deferred to ratification.**
+- **§9-19 — Compact type picker (fixed now).** The "What are you adding?" grid is
+  now **compact** (smaller type, tighter grid, `-webkit-line-clamp` subtitles,
+  shorter copy) so all **11 tiles + Cancel fit without scrolling** on a laptop
+  (3–4 columns as width allows), still usable on phone. Presentational only —
+  independent of the D-090/D-091 ratification.
+
 ### Surfaced during Phase 1 assembly (2026-07-10) — for the Holdings look
 
 - **§9-8 — free-text input gap → `TextInput`.** Assembly found the manual-asset

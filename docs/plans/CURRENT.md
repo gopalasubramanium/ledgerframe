@@ -312,6 +312,24 @@ out of scope — components only.
   Verified in headless Chromium; 39 frontend tests + build green (also fixed a
   ToastProvider timer leak on unmount). page-holdings §9-16.
 
+- **D-090 / D-091 — PROPOSED spec tables (owner, 2026-07-10; reshape awaits
+  ratification), + compact picker fixed now.**
+  - **D-090 (MASTER-DATA §10, PROPOSED)** — AssetClass × TxnType applicability
+    matrix; the Type dropdown will filter by class (form-level only, **engine
+    unchanged**). Judgment calls flagged (crypto corporate actions off;
+    retirement/liability interest).
+  - **D-091 (MASTER-DATA §11, PROPOSED)** — per-class REQUIRED vs
+    OPTIONAL-PROMPTED creation fields, seeded from the D-049 `_META_KEYS`
+    whitelist. Verified present (FD rate/maturity, bond coupon/maturity, property
+    address/valuation-date, retirement scheme, private company/ownership); gaps =
+    property `cost`, private `round`. Incomplete details → a low-priority Review
+    signal, never a hard wall.
+  - **Compact type picker (done)** — all 11 tiles + Cancel now fit without
+    scrolling on a laptop (3 cols verified in headless Chromium at 1366×768);
+    presentational, independent of ratification.
+  - Recorded: DECISIONS.md (D-090/D-091 PROPOSED); page-holdings §9-17/18/19.
+    39 frontend tests + build green; no backend change.
+
 - **Corporate-actions gap — RECORDED (owner-identified 2026-07-10; not built).**
   1. **ROADMAP R-7 enriched** into the v2.1 "accounting precision" theme:
      **de-merger / spin-off** (merger-in-reverse — cost-basis apportionment per
