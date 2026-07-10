@@ -268,17 +268,19 @@ out of scope — components only.
 
 ## IN-PROGRESS
 
-- **Holdings build — PHASE 0a DONE, ⏸ PAUSED for ratification look.** All
-  `page-holdings.md` §9 items resolved by the owner (2026-07-10). Built the four
-  DESIGN-SYSTEM §5 component amendments — **Dialog/Drawer**, **ConfirmDialog +
-  PIN** (reuses Dialog), **FileInput**, **Toast/Snackbar** (10s undo) — all
-  token-compliant (added a `--scrim` token; drift green), amended into
-  DESIGN-SYSTEM §5 as PROPOSED, and demonstrated in the new `/kitchen-sink` "§5
-  amendments" section. 29 tests + build green; visually verified in headless
-  Chromium. **Awaiting the owner's ratification look at `/#/kitchen-sink` before
-  Phase 1 (Holdings assembly).** Remaining phases: 0b (contract deltas —
-  `/refdata`, `holdings.csv`, `TransactionIn` merger reshape, typed
-  holdings/summary/import-preview responses), 1 (assembly), 2 (tests).
+- **Holdings build — Phases 0a + 0b DONE; Phase 1 (assembly) next.**
+  - **0a (component amendment) DONE + RATIFIED 2026-07-10** — Dialog/Drawer,
+    ConfirmDialog+PIN, FileInput, Toast/Snackbar; DESIGN-SYSTEM §5 amended and
+    ratified at the owner's look; `--scrim` token added.
+  - **0b (backend contract deltas) DONE 2026-07-10** — `GET /refdata` (D-005, 22
+    vocabs), `GET /portfolio/holdings.csv` (D-050, sanitised), `TransactionIn`
+    merger reshape (D-019, `related_instrument_id`), typed `GET /portfolio/holdings`
+    response (§9-6). Contract regenerated (121→**123 paths**); drift green;
+    **459 backend tests pass**; ruff clean. (§9-6 typing scoped to holdings per
+    owner; summary/import-preview typing is a follow-up.)
+  - **NEXT: Phase 1** — assemble the `/holdings` page (table + summary header,
+    transactions ledger, one Add flow, import review queue, tags,
+    soft-delete+undo+purge, export), then **Phase 2** (tests + verification).
 
 ## NEXT
 

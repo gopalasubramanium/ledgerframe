@@ -226,13 +226,18 @@ coverage noted; anything unexercised carries build+test risk.*
   nested-drawer isolation + reduced-motion toast confirmed). All four in
   `/kitchen-sink` (new "§5 amendments" section); 6 dedicated tests. `npm run
   check` (29 tests) + build green; verified in headless Chromium.
-- **Phase 0b — Contract deltas (§3b), backend-first.** `GET /refdata` (D-005),
-  `GET /portfolio/holdings.csv` (D-050), the `TransactionIn` **reshape** for the
-  merger target (D-019), and **explicit response schemas** for
-  `portfolio/holdings`, `portfolio/summary`, and `import/preview` (replace
-  `additionalProperties: true`, §9-6). Each regenerates `API-CONTRACT.json` +
-  `docs/openapi.json` in the same commit; drift check green. *(Where `/refdata`
-  or `holdings.csv` ship via their own plans, Holdings is sequenced after them.)*
+- **Phase 0b — Contract deltas (§3b), backend-first. ✅ DONE 2026-07-10.**
+  Delivered `GET /refdata` (D-005, 22 vocabs from the canonical enums/constants),
+  `GET /portfolio/holdings.csv` (D-050, formula-injection sanitised), the
+  `TransactionIn` **merger reshape** (D-019 — exposes `related_instrument_id`;
+  the DB column + `resolve_mergers` already existed), and the **typed**
+  `GET /portfolio/holdings` response (`HoldingsResponse`/`HoldingView`, §9-6).
+  Contract regenerated (`API-CONTRACT.json` + `docs/openapi.json`, 121→**123
+  paths**); drift check green. **459 backend tests pass** (+4 new); ruff clean.
+  *Scoping note (honest): §9-6 response-typing was scoped to `portfolio/holdings`
+  per the owner's resolution; `portfolio/summary` and `import/preview` remain
+  `additionalProperties: true` and are a follow-up contract-tighten (not a
+  Holdings blocker).*
 - **Phase 1 — Page assembly.** Compose the ratified + newly-ratified components:
   holdings table + summary header; transactions ledger; one Add flow; import
   preview→commit + review queue; tags editor; soft-delete + undo + purge; export.

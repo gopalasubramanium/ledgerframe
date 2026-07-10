@@ -42,13 +42,21 @@ Run it in CI.
 (the inherited contract already satisfies the decision — no change needed).
 "Current" paths exist in the frozen baseline today.
 
+**Delivered 2026-07-10 (Holdings page-build Phase 0b):** `GET /api/v1/refdata`
+(D-005), `GET /api/v1/portfolio/holdings.csv` (D-050), the `TransactionIn`
+merger reshape (D-019, adds `related_instrument_id`), and the typed
+`GET /api/v1/portfolio/holdings` response (§9-6). Baseline is now **123 paths**;
+the per-master `*/meta` removals (D-005) stay pending until their pages migrate.
+
 | Kind | Endpoint (current → intended) | Decision | Note |
 |------|-------------------------------|----------|------|
-| **add** | `GET /api/v1/refdata` | **D-005** | Single fixed-vocabulary endpoint. Retires the per-master meta endpoints and all frontend inline lists. |
+| **add ✅** | `GET /api/v1/refdata` | **D-005** | **Delivered 2026-07-10.** Single fixed-vocabulary endpoint (22 vocabs). Retires the per-master meta endpoints and all frontend inline lists. |
 | **remove** | `GET /api/v1/insurance/meta` → (into `/refdata`) | **D-005** | Insurance vocab moves to `/refdata`; endpoint removed once `/refdata` lands. |
 | **remove** | `GET /api/v1/estate/meta` → (into `/refdata`) | **D-005** | Estate vocab (doc categories, contact roles) moves to `/refdata`. |
 | **add** | `POST /api/v1/entities`, `PATCH /api/v1/entities/{id}`, `DELETE /api/v1/entities/{id}` | **D-065** | Entity CRUD; only `GET /api/v1/entities` exists today. |
-| **add** | `GET /api/v1/portfolio/holdings.csv` | **D-050** | Server-side holdings CSV export (only `realised-gains.csv` and `statements.csv` exist today); client never generates the file (P-5). |
+| **add ✅** | `GET /api/v1/portfolio/holdings.csv` | **D-050** | **Delivered 2026-07-10.** Server-side holdings CSV export; formula-injection sanitised; client never generates the file (P-5). |
+| **reshape ✅** | `POST/PUT /api/v1/portfolio/transactions` (`TransactionIn`) | **D-019** | **Delivered 2026-07-10.** Adds `related_instrument_id` — the merger "Absorbed into" target (ratio in `price`). The DB column + `resolve_mergers` already existed; this exposes it in the request body. |
+| **reshape ✅** | `GET /api/v1/portfolio/holdings` | **§9-6** | **Delivered 2026-07-10.** Response typed (`HoldingsResponse`/`HoldingView`) — replaces `additionalProperties: true` with an explicit footprint for contract hygiene. |
 | **rename** | `GET /api/v1/review/centre` → `GET /api/v1/review` | **D-030** | "Review Centre" retired to "Review". |
 | **rename** | `GET /api/v1/portfolio/cost-of-ownership` → `…/ongoing-cost` | **D-029** | "Cost of ownership" retired to "Ongoing cost (expense ratio)". |
 | **rename** | `GET /api/v1/portfolio/realised-gains` (+ `.csv`) → "Realised P/L" naming | **D-026** | "Realised gain(s)" retired to "Realised P/L". |

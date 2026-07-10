@@ -402,3 +402,37 @@ def top_movers(val: PortfolioValuation, n: int = 5) -> tuple[list[HoldingValue],
     gainers = sorted(priced, key=lambda h: h.day_change_base, reverse=True)[:n]
     losers = sorted(priced, key=lambda h: h.day_change_base)[:n]
     return gainers, [hv for hv in losers if hv.day_change_base < ZERO]
+
+
+def holdings_csv(val: PortfolioValuation) -> str:
+    """Flatten holdings into CSV text for the server-side export (D-050 / P-5).
+
+    The client never generates the file; every text cell is formula-injection
+    sanitised (`sanitize_cell`). Money is rendered at full Decimal precision (not
+    the display float), for an accountant.
+    """
+    import csv
+    import io
+
+    from app.services.csv_import import sanitize_cell
+
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow([
+        "symbol", "name", "asset_class", "currency", "quantity", "price",
+        "market_value_base", "cost_basis_base", "unrealised_pl_base",
+        "day_change_base", "is_stale", "valuation_method", "base_currency",
+    ])
+    for h in val.holdings:
+        w.writerow([
+            sanitize_cell(h.symbol or ""),
+            sanitize_cell(getattr(h, "name", None) or h.label or ""),
+            sanitize_cell(h.asset_class or ""),
+            sanitize_cell(h.native_currency or ""),
+            h.quantity, h.price, h.market_value_base, h.cost_basis_base,
+            h.unrealised_pl_base, h.day_change_base,
+            "yes" if h.is_stale else "no",
+            sanitize_cell(str(getattr(h, "valuation_method", "") or "")),
+            val.base_currency,
+        ])
+    return buf.getvalue()

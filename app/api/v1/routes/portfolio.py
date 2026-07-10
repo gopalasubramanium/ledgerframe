@@ -34,6 +34,7 @@ from app.services.csv_import import (
     preview_import,
 )
 from app.services.portfolio import (
+    holdings_csv,
     rebuild_holdings_from_transactions,
     top_movers,
     value_portfolio,
@@ -82,11 +83,49 @@ async def portfolio_summary(entity_id: int | None = Query(default=None),
     }
 
 
-@router.get("/portfolio/holdings")
+class HoldingView(BaseModel):
+    """Typed footprint of one holdings row (§9-6, D-050 contract hygiene). Money
+    fields are display floats at the JSON boundary (`to_display`), nullable when
+    unpriced."""
+    id: int
+    label: str | None = None
+    name: str | None = None
+    symbol: str | None = None
+    asset_class: str | None = None
+    quantity: float | None = None
+    currency: str | None = None
+    price: float | None = None
+    market_value: float | None = None
+    cost_basis: float | None = None
+    unrealised_pl: float | None = None
+    day_change: float | None = None
+    day_change_pct: float | None = None
+    is_stale: bool
+    is_priced: bool
+    valuation_method: str | None = None
+    valuation_label: str | None = None
+
+
+class HoldingsResponse(BaseModel):
+    base_currency: str
+    holdings: list[HoldingView]
+
+
+@router.get("/portfolio/holdings", response_model=HoldingsResponse)
 async def portfolio_holdings(session: AsyncSession = Depends(get_db)) -> dict:
     base = get_settings().base_currency
     val = await value_portfolio(session, base)
     return {"base_currency": base, "holdings": [_hv(h) for h in val.holdings]}
+
+
+@router.get("/portfolio/holdings.csv", response_class=PlainTextResponse)
+async def portfolio_holdings_csv(session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
+    """Server-side holdings CSV export (D-050 / P-5). The client never generates
+    the file; cells are formula-injection sanitised in `holdings_csv`."""
+    base = get_settings().base_currency
+    val = await value_portfolio(session, base)
+    return PlainTextResponse(holdings_csv(val), media_type="text/csv", headers={
+        "Content-Disposition": 'attachment; filename="ledgerframe-holdings.csv"'})
 
 
 @router.get("/portfolio/pricing-health")
@@ -246,6 +285,10 @@ class TransactionIn(BaseModel):
     name: str | None = None
     exchange: str | None = None
     country: str | None = None
+    # Merger recording (D-019): the "Absorbed into" target instrument B. The
+    # merger form sets this (picker) plus the ratio in `price`; resolve_mergers
+    # carries A's open position into B. Nullable — only meaningful for `merger`.
+    related_instrument_id: int | None = None
 
 
 def _naive_utc(dt: datetime) -> datetime:
@@ -289,6 +332,7 @@ async def list_transactions(limit: int = 500, session: AsyncSession = Depends(ge
             "quantity": to_display(D(t.quantity)), "price": to_display(D(t.price)),
             "fees": to_display(D(t.fees)), "taxes": to_display(D(getattr(t, "taxes", 0) or 0)),
             "amount": to_display(D(t.amount)), "currency": t.currency, "note": t.note,
+            "related_instrument_id": t.related_instrument_id,  # D-019 merger target
         })
     return {"transactions": out}
 
@@ -310,6 +354,7 @@ async def add_transaction(payload: TransactionIn, session: AsyncSession = Depend
     txn = Transaction(
         account_id=account.id,
         instrument_id=instrument.id if instrument else None,
+        related_instrument_id=payload.related_instrument_id,  # D-019 merger target
         type=payload.type,
         ts=ts,
         quantity=D(payload.quantity), price=D(payload.price),
@@ -340,6 +385,7 @@ async def update_transaction(
         exchange=payload.exchange, country=payload.country,
     ) if payload.symbol else None
     txn.instrument_id = instrument.id if instrument else None
+    txn.related_instrument_id = payload.related_instrument_id  # D-019 merger target
     txn.type = payload.type
     txn.ts = _naive_utc(payload.ts)
     txn.quantity = D(payload.quantity)
