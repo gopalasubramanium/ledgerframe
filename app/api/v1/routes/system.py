@@ -466,13 +466,33 @@ def _parse_ver(tag: str) -> tuple:
         return (0,)
 
 
+async def _no_egress_enabled(session: AsyncSession) -> bool:
+    """True when the no-egress toggle (``privacy_mode``) is on. Under no-egress the
+    device must make ZERO outbound network calls — version check included
+    (SECURITY-BASELINE §7, Product Guarantee 5, D-075/D-060)."""
+    from app.models import Setting
+
+    row = (
+        await session.execute(select(Setting).where(Setting.key == "privacy_mode"))
+    ).scalars().first()
+    return bool(row and str(row.value).strip().lower() in ("1", "true", "yes", "on"))
+
+
 @router.get("/system/version-check")
-async def version_check() -> dict:
+async def version_check(session: AsyncSession = Depends(get_db)) -> dict:
     """Compare the running version to the latest GitHub release. Best-effort; never
-    fails the call (offline → update_available False)."""
+    fails the call (offline → update_available False).
+
+    No-egress (D-075/§7): when the no-egress toggle is on, make ZERO outbound calls
+    and report "up to date" honestly — the UpdateBanner then simply hides."""
+    current = __version__
+
+    if await _no_egress_enabled(session):
+        # Zero outbound: never construct the HTTP client. Same response shape.
+        return {"current": current, "latest": current, "update_available": False, "url": ""}
+
     import httpx
 
-    current = __version__
     latest = current
     available = False
     url = f"https://github.com/{_GITHUB_REPO}/releases/latest"

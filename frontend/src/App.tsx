@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchHealth } from "./api/health";
 import type { HealthResult } from "./api/health";
-import { DisplayControls } from "./components/DisplayControls";
 import "./App.css";
 
 // A column of varied-width figures. With tabular numerals they align on the
@@ -57,11 +56,6 @@ export default function App() {
         </div>
 
         <HealthRow health={health} />
-
-        <div>
-          <p className="boot__label boot__caption">Display settings (per-device)</p>
-          <DisplayControls />
-        </div>
 
         <div>
           <p className="boot__label boot__caption">

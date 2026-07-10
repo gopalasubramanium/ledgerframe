@@ -1,0 +1,20 @@
+/* App shell layout (page-chrome Phase 1). Sidebar (left, full height) + a main
+   column: slim TopBar, status strips (in flow, pushing content), then the scrollable
+   page content. The shell owns the outer scroll so pages scroll within their region. */
+.lf-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+.lf-shell__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lf-shell__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: auto;
+}

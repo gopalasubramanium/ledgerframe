@@ -22,7 +22,6 @@ import {
   useToast,
 } from "../components/ui";
 import type { Column, SortState } from "../components/ui";
-import { DisplayControls } from "../components/DisplayControls";
 import {
   addManualHolding,
   addTransaction,
@@ -341,7 +340,6 @@ export function Holdings() {
         <Link className="lf-btn" to="/">
           ← Home
         </Link>
-        <DisplayControls />
       </div>
 
       <PageHeaderHoldings

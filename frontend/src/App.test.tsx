@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { DisplayProvider } from "./theme/DisplayProvider";
+import { DisplayControls } from "./components/DisplayControls";
 import App from "./App";
 
 afterEach(() => {
@@ -22,6 +23,18 @@ function renderApp() {
         <MemoryRouter>
           <App />
         </MemoryRouter>
+      </DisplayProvider>
+    </ThemeProvider>,
+  );
+}
+
+// DisplayControls moved out of the page into the chrome TopBar (D-066, Phase 1);
+// the per-device axis behaviour is tested against the component directly.
+function renderControls() {
+  return render(
+    <ThemeProvider>
+      <DisplayProvider>
+        <DisplayControls />
       </DisplayProvider>
     </ThemeProvider>,
   );
@@ -57,9 +70,8 @@ test("shows an unreachable state when /health fails", async () => {
 });
 
 test("theme cycle advances light → dark → system and stamps data-theme", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
   const user = userEvent.setup();
-  renderApp();
+  renderControls();
 
   // Icon-only button (recomposed 2026-07-11): state lives in the tooltip/aria-label.
   const btn = screen.getByRole("button", { name: /change theme/i });
@@ -79,9 +91,8 @@ test("theme cycle advances light → dark → system and stamps data-theme", asy
 });
 
 test("density toggle stamps data-density and persists per-device", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
   const user = userEvent.setup();
-  renderApp();
+  renderControls();
 
   // Default is comfortable.
   expect(document.documentElement).toHaveAttribute(

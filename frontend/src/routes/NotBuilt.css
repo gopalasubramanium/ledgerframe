@@ -1,0 +1,5 @@
+.lf-notbuilt {
+  padding: var(--space-9) var(--space-5);
+  max-width: 40rem;
+  margin: 0 auto;
+}

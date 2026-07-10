@@ -12949,7 +12949,7 @@
     },
     "/api/v1/system/version-check": {
       "get": {
-        "description": "Compare the running version to the latest GitHub release. Best-effort; never\nfails the call (offline \u2192 update_available False).",
+        "description": "Compare the running version to the latest GitHub release. Best-effort; never\nfails the call (offline \u2192 update_available False).\n\nNo-egress (D-075/\u00a77): when the no-egress toggle is on, make ZERO outbound calls\nand report \"up to date\" honestly \u2014 the UpdateBanner then simply hides.",
         "operationId": "version_check_api_v1_system_version_check_get",
         "parameters": [
           {

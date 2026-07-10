@@ -14,7 +14,6 @@ import {
   useToast,
 } from "../components/ui";
 import type { PricePoint } from "../mocks/types";
-import { DisplayControls } from "../components/DisplayControls";
 import {
   getInstrument,
   getInstrumentHistory,
@@ -124,7 +123,6 @@ export function InstrumentDetail() {
     <div className="ins">
       <div className="ins__bar">
         <Link className="lf-btn" to="/holdings">← Holdings</Link>
-        <DisplayControls />
       </div>
 
       <PageHeader
