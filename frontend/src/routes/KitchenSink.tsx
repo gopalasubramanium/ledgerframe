@@ -414,8 +414,8 @@ export function KitchenSink() {
 
       {/* ---------------------------------------------------------------- */}
       <Section
-        title="§5 amendments — PROPOSED, ratify at this look (2026-07-10)"
-        note="Added for the Holdings page-build (page-holdings.md §9): Dialog/Drawer, ConfirmDialog + PIN, FileInput, and the undo Toast. Token-compliant; verify focus-trap, Esc, backdrop dismiss, both themes/densities, and reduced motion."
+        title="§5 amendments — ratified 2026-07-10"
+        note="Added for the Holdings page-build (page-holdings.md §9): Dialog/Drawer, ConfirmDialog + PIN, FileInput, and the undo Toast. Token-compliant; ratified at the kitchen-sink look (both themes; reduced-motion toast confirmed)."
       >
         <div className="ks__row">
           <Specimen label="Dialog · center (CRUD editor container)">

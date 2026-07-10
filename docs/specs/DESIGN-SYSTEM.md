@@ -218,13 +218,13 @@ Built **before any page** (brief). Every component lives in
 Categorical props resolve through MASTER-DATA.md (never inline lists); monetary
 props are backend-computed `Decimal` strings (never client-computed).
 
-> **AMENDMENT 2026-07-10 (Holdings page-build).** Four components are added — a
-> **FileInput** (§5.1), **Dialog** + **ConfirmDialog** (§5.4), and a
-> **Toast/Snackbar** (§5.5) — resolving `page-holdings.md` §9-2..5. They are
-> marked **PROPOSED — ratify at the kitchen-sink look**; they are built
-> token-compliant (drift check green) and demonstrated at `/kitchen-sink`. Until
-> the owner's look, they are working components; a `--scrim` backdrop token was
-> added to §2.1. No other component changed.
+> **AMENDMENT 2026-07-10 (Holdings page-build) — RATIFIED 2026-07-10.** Four
+> components are added — a **FileInput** (§5.1), **Dialog** + **ConfirmDialog**
+> (§5.4), and a **Toast/Snackbar** (§5.5) — resolving `page-holdings.md` §9-2..5.
+> Built token-compliant (drift check green), demonstrated at `/kitchen-sink`, and
+> **ratified at the owner's look** (both themes; light-theme scrim opacity and
+> nested-drawer isolation confirmed; reduced-motion toast behaviour confirmed).
+> A `--scrim` backdrop token was added to §2.1. No other component changed.
 
 ### 5.1 Inputs (the only sanctioned way to accept user input)
 
