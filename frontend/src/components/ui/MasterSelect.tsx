@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import "./inputs.css";
-import { getMaster } from "../../mocks/refdata";
+import { getMaster, humanize } from "../../mocks/refdata";
+import { useRefdataVocabs } from "../../refdata/refdata-context";
 
-// THE select for every categorical field (DESIGN-SYSTEM §5.1 / §6). Options are
-// resolved through the master registry (a mock of /refdata + the extensible
-// masters) — never an inline option list. `allowCreate` is honoured only where
-// the master is user-extensible (institution, sector, tag).
+// THE select for every categorical field (DESIGN-SYSTEM §5.1 / §6). Fixed-vocab
+// VALUES come from GET /refdata (D-005) when a RefdataProvider is present; the
+// labelled registry provides display labels + the extensible flag and is the
+// graceful offline fallback. Never an inline option list. `allowCreate` is
+// honoured only where the master is user-extensible (institution, sector, tag).
 export interface MasterSelectProps {
   /** Vocabulary / master id (see mocks/refdata MASTERS). */
   master: string;
@@ -28,14 +30,21 @@ export function MasterSelect({
   const canCreate = Boolean(allowCreate && def.extensible);
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState("");
+  const vocabs = useRefdataVocabs();
 
-  // Value may be a just-created row not yet in the seed — show it regardless.
+  // Prefer live /refdata values for this vocabulary (D-005); fall back to the
+  // labelled registry offline. Value may be a just-created row not yet in the
+  // seed — show it regardless.
   const options = useMemo(() => {
-    if (value && !def.options.some((o) => o.value === value)) {
-      return [...def.options, { value, label: value }];
+    const live = vocabs?.[master];
+    const base = live
+      ? live.map((v) => ({ value: v, label: humanize(v) }))
+      : def.options;
+    if (value && !base.some((o) => o.value === value)) {
+      return [...base, { value, label: value }];
     }
-    return def.options;
-  }, [def.options, value]);
+    return base;
+  }, [vocabs, master, def.options, value]);
 
   if (creating) {
     return (

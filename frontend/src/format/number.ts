@@ -9,15 +9,19 @@
 
 export const EMDASH = "—";
 
-/** A backend-supplied decimal value: a string, or null/undefined when absent. */
-export type DecimalString = string | null | undefined;
+/**
+ * A backend-supplied decimal value. The v2 backend emits display floats at the
+ * JSON boundary (`to_display`), and some readers emit Decimal strings — either
+ * is accepted here for rendering only (the frontend never computes money).
+ */
+export type DecimalString = string | number | null | undefined;
 
 function isMissing(value: DecimalString): value is null | undefined | "" {
   return value === null || value === undefined || value === "";
 }
 
-function toNumber(value: string): number | null {
-  const n = Number(value);
+function toNumber(value: string | number): number | null {
+  const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : null;
 }
 

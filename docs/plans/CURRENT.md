@@ -268,19 +268,34 @@ out of scope — components only.
 
 ## IN-PROGRESS
 
-- **Holdings build — Phases 0a + 0b DONE; Phase 1 (assembly) next.**
-  - **0a (component amendment) DONE + RATIFIED 2026-07-10** — Dialog/Drawer,
-    ConfirmDialog+PIN, FileInput, Toast/Snackbar; DESIGN-SYSTEM §5 amended and
-    ratified at the owner's look; `--scrim` token added.
-  - **0b (backend contract deltas) DONE 2026-07-10** — `GET /refdata` (D-005, 22
-    vocabs), `GET /portfolio/holdings.csv` (D-050, sanitised), `TransactionIn`
-    merger reshape (D-019, `related_instrument_id`), typed `GET /portfolio/holdings`
-    response (§9-6). Contract regenerated (121→**123 paths**); drift green;
-    **459 backend tests pass**; ruff clean. (§9-6 typing scoped to holdings per
-    owner; summary/import-preview typing is a follow-up.)
-  - **NEXT: Phase 1** — assemble the `/holdings` page (table + summary header,
-    transactions ledger, one Add flow, import review queue, tags,
-    soft-delete+undo+purge, export), then **Phase 2** (tests + verification).
+- (none) — **Holdings page (`/holdings`) built; awaiting an owner verification
+  look** (incl. ratifying the newly-surfaced `TextInput`, §9-8).
+
+## DONE (Holdings page-build — all phases)
+
+- **Holdings build COMPLETE (Phases 0a/0b/1/2, 2026-07-10).** See
+  `docs/plans/page-holdings.md`.
+  - **0a — §5 component amendment, RATIFIED** — Dialog/Drawer, ConfirmDialog+PIN,
+    FileInput, Toast/Snackbar; `--scrim` token.
+  - **0b — backend contract deltas** — `GET /refdata` (D-005, 22 vocabs),
+    `GET /portfolio/holdings.csv` (D-050), `TransactionIn` merger reshape (D-019),
+    typed `GET /portfolio/holdings` (§9-6). Contract regenerated (121→**123
+    paths**); **459 backend tests**; ruff clean.
+  - **1 — page assembly** — `/holdings` composes the ratified components:
+    holdings table + linked P-1 summary header (→ Portfolio, D-023), transactions
+    ledger with soft-delete + 10s undo Toast, one Add flow (listed/manual;
+    merger = Absorbed-into + Ratio), import (FileInput→preview→commit), tags
+    editor, purge [PIN], server-side Export (P-5). Vocab via `/refdata`
+    (`RefdataProvider`; MasterSelect reads live values, registry is the offline
+    fallback). Verified in headless Chromium against the live backend (real
+    seeded data). Surfaced + built **`TextInput`** (§9-8, PROPOSED) for free-text
+    label/tag fields.
+  - **2 — tests** — `Holdings.test.tsx` (6, API-mocked). Frontend suite **35
+    tests**; drift + typecheck + lint + build green.
+  - **Follow-ups (non-blocking, in page-holdings §9):** InstrumentPicker→real
+    instrument search (symbol entry works via the create path; merger-target
+    id needs it); per-holding tags read-back; purge PIN→session-auth binding;
+    `summary`/`import-preview` response typing.
 
 ## NEXT
 

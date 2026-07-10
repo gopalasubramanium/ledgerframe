@@ -10,6 +10,8 @@ export { PercentInput } from "./PercentInput";
 export type { PercentInputProps } from "./PercentInput";
 export { DateInput } from "./DateInput";
 export type { DateInputProps } from "./DateInput";
+export { TextInput } from "./TextInput";
+export type { TextInputProps } from "./TextInput";
 export { InstrumentPicker } from "./InstrumentPicker";
 export type { InstrumentPickerProps, InstrumentPick } from "./InstrumentPicker";
 export { MasterSelect } from "./MasterSelect";

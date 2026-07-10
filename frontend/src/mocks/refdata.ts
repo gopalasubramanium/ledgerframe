@@ -18,7 +18,7 @@ export interface Master {
 }
 
 // snake_case / kebab value → Title Case label for display.
-function humanize(value: string): string {
+export function humanize(value: string): string {
   return value
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());

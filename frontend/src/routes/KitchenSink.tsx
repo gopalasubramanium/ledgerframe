@@ -24,6 +24,7 @@ import {
   QuoteCardRow,
   ReviewCard,
   StalenessChip,
+  TextInput,
   TickerStrip,
   Treemap,
   TrendStat,
@@ -98,6 +99,7 @@ export function KitchenSink() {
   const [qty, setQty] = useState("0.75000000");
   const [pct, setPct] = useState("12.50");
   const [date, setDate] = useState("2026-07-09");
+  const [text, setText] = useState("Household flat");
   const [assetClass, setAssetClass] = useState("equity");
   const [sector, setSector] = useState("Financials");
   const [instrument, setInstrument] = useState<string | undefined>("ins-1");
@@ -196,6 +198,9 @@ export function KitchenSink() {
           </Specimen>
           <Specimen label="DateInput (ISO)">
             <DateInput value={date} onChange={setDate} aria-label="Date" />
+          </Specimen>
+          <Specimen label="TextInput · free text (label / tag names)">
+            <TextInput value={text} onChange={setText} aria-label="Label" placeholder="e.g. Gold bar" />
           </Specimen>
           <Specimen label="MasterSelect · fixed vocab (asset_class)">
             <MasterSelect master="asset_class" value={assetClass} onChange={setAssetClass} />

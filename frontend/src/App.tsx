@@ -81,9 +81,14 @@ export default function App() {
           </ul>
         </div>
 
-        <Link className="lf-btn lf-btn--primary" to="/kitchen-sink">
-          Open the kitchen sink →
-        </Link>
+        <div className="boot__links">
+          <Link className="lf-btn lf-btn--primary" to="/holdings">
+            Open Holdings →
+          </Link>
+          <Link className="lf-btn" to="/kitchen-sink">
+            Kitchen sink
+          </Link>
+        </div>
       </div>
     </div>
   );

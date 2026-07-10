@@ -107,3 +107,9 @@
 .boot__fig--loss {
   color: var(--loss);
 }
+
+.boot__links {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}

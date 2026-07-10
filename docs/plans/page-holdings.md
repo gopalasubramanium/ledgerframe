@@ -238,13 +238,27 @@ coverage noted; anything unexercised carries build+test risk.*
   per the owner's resolution; `portfolio/summary` and `import/preview` remain
   `additionalProperties: true` and are a follow-up contract-tighten (not a
   Holdings blocker).*
-- **Phase 1 — Page assembly.** Compose the ratified + newly-ratified components:
-  holdings table + summary header; transactions ledger; one Add flow; import
-  preview→commit + review queue; tags editor; soft-delete + undo + purge; export.
-  Honest empty/error/stale states throughout.
-- **Phase 2 — Tests + verification.** Render/behaviour tests per §7; drift +
-  typecheck + lint + unit tests green; visual check in both themes and both
-  densities (headless Chromium).
+- **Phase 1 — Page assembly. ✅ DONE 2026-07-10.** `/holdings` route composes the
+  ratified components: holdings **DataTable** (per-unit tabular figures,
+  gain/loss cells, per-holding provenance via StalenessChip + valuation label,
+  Tags action), the **linked P-1 summary header** (TrendStat → Portfolio,
+  D-023), the **transactions ledger** with soft-delete + **10s undo Toast**
+  (restore), the **one Add flow** (Dialog; listed-instrument vs manual-asset
+  branch; **merger** shows Absorbed-into + Ratio, D-019), **import** (FileInput →
+  preview → commit), **tags** editor (Dialog, cap 16), **purge [PIN]**
+  (ConfirmDialog), and **server-side Export** (`apiDownload`, P-5). Honest
+  loading/empty/error states. Vocab via **`/refdata`** through a `RefdataProvider`
+  (MasterSelect reads live values, D-005; registry is the labelled offline
+  fallback). New API client (`api/client.ts`, `api/holdings.ts`); formatters
+  widened to accept the backend's display floats. **Verified in headless Chromium
+  against the live backend** with real seeded data (14 positions, gain/loss,
+  provenance). Surfaced + built **`TextInput`** (§9-8, PROPOSED) for free-text
+  label/tag fields.
+- **Phase 2 — Tests + verification. ✅ DONE 2026-07-10.** `Holdings.test.tsx` (6
+  tests, API mocked): renders holdings + linked summary, honest empty + error
+  states, server-side Export, the Add flow's listed/manual branches, and
+  soft-delete → Undo → restore. Full frontend suite **35 tests**; drift +
+  typecheck + lint + build all green.
 
 ---
 
@@ -284,6 +298,30 @@ coverage noted; anything unexercised carries build+test risk.*
   Review `other`-overuse signal**; add `POST /portfolio/reclassify` **only if**
   the existing path genuinely can't serve the nudge — with a same-commit contract
   update if so.
+
+### Surfaced during Phase 1 assembly (2026-07-10) — for the Holdings look
+
+- **§9-8 — free-text input gap → `TextInput`.** Assembly found the manual-asset
+  **label** and **tag** fields are free text, and the ratified inventory had **no
+  plain text input** (§6 forbids raw `<input>`). Resolved by building a minimal
+  **`TextInput`** (§5.1, sibling of the other inputs; wraps the native input),
+  added to `/kitchen-sink`, and **marked PROPOSED** — for the owner's **ratify at
+  the Holdings look** (same pattern as the four §5 amendments). NOT for
+  categorical data (that stays MasterSelect).
+- **Known follow-ups (non-blocking, noted honestly):**
+  1. **InstrumentPicker → real instrument search.** The ratified picker is
+     mock-backed. Symbol *entry* works via its **create path** (returns the typed
+     symbol string, which the backend `_ensure_instrument` resolves on submit).
+     But selecting a **merger target** by real `related_instrument_id` needs the
+     picker wired to a real instrument-search endpoint — a small follow-up delta.
+     The D-019 merger **form** (Absorbed into + Ratio) is present.
+  2. **Per-holding tags read-back.** The holdings reader doesn't echo a holding's
+     current tags, so the tags editor starts empty (write works via
+     `PUT …/tags`). Echoing current tags is a minor reader/contract tweak.
+  3. **Purge PIN transport.** `require_pin` authorises via an Authorization
+     header from an unlock session (a Settings/Security concern). The
+     ConfirmDialog PIN is the **deliberate UX gate** (D-049); binding it to real
+     session auth lands with the unlock flow.
 
 **Sign-off:** all §9 items resolved (2026-07-10). Build proceeds per §8; the
 Phase 0a component amendment pauses at `/kitchen-sink` for the owner's
