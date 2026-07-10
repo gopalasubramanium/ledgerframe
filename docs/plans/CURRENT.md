@@ -284,6 +284,23 @@ out of scope — components only.
   - Still pending owner: ratify **`TextInput`** (§9-8) at the Holdings look.
   - 36 frontend tests + build green; drift/typecheck/lint clean.
 
+- **Corporate-actions gap — RECORDED (owner-identified 2026-07-10; not built).**
+  1. **ROADMAP R-7 enriched** into the v2.1 "accounting precision" theme:
+     **de-merger / spin-off** (merger-in-reverse — cost-basis apportionment per
+     approved ratio, holding-period carry, zero realised gain) **+ ticker/symbol
+     rename**. Plan-file coverage spelled out (ratio user-input vs published
+     reference, multi-instrument creation flow, FX acquisition-rate carry,
+     provenance labelling). `ROADMAP.md` R-7 + v2.1 theme.
+  2. **VERIFIED (this milestone):** editing an instrument's **name** preserves
+     transaction history + price continuity — transactions/holdings/lots reference
+     `instruments.id` (FK), identity is `(id_type, value)`. Recorded in GLOSSARY
+     ("Ticker / name change"). The **symbol/ticker rename** is not yet exposed
+     (`InstrumentPatch` lacks a symbol field) → added to ROADMAP R-7.
+  3. **GLOSSARY entries added** (canon): **Rights issue** (= Buy at rights price),
+     **Buyback** (= Sell at offer price) — existing types, correct cost basis, no
+     special form; **De-merger / Spin-off** (R-7); **Ticker / name change**. The
+     in-app **Help copy** task is queued for the Help/Holdings page plan (NEXT).
+
 ## DONE (Holdings page-build — all phases)
 
 - **Holdings build COMPLETE (Phases 0a/0b/1/2, 2026-07-10).** See
@@ -312,28 +329,21 @@ out of scope — components only.
 
 ## NEXT
 
-1. **Resolve Holdings pre-build blockers (`docs/plans/page-holdings.md` §9)** —
-   found while planning, surfaced before build per the framework:
-   - **Contract reshape:** the frozen `TransactionIn` has **no merger-target
-     field** (`related_instrument_id` / "Absorbed into"), so D-019 mergers can't
-     be submitted through the current API → backend-first reshape, same-commit
-     contract regen.
-   - **Four component-inventory gaps** needing a DESIGN-SYSTEM amendment before
-     Holdings can be built: a **CRUD-editor container** (Dialog/Drawer — the
-     worklist "CRUD editor" has no ratified component), a **FileInput** (CSV
-     import), an **undo Toast/Snackbar** (10s soft-delete undo), and a
-     **PIN-confirm** (purge-deleted). New components are forbidden without a spec
-     amendment, so these gate the build.
-   - Plus confirm the untyped `holdings`/`summary`/`import-preview` reader shapes
-     and the `Select`-over-`/accounts` account picker.
-2. **Kitchen-sink / design-system ratification** — **DONE (2026-07-10)**: §2
-   tokens + components ratified with three amendments (`docs/plans/RATIFICATION.md`).
-   Still open separately: ratify the authored DEF-2/DEF-6 vocabularies
-   (MASTER-DATA §2/§6) — data vocab, not design tokens.
-3. **Feature build (post-freeze)** — per the API-CONTRACT delta table, each gated
-   by its own plan file (page plans use the new template): `/refdata` (D-005),
-   entity CRUD (D-065), holdings CSV export (D-050), the Realised P/L / Review /
-   Ongoing-cost renames (D-026/D-030/D-029), route-rename redirects (D-022/D-056).
+1. **Resume the Holdings acceptance walk** (owner) — the 4 findings are fixed;
+   ratify **`TextInput`** (§9-8) at the look. The Holdings pre-build blockers and
+   the design-system ratification are all resolved (see DONE).
+2. **Help copy task** (for the Help page plan, or a Holdings help section) —
+   surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
+   **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price
+   (existing types, no special form); **Ticker / name change** supported (name
+   edits preserve history); **De-merger / Spin-off** parked (ROADMAP R-7).
+3. **Next page builds** — each via `docs/plans/TEMPLATE-page-build.md`, per the
+   API-CONTRACT delta table: entity CRUD (D-065), the Realised P/L / Review /
+   Ongoing-cost renames (D-026/D-030/D-029), route-rename redirects
+   (D-022/D-056). `/refdata` (D-005) + holdings CSV (D-050) already shipped in the
+   Holdings build.
+4. **Ratify authored DEF-2/DEF-6 vocabularies** (MASTER-DATA §2/§6) — data vocab,
+   separate from design tokens.
 
 ## Needs decision
 

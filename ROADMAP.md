@@ -17,7 +17,7 @@ merges — the historical-FX item is a single merged entry (D-020 + D-076).
 | R-4 | Instrument notes | D-015 | Follows the drop of the general `Note` table; per-record note fields cover the current need | parked |
 | R-5 | Opt-in AI chat history | D-016 | Opt-in only; default remains ephemeral (Product Guarantee 6 — no stored AI conversations) | parked |
 | R-6 | `spec` (specific-lot) cost-basis method | D-018 | Extends the per-account fifo/average selector | parked |
-| R-7 | Corporate-actions audit: spin-offs, symbol changes as first-class recordings | D-019 | Audit whether other corporate actions need first-class recording; splits/bonuses already engine-covered | parked |
+| R-7 | Corporate actions — de-merger / spin-off + ticker/symbol rename (v2.1 "accounting precision") | D-019 | **Owner-identified 2026-07-10.** De-merger/spin-off support + exposing a symbol/ticker rename. Splits/bonuses/mergers already engine-covered; see the v2.1 theme for the plan-file coverage. | parked |
 | R-8 | Historical FX series (enables trade-date backfill + per-date realised totals) | D-020, D-076 | Merged entry. Native-currency stays the filing-grade output; base-currency realised totals stay explicitly indicative with caveats preserved | parked |
 | R-9 | Insurance cash value: opt-in inclusion in Net worth | D-039 | Opt-in only; default remains permanently excluded in v2, stated visibly on Insurance and Net worth pages | parked |
 | R-10 | App-wide Detail level | D-040 | Gated on per-page specs (v2 scopes Detail level to Home only) | parked |
@@ -41,8 +41,34 @@ individual gate:
 | In the theme | Item | Individual gate (unchanged) |
 |---|---|---|
 | R-6 | `spec` (specific-lot) cost-basis method | extends the per-account fifo/average selector |
+| R-7 | Corporate actions — de-merger / spin-off + ticker rename | **owner-identified 2026-07-10**; plan-file coverage below |
 | R-8 | Historical FX series (trade-date backfill + per-date realised totals) | native currency stays filing-grade; base totals stay explicitly indicative |
 | R-14 | FD accrued-interest valuation | plan file must cover day-count, compounding, maturity, and provenance labelling of calculated values |
+
+**R-7 — de-merger / spin-off + ticker rename (owner-identified 2026-07-10).**
+A de-merger/spin-off is a **merger-in-reverse**: one holding splits into several
+resulting instruments. The plan file **must cover**:
+
+- **Cost-basis apportionment** across the resulting instruments per an **approved
+  ratio**, with **holding-period carry** (each resulting lot keeps the original
+  acquisition date) and **zero realised gain** (a spin-off is not a sale) —
+  mirroring the merger invariant in reverse.
+- **Ratio as user input vs a published-ratio reference** — how the apportionment
+  ratio is entered/sourced and labelled (user-entered vs referenced).
+- **Multi-instrument creation flow** — recording one action that creates/updates
+  several instruments (the parent + each spun-off child) in one reviewed step.
+- **FX acquisition-rate carry** — each carried lot preserves its original
+  acquisition FX rate (so trade-date-FX realised totals stay correct downstream).
+- **Provenance labelling** — the resulting synthetic lots are marked as
+  corporate-action-derived (source/valuation labelling), never presented as market
+  buys.
+- **Ticker / symbol rename** — expose editing an instrument's **symbol** (today
+  `InstrumentPatch` edits name/class/country/source only). **Verified 2026-07-10:**
+  the data model already supports this safely — transactions/holdings/lots
+  reference `instruments.id` (FK), and instrument identity is `(id_type, value)`
+  in `instrument_identifiers`, so a rename preserves history and price continuity;
+  only the **API/UI to change the symbol** is missing. (Instrument **name** edits
+  are already supported — see GLOSSARY "Ticker / name change".)
 
 All other R-items remain independent parked breadcrumbs, not part of this theme.
 
