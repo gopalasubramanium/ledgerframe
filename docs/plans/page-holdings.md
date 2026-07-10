@@ -323,6 +323,49 @@ coverage noted; anything unexercised carries build+test risk.*
   GLOSSARY), shown as a linked P-1 summary to the Net worth page. Frontend
   grepped for the other deprecated terms — none present.
 
+### Add-flow per-type semantics — acceptance walk #2 (2026-07-10, owner)
+
+Same discipline as split/bonus: engine semantics verified first, then forms
+reshaped. **No engine changes.**
+
+- **§9-12 — Dividend (fixed).** **Verified:** the engine consumes dividends as
+  **total cash**, not per-share — `statements_report.py` sums `t.amount` into
+  income (and `inc_ccy += t.amount`); `compute_fifo` does `income += t.amount`;
+  a dividend never appends a lot. `t.amount` is the server-computed cash impact
+  (`_txn_cash_impact` = qty×price − costs). **Form:** a single **"Amount
+  received"** (+ currency), no quantity/price. **Mapping (no engine change):**
+  quantity = 1, price = Amount → stored `amount` == Amount → income == Amount.
+- **§9-13 — Interest (fixed).** Same engine path as dividend
+  (`income += t.amount`; bucketed under "Interest"). **Form:** single **"Amount
+  received"**, no quantity; the **instrument is optional** (interest on cash has
+  no instrument — `Transaction.instrument_id` is nullable). Same quantity 1 ×
+  price mapping.
+- **§9-14 — Fee (fixed).** **Verified:** a `type = fee` transaction routes to the
+  **Recorded fees** block via `abs(t.amount)` (`statements_report.py`), and has
+  **no `compute_fifo` branch** → it **never enters cost basis** (D-048
+  never-blend). Trade commissions stay on the trade (the buy/sell `fees` field,
+  summed separately). **Form:** a single **"Amount"** with help text (standalone
+  custody/platform/advisory charges; commissions recorded on the trade),
+  instrument optional. **Mapping:** quantity = 1, price = Amount → `amount` =
+  −Amount → Recorded fees += Amount. Deliberately **not** the `fees` field (that
+  would double-count with line 73). GLOSSARY gains **"Fee (recorded)"**.
+- **§9-15 — Fractional quantities (audited; supported end-to-end, no change).**
+  Full-path audit:
+  - **DB:** `Transaction.quantity`, `Holding.quantity`, lot quantities, price,
+    amount are all **`DecimalText`** (exact arbitrary-precision Decimal). ✔
+  - **Engine:** `compute_fifo` uses `Decimal` throughout (FIFO lot math exact). ✔
+  - **API:** `TransactionIn.quantity` / `HoldingView.quantity` are **`float`** —
+    decimals supported (0.75, mutual-fund units, fractional shares). The only
+    ceiling is float's ~15–17 significant figures at the JSON boundary — adequate
+    for real holdings, but not exact for 18-decimal (wei-level) crypto.
+  - **Frontend:** `QuantityInput` is free-decimal text → `Number()`; no
+    integer-only validation anywhere. ✔
+  - **Verdict:** fractional is supported end-to-end; **no layer is integer-only**,
+    so no fix is required. **Optional NEEDS DECISION (non-blocking):** if
+    sub-float exactness is ever wanted for high-precision crypto, the minimal fix
+    is Decimal **strings** at the API boundary for quantity/price (schema change,
+    no engine change) — parked-worthy, not needed for v2.
+
 ### Surfaced during Phase 1 assembly (2026-07-10) — for the Holdings look
 
 - **§9-8 — free-text input gap → `TextInput`.** Assembly found the manual-asset

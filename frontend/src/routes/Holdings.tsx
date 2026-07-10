@@ -335,6 +335,9 @@ function PageHeaderHoldings({
   );
 }
 
+// Total-cash transaction types: entered as a single "Amount", not qty × price.
+const AMOUNT_TYPES = ["dividend", "interest", "fee"];
+
 // --- Add flow: one dialog, branch listed vs manual (D-049) --------------------
 function AddDialog({
   accounts,
@@ -372,10 +375,18 @@ function AddDialog({
 
   async function submit() {
     if (mode === "listed") {
-      if (!symbol.trim()) return onError("Enter or create an instrument first.");
-      // Corporate-action field mapping onto the pinned engine schema (§4.3,
-      // D-019 way; no engine change): split ratio → price (qty 0); bonus units
-      // → quantity at zero cost (no price); merger ratio → price + target.
+      // Instrument-less types (interest on cash, standalone fees) don't require a
+      // symbol; the rest do (transactions reference the instrument).
+      const symbolRequired = !["interest", "fee"].includes(type);
+      if (symbolRequired && !symbol.trim()) return onError("Enter or create an instrument first.");
+      // Per-type mapping onto the pinned engine schema (no engine change):
+      //  · split ratio → price (qty 0); bonus units → quantity (no price);
+      //    merger ratio → price + target (§4.3, D-019).
+      //  · dividend/interest/fee are TOTAL-CASH types: the engine reads the
+      //    stored `amount` (= qty×price). Map "Amount" → price with quantity 1 so
+      //    amount == the entered value (statements_report.py; compute_fifo income;
+      //    fees route via the fee-type `amount`, never the `fees` field — no
+      //    D-048 double-count).
       let quantity: number;
       let priceOrRatio: number;
       if (type === "split" || type === "merger") {
@@ -384,6 +395,9 @@ function AddDialog({
       } else if (type === "bonus") {
         quantity = Number(qty);
         priceOrRatio = 0;
+      } else if (AMOUNT_TYPES.includes(type)) {
+        quantity = 1;
+        priceOrRatio = Number(price); // `price` state holds the "Amount" here
       } else {
         quantity = Number(qty);
         priceOrRatio = Number(price);
@@ -455,7 +469,10 @@ function AddDialog({
         {mode === "listed" ? (
           <>
             <div className="hold__field">
-              <span className="hold__label">Instrument (type a symbol, then “create”)</span>
+              <span className="hold__label">
+                Instrument (type a symbol, then “create”)
+                {["interest", "fee"].includes(type) ? " — optional" : ""}
+              </span>
               <InstrumentPicker
                 allowCreate
                 onSelect={(p) =>
@@ -495,6 +512,27 @@ function AddDialog({
               <div className="hold__field">
                 <span className="hold__label">Bonus units (extra shares, zero cost)</span>
                 <QuantityInput value={qty} onChange={setQty} aria-label="Bonus units" />
+              </div>
+            ) : AMOUNT_TYPES.includes(type) ? (
+              // Dividend / interest / fee are total-cash: a single Amount, no
+              // quantity or per-share price (statements_report; compute_fifo).
+              <div className="hold__field">
+                <span className="hold__label">
+                  {type === "fee" ? "Amount" : "Amount received"}
+                </span>
+                <MoneyInput
+                  value={price}
+                  currency={currency}
+                  onChange={setPrice}
+                  aria-label={type === "fee" ? "Amount" : "Amount received"}
+                />
+                {type === "fee" && (
+                  <span className="hold__sub">
+                    Standalone charges (custody / platform / advisory). Trade
+                    commissions are recorded on the trade, not here — they never
+                    enter cost basis (D-048).
+                  </span>
+                )}
               </div>
             ) : (
               <>

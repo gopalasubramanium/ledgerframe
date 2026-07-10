@@ -284,6 +284,22 @@ out of scope — components only.
   - Still pending owner: ratify **`TextInput`** (§9-8) at the Holdings look.
   - 36 frontend tests + build green; drift/typecheck/lint clean.
 
+- **Holdings acceptance walk #2 — 4 Add-flow findings fixed 2026-07-10; no engine
+  change** (page-holdings.md §9-12..15). Engine semantics verified first, then
+  forms reshaped:
+  - **Dividend / Interest** → single **"Amount received"** field (verified
+    total-cash, not per-share, in `statements_report`/`compute_fifo`); mapped
+    quantity 1 × price so stored `amount` == the entered value. Interest
+    instrument optional.
+  - **Fee** → single **"Amount"** with help text; routes to **Recorded fees** via
+    the fee-type `amount` (never the `fees` field → no D-048 double-count), never
+    cost basis (no `compute_fifo` branch). GLOSSARY gains **"Fee (recorded)"**.
+  - **Fractional quantities** audited end-to-end — DB `DecimalText`, engine
+    `Decimal`, API `float`, frontend free-decimal: **supported, no integer-only
+    layer, no fix needed**. Optional non-blocking NEEDS DECISION: Decimal-string
+    API for sub-float crypto exactness (parked-worthy).
+  - 38 frontend tests + build green; backend 459 unchanged; ruff clean.
+
 - **Corporate-actions gap — RECORDED (owner-identified 2026-07-10; not built).**
   1. **ROADMAP R-7 enriched** into the v2.1 "accounting precision" theme:
      **de-merger / spin-off** (merger-in-reverse — cost-basis apportionment per

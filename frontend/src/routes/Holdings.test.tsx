@@ -132,6 +132,44 @@ test("split and bonus get purpose-labelled fields (D-019 way, §4.3 mapping)", a
   expect(within(dialog).queryByLabelText("Price")).toBeNull(); // zero-cost per engine
 });
 
+test("dividend/interest/fee use a single Amount field (total-cash types)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  const dialog = screen.getByRole("dialog");
+  const typeSelect = within(dialog).getByLabelText("Transaction type");
+
+  await user.selectOptions(typeSelect, "dividend");
+  expect(within(dialog).getByLabelText("Amount received")).toBeInTheDocument();
+  expect(within(dialog).queryByLabelText("Quantity")).toBeNull();
+  expect(within(dialog).queryByLabelText("Price")).toBeNull();
+
+  await user.selectOptions(typeSelect, "fee");
+  expect(within(dialog).getByLabelText("Amount")).toBeInTheDocument();
+  expect(within(dialog).getByText(/never enter cost basis/)).toBeInTheDocument();
+  expect(within(dialog).queryByLabelText("Quantity")).toBeNull();
+});
+
+test("dividend submits its Amount as quantity 1 × price (engine total-cash map)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  const dialog = screen.getByRole("dialog");
+  await user.selectOptions(within(dialog).getByLabelText("Transaction type"), "dividend");
+  // Symbol via the instrument picker's explicit create path.
+  await user.type(within(dialog).getByLabelText("Instrument"), "AAPL");
+  await user.click(within(dialog).getByText(/Create new instrument/));
+  const amount = within(dialog).getByLabelText("Amount received");
+  await user.clear(amount);
+  await user.type(amount, "125.50");
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  expect(vi.mocked(api.addTransaction)).toHaveBeenCalledWith(
+    expect.objectContaining({ type: "dividend", quantity: 1, price: 125.5, symbol: "AAPL" }),
+  );
+});
+
 test("deleting a transaction soft-deletes and offers Undo", async () => {
   vi.mocked(api.getTransactions).mockResolvedValue({
     ok: true,

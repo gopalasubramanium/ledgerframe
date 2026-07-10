@@ -172,6 +172,7 @@ Home shows one summary of each, linked to its canonical page.
 | Term | Canonical definition |
 |------|----------------------|
 | **Recorded fees** | Actual commissions + taxes from the ledger for a year (a currency fact). |
+| **Fee (recorded)** | A **standalone charge** transaction (`type = fee`) — custody / platform / advisory fees not tied to a specific trade. It flows to the **Recorded fees** block and **never enters cost basis** (no FIFO effect, D-048 never-blend). Trade commissions, by contrast, are recorded **on the trade** (the buy/sell `fees` field). Entered as a single **Amount** (no quantity/price). |
 | **Ongoing cost (expense ratio)** | Forward estimate = expense ratio (`annual_cost_bps`) × current value. Kept **separate** from recorded fees, never blended. A card may be titled "Costs" (D-029). **[Help]** |
 | **Statements** | Income, fees, cash flow, realised-vs-unrealised from recorded transactions — for review / your accountant. |
 | **Review** | The page/concept: a live "what needs a look" feed from existing signals; a recorded review snapshots state to `ReviewLog`. "what needs a look" may survive as body copy but not as a label (D-030). Canonical on the **Review** page. |
