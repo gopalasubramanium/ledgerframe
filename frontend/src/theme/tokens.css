@@ -166,9 +166,10 @@
   --control-height: 36px;
 }
 :root[data-density="compact"] {
-  --row-height: 32px;
-  --cell-pad-y: var(--space-3);
-  --cell-pad-x: var(--space-4);
+  /* One size denser (final-walk item 3) — helps wide tables fit a 1366px laptop. */
+  --row-height: 28px;
+  --cell-pad-y: var(--space-2);
+  --cell-pad-x: var(--space-3);
   --control-height: 30px;
 }
 

@@ -377,6 +377,41 @@ out of scope — components only.
     backend** (+4 paging) + **46 frontend** (+1). ruff/contract-drift/tokens/lint/
     typecheck/build green throughout.
 
+- **Final-walk findings #7 — CSV round-trip bug + layout (owner, 2026-07-10;
+  NOT yet committed — owner re-verifies first).** page-holdings §9-27..30;
+  DECISIONS.md D-095.
+  - **Round-trip bug (D-095) FIXED.** The Holdings **Export** was a positions
+    **snapshot** while **Import** ingests a transactions **ledger** → every row
+    failed, symbols "(none)". A snapshot can't round-trip without fabricating trade
+    dates, so the lossless pair is a **transactions export ⇄ transactions import**:
+    new `GET /portfolio/transactions.csv` (columns == `IMPORT_COLUMNS`; wired to the
+    ledger Export; contract +1 → **126**); the importer now returns one honest
+    `format_error` for a snapshot instead of 14 garbage rows. **Permanent
+    round-trip test** + rule in `TEMPLATE-page-build.md` §7.
+  - **Import review grid** responsive (content-typed columns), dialog `size="xl"`.
+  - **Add dialog** two-column form at desktop, dialog `size="lg"` — `Dialog` gains
+    a **`size`** prop (§5.4 amendment).
+  - **Holdings table** fits 1366px: Symbol+Name merged into one identity cell,
+    Class → chip, Source → `StalenessChip`+tooltip; compact density one step denser.
+  - **469 backend** (+2 round-trip) + **48 frontend** (+2) tests; all checks green.
+
+- **Post-import + polish findings #8 (owner, 2026-07-10).** page-holdings §9-31..34.
+  - **Import visibility (item 1)** — *not* a persistence bug (commit saves +
+    rebuilds fine). Imported rows are historical-dated → they sank below the
+    most-recent-first window. Fix: ledger gains an **`added`** (insertion-order)
+    sort; **post-commit the ledger jumps to "recently added"** + toast says so.
+  - **StalenessChip (item 2)** — fixed *"Stale · as of Stale cache"* (label passed
+    as `asOf`) and the width. Holdings response now carries real **`price_ts`**;
+    chip reads compact **"Stale · 08 Jul"** (full date in tooltip), just "Stale"
+    when no timestamp; `nowrap`, no horizontal scroll.
+  - **Table height (item 3)** — `DataTable` caps at **`60vh`** and scrolls
+    internally (sticky header); page can't grow unboundedly. Template rule added.
+  - **Tile order (item 4)** — **"Other"** moved to last, after Insurance.
+  - **470 backend** (+1 recently-added) + **49 frontend** (+1 import-visibility)
+    tests; ruff/contract-drift/tokens/lint/typecheck/build green.
+  - **Committing this batch together with findings #7** (owner: "commit everything
+    pending").
+
 - **D-090 / D-091 — PROPOSED spec tables (owner, 2026-07-10; SUPERSEDED — see the
   ratified+shipped entry above), + compact picker fixed now.**
   - **D-090 (MASTER-DATA §10, PROPOSED)** — AssetClass × TxnType applicability

@@ -46,6 +46,42 @@
   gap: var(--space-3);
 }
 
+/* Item 3 — compact holdings identity + chips so the table fits a 1366px laptop. */
+.hold__ident {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+.hold__ident-sym {
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hold__ident-name {
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hold__chip {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  border: var(--border-width) solid var(--border);
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.hold__src {
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 .hold__form {
   display: flex;
   flex-direction: column;
@@ -55,6 +91,23 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+/* Two-column form at desktop widths so the Add dialog fits without scrolling;
+   single column on narrow viewports. Structural rows + full-width controls span
+   both columns; paired inputs (Account/Instrument, Qty/Price, Date/Currency, and
+   the D-091 optional fields) flow two-up. Tighter vertical rhythm than the stack. */
+@media (min-width: 34rem) {
+  .hold__form--grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3) var(--space-4);
+    align-items: start;
+  }
+  .hold__form--grid > .hold__field--full,
+  .hold__form--grid > .hold__chosen,
+  .hold__form--grid > .hold__sub {
+    grid-column: 1 / -1;
+  }
 }
 .hold__label {
   font-size: var(--font-size-13);
@@ -215,11 +268,22 @@
 .imp__head,
 .imp__row {
   display: grid;
-  grid-template-columns: 9rem 7rem 8rem 6rem 6rem 5rem 4rem 5rem;
+  /* Sized to content type — date/type narrow & fixed; symbol wide & flexible;
+     qty/price flex; ccy/status/action compact. Fills the (wide) dialog and stays
+     within a 1366px laptop without horizontal scroll for the core columns. */
+  grid-template-columns:
+    8rem minmax(6rem, 1.4fr) 8rem
+    minmax(4.5rem, 0.8fr) minmax(4.5rem, 0.8fr)
+    5rem 4rem 4.5rem;
   gap: var(--space-2);
   align-items: center;
   padding: var(--space-2) var(--space-3);
   border-bottom: var(--border-width) solid var(--border);
+}
+/* Inputs fill their cell so columns, not intrinsic input widths, set the layout. */
+.imp__row .lf-field {
+  width: 100%;
+  min-width: 0;
 }
 .imp__head {
   position: sticky;

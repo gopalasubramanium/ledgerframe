@@ -34,6 +34,9 @@
   border-radius: var(--radius-lg);
   animation: lf-pop var(--motion-duration) ease-out;
 }
+/* Wider panels clamp to the viewport, so they only widen where there is room. */
+.lf-scrim--center .lf-dialog--lg { max-width: min(46rem, 96vw); }
+.lf-scrim--center .lf-dialog--xl { max-width: min(64rem, 96vw); }
 .lf-scrim--drawer .lf-dialog {
   width: 100%;
   max-width: 28rem;

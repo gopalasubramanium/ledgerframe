@@ -46,11 +46,63 @@ TRANSACTION_TEMPLATE = (
 )
 
 
+# The canonical import/export column contract. The transactions export writes
+# EXACTLY these columns so the app's own export re-imports losslessly (round-trip
+# contract). Keep in lockstep with TRANSACTION_TEMPLATE's header and _validate_row.
+IMPORT_COLUMNS = [
+    "date", "symbol", "type", "quantity", "price", "fees", "taxes",
+    "currency", "note", "asset_class", "country",
+]
+
+
 def sanitize_cell(value: str) -> str:
     """Neutralise spreadsheet formula injection (used on export too)."""
     if value and value[0] in _DANGEROUS_PREFIX:
         return "'" + value
     return value
+
+
+async def export_transactions_csv(session: AsyncSession) -> str:
+    """Server-side transactions export (D-050 / P-5). Columns are EXACTLY the import
+    schema (`IMPORT_COLUMNS`), so the app's own export re-imports with zero errors
+    and zero fixes (round-trip contract). Full dataset — ignores any UI window;
+    soft-deleted rows excluded. Money at full Decimal precision; text cells
+    formula-injection sanitised. The client never builds the file."""
+    rows = (await session.execute(
+        select(Transaction)
+        .where(Transaction.deleted_at.is_(None))
+        .order_by(Transaction.ts.asc(), Transaction.id.asc())
+    )).scalars().all()
+    instr_ids = {t.instrument_id for t in rows if t.instrument_id}
+    instr_by_id: dict[int, Instrument] = {}
+    if instr_ids:
+        instr_by_id = {
+            i.id: i for i in (await session.execute(
+                select(Instrument).where(Instrument.id.in_(instr_ids))
+            )).scalars()
+        }
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(IMPORT_COLUMNS)
+    for t in rows:
+        instr = instr_by_id.get(t.instrument_id) if t.instrument_id else None
+        ac = ""
+        country = ""
+        if instr is not None:
+            ac = instr.asset_class.value if hasattr(instr.asset_class, "value") else str(instr.asset_class or "")
+            country = instr.country or ""
+        ttype = t.type.value if hasattr(t.type, "value") else str(t.type)
+        w.writerow([
+            t.ts.date().isoformat(),
+            sanitize_cell(instr.symbol if instr else ""),
+            ttype,
+            str(D(t.quantity)), str(D(t.price)),
+            str(D(t.fees)), str(D(getattr(t, "taxes", 0) or 0)),
+            (t.currency or ""),
+            sanitize_cell(t.note or ""),
+            sanitize_cell(ac), sanitize_cell(country),
+        ])
+    return buf.getvalue()
 
 
 def _clean(value: str | None) -> str:
@@ -163,7 +215,27 @@ async def preview_import(session: AsyncSession, content: bytes) -> dict:
         raise ValueError(f"file too large (max {MAX_BYTES // 1024 // 1024} MB)")
     text = content.decode("utf-8-sig", errors="replace")
     reader = csv.DictReader(io.StringIO(text))
+    fields = [_clean(f).lower() for f in (reader.fieldnames or [])]
     batch = _batch_hash(content)
+    # A transactions CSV must carry at least `date` + `type`. A holdings SNAPSHOT
+    # (the D-050 positions report) has neither — it's a report, not an import file.
+    # Guide the user with ONE honest message instead of failing every row with
+    # cryptic per-cell errors ("dates unparsed / types unselected").
+    if "date" not in fields or "type" not in fields:
+        looks_snapshot = "market_value_base" in fields or ("symbol" in fields and "quantity" in fields)
+        msg = (
+            "This looks like a holdings snapshot (a positions report), not a "
+            "transactions file. Use the Transactions “Export” to get a re-importable "
+            "ledger."
+            if looks_snapshot else
+            "Missing required columns — a transactions CSV needs at least ‘date’ and "
+            "‘type’. See the template."
+        )
+        return {
+            "batch": batch, "already_imported": False, "format_error": msg,
+            "summary": {"total": 0, "valid": 0, "errors": 0, "duplicates": 0, "new": 0},
+            "rows": [],
+        }
     already = await _batch_already_imported(session, batch)
     existing = await _existing_fingerprints(session)
     seen: set[str] = set()

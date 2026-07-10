@@ -59,11 +59,17 @@ import { formatMoney, formatSignedMoney } from "../format/number";
 // tags, soft-delete+undo+purge, server-side export); the value/positions header
 // is a linked P-1 summary of the Portfolio reader — never recomputed here.
 
+// Compact provenance (item 3): stale → the amber chip; fresh → a small source
+// label with the full valuation label on hover. Collapses the old wide text column.
 function provenanceCell(h: HoldingRow) {
+  // Stale → the compact amber chip with the REAL as-of timestamp (not the label —
+  // passing the label produced "Stale · as of Stale cache"). Fresh → a small
+  // source label with the full label on hover.
+  if (h.is_stale) return <StalenessChip isStale asOf={h.price_ts ?? ""} />;
+  const label = h.valuation_label ?? "—";
   return (
-    <span className="hold__provcell">
-      <StalenessChip isStale={h.is_stale} asOf={h.valuation_label ?? ""} />
-      {!h.is_stale && <span>{h.valuation_label ?? "—"}</span>}
+    <span className="hold__src" title={label}>
+      {label}
     </span>
   );
 }
@@ -124,6 +130,9 @@ export function Holdings() {
   const [txnQuery, setTxnQuery] = useState(""); // debounced value sent to the server
   const [txnOffset, setTxnOffset] = useState(0);
   const [txnTotal, setTxnTotal] = useState(0);
+  // Bump to force a ledger refetch even when sort/filter/offset are unchanged
+  // (e.g. two imports in a row that both jump to "recently added").
+  const [txnReloadTick, setTxnReloadTick] = useState(0);
 
   // Debounce the filter box → one request per pause, and reset to the first page.
   useEffect(() => {
@@ -183,9 +192,10 @@ export function Holdings() {
     reloadCore();
   }, [reloadCore]);
   // Refetch the ledger whenever the window (sort/filter/page) changes — server-side.
+  // `txnReloadTick` forces a refetch even when the window is unchanged.
   useEffect(() => {
     reloadTxns();
-  }, [reloadTxns]);
+  }, [reloadTxns, txnReloadTick]);
 
   const softDeleteTxn = useCallback(
     async (row: TransactionRow) => {
@@ -239,15 +249,31 @@ export function Holdings() {
 
   const holdingColumns = useMemo<Column<HoldingRow>[]>(
     () => [
-      { key: "symbol", label: "Symbol", sortable: true, render: (h) => h.symbol ?? h.label ?? "—" },
-      { key: "name", label: "Name", truncate: true, render: (h) => h.name ?? h.label ?? "—" },
-      { key: "asset_class", label: "Class", sortable: true },
+      // Item 3: symbol + name merged into one identity cell (symbol bold, name as
+      // the secondary line) — they're near-duplicates for most rows. Frees a column.
+      {
+        key: "symbol", label: "Holding", sortable: true, truncate: true,
+        render: (h) => (
+          <span className="hold__ident">
+            <span className="hold__ident-sym">{h.symbol ?? h.label ?? "—"}</span>
+            {h.name && h.name !== h.symbol && (
+              <span className="hold__ident-name">{h.name}</span>
+            )}
+          </span>
+        ),
+      },
+      // Class as a compact chip rather than a wide text column.
+      {
+        key: "asset_class", label: "Class", sortable: true,
+        render: (h) => <span className="hold__chip">{h.asset_class}</span>,
+      },
       { key: "quantity", label: "Position", format: "quantity", sortable: true },
       { key: "price", label: "Price", format: "price" },
       { key: "market_value", label: `Value (${baseCcy})`, format: "money", sortable: true },
       { key: "unrealised_pl", label: "Unrealised P/L", format: "signed-money", sortable: true },
       { key: "day_change", label: "Today's change", format: "signed-money" },
-      { key: "valuation_label", label: "Source", truncate: true, render: provenanceCell },
+      // Provenance collapsed to the StalenessChip + tooltip pattern (compact).
+      { key: "valuation_label", label: "Source", render: provenanceCell },
       {
         key: "id",
         label: "",
@@ -390,6 +416,9 @@ export function Holdings() {
                 placeholder: "Filter transactions…",
                 ariaLabel: "Filter transactions",
               }}
+              // D-050 / round-trip: full-dataset server-side export whose columns
+              // are exactly the import schema — this file re-imports losslessly.
+              onExport={() => apiDownload("/portfolio/transactions.csv")}
             />
             {/* D-094: the window is explicit — the full total is always stated, so
                 the ledger never silently truncates (the old 500-row cap). */}
@@ -441,8 +470,14 @@ export function Holdings() {
           onClose={() => setImportOpen(false)}
           onDone={async (n) => {
             setImportOpen(false);
-            await reload();
-            toast.show({ message: `Imported ${n} transaction${n === 1 ? "" : "s"}.` });
+            // Imported rows are often historical-dated and would sink below the
+            // most-recent-first window. Surface them: sort the ledger by "recently
+            // added" and jump to the first page, then refresh the core reads.
+            setTxnSort({ key: "added", dir: "desc" });
+            setTxnOffset(0);
+            setTxnReloadTick((t) => t + 1);
+            await reloadCore();
+            toast.show({ message: `Imported ${n} transaction${n === 1 ? "" : "s"} — showing most recently added.` });
           }}
           onError={(m) => toast.show({ message: m })}
         />
@@ -607,9 +642,10 @@ const ASSET_TILES: AssetTile[] = [
   { id: "retirement", label: "Retirement", subtitle: "Pension / retirement balances.", branch: "manual", assetClass: "retirement" },
   { id: "private", label: "Private asset", subtitle: "Unlisted holdings valued manually.", branch: "manual", assetClass: "private" },
   { id: "liability", label: "Liability", subtitle: "A debt — counts against net worth.", branch: "manual", assetClass: "liability" },
-  { id: "other", label: "Other", subtitle: "Doesn't fit — the honest escape valve.", branch: "manual", assetClass: "other" },
   // D-092 signpost — Insurance never branches this form (its own register, D-062).
   { id: "insurance", label: "Insurance", subtitle: "Policies live in their own register — we'll take you there.", branch: "manual", assetClass: "other", nav: "#/insurance" },
+  // "Other" is the escape valve — it reads sensibly LAST, after Insurance.
+  { id: "other", label: "Other", subtitle: "Doesn't fit — the honest escape valve.", branch: "manual", assetClass: "other" },
 ];
 
 // --- Add flow: type-first entry (D-089) → single listed/manual flow (D-049) ---
@@ -756,6 +792,7 @@ function AddDialog({
       open
       onClose={onClose}
       title={tile === null ? "What are you adding?" : "Add to holdings"}
+      size={tile === null ? "md" : "lg"}
       footer={
         tile === null ? (
           <button type="button" className="lf-btn" onClick={onClose}>
@@ -802,7 +839,7 @@ function AddDialog({
           ))}
         </div>
       ) : (
-        <div className="hold__form">
+        <div className="hold__form hold__form--grid">
           <div className="hold__chosen">
             <button
               type="button"
@@ -834,14 +871,14 @@ function AddDialog({
                 }
               />
             </div>
-            <div className="hold__field">
+            <div className="hold__field hold__field--full">
               <span className="hold__label">Type</span>
               {/* D-090: only the types this asset class offers (from /refdata). */}
               <MasterSelect master="txn_type" value={type} onChange={setType} include={listedTypes} />
             </div>
             {type === "merger" ? (
               <>
-                <div className="hold__field">
+                <div className="hold__field hold__field--full">
                   <span className="hold__label">Absorbed into (target instrument)</span>
                   <InstrumentPicker
                     allowCreate={false}
@@ -858,20 +895,20 @@ function AddDialog({
             ) : type === "split" ? (
               // §4.3: split scales lots by the ratio (in the price field); no
               // quantity or price of its own.
-              <div className="hold__field">
+              <div className="hold__field hold__field--full">
                 <span className="hold__label">Split ratio (e.g. 2 for a 2:1 split)</span>
                 <QuantityInput value={price} onChange={setPrice} aria-label="Split ratio" />
               </div>
             ) : type === "bonus" ? (
               // §4.3: bonus adds shares at ZERO cost — units only, no price field.
-              <div className="hold__field">
+              <div className="hold__field hold__field--full">
                 <span className="hold__label">Bonus units (extra shares, zero cost)</span>
                 <QuantityInput value={qty} onChange={setQty} aria-label="Bonus units" />
               </div>
             ) : AMOUNT_TYPES.includes(type) ? (
               // Dividend / interest / fee are total-cash: a single Amount, no
               // quantity or per-share price (statements_report; compute_fifo).
-              <div className="hold__field">
+              <div className="hold__field hold__field--full">
                 <span className="hold__label">
                   {type === "fee" ? "Amount" : "Amount received"}
                 </span>
@@ -915,7 +952,7 @@ function AddDialog({
             {/* D-090: for cash-flow classes, choose whether to add the holding or
                 record a separate cash-flow transaction (e.g. FD interest). */}
             {manualTxnTypes.length > 0 && (
-              <div className="hold__field">
+              <div className="hold__field hold__field--full">
                 <span className="hold__label">Record</span>
                 <Select
                   value={manualAction}
@@ -930,12 +967,12 @@ function AddDialog({
             )}
             {manualAction === "txn" ? (
               <>
-                <div className="hold__field">
+                <div className="hold__field hold__field--full">
                   <span className="hold__label">Type</span>
                   {/* D-090: only the cash-flow types this class offers (from /refdata). */}
                   <MasterSelect master="txn_type" value={type} onChange={setType} include={manualTxnTypes} />
                 </div>
-                <div className="hold__field">
+                <div className="hold__field hold__field--full">
                   <span className="hold__label">Amount</span>
                   <MoneyInput value={price} currency={currency} onChange={setPrice} aria-label="Amount" />
                   <span className="hold__sub">
@@ -954,7 +991,7 @@ function AddDialog({
               </>
             ) : (
               <>
-                <div className="hold__field">
+                <div className="hold__field hold__field--full">
                   <span className="hold__label">Label</span>
                   <TextInput
                     value={label}
@@ -1138,13 +1175,20 @@ function ImportDialog({
   onError: (msg: string) => void;
 }) {
   const [rows, setRows] = useState<ReviewRow[] | null>(null);
+  const [formatError, setFormatError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function doPreview(f: File) {
     setBusy(true);
+    setFormatError(null);
     const res = await importPreview(f);
     setBusy(false);
     if (!res.ok) return onError(`Preview failed: ${res.error}`);
+    // Wrong-format file (e.g. a holdings snapshot) → one honest banner, no grid.
+    if (res.data.format_error) {
+      setFormatError(res.data.format_error);
+      return;
+    }
     // Duplicates are excluded by default (the backend skips them anyway); the
     // user can re-include if wanted.
     setRows((res.data.rows ?? []).map((r) => ({ ...r, excluded: Boolean(r.duplicate) })));
@@ -1173,6 +1217,7 @@ function ImportDialog({
       open
       onClose={onClose}
       title="Import transactions (CSV)"
+      size="xl"
       footer={
         <>
           <button type="button" className="lf-btn" onClick={onClose}>Cancel</button>
@@ -1187,10 +1232,15 @@ function ImportDialog({
       {!rows ? (
         <div className="hold__form">
           <FileInput accept=".csv" aria-label="Import CSV" label="Choose CSV" onChange={(fs) => doPreview(fs[0])} />
-          <span className="hold__sub">
-            A dry run — every row is reviewed before anything is written. Fix flagged
-            cells inline or exclude the row; imports never silently create bad data (D-012).
-          </span>
+          {formatError ? (
+            <EmptyState message="That file isn’t a transactions ledger" reason={formatError} />
+          ) : (
+            <span className="hold__sub">
+              A dry run — every row is reviewed before anything is written. Fix flagged
+              cells inline or exclude the row; imports never silently create bad data (D-012).
+              Tip: the Transactions <strong>Export</strong> produces a file that re-imports cleanly.
+            </span>
+          )}
         </div>
       ) : (
         <div className="imp">

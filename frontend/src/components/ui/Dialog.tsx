@@ -15,6 +15,10 @@ export interface DialogProps {
   children: ReactNode;
   footer?: ReactNode;
   variant?: "center" | "drawer";
+  /** Panel width (center variant). `md` (default) = the base editor width; `lg`
+   *  fits a two-column form; `xl` fits a wide review grid. All clamp to the
+   *  viewport, so they only widen where there is room (desktop). */
+  size?: "md" | "lg" | "xl";
   /** Set false to keep the dialog open on backdrop click (e.g. dirty forms). */
   dismissOnBackdrop?: boolean;
 }
@@ -29,6 +33,7 @@ export function Dialog({
   children,
   footer,
   variant = "center",
+  size = "md",
   dismissOnBackdrop = true,
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -83,7 +88,7 @@ export function Dialog({
     >
       <div
         ref={panelRef}
-        className="lf-dialog"
+        className={`lf-dialog lf-dialog--${size}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

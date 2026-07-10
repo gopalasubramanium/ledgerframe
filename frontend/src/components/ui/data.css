@@ -43,7 +43,11 @@
 /* DataTable (DESIGN-SYSTEM §5.2) — one implementation for every table */
 .lf-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  /* Cap at a viewport-relative height and scroll INSIDE (both axes), so a long
+     table never grows the page unboundedly; the sticky header stays put within
+     this scroll container. Overridable via --table-max-h per table. */
+  max-height: var(--table-max-h, 60vh);
+  overflow: auto;
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
 }

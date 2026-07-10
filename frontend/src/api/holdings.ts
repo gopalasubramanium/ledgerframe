@@ -18,6 +18,7 @@ export interface HoldingRow {
   day_change?: number | null;
   day_change_pct?: number | null;
   is_stale: boolean;
+  price_ts?: string | null; // as-of ISO timestamp (null when unpriced)
   is_priced: boolean;
   valuation_method?: string | null;
   valuation_label?: string | null;
@@ -107,6 +108,9 @@ export interface ImportRow {
 export interface ImportPreview {
   batch?: string;
   already_imported?: boolean;
+  // Set when the file is the wrong format entirely (e.g. a holdings snapshot, not a
+  // transactions ledger) — one honest message instead of per-row garbage.
+  format_error?: string;
   summary?: { total: number; valid: number; errors: number; duplicates: number; new: number };
   rows: ImportRow[];
 }

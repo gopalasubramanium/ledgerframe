@@ -60,3 +60,23 @@ async def test_sort_executes_on_the_full_dataset(app_client):
 async def test_unknown_sort_falls_back_to_ts(app_client):
     r = (await app_client.get("/api/v1/portfolio/transactions?sort=bogus")).json()
     assert r["sort"] == "ts"  # never errors on a bad column; degrades to default
+
+
+async def test_recently_added_surfaces_old_dated_import(app_client):
+    """The 'added' (insertion-order) sort surfaces a just-added row even when its
+    trade date is historical — the post-import visibility fix. A CSV import of a
+    2019 trade must be findable at the top of 'recently added', not buried by date."""
+    # A historical-dated transaction, added last.
+    assert (await app_client.post("/api/v1/portfolio/transactions", json={
+        "symbol": "ZOLD", "type": "buy", "ts": "2019-01-01T09:30:00",
+        "quantity": 1, "price": 5, "currency": "USD",
+    })).status_code == 200
+
+    added = (await app_client.get("/api/v1/portfolio/transactions?sort=added&dir=desc")).json()
+    assert added["sort"] == "added"
+    assert added["transactions"][0]["symbol"] == "ZOLD"  # newest-added, despite oldest date
+
+    # By trade date (default), the 2019 row is NOT at the top — that's the bug the
+    # 'recently added' sort works around.
+    by_date = (await app_client.get("/api/v1/portfolio/transactions?sort=ts&dir=desc")).json()
+    assert by_date["transactions"][0]["symbol"] != "ZOLD"

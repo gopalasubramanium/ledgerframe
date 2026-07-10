@@ -802,6 +802,17 @@
             ],
             "title": "Price"
           },
+          "price_ts": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Ts"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -10684,6 +10695,72 @@
           }
         },
         "summary": "Add Transaction",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
+    "/api/v1/portfolio/transactions.csv": {
+      "get": {
+        "description": "Server-side transactions export (D-050 / P-5). Columns are exactly the import\nschema so this file re-imports losslessly (round-trip contract). FULL dataset \u2014\nignores the ledger's UI window; the client never generates the file.",
+        "operationId": "portfolio_transactions_csv_api_v1_portfolio_transactions_csv_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Portfolio Transactions Csv",
         "tags": [
           "portfolio"
         ]

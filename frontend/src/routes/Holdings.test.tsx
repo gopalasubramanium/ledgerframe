@@ -239,6 +239,32 @@ test("D-093 import review grid gates Commit until errors are fixed or excluded",
   expect(within(dialog).getByRole("button", { name: /Commit/ })).toBeEnabled();
 });
 
+test("post-import: the ledger jumps to 'recently added' so imports are visible (item 1)", async () => {
+  vi.mocked(api.importPreview).mockResolvedValue({
+    ok: true,
+    data: {
+      summary: { total: 1, valid: 1, errors: 0, duplicates: 0, new: 1 },
+      rows: [{ row: 2, ok: true, date: "2019-01-01", type: "buy", symbol: "ZOLD", quantity: "1", price: "5", currency: "USD" }],
+    },
+  });
+  vi.mocked(api.importCommit).mockResolvedValue({ ok: true, data: { ok: true, imported: 1 } });
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  const dialog = screen.getByRole("dialog");
+  await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "t.csv", { type: "text/csv" }));
+  await waitFor(() => expect(within(dialog).getByRole("button", { name: /Commit/ })).toBeEnabled());
+  await user.click(within(dialog).getByRole("button", { name: /Commit/ }));
+  // The ledger refetches sorted by recently-added so the (historical) import shows.
+  await waitFor(() =>
+    expect(vi.mocked(api.getTransactions)).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: "added", dir: "desc", offset: 0 }),
+    ),
+  );
+  expect(await screen.findByText(/most recently added/)).toBeInTheDocument();
+});
+
 test("D-091 manual FD tile prompts optional detail; meta is submitted", async () => {
   const user = userEvent.setup();
   renderPage();
@@ -300,6 +326,46 @@ test("D-094 holdings filter runs client-side (bounded dataset)", async () => {
   await user.type(screen.getByLabelText("Filter holdings"), "msft");
   await waitFor(() => expect(screen.queryByText("AAPL")).toBeNull());
   expect(screen.getByText("MSFT")).toBeInTheDocument();
+});
+
+test("round-trip: importing a holdings snapshot is guided, not garbled", async () => {
+  vi.mocked(api.importPreview).mockResolvedValue({
+    ok: true,
+    data: {
+      format_error:
+        "This looks like a holdings snapshot (a positions report), not a transactions file. Use the Transactions “Export” to get a re-importable ledger.",
+      rows: [],
+      summary: { total: 0, valid: 0, errors: 0, duplicates: 0, new: 0 },
+    },
+  });
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  const dialog = screen.getByRole("dialog");
+  await user.upload(within(dialog).getByLabelText("Import CSV"), new File(["x"], "snap.csv", { type: "text/csv" }));
+  // One honest banner, no review grid, no Commit.
+  await waitFor(() => expect(within(dialog).getByText(/isn’t a transactions ledger/)).toBeInTheDocument());
+  expect(within(dialog).getByText(/holdings snapshot/)).toBeInTheDocument();
+  expect(within(dialog).queryByRole("button", { name: /Commit/ })).toBeNull();
+});
+
+test("round-trip: the ledger Export downloads the server-side transactions.csv", async () => {
+  vi.mocked(api.getTransactions).mockResolvedValue({
+    ok: true,
+    data: {
+      transactions: [{ id: 7, type: "buy", ts: "2024-05-01T00:00:00", symbol: "AAPL", currency: "USD", amount: -1900 }],
+      total: 1, offset: 0, limit: 100, sort: "ts", dir: "desc", filter: "",
+    },
+  });
+  const user = userEvent.setup();
+  renderPage();
+  await waitFor(() => expect(screen.getByText(/2024-05-01/)).toBeInTheDocument());
+  // Two server-side exports on the page (holdings snapshot in the header, ledger in
+  // the transactions section) — the ledger's is last in the DOM.
+  const exports = screen.getAllByRole("button", { name: /Export \(server-side\)/ });
+  await user.click(exports[exports.length - 1]);
+  expect(vi.mocked(client.apiDownload)).toHaveBeenCalledWith("/portfolio/transactions.csv");
 });
 
 test("D-094 transactions ledger is server-side: window stated, sort/filter/page hit the API", async () => {

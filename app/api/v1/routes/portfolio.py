@@ -31,6 +31,7 @@ from app.services import fx
 from app.services.csv_import import (
     TRANSACTION_TEMPLATE,
     commit_import,
+    export_transactions_csv,
     import_transactions_csv,
     preview_import,
 )
@@ -56,9 +57,11 @@ def _hv(h) -> dict:
         "day_change": to_display(h.day_change_base),
         "day_change_pct": to_display(h.day_change_pct),
         "is_stale": h.is_stale, "is_priced": h.is_priced,
-        # Provenance: HOW this value was derived + a concise, honest label.
+        # Provenance: HOW this value was derived + a concise, honest label + the
+        # real as-of timestamp (null when unpriced — never fabricated).
         "valuation_method": method,
         "valuation_label": valuation_label(ValuationMethod(method), is_stale=h.is_stale, price_available=True),
+        "price_ts": h.price_ts.isoformat() if getattr(h, "price_ts", None) else None,
     }
 
 
@@ -105,6 +108,7 @@ class HoldingView(BaseModel):
     is_priced: bool
     valuation_method: str | None = None
     valuation_label: str | None = None
+    price_ts: str | None = None  # as-of ISO timestamp (null when unpriced)
 
 
 class HoldingsResponse(BaseModel):
@@ -127,6 +131,15 @@ async def portfolio_holdings_csv(session: AsyncSession = Depends(get_db)) -> Pla
     val = await value_portfolio(session, base)
     return PlainTextResponse(holdings_csv(val), media_type="text/csv", headers={
         "Content-Disposition": 'attachment; filename="ledgerframe-holdings.csv"'})
+
+
+@router.get("/portfolio/transactions.csv", response_class=PlainTextResponse)
+async def portfolio_transactions_csv(session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
+    """Server-side transactions export (D-050 / P-5). Columns are exactly the import
+    schema so this file re-imports losslessly (round-trip contract). FULL dataset —
+    ignores the ledger's UI window; the client never generates the file."""
+    return PlainTextResponse(await export_transactions_csv(session), media_type="text/csv", headers={
+        "Content-Disposition": 'attachment; filename="ledgerframe-transactions.csv"'})
 
 
 @router.get("/portfolio/pricing-health")
@@ -325,6 +338,9 @@ _TXN_SORT_COLS = {
     "price": Transaction.price,
     "currency": Transaction.currency,
     "symbol": Instrument.symbol,
+    # Insertion order (id) — "recently added". Lets the UI surface just-imported
+    # rows regardless of their (often historical) trade date after a CSV import.
+    "added": Transaction.id,
 }
 # amount/quantity/price are stored as text (DecimalText); cast to numeric for
 # ORDER BY so sorting is by value, not lexicographic ("9" would beat "10").

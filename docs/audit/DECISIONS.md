@@ -590,10 +590,28 @@ clarifying notes recorded in the guide.
     assumption** and **where sort/filter execute** (client vs server). Added to
     `TEMPLATE-page-build.md`.
 
+- **D-095 — CSV round-trip contract** (owner, 2026-07-10; final-walk item 1).
+  **Any surface that both exports and imports a format must have a lossless
+  round-trip test** — export → import preview → **zero errors, zero fixes**; the
+  app's own export is its import's cleanest input (export columns == import schema).
+  Diagnosis: the Holdings **Export** was a positions **snapshot** while **Import**
+  ingests a transactions **ledger** — different schemas, so every row failed and
+  symbols showed "(none)". A snapshot can't round-trip into a ledger without
+  fabricating trade dates (Product-Guarantee violation). Fix: a new
+  `GET /portfolio/transactions.csv` whose columns are exactly `IMPORT_COLUMNS`
+  (wired to the ledger's Export); the importer detects a snapshot and returns one
+  honest `format_error` instead of per-cell garbage; a permanent round-trip test.
+  Rule recorded in page-holdings §9-27 + `TEMPLATE-page-build.md` §7. Also this
+  walk: the `Dialog` **`size`** prop (§5.4 amendment; md/lg/xl, viewport-clamped),
+  the Add dialog's two-column form, the responsive import review grid, the compact
+  Holdings table (merged identity cell, class chip, provenance chip), and a
+  one-step-denser compact density. Contract +1 → **126 paths**.
+
 **Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
 after the 12-batch spec close (D-001–D-088); they change no earlier decision.
 **D-090 and D-091 were ratified 2026-07-10** (D-090 with the ETF-Bonus amendment);
-**D-094** records the table dataset-size posture. None changes an earlier decision.
+**D-094** records the table dataset-size posture; **D-095** the CSV round-trip
+contract. None changes an earlier decision.
 
 ---
 

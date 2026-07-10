@@ -116,6 +116,10 @@ execute** — client-side or server-side.
   server-side full-dataset CSV export (D-050) regardless of what is loaded. The
   endpoint's sort/filter/page params are a **contract delta** (§3b).
 
+Every table also **caps at a viewport-relative max height and scrolls internally**
+(sticky header), so a long table never grows the page unboundedly — this is the
+`DataTable` default (`--table-max-h`, `60vh`); a page overrides it only with reason.
+
 ---
 
 ## 5. VOCABULARIES
@@ -163,6 +167,13 @@ the theme/density matrix. Written as checkable statements.*
 - [ ] **Tables (D-094):** each table's dataset-size assumption + sort/filter
       location (§4) is honoured — bounded tables filter/sort client-side; unbounded
       tables filter/sort **server-side over the full dataset**, not the loaded page.
+- [ ] **Round-trip (D-095):** any surface that both **exports and imports** the
+      same format has a **lossless round-trip test** — export → import preview →
+      **zero errors, zero fixes**. The app's own export must be its import's
+      cleanest input; the export's columns are exactly the import's schema. If a
+      surface exports a *report* that is deliberately not re-importable (e.g. a
+      snapshot vs a ledger), the importer must **say so with one honest message**,
+      never fail every row.
 
 ---
 

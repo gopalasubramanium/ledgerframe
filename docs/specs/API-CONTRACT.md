@@ -47,9 +47,10 @@ Run it in CI.
 merger reshape (D-019, adds `related_instrument_id`), and the typed
 `GET /api/v1/portfolio/holdings` response (§9-6). Later same-day additions:
 `GET /api/v1/portfolio/deleted-count` (§9-23, +1 → 124) and
-`GET /api/v1/refdata/txn-applicability` (D-090, +1 → **125**). Baseline is now
-**125 paths**; the per-master `*/meta` removals (D-005) stay pending until their
-pages migrate.
+`GET /api/v1/refdata/txn-applicability` (D-090, +1 → 125) and
+`GET /api/v1/portfolio/transactions.csv` (D-095 round-trip, +1 → **126**). Baseline
+is now **126 paths**; the per-master `*/meta` removals (D-005) stay pending until
+their pages migrate.
 
 **Delivered 2026-07-10 (D-094):** `GET /api/v1/portfolio/transactions` gained
 server-side **sort / dir / filter / offset / limit** query params **plus `total`,
@@ -66,9 +67,10 @@ new path; still **125 paths** (row below).
 | **remove** | `GET /api/v1/insurance/meta` → (into `/refdata`) | **D-005** | Insurance vocab moves to `/refdata`; endpoint removed once `/refdata` lands. |
 | **remove** | `GET /api/v1/estate/meta` → (into `/refdata`) | **D-005** | Estate vocab (doc categories, contact roles) moves to `/refdata`. |
 | **add** | `POST /api/v1/entities`, `PATCH /api/v1/entities/{id}`, `DELETE /api/v1/entities/{id}` | **D-065** | Entity CRUD; only `GET /api/v1/entities` exists today. |
-| **add ✅** | `GET /api/v1/portfolio/holdings.csv` | **D-050** | **Delivered 2026-07-10.** Server-side holdings CSV export; formula-injection sanitised; client never generates the file (P-5). |
+| **add ✅** | `GET /api/v1/portfolio/holdings.csv` | **D-050** | **Delivered 2026-07-10.** Server-side holdings CSV export (positions **snapshot / report** — not an import file); formula-injection sanitised; client never generates the file (P-5). |
+| **add ✅** | `GET /api/v1/portfolio/transactions.csv` | **D-050 / D-095** | **Delivered 2026-07-10.** Server-side transactions export; columns are exactly the import schema so the file re-imports losslessly (round-trip contract); full dataset regardless of the ledger's UI window. +1 path → **126**. |
 | **reshape ✅** | `POST/PUT /api/v1/portfolio/transactions` (`TransactionIn`) | **D-019** | **Delivered 2026-07-10.** Adds `related_instrument_id` — the merger "Absorbed into" target (ratio in `price`). The DB column + `resolve_mergers` already existed; this exposes it in the request body. |
-| **reshape ✅** | `GET /api/v1/portfolio/holdings` | **§9-6** | **Delivered 2026-07-10.** Response typed (`HoldingsResponse`/`HoldingView`) — replaces `additionalProperties: true` with an explicit footprint for contract hygiene. |
+| **reshape ✅** | `GET /api/v1/portfolio/holdings` | **§9-6** | **Delivered 2026-07-10.** Response typed (`HoldingsResponse`/`HoldingView`) — replaces `additionalProperties: true` with an explicit footprint for contract hygiene. Later added **`price_ts`** (as-of ISO, null when unpriced) for the compact StalenessChip (§9-32). |
 | **rename** | `GET /api/v1/review/centre` → `GET /api/v1/review` | **D-030** | "Review Centre" retired to "Review". |
 | **rename** | `GET /api/v1/portfolio/cost-of-ownership` → `…/ongoing-cost` | **D-029** | "Cost of ownership" retired to "Ongoing cost (expense ratio)". |
 | **rename** | `GET /api/v1/portfolio/realised-gains` (+ `.csv`) → "Realised P/L" naming | **D-026** | "Realised gain(s)" retired to "Realised P/L". |

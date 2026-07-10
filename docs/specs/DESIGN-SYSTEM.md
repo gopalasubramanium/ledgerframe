@@ -158,8 +158,8 @@ and cell padding (primarily in DataTable) and the wall-kiosk reading distance.
 
 | Density | Table row height | Cell padding (Y) | Status |
 |---------|------------------|------------------|--------|
-| comfortable | 44px | `--space-4` (12) | ratified 2026-07-10 |
-| compact | 32px | `--space-3` (8) | ratified 2026-07-10 |
+| comfortable | 44px | `--space-4` (16) | ratified 2026-07-10 |
+| compact | 28px | `--space-2` (8) | amended 2026-07-10 (one step denser; page-holdings §9-30) |
 
 ### 2.6 Ratification checklist — COMPLETE (2026-07-10)
 
@@ -275,7 +275,7 @@ props are backend-computed `Decimal` strings (never client-computed).
 | **EmptyState** | `message`, `reason`, `action?` | Every empty/"—" region shows a **reason** (Product Guarantee 3: "—" with a reason, never blank). |
 | **ReviewCard** | `sections` (verdicts), `attention`, `link` | Summary-with-link on Home/Net worth; canonical body on Review. **Enforcement corollary:** shows no figure the Review page does not (P-1). |
 | **GlossaryTerm** | `term` (`term-*` id), `children` | Popover linking a shown term to its GLOSSARY entry; term spelling must match GLOSSARY exactly. |
-| **Dialog** *(amended)* | `open`, `onClose`, `title`, `children`, `footer?`, `variant?` (`center`\|`drawer`), `dismissOnBackdrop?` | The worklist **CRUD-editor** container (Add flow, edit forms, import wizard) and the base for ConfirmDialog. Focus-trapped, Esc-to-close, backdrop-dismiss, restores focus on close; portal + `--scrim` backdrop + `--shadow-1`. **Amended 2026-07-10 (Holdings page-build §9-2).** |
+| **Dialog** *(amended)* | `open`, `onClose`, `title`, `children`, `footer?`, `variant?` (`center`\|`drawer`), `size?` (`md`\|`lg`\|`xl`), `dismissOnBackdrop?` | The worklist **CRUD-editor** container (Add flow, edit forms, import wizard) and the base for ConfirmDialog. Focus-trapped, Esc-to-close, backdrop-dismiss, restores focus on close; portal + `--scrim` backdrop + `--shadow-1`. **`size`** sets the centered panel width — `md` (32rem, default), `lg` (`min(46rem,96vw)`, two-column forms), `xl` (`min(64rem,96vw)`, wide review grids); all clamp to the viewport so they only widen on desktop. **Amended 2026-07-10 (Holdings page-build §9-2; `size` added §9-29).** |
 | **ConfirmDialog** *(amended)* | `open`, `title`, `message`, `confirmLabel?`, `destructive?`, `requirePin?`, `onCancel`, `onConfirm` | Confirm overlay for destructive actions; **reuses Dialog**. `requirePin` gates confirmation on a masked PIN (purge-deleted, D-002/D-049). **Amended 2026-07-10 (Holdings page-build §9-5).** |
 | **RowMenu** *(amended)* | `items` (`{label,onClick,danger?,disabled?}`), `aria-label?` | Compact per-row overflow menu (⋯) for **worklist row actions** — details / edit / delete / tags. Closes on outside-click / Esc. Keeps data-dense tables narrow (§3 worklist note). **Amended 2026-07-10 (Holdings page-build §9-22).** |
 

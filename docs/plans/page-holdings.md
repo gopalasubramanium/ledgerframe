@@ -502,6 +502,67 @@ reshaped. **No engine changes.**
   - **Worklist rule** added to `TEMPLATE-page-build.md` §4/§7: every table's plan
     states its dataset-size assumption and where sort/filter execute.
 
+### Final-walk findings #7 (2026-07-10, owner) — round-trip bug + layout
+
+- **§9-27 — CSV round-trip bug FIXED (D-095).** *Diagnosis:* the Holdings
+  **Export** produced a holdings **snapshot** (`symbol,name,asset_class,currency,
+  quantity,price,market_value_base,…`) while **Import** ingests a transactions
+  **ledger** (`date,symbol,type,…`). Every row failed on the missing `type`/`date`,
+  and a failed record never carried `symbol` → the grid showed "(none)". A snapshot
+  **cannot** round-trip into a ledger without fabricating trade dates (a Product-
+  Guarantee violation), so the honest lossless pair is a **transactions export ⇄
+  the transactions import**. *Fix:*
+  - New **`GET /portfolio/transactions.csv`** (server-side, full dataset, D-050) —
+    columns are **exactly** `IMPORT_COLUMNS`, so it re-imports with zero errors /
+    zero fixes. Wired to the Transactions ledger's **Export**. Contract +1 → **126**.
+  - The importer now recognises a **holdings snapshot** and returns **one honest
+    `format_error`** ("…a holdings snapshot (a positions report), not a transactions
+    file. Use the Transactions Export…") instead of 14 per-cell errors; the dialog
+    shows a banner, no grid, no Commit.
+  - **Permanent round-trip test** (`tests/integration/test_csv_roundtrip.py`):
+    export → import-preview → `errors == 0`, all rows ok, dates/types/symbols
+    parsed; plus the snapshot-guidance guard. **Rule recorded** here + in
+    `TEMPLATE-page-build.md` §7 (D-095): any surface that both exports and imports a
+    format must have a lossless round-trip test.
+- **§9-28 — Import review grid responsive (item 1b).** The review grid now uses
+  content-typed responsive columns (date/type fixed-narrow; symbol wide+flexible;
+  qty/price flex; ccy/status/action compact), fills the dialog, and the dialog is
+  **`size="xl"`** (`min(64rem, 96vw)`) — usable at 1366px with no horizontal scroll
+  for the core columns.
+- **§9-29 — Add dialog fits without scrolling (item 2).** `Dialog` gains a **`size`**
+  prop (`md`/`lg`/`xl`, all viewport-clamped) — a §5.4 amendment. The Add form is
+  **`size="lg"`** with a **two-column** field grid at desktop (Account+Instrument,
+  Type full-width, then Qty/Price and Date/Currency paired; the D-091 optional
+  fields flow two-up), single column on narrow. Tighter vertical rhythm.
+- **§9-30 — Holdings table fits 1366px (item 3).** Symbol+Name **merged** into one
+  identity cell (symbol bold, name secondary); **Class** → compact chip; **Source**
+  → the `StalenessChip` + tooltip pattern (no wide text column); Tags stay in the
+  row menu; numbers keep tabular alignment. **Compact density** tightened one step
+  (`--cell-pad`/`--row-height`, tokens.css) — a density amendment.
+
+### Post-import + polish findings #8 (2026-07-10, owner)
+
+- **§9-31 — Import visibility (item 1).** *Not a persistence bug* — the commit
+  path saves + rebuilds correctly (verified). Imported rows are typically
+  **historical-dated**, so they sink below the ledger's most-recent-first window
+  and looked "unchanged". Fix: the ledger endpoint gains an **`added`**
+  (insertion-order / `Transaction.id`) sort; **post-commit the ledger jumps to
+  "recently added" (first page)** and the toast reads *"Imported N — showing most
+  recently added"*, so the import is always evident. Backend + frontend tests.
+- **§9-32 — StalenessChip (item 2).** Two bugs: `provenanceCell` passed the
+  provenance **label** as `asOf` → *"Stale · as of Stale cache"* (double-read), and
+  the chip was too wide for a table cell. Fix: the holdings response now carries a
+  real **`price_ts`** (as-of ISO, null when unpriced — never fabricated); the chip
+  reads compact **"Stale · 08 Jul"** with the full date in the tooltip, and just
+  **"Stale"** when there is no real timestamp (no "as of <label>"). `white-space:
+  nowrap`, no horizontal scroll.
+- **§9-33 — Table height (item 3).** `DataTable` (`.lf-table-wrap`) now **caps at
+  `--table-max-h` (`60vh`) and scrolls internally** (sticky header stays), so
+  neither table grows the page unboundedly. Recorded as the default in
+  `TEMPLATE-page-build.md` §4.
+- **§9-34 — Picker tile order (item 4).** **"Other"** moved to the **last** tile,
+  after Insurance — the escape valve reads sensibly at the end.
+
 **Sign-off:** all §9 items resolved (2026-07-10). Build proceeds per §8; the
 Phase 0a component amendment pauses at `/kitchen-sink` for the owner's
 ratification look before Phase 1 assembly.
