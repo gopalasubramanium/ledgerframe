@@ -1,12 +1,12 @@
 # page-portfolio.md — Portfolio (analytics) page build plan
 
-**Status: Batch 13 NDs RATIFIED + Phase-0 VERIFICATION DONE (2026-07-11) — STOPPED for owner
-sign-off before Phase-0a/1.** Instantiated from `TEMPLATE-page-build.md` (latest — incl. the
-Phase-3a scripted pre-pass step). Every section is derived from the specs with a section
-reference; nothing here is invented. **§9 records the ratified ND resolutions + verification
-findings; §10 is the Phase-0 verification report + the remaining owner sign-off items.** No
-backend delta was needed (the ND-12 conditional did not trigger). **Do not begin Phase-0a/1
-until the owner signs off §10.**
+**Status: Phase-0a RATIFIED · Phase 1+2 built · Phase-3a scripted pre-pass GREEN (2026-07-11) —
+STOPPED for the owner's Phase-3b acceptance walk.** Batch-13 NDs ratified (§9/§11); Phase-0
+verification (§10); ND-4 backend delta shipped; Phase-0a amendments (PriceChart comparison mode +
+AllocationDonut footnote) ratified. `/portfolio` assembled + wired + nav-built; tests + overflow
+suite extended; the pre-pass caught + fixed 3 real layout defects (grid min-width, unrounded
+values, rail column width) and now runs 0-overflow at 320/375/900/1366 × both themes, 0 console
+errors. Commits `751f9bf`→`3cb619e`. **Next: the owner's live Phase-3b walk (judgment items).**
 
 Portfolio is the second **overview-template** page (Net worth/Home are the others) and the
 **analytics** half of the Holdings↔Portfolio split (D-023). Holdings is DONE; this page is its
