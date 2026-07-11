@@ -733,6 +733,13 @@ instrument picker. None changes an earlier decision.
 | R-13 | Per-lane provider priority editing, only on demonstrated need | D-072 |
 | R-14 | **FD accrued-interest valuation — first post-v2 feature; plan file must cover day-count conventions, compounding variants, maturity handling, and provenance labelling of calculated values** | D-073 |
 | R-15 | User-configurable review thresholds (defaults set in D-084) | D-084 |
+| R-16 | Ticker scroll speed as a per-device display setting | D-047-amend, D-078 |
+| R-17 | Ticker index entries link to Markets (when the Markets page ships) | D-047-amend, D-098 |
+| R-18 | D-101 themed scrollbar-thumb polish | D-101 |
+| R-19 | Customisable Home — movable/resizable widgets, user-selected set (**amends D-046**; per-widget summary-reader gate) | D-046 (amend) |
+| R-20 | External widget API — scoped long-lived keys for read-only summary widgets (read-only only; D-001 LAN/VPN posture) | D-069 |
+| R-21 | External-connectivity adaptors (FIX, ISO 20022) as read-only provider lanes (no order flow; honest stale under no-egress) | Product Guarantee 1 & 5 |
+| R-21a | MCP surface — AI-tool integration, evaluate in the AI-surfaces milestone (not a market-data lane) | D-067, D-068 |
 
 **v2.1 "accounting precision" theme (D-088).** R-6 (`spec` specific-lot cost
 basis), R-8 (historical FX series), and R-14 (FD accrued-interest valuation) are
