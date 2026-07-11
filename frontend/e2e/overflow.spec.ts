@@ -42,6 +42,27 @@ for (const theme of THEMES) {
   }
 }
 
+// Content-left offset is OWNED by the shell (page-portfolio §12-1): every built content page
+// starts at the same left inset from the chrome — no page sets its own root padding. At ≤1366
+// the content box is narrower than any page's max-width, so no page centering shifts the left.
+test("built pages share one content-left inset (shell owns the padding)", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  const lefts: number[] = [];
+  for (const hash of ["#/holdings", "#/portfolio", "#/instrument/AAPL"]) {
+    await page.goto(`/${hash}`);
+    await page.waitForSelector(".lf-shell__content > *", { timeout: 15_000 });
+    lefts.push(
+      await page.evaluate(() => {
+        const first = document.querySelector(".lf-shell__content")?.firstElementChild as HTMLElement | null;
+        return first ? Math.round(first.getBoundingClientRect().left) : -1;
+      }),
+    );
+  }
+  // All equal (within 1px) and non-zero (there IS a gap from the chrome).
+  expect(Math.max(...lefts) - Math.min(...lefts), `content-left offsets: ${lefts.join(",")}`).toBeLessThanOrEqual(1);
+  expect(Math.min(...lefts), "content is inset from the chrome, not flush").toBeGreaterThan(4);
+});
+
 // First-run checklist overlay (D-045). Opened from the kitchen-sink specimen (the shell
 // keeps it hidden without a backend); the overlay is fixed inset:0, so `.lf-firstrun`
 // scrollWidth vs clientWidth measures the overlay's own horizontal overflow, independent

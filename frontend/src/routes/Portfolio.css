@@ -11,40 +11,59 @@
   min-width: 0;
 }
 
+/* Main stat rail (§12-2, PROPOSED): equal-size COMPACT tiles, responsive 6×1 → 3×2 → 2×3. */
 .pf__rail {
   display: grid;
-  /* Min column wide enough for a large money value at the 28px stat size, so tiles never
-     force text overflow at any breakpoint (money can reach ~13rem). */
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: var(--space-3);
 }
+@media (max-width: 72rem) {
+  .pf__rail {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .pf__rail {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* The concentration / risk rails have few items → auto-fit (not the fixed 6-col rail). */
 .pf__rail--tight {
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
 }
-/* Grid children MUST be allowed to shrink below their intrinsic / min widths, or a wide
-   TrendStat (its own min-width: 12rem) forces extra columns and overflows narrow viewports. */
+/* Grid children MUST be allowed to shrink below their intrinsic / min widths. */
 .pf__rail > *,
 .pf__donuts > *,
 .pf__movers > *,
 .pf__costs > * {
   min-width: 0;
 }
+/* Compact: smaller value + padding so all 6 tiles fit a row and money never overflows. */
 .pf__rail .lf-stat {
   min-width: 0;
+  padding: var(--space-3);
+}
+.pf__rail .lf-stat__value {
+  font-size: var(--font-size-20);
+  line-height: var(--line-20);
 }
 .pf__railtile {
   position: relative;
   display: flex;
   flex-direction: column;
 }
+/* Realised tile: the Report link is the D-100 header-arrow, INSIDE the tile, top-right. */
+.pf__railtile .pf__tilelink {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
+}
 .pf__tilelink,
 .pf__link {
   color: var(--accent);
   font-size: var(--font-size-13);
   text-decoration: none;
-}
-.pf__tilelink {
-  margin-top: var(--space-1);
 }
 .pf__tilelink:hover,
 .pf__link:hover {
@@ -149,9 +168,18 @@
   color: var(--loss);
 }
 
-/* Wide content (the attribution table) scrolls inside its own container, never the page. */
+/* Attribution table (§12-5, D-101): wide content scrolls horizontally inside its own
+   container (never the page); rows scroll vertically under a capped height with the header
+   pinned OUTSIDE the scroll (sticky), like the Holdings tables. */
 .pf__scroll {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: var(--table-max-h, 60vh);
+}
+.pf__attr thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-raised);
+  z-index: 1;
 }
 .pf__attr {
   width: 100%;

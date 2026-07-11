@@ -243,8 +243,19 @@ Notes:
   **ADR documenting the single-dependency exception** (D-053). This is the only
   sanctioned path back to a charting dependency.
 - Charts use the semantic palette (§2.1): gain/loss green/red only where a value
-  is a gain/loss; allocation/category segments use the slate ramp + accent, not
-  a rainbow.
+  is a gain/loss.
+- **Categorical identity palette (AMENDMENT — PROPOSED 2026-07-11, page-portfolio §12-6).**
+  Segment/category identity is a **distinct axis** from semantic colour: a tokenized
+  **`--cat-1..8`** set — a fixed-order 8-hue palette (blue · aqua · yellow · green · violet ·
+  red · magenta · orange), **assigned in order, never cycled beyond the set** (a 9th identity
+  folds into "Other" — follow-up). **Colour-blind-aware and validated** with the dataviz
+  validator: light worst-adjacent CVD ΔE 24.2; dark = the same hues stepped for the dark surface
+  (ΔE 10.3, floor band — legal because identity is carried **with the always-present legend
+  labels** + segment relief). Defined for **light + dark**; **high-contrast inherits** the set
+  (the contrast-boosted legend provides relief). **Semantic gain/loss/attention stay reserved for
+  meaning** and are never reused as a category hue. Applied to all AllocationDonut segments;
+  specimen (palette board + donut, ratify across all three modes) at `/kitchen-sink`. Supersedes
+  the retired 5-tone slate-ramp segment palette.
 
 ---
 

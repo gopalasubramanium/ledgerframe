@@ -79,6 +79,11 @@ function metricDisplay(m: StatMetric | undefined): string {
 function segmentsOf(map: Record<string, number> | undefined): Segment[] {
   return Object.entries(map ?? {}).map(([label, value]) => ({ label, value: String(value) }));
 }
+// Map raw served keys → SERVED display labels (D-005 + copy hygiene, §12-3). Never render an
+// internal enum key (`fixed_deposit`, `equity`, …) in a legend — same source as Holdings' chips.
+function labeledSegments(map: Record<string, number> | undefined, labelFn: (k: string) => string): Segment[] {
+  return Object.entries(map ?? {}).map(([k, value]) => ({ label: labelFn(k), value: String(value) }));
+}
 
 export function Portfolio() {
   const labelFor = useLabelFor();
@@ -239,7 +244,7 @@ export function Portfolio() {
           <section className="pf__card lf-card">
             <h2 className="pf__h2">Allocation</h2>
             <div className="lf-card__body pf__donuts">
-              <DonutBlock title="By class" segments={segmentsOf(summary?.allocation_by_class)} footnote={liabFootnote} />
+              <DonutBlock title="By class" segments={labeledSegments(summary?.allocation_by_class, (k) => labelFor("asset_class", k))} footnote={liabFootnote} />
               <DonutBlock title="By sector" segments={segmentsOf(summary?.allocation_by_sector)} footnote={liabFootnote} />
               <DonutBlock title="By currency" segments={segmentsOf(summary?.allocation_by_currency)} footnote={liabFootnote} />
               <DonutBlock
@@ -364,7 +369,8 @@ function RealisedTile({ realised }: { realised: RealisedResp | null }) {
   return (
     <div className="pf__railtile">
       <TrendStat label={label} value={value} delta={realised?.base_realised_total_current_fx} />
-      <Link className="pf__tilelink" to="/reports">Report ↗</Link>
+      {/* D-100 header-arrow, inside the tile, to the full report on Reports. */}
+      <Link className="pf__tilelink" to="/reports" aria-label="Realised P/L report" title="Realised P/L report">↗</Link>
     </div>
   );
 }

@@ -55,7 +55,7 @@ export function AllocationDonut({
               cy="50"
               r="38"
               fill="none"
-              className={`lf-seg--${i % 5}`}
+              className={`lf-seg--${i % 8}`}
               strokeWidth="16"
               pathLength={100}
               strokeDasharray={`${pct} ${100 - pct}`}
@@ -73,7 +73,7 @@ export function AllocationDonut({
               className={`lf-donut__row${onSegmentClick ? " lf-donut__row--clickable" : ""}`}
               onClick={onSegmentClick ? () => onSegmentClick(seg) : undefined}
             >
-              <span className={`lf-donut__swatch lf-seg--${i % 5}`} aria-hidden="true" />
+              <span className={`lf-donut__swatch lf-seg--${i % 8}`} aria-hidden="true" />
               <span className="lf-donut__label">{seg.label}</span>
               <span className="lf-donut__pct">{formatPercent(String(pct))}</span>
             </li>

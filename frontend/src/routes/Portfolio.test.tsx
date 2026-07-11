@@ -135,6 +135,17 @@ test("sector donut renders the served D-082 'Not sector-classified (non-equity)'
   expect(await screen.findByText("Not sector-classified (non-equity)")).toBeTruthy();
 });
 
+test("no donut legend label is a raw internal enum key (D-005 + copy hygiene, §12-3)", async () => {
+  const { container } = renderPage();
+  await screen.findByText("Allocation");
+  await waitFor(() => expect(container.querySelectorAll(".lf-donut__label").length).toBeGreaterThan(0));
+  const RAW_KEY = /^[a-z]+(_[a-z]+)*$/; // lowercase_with_underscores → an internal key, never a UI label
+  const bad = Array.from(container.querySelectorAll(".lf-donut__label"))
+    .map((el) => (el.textContent ?? "").trim())
+    .filter((t) => RAW_KEY.test(t));
+  expect(bad, `raw enum keys leaked into legend labels: ${bad.join(", ")}`).toEqual([]);
+});
+
 test("attribution shows an explicit residual row + headline that reconcile (ND-7)", async () => {
   renderPage();
   expect(await screen.findByText(/Residual \(income, realised, closed\)/)).toBeTruthy();

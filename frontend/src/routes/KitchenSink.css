@@ -145,3 +145,17 @@
 }
 
 .ks__stat-rail { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+
+/* Categorical palette board (§4 amendment specimen, PROPOSED 2026-07-11). */
+.ks__palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-13);
+}
+.ks__paletterow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+}

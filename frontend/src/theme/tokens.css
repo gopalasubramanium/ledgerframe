@@ -48,6 +48,19 @@
      unsupported, so ambient content is unreadable regardless of blur. */
   --lock-scrim: rgba(15, 23, 42, 0.55);
   --lock-scrim-opaque: rgba(15, 23, 42, 0.95);
+  /* Categorical data-viz palette (DESIGN-SYSTEM §4 amendment, 2026-07-11 — page-portfolio §12-6).
+   * A distinct axis from semantic gain/loss/attention: identity, assigned in FIXED order, never
+   * cycled beyond the set. Colour-blind-aware (validated: worst adjacent CVD ΔE 24.2 light; low-
+   * contrast slots rely on the always-present legend labels — the relief rule). Dark = the same
+   * eight hues stepped for the dark surface. */
+  --cat-1: #2a78d6; /* blue */
+  --cat-2: #1baf7a; /* aqua */
+  --cat-3: #eda100; /* yellow */
+  --cat-4: #008300; /* green */
+  --cat-5: #4a3aa7; /* violet */
+  --cat-6: #e34948; /* red */
+  --cat-7: #e87ba4; /* magenta */
+  --cat-8: #eb6834; /* orange */
 }
 
 :root[data-theme="dark"] {
@@ -74,6 +87,17 @@
   /* LockScreen dim (D-002) — see the light block for the pairing rationale. */
   --lock-scrim: rgba(0, 0, 0, 0.6);
   --lock-scrim-opaque: rgba(0, 0, 0, 0.96);
+  /* Categorical palette — the same eight hues stepped for the dark surface (validated: all 8
+   * >= 3:1 on the dark surface; worst adjacent CVD ΔE 10.3, the floor band, legal with the
+   * always-present legend + segment gaps as secondary encoding). High-contrast inherits this set. */
+  --cat-1: #3987e5;
+  --cat-2: #199e70;
+  --cat-3: #c98500;
+  --cat-4: #008300;
+  --cat-5: #9085e9;
+  --cat-6: #e66767;
+  --cat-7: #d55181;
+  --cat-8: #d95926;
 }
 
 /* High contrast (§7, D-078): boost border + secondary/tertiary text contrast.

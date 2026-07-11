@@ -17,6 +17,9 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: auto;
+  /* The gap from the sidebar/chrome is OWNED by the shell (page-portfolio §12-1) — every
+     in-shell page inherits the same content padding; pages never set their own root padding. */
+  padding: var(--space-7) var(--space-6) var(--space-12);
 }
 /* Global ticker footer (D-047 amendment, §11-17): fixed at the bottom of the main
    column (always visible; content above scrolls and reserves this space). Height is a

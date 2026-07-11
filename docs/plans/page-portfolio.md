@@ -453,3 +453,48 @@ contract regenerated, suite green). Sequence next: Phase-0a specimens, then PAUS
    Ratify at `/kitchen-sink`.
 
 **One open owner item before Phase 1 (beyond Phase-0a ratification): the ⚠ TWR flag above (ND-3a).**
+
+---
+
+## 12. PHASE-3B WALK — batch 1 (owner, 2026-07-11)
+
+Owner's live walk. Each finding recorded, fixed, pre-pass re-run, then owner re-verifies.
+
+- **§12-1 — Content had no gap from the sidebar (template-level BUG, FIXED).** `/portfolio`'s `.pf`
+  set no root padding while `.hold`/`.ins` each set their own → Portfolio's content sat flush against
+  the chrome. Moved the content padding to the **shared `.lf-shell__content`** (owned by the shell,
+  not per page); removed it from `.hold`/`.ins` (their max-width/centering kept). **Overflow-suite
+  check added:** all built content pages (`/holdings`, `/portfolio`, `/instrument/:sym`) share **one
+  content-left inset** (equal, non-zero) — catches any page that drops or doubles the gap.
+- **§12-2 — Stat rail: compact equal tiles, responsive (PROPOSED, ratify at re-verify).** Rail is a
+  fixed 6-col grid (6×1) → 3-col (≤72rem) → 2-col (≤40rem); tiles compacted (smaller value size +
+  padding) so all six fit a row and money never overflows. **TWR is a normal grid tile** (no orphan
+  row). The **Realised P/L tile's Report link is now the D-100 header-arrow** (↗) inside the tile,
+  top-right, linking to Reports.
+- **§12-3 — Allocation legend rendered raw enum keys (D-005 + copy-hygiene BUG, FIXED).** The class
+  donut showed `fixed_deposit`/`equity`/`etf`. Class labels now resolve through the **served
+  `labelFor("asset_class", …)`** — the same source Holdings' class chips use. Audited all four donuts
+  (sector/currency/tag were already display strings) + the attribution **Class** column (already
+  mapped). **Test added:** no donut legend label matches an internal key pattern
+  (`^[a-z]+(_[a-z]+)*$`).
+- **§12-4 — D-082 bucket label: OWNER DECISION PENDING.** Options: keep **"Not sector-classified
+  (non-equity)"** as-is · "No sector (non-equity)" · "Sector Unavailable". **Kept as-is** (no change)
+  pending the owner's pick at re-verify. If changed: it's a **served** label (backend-side change +
+  D-082 amendment in DECISIONS.md + GLOSSARY update; contract untouched — label is data).
+- **§12-5 — Attribution table D-101 (FIXED).** The table now scrolls inside its own container with a
+  **`--table-max-h` cap** and the **header pinned (sticky) outside the row scroll**, like the Holdings
+  tables. (Horizontal scroll for the wide case was already in place.)
+- **§12-6 — Categorical data-viz palette (DESIGN-SYSTEM §4 amendment, PROPOSED).** Replaced the
+  monochrome slate-ramp segment palette with a **tokenized categorical identity palette** —
+  `--cat-1..8`, a fixed-order 8-hue set (blue/aqua/yellow/green/violet/red/magenta/orange),
+  **colour-blind-aware and VALIDATED** with the dataviz validator (light: worst adjacent CVD ΔE 24.2;
+  dark: the same hues stepped for the dark surface, ΔE 10.3 floor band — legal with the always-present
+  legend + segment relief). **Semantic gain/loss/attention stay reserved for meaning**; categorical
+  identity is a distinct axis. Applied to all four donuts (`.lf-seg--0..7`, cycle of 8). Light + dark
+  defined; **high-contrast inherits** the validated set (identity carried by the contrast-boosted
+  legend labels). **Kitchen-sink specimen:** the 8-swatch palette board + an 8-identity donut; ratify
+  by toggling theme + contrast. *(Caveat: >8 identities currently cycle; a proper "Other" fold is a
+  follow-up — allocation dimensions rarely exceed 8.)*
+
+**Checks after batch 1:** frontend **112 vitest + 41 Playwright** (incl. content-left-offset +
+raw-key guards) + drift + build green. Live pre-pass re-run green (below).

@@ -3,7 +3,7 @@
 .hold {
   max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-7) var(--space-6) var(--space-12);
+  /* Root padding is owned by the shell (.lf-shell__content) — not per page (§12-1). */
   display: flex;
   flex-direction: column;
   gap: var(--space-7);

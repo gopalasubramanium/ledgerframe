@@ -433,9 +433,32 @@ export function KitchenSink() {
       {/* ---------------------------------------------------------------- */}
       <Section
         title="Data display · charts — house SVG only (§5.2 / §4, D-053)"
-        note="No charting dependency. Segments use the slate ramp + accent; gain/loss red/green only where a value is a gain/loss."
+        note="No charting dependency. Segments use the CATEGORICAL palette (§4 amendment, identity axis); gain/loss red/green stay reserved for meaning only."
       >
         <div className="ks__row">
+          <Specimen label="Categorical palette (§4 AMENDMENT, PROPOSED 2026-07-11) — CVD-aware identity set, distinct from gain/loss. Toggle theme + contrast to ratify all three modes.">
+            <div className="ks__palette">
+              {["blue", "aqua", "yellow", "green", "violet", "red", "magenta", "orange"].map((name, i) => (
+                <span key={name} className="ks__paletterow">
+                  <span className={`lf-donut__swatch lf-seg--${i}`} aria-hidden="true" /> {i + 1} · {name}
+                </span>
+              ))}
+            </div>
+          </Specimen>
+          <Specimen label="AllocationDonut · categorical palette (8 identities in fixed order)">
+            <AllocationDonut
+              segments={[
+                { label: "Equities & ETFs", value: "45000" },
+                { label: "Cash & deposits", value: "30000" },
+                { label: "Bonds", value: "20000" },
+                { label: "Property", value: "80000" },
+                { label: "Crypto", value: "12000" },
+                { label: "Retirement", value: "25000" },
+                { label: "Private", value: "8000" },
+                { label: "Commodities", value: "6000" },
+              ]}
+            />
+          </Specimen>
           <Specimen label="AllocationDonut · by class">
             <AllocationDonut segments={ALLOCATION_BY_CLASS} />
           </Specimen>

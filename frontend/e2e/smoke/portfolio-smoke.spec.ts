@@ -47,19 +47,23 @@ test.describe.serial("portfolio pre-pass (live)", () => {
 
     // --- PART 4: performance chart + controls (benchmark, window, include_manual) -----------
     await expect(page.locator(".lf-pricechart__cmp").first()).toBeVisible(); // shared-axis benchmark line
-    console.log("PART 4a — window select:", await page.getByRole("combobox", { name: "Time window" }).count());
+    // Window + include_manual on the default benchmark (SPY, which has demo history) → line stays.
     await page.getByRole("combobox", { name: "Time window" }).selectOption("3M");
-    await page.waitForTimeout(400);
-    console.log("PART 4b — benchmark select:", await page.getByRole("combobox", { name: "Benchmark" }).count());
-    await page.getByRole("combobox", { name: "Benchmark" }).selectOption("QQQ");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(500);
     const sw = page.getByRole("switch", { name: "Include manual assets" });
     await sw.scrollIntoViewIfNeeded();
     await sw.click(); // toggle on
     await expect(sw).toHaveAttribute("aria-checked", "true"); // the toggle actually flipped (functional)
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(500);
     await expect(page.locator(".lf-pricechart__line").first()).toBeVisible(); // portfolio line still drawn
-    console.log("PART 4 — chart controls (window/benchmark/include_manual) exercised");
+    // Switching benchmark to one WITHOUT demo history must degrade HONESTLY (line OR EmptyState),
+    // never a crash or a fabricated curve (Guarantee 3).
+    await page.getByRole("combobox", { name: "Benchmark" }).selectOption("QQQ");
+    await page.waitForTimeout(500);
+    const perfCard = page.locator(".pf__card").filter({ hasText: "Performance" });
+    const chartOk = await perfCard.locator(".lf-pricechart__line, .lf-empty").count();
+    console.log("PART 4 — after benchmark switch, chart shows line-or-honest-empty:", chartOk > 0);
+    expect(chartOk, "chart degrades honestly on a no-history benchmark").toBeGreaterThan(0);
 
     // --- PART 5: attribution residual + concentration HHI ----------------------------------
     await expect(page.getByText(/Residual \(income, realised, closed\)/)).toBeVisible();
