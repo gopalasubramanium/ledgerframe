@@ -253,7 +253,7 @@ test("a real routed page renders inside the shell with chrome around it", async 
 });
 
 test("an unbuilt route lands on the honest NotBuilt fallback inside the shell", async () => {
-  renderRoutesAt("/net-worth");
+  renderRoutesAt("/accounts");
   expect(document.querySelector(".lf-topbar")).not.toBeNull();
   expect(await screen.findByText(/isn't built yet/)).toBeTruthy();
 });

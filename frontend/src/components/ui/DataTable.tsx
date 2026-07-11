@@ -79,7 +79,7 @@ function renderCell<R>(col: Column<R>, row: R): ReactNode {
 
 export function DataTable<R>({
   columns,
-  rows,
+  rows = [],
   sort,
   onSort,
   filter,

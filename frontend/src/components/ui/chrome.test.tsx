@@ -37,17 +37,18 @@ test("Sidebar shows only built pages as entries; showAll reveals the full skelet
       <Sidebar />
     </MemoryRouter>,
   );
-  // Holdings + Portfolio are built; Net worth is not yet — so unbuilt pages are hidden by default.
+  // Net worth + Holdings + Portfolio are built; Accounts is not yet — unbuilt pages hidden by default.
+  expect(screen.getByRole("link", { name: "Net worth" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Holdings" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Portfolio" })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: "Net worth" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Accounts" })).toBeNull();
 
   rerender(
     <MemoryRouter initialEntries={["/holdings"]}>
       <Sidebar showAll />
     </MemoryRouter>,
   );
-  expect(screen.getByRole("link", { name: "Net worth" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Accounts" })).toBeTruthy();
 });
 
 test("Sidebar off-canvas (D-102): open shows scrim; Esc and backdrop click dismiss it", async () => {

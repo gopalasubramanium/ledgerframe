@@ -200,7 +200,7 @@ export function NetWorth() {
         <div className="lf-card__body">
           <CardBody data={liquidity} lines={4} onRetry={reload}>
             {(l) =>
-              l.rungs.length > 0 ? (
+              (l.rungs ?? []).length > 0 ? (
                 <>
                   <DataTable
                     columns={[

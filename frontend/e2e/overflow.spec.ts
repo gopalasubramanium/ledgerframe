@@ -9,6 +9,7 @@ import { test, expect } from "@playwright/test";
 const WIDTHS = [320, 375, 900, 1366];
 const ROUTES = [
   { name: "home (overview)", hash: "#/" },
+  { name: "net worth (overview)", hash: "#/net-worth" },
   { name: "holdings (worklist)", hash: "#/holdings" },
   { name: "portfolio (overview)", hash: "#/portfolio" },
   { name: "instrument (entity-detail)", hash: "#/instrument/AAPL" },
@@ -48,7 +49,7 @@ for (const theme of THEMES) {
 test("built pages share one content-left inset (shell owns the padding)", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   const lefts: number[] = [];
-  for (const hash of ["#/holdings", "#/portfolio", "#/instrument/AAPL"]) {
+  for (const hash of ["#/net-worth", "#/holdings", "#/portfolio", "#/instrument/AAPL"]) {
     await page.goto(`/${hash}`);
     await page.waitForSelector(".lf-shell__content > *", { timeout: 15_000 });
     lefts.push(
