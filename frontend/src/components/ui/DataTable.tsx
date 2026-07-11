@@ -135,7 +135,9 @@ export function DataTable<R>({
           scrollbar/gutter sits inside the border below the toolbar. */}
       <div className="lf-table__scroll">
       <table className="lf-table">
-        {caption && <caption className="lf-empty__reason">{caption}</caption>}
+        {/* Kept for screen readers but visually hidden — the enclosing titled card already names
+            the table, so a visible caption is a duplicate title (page-pricing-health §12ph1-3). */}
+        {caption && <caption className="lf-visually-hidden">{caption}</caption>}
         <thead>
           <tr>
             {columns.map((col) => {

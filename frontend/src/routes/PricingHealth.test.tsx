@@ -46,6 +46,14 @@ vi.mock("../api/client", async (orig) => ({
   apiGet: vi.fn(async () => ({ ok: false, error: "no refdata in test" })),
 }));
 
+// The shared stale-count store (§12ph1-1) — the SAME source the StaleBanner reads. Return a value
+// distinct from the holdings' own is_stale count so the test proves the footnote renders the shared
+// value, never an independently-computed one.
+vi.mock("../state/staleCount", () => ({
+  useStaleCount: () => ({ count: 3, loaded: true }),
+  invalidateStaleCount: vi.fn(),
+}));
+
 import { PricingHealth } from "./PricingHealth";
 import { getIdentifierDuplicates, getNoEgress } from "../api/pricing-health";
 
@@ -78,12 +86,13 @@ test("per-holding diagnostics render with served status + confidence chips", asy
   });
 });
 
-test("banner-reconciliation invariant (ND-1): page stale count == count of is_stale rows", async () => {
+test("footnote renders the SHARED stale count, not its own (§12ph1-1)", async () => {
   renderPage();
-  // Two mocked holdings have is_stale:true → the page's own count must be 2 (what
-  // /portfolio/summary.stale_count — the StaleBanner's source — also derives from value_portfolio).
+  // The shared store (which the StaleBanner also reads) returns 3; the mocked holdings have 2
+  // is_stale rows. The footnote must show 3 — the shared/banner value — never the 2 it could compute
+  // itself, so it can't claim "matches the Stale banner" while displaying a different number.
   const el = await screen.findByTestId("ph-stale-count");
-  expect(el.textContent).toBe("2");
+  expect(el.textContent).toBe("3");
 });
 
 test("portfolio confidence card shows overall band + by-band table (ND-6, ratified components)", async () => {

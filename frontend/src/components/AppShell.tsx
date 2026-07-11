@@ -17,12 +17,12 @@ import { DisplayControls } from "./DisplayControls";
 import { fetchVersionCheck, setPin as apiSetPin, unlock as apiUnlock } from "../api/system";
 import {
   fetchFirstRunState,
-  fetchStaleSummary,
   fetchTickerQuotes,
   setDataProvider,
   updateSetting,
 } from "../api/chrome";
 import type { TickerQuote } from "../api/chrome";
+import { useStaleCount } from "../state/staleCount";
 
 // Each first-run step links to its Settings home (D-045). Settings isn't built yet, so
 // the links land on the honest NotBuilt fallback (F-2) — one route for all four for now.
@@ -54,7 +54,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Consumed status summaries + settings-derived state.
   const [timezone, setTimezone] = useState("UTC");
   const [demo, setDemo] = useState(false);
-  const [staleCount, setStaleCount] = useState(0);
+  // Stale count comes from the ONE shared query (page-pricing-health §12ph1-1) — the same value the
+  // Pricing Health footnote reads, so the two can never disagree. Poll + invalidate-on-refresh.
+  const { count: staleCount } = useStaleCount();
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [ticker, setTicker] = useState<TickerQuote[]>([]);
 
@@ -90,7 +92,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       setProviders(s.providers);
       setFirstRunComplete(s.complete);
     });
-    fetchStaleSummary().then((s) => alive && setStaleCount(s.stale_count));
     fetchVersionCheck().then((v) => {
       if (alive && v?.update_available) setUpdateVersion(v.latest);
     });

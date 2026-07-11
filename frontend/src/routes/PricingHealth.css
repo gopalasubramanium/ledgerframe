@@ -80,12 +80,19 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Confidence card: overall tile + by-band table + status-count strip, wrapping responsively. */
+/* Confidence card: overall tile + by-band table + status-count strip. Equal-geometry grid that
+   FILLS the card width — no phantom auto-fit track leaving dead space on the right (§12ph1-2).
+   Three equal columns at laptop+, stacked below. The stale footnote spans the full width. */
 .ph__confgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
+}
+@media (min-width: 56rem) {
+  .ph__confgrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .ph__confgrid > * {
   min-width: 0;

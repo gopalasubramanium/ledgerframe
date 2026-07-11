@@ -40,6 +40,26 @@ if [ ! -x .venv/bin/uvicorn ]; then
   exit 1
 fi
 
+# 1a) Port pre-check — never silently half-start. If a port is already held, print the owning
+#     PID + a one-line kill hint and exit non-zero, so a stale server can't shadow this one.
+port_held() {  # $1 = port → echoes "PID/cmd" if held, empty otherwise
+  ss -ltnpH "sport = :$1" 2>/dev/null | grep -oE 'pid=[0-9]+' | head -1 | cut -d= -f2
+}
+blocked=0
+for port in 8321 5173; do
+  pid="$(port_held "$port")"
+  if [ -n "$pid" ]; then
+    cmd="$(ps -o comm= -p "$pid" 2>/dev/null || echo '?')"
+    echo "[dev] port $port already in use by PID $pid ($cmd)." >&2
+    echo "[dev]   kill it:  kill $pid   (or: kill \$(lsof -ti tcp:$port))" >&2
+    blocked=1
+  fi
+done
+if [ "$blocked" = 1 ]; then
+  echo "[dev] refusing to half-start — free the port(s) above and re-run." >&2
+  exit 1
+fi
+
 # 2) Start backend + frontend with prefixed logs; Ctrl+C (or any exit) stops both.
 PIDS=()
 cleanup() {

@@ -18,6 +18,7 @@ import {
 import type { Column } from "../components/ui";
 import type { ConfidenceBand, Entitlement, HealthStatus, ValuationMethod } from "../mocks/types";
 import { useLabelFor } from "../refdata/refdata-context";
+import { invalidateStaleCount, useStaleCount } from "../state/staleCount";
 import { RotateCw } from "../icons";
 import { formatMoney, formatPrice } from "../format/number";
 import {
@@ -54,6 +55,9 @@ export function PricingHealth() {
   const [data, setData] = useState<PricingHealthResp | null>();
   const [dups, setDups] = useState<DuplicatesResp | null>();
   const [noEgress, setNoEgress] = useState(false);
+  // The stale count is the ONE shared query the StaleBanner also reads (§12ph1-1) — the footnote
+  // renders THIS value, so "matches the Stale banner" is true by construction.
+  const { count: staleCount } = useStaleCount();
 
   const [refreshing, setRefreshing] = useState(false);
   const [detail, setDetail] = useState<PricingRow | null>(null); // Details dialog
@@ -91,6 +95,7 @@ export function PricingHealth() {
       tone: s.failed.length || s.skipped ? "warning" : undefined,
     });
     reload();
+    invalidateStaleCount(); // banner + footnote move together after a refresh (§12ph1-1)
   }, [noEgress, toast, reload]);
 
   const onRefreshHolding = useCallback(
@@ -105,6 +110,7 @@ export function PricingHealth() {
       } else if (r.ok) {
         toast.show({ message: `Refreshed ${row.label}.` });
         reload();
+        invalidateStaleCount();
       } else {
         toast.show({ message: `Refresh failed: ${r.error}`, tone: "warning" });
       }
@@ -119,6 +125,7 @@ export function PricingHealth() {
       toast.show({ message: `Source corrected for ${correcting.label}.` });
       setCorrecting(null);
       reload();
+      invalidateStaleCount();
     } else {
       toast.show({ message: `Couldn't set source: ${r.error}`, tone: "warning" });
     }
@@ -173,9 +180,10 @@ export function PricingHealth() {
         title="Pricing Health"
         subtitle="Provenance, confidence & routing — the honest “why is this number what it is”"
         actions={
-          <button type="button" className="lf-btn" onClick={onRefreshAll} disabled={refreshing || noEgress}
-            title={noEgress ? "No-egress is on — refresh makes no network calls" : "Refresh all shown prices"}>
-            <RotateCw aria-hidden="true" /> {refreshing ? "Refreshing…" : "Refresh all"}
+          <button type="button" className="lf-iconbtn lf-iconbtn--framed" onClick={onRefreshAll}
+            disabled={refreshing || noEgress} aria-busy={refreshing} aria-label="Refresh all prices"
+            title={noEgress ? "No-egress is on — refresh makes no network calls" : refreshing ? "Refreshing…" : "Refresh all prices"}>
+            <RotateCw aria-hidden="true" />
           </button>
         }
       />
@@ -221,11 +229,11 @@ export function PricingHealth() {
                     <span key={status} className={`ph__chip ph__chip--${statusTone(status)}`}>{status} · {n}</span>
                   ))}
                 </div>
-                {/* ND-1(a): the page's OWN is_stale count — reconciles with the global Stale banner
-                    (both derive from value_portfolio; the banner reads summary.stale_count). */}
+                {/* ND-1 (§12ph1-1): render the SHARED stale count the Stale banner also reads — so
+                    the claim is true by construction (never a stale, independently-fetched number). */}
                 <p className="ph__stale">
-                  <span data-testid="ph-stale-count">{d.holdings.filter((h) => h.is_stale).length}</span> of {d.holdings.length}
-                  {" "}prices stale — matches the <Link to="/pricing-health">Stale banner</Link> (same reader).
+                  <span data-testid="ph-stale-count">{staleCount}</span> of {d.holdings.length} prices stale — the
+                  same count the Stale banner shows (one shared reader).
                 </p>
               </div>
             )}

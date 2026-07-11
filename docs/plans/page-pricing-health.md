@@ -6,7 +6,7 @@ ratified parts suffice (no §5 amendment); `/pricing-health` assembled + routed 
 Reports-group page, Worklist template). The pre-pass drives the live page on seeded demo GREEN ×3 —
 14 diagnostics rows, **live banner↔page stale-count reconciliation** (ND-1), read-only routing chain +
 no priority config (D-072), correct-source MasterSelect, 0 overflow × both themes, 0 console errors.
-Build record: §11. **Next: the owner's live Phase-3b walk (judgment items).**
+Build record: §11; Phase-3b walk batch 1 in §12. **Next: the owner's re-verify of batch 1.**
 
 Pricing Health is the **first Reports-group page** and the canonical home for **provenance,
 confidence, and routing diagnostics** (D-038) — the honest "why is this number what it is" view. The
@@ -366,3 +366,56 @@ RESOLVED; Phases 0a/1/2/3a built (§11).**
 
 **Commits:** `60d2338` (§9 resolutions) · `635f1ce` (Phase 1+2) · Phase-3a close-out. **STOP — the
 Phase-3b acceptance walk is the owner's** (fail-first standard for any geometry fix, TEMPLATE §7/§8).
+
+---
+
+## 12. PHASE-3B WALK — batch 1 (owner, 2026-07-12)
+
+Recorded, fixed, pre-pass re-run green, awaiting owner re-verify. (Page NOT closed.)
+
+1. **§12ph1-1 — RECONCILIATION BUG (ND-1 guarantee), fixed structurally.** The banner and the page
+   footnote were **two independent fetches** — the banner's count was fetched **once at `AppShell`
+   mount** (never invalidated), the footnote computed its **own** `is_stale` count from a separate
+   `pricing-health` fetch; under a staleness change between them the footnote's "matches the Stale
+   banner" claim went **false** (owner saw banner "6" vs footnote "0" live). **Fix:** ONE shared
+   client query — **`src/state/staleCount.ts`** (`useSyncExternalStore`, polls `/portfolio/summary`,
+   exposes `invalidateStaleCount()`). Both the `StaleBanner` (via `AppShell`) and the footnote read
+   **this single cached value**, so they can never disagree; the footnote **renders the shared value**
+   (never asserts an equality it isn't displaying); refresh actions call `invalidateStaleCount()` so
+   banner + footnote **move together**. **Pre-pass skew test added:** banner == footnote at load AND
+   after a server-side staleness mutation (a refresh). **⚠ Honest fail-first note:** a *numeric*
+   fail-first was **not reproducible this session** — the demo currently has **0 stale holdings** (all
+   refreshed fresh) and there is **no force-stale affordance**, so the mutation is a no-op (0→0). The
+   bug is owner-observed-live and architecturally reproduced (two fetch sites, mount-cached banner, no
+   invalidation); the fix **removes the second fetch by construction**, and the skew test asserts the
+   invariant that would trip on the old architecture given any stale holding.
+2. **§12ph1-2 — Confidence card dead-right (BUG + fail-first).** The `.ph__confgrid` used
+   `repeat(auto-fit, minmax(14rem,1fr))` — at wide widths it created a **phantom empty track**, so
+   the three sections rendered at ~248px each and left **261px dead on the right** (measured
+   fail-first at 1366). **Fix:** deterministic **equal-geometry** columns — `repeat(3, 1fr)` at
+   laptop+ (stacked below), `align-items: stretch`; the stale footnote spans full width. **Pre-pass
+   card-fill assertion added** (the Net worth card-fill class): the sections row fills the card width
+   (dead-right ≤ 2px) at all breakpoints — **verified 261px → 1px**.
+3. **§12ph1-3 — Duplicate title (DataTable caption repeats the card header).** **Rule recorded: a
+   `DataTable` inside a titled card keeps its `<caption>` for screen readers but hides it visually**
+   (the card header already names the table). Fixed in the component — the caption now uses a new
+   **`.lf-visually-hidden`** utility (1px dims via the `--border-width` token, no raw px). **Audit:**
+   this fixes every DataTable app-wide — Net worth statement + liquidity ladder, Portfolio
+   attribution, Holdings/transactions all had a visible caption repeating their card title; now all
+   sr-only. Pre-pass asserts the caption is present (a11y) but visually hidden. *(Candidate for a
+   DESIGN-SYSTEM §5.2 line — owner greenlights promotions.)*
+4. **§12ph1-4 — "Refresh all" → ratified icon-only framed page-action.** Now
+   `lf-iconbtn lf-iconbtn--framed` (RotateCw, tooltip + `aria-label="Refresh all prices"`,
+   `aria-busy` while refreshing); the `[S]`-gated / no-egress-disabled behaviour is unchanged.
+5. **§12ph1-5 — dev.sh port pre-check (tooling only, no app change).** `scripts/dev.sh` now pre-checks
+   ports **8321** + **5173**; if either is held it prints the **owning PID + command + a one-line kill
+   hint** and **exits non-zero** — never silently half-starts. Verified: syntax + live detection of the
+   held ports.
+
+**Reusable outcomes:** `src/state/staleCount.ts` (a shared polled+invalidatable client query — the
+pattern for any "summary count also shown on its canonical page"); the **`.lf-visually-hidden`**
+utility + the **caption-hidden rule** for DataTables inside titled cards.
+
+**Checks after batch 1:** frontend **126 vitest + 57 overflow + lint/typecheck/tokens/build** green.
+Live pre-pass GREEN ×3 (shared-count skew test, confidence card-fill 261→1px, caption hidden,
+icon-only Refresh all, plus all Phase-3a assertions).
