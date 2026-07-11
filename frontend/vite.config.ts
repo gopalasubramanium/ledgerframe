@@ -22,5 +22,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // e2e/ holds Playwright specs (real browser, ADR-0004) — not Vitest/jsdom.
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
   },
 });

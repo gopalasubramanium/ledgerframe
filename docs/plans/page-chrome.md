@@ -388,3 +388,43 @@ kitchen-sink icon row, the ticker under lock) **+ ratifies the PROPOSED items**
 **Batch-4 checks:** frontend 83 tests green (incl. overflow guard, lock-hides-ticker,
 ticker links); drift/typecheck/lint/build green; backend untouched. **STOP — owner
 re-verifies live.**
+
+### Batch-4 re-verify + Phase-3 close-out (owner, 2026-07-11)
+
+- **§11-17 lock clause — OWNER-VERIFIED LIVE (D-002).** set-pin curl → reload → the gate
+  renders, content is illegible, the **ticker is ABSENT under lock**, wrong-PIN shows the
+  error, unlock works. The D-002 no-leak-under-lock requirement is verified.
+- **§11-20 addendum — clear the dev PIN (return to no-PIN demo state):**
+  ```
+  sqlite3 "$HOME/.local/share/ledgerframe-dev/db/ledgerframe.db" "UPDATE users SET pin_hash=NULL;"
+  ```
+  (Still the honest picture: the contract has **no** clear-PIN endpoint; this edits the dev
+  SQLite directly. Run with the backend stopped, or it takes effect on the next read.)
+- **§11-21 — Playwright breakpoint overflow suite (ADR-0004, APPROVED + wired).** Added
+  `@playwright/test` + `e2e/overflow.spec.ts`: **24 checks** (320/375/900/1366 × `/`,
+  `/holdings`, `/instrument/:symbol` × light/dark) assert `scrollWidth ≤ clientWidth` on
+  the document + `.lf-shell__content`. **Wired into `npm run check`** (`test:overflow`,
+  after Vitest; Playwright's `webServer` builds + `vite preview`s the app). CI must
+  `npx playwright install chromium` first (browser not bundled — noted in the ADR).
+  **Green: 24/24** — the §11-14 fix is now enforced at 320px in a real browser.
+
+**RATIFICATIONS FLIPPED (owner, 2026-07-11):** §11-15 lucide icon set (ADR-0003); §11-16
+page-action icon-button pattern (recorded as the DESIGN-SYSTEM §5.5 standard); §11-17
+TickerStrip footer / D-047 amendment (DECISIONS + DESIGN-SYSTEM §5.2 flipped to ratified);
+§11-18 ticker speed **set to 30s**, height/gap ratified (R-16 stands); §11-19 indices
+unlinked ratified (R-17 recorded for the Markets plan); batch-2 overflow popover / Clock /
+DemoBadge placement ratified. The Phase-0a chrome inventory marker is flipped to ratified.
+
+### OPEN before Phase-3 close-out
+
+1. **D-101 themed scrollbar-thumb polish** — **NOT** addressed in batches 1–4 (no scrollbar
+   CSS touched). Given a named home: **ROADMAP R-18**. A real browser is now available
+   (ADR-0004 chromium) to verify the thumb paints and close it. *Cosmetic; not blocking.*
+2. **Deferred by prior decision (not this milestone):** the **Ask panel (D-067)** stays
+   deferred to the AI-surfaces milestone (C-2); the **first-run checklist (D-045)** is its
+   own later small plan (C-4). Both intentionally out of chrome scope.
+3. **Future links parked:** per-device ticker speed setting (R-16, Settings plan);
+   indices→Markets link (R-17, Markets plan).
+
+Nothing else is open. With the ratifications flipped and the overflow suite green, the
+chrome build is ready for **Phase-3 close-out** on owner sign-off.

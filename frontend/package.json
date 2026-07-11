@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:tokens": "node scripts/check-design-tokens.mjs",
-    "check": "npm run lint && npm run typecheck && npm run check:tokens && npm run test"
+    "test:overflow": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm run check:tokens && npm run test && npm run test:overflow"
   },
   "dependencies": {
     "lucide-react": "^1.24.0",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

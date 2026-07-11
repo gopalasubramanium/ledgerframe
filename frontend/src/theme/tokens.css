@@ -166,7 +166,7 @@
      kitchen sink. Shorter duration = faster scroll (default set noticeably faster). */
   --ticker-height: 2.5rem;
   --ticker-gap: var(--space-6);
-  --ticker-scroll-duration: 22s;
+  --ticker-scroll-duration: 30s; /* ratified 2026-07-11 (§11-18) */
   /* LockScreen backdrop blur radius (D-002). Strong enough to smear all text/figures
      to illegibility; paired with a heavy --lock-scrim so content stays unreadable
      even where backdrop-filter is unsupported (see LockScreen.tsx @supports fallback).

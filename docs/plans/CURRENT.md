@@ -596,12 +596,19 @@ are now platform-wide primitives.
 
 ## NEXT
 
-1. **Page-chrome Phase 3 — owner LIVE acceptance walk (PENDING, owner-driven).** NOT
-   self-certified. Owner drives the real app (both themes + high-contrast + a narrow
-   width): sidebar collapse (D-102), top-bar wrap, banners pushing content, lock gate,
-   redirects, the four templates inside the shell. Each finding → numbered `page-chrome.md`
-   §-entry, re-verified live. First-run checklist (D-045) remains its own small later plan;
-   Ask panel (D-067) stays deferred to the AI-surfaces milestone. See `page-chrome.md` §8/§10.
+1. **Page-chrome Phase 3 — acceptance walk COMPLETE (batches 1–4), READY FOR CLOSE-OUT on
+   owner sign-off.** Four live-verify batches resolved (`page-chrome.md` §11-1..§11-21) and
+   **all PROPOSED items ratified** (2026-07-11): lucide icon set (ADR-0003), page-action
+   icon-button pattern, TickerStrip global footer (D-047 amendment — DECISIONS + DESIGN-
+   SYSTEM §5.2), narrow TopBar overflow popover / time-only Clock / DemoBadge sidebar-footer,
+   ticker speed 30s. **Lock no-leak owner-verified live (D-002).** **Playwright breakpoint
+   overflow suite (ADR-0004)** added + wired into `npm run check` (24 checks green, 320–1366px
+   × both themes × shell + built pages). **Open before close-out:** D-101 scrollbar-thumb
+   polish parked as **ROADMAP R-18** (not addressed in these batches; a real browser is now
+   available to verify). Deferred by prior decision: Ask panel (D-067, C-2), first-run
+   checklist (D-045, C-4). Parked future links: ticker speed setting (R-16), indices→Markets
+   (R-17). See `page-chrome.md` §11 close-out. Backend commits `93b717c`+; frontend batches
+   `1c77f58`→`839c5bd` + this close-out commit.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price

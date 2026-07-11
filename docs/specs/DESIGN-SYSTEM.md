@@ -288,7 +288,7 @@ props are backend-computed `Decimal` strings (never client-computed).
 | **PriceChart** *(amended — RATIFIED 2026-07-11)* | `series`, `overlays?` (`MA`/`BB`/`RSI`), `mode` (`candles`\|`line`), `benchmark?`, `interval`, **`controls?`**, **`defaultView?`** (`simple`\|`advanced`), **`periods?`**, **`activePeriod?`**, **`onPeriodChange?`**, **`coverageNote?`** | House-SVG price/performance chart (D-035, no ECharts). **Amendment RATIFIED 2026-07-11 (Instrument Detail walk):** a **Simple/Advanced view toggle** (Simple = line + price only, the Instrument-Detail default; Advanced = candles + volume + MA/BB/RSI), a **hover crosshair + tooltip** (date + close, OHLCV in Advanced), and a **period selector** (1D/5D/1M/3M/6M/YTD/1Y/5Y/Max) with **honest short-history** (shows only what exists, labels it via `coverageNote`, never stretches or fabricates). Back-compatible: without `controls` it behaves as before. Open-state case at `/kitchen-sink`. |
 | **Treemap** (D-053) | `nodes` (`{label,value,tone}`), `squarified` | Heatmap; house SVG squarified; ECharts escape hatch via ADR only (§4). |
 | **QuoteCardRow** (D-046) | `quotes`, `source` (select: markets/holdings/global/watchlist) | Home's single compact quote-card row with source select; replaces the three separate market rows. |
-| **TickerStrip** (D-047 AMENDMENT, PROPOSED — §11-17) | `quotes` (`TickerQuote[]`: `symbol`, `price`, `changePct`, `stale?`) | **Global chrome FOOTER** — a fixed, always-visible strip at the bottom of the shell, **every width** (was Home-Full-only). Shows the user's holdings + world indices; **staleness flagged per item** (amber). Marquee **halts under reduced motion** → static + manually scrollable. **Hidden entirely under lock** (leaks nothing, D-002). Home Full no longer duplicates it in-page. |
+| **TickerStrip** (D-047 AMENDMENT, **ratified 2026-07-11** — §11-17) | `quotes` (`TickerQuote[]`: `symbol`, `price`, `changePct`, `stale?`, `href?`) | **Global chrome FOOTER** — a fixed, always-visible strip at the bottom of the shell, **every width** (was Home-Full-only). Holdings (+ world indices); a symbol with an `href` **links to its entity-detail page** (holdings → `/instrument/{symbol}`; indices unlinked, D-098/§11-19). **Staleness flagged per item** (amber). Marquee **halts under reduced motion** → static + manually scrollable; speed/height/gap are tokens (`--ticker-scroll-duration` 30s, `--ticker-height`, `--ticker-gap`). **Hidden entirely under lock** (leaks nothing, D-002). Home Full no longer duplicates it. |
 
 ### 5.3 Provenance & status
 
@@ -318,10 +318,10 @@ before answer, validated-before-display, ephemeral, privacy-mode label always
 visible — D-067). The Detail toggle leaves the top bar but only Home branches on
 it (D-040/D-066). The **first-run checklist** (D-045) replaces PersonaOnboarding.
 
-**Chrome component inventory** *(amendment PROPOSED 2026-07-11 — page-chrome
-Phase 0a, C-1; **recomposed at re-ratify 2026-07-11** per owner amendments 1–4).*
+**Chrome component inventory** *(amendment **RATIFIED 2026-07-11** — page-chrome
+Phase 0a, C-1; recomposed + re-ratified per owner amendments 1–4).*
 The pieces above are now built as named components in `src/components/ui/`
-(previously only `DisplayControls` existed). PROPOSED, to be ratified at
+(previously only `DisplayControls` existed). Ratified at
 `/kitchen-sink` before shell assembly:
 
 | Component | Props (surface) | Usage rules |
@@ -376,27 +376,26 @@ illegibility at the kitchen sink.
   `Function: state` (e.g. `Theme: dark`) — no "click to change" trailer — and its
   `aria-label` matches the tooltip.
 
-**TopBar narrow composition (PROPOSED — D-102 extension, batch 2).** Below the 900px
-laptop breakpoint the display axes + rotation + Detail **collapse into a single overflow
-popover** (`⋯`, `aria-label="Display settings"`); the bar then shows only ☰ + brand +
-overflow + Clock + DemoBadge and **never wraps at any width ≥320px**. The popover reuses
-`--surface-raised`/`--border`/`--shadow-1`, closes on outside-click/Esc. New pattern →
-ratify at the kitchen sink.
+**TopBar narrow composition (RATIFIED 2026-07-11 — D-102 extension, batch 2).** Below the
+900px laptop breakpoint the display axes + rotation + Detail **collapse into a single
+overflow popover** (`aria-label="Display settings"`); the bar then shows only Menu + brand
++ overflow + Clock + DemoBadge and **never wraps at any width ≥320px**. The popover reuses
+`--surface-raised`/`--border`/`--shadow-1`, closes on outside-click/Esc.
 
-**Clock (PROPOSED, batch 2).** Time-only in the bar at **all** widths; the full date +
-IANA timezone name live in the tooltip/`aria-label`.
+**Clock (RATIFIED 2026-07-11, batch 2).** Time-only in the bar at **all** widths; the full
+date + IANA timezone name live in the tooltip/`aria-label`.
 
-**DemoBadge placement (PROPOSED, batch 2).** At laptop+ it renders in the **sidebar
-footer** (bottom-left); below the breakpoint it moves into the **top bar**. Never hidden
-while demo data is active.
+**DemoBadge placement (RATIFIED 2026-07-11, batch 2).** At laptop+ it renders in the
+**sidebar footer** (bottom-left); below the breakpoint it moves into the **top bar**.
+Never hidden while demo data is active.
 
-**Page-action icon buttons (PROPOSED — DESIGN-SYSTEM §5.5 amendment; batch 2 §11-13,
-revised batch 3 §11-16).** **ALL** page-header actions are **icon-only `.lf-iconbtn`**
-with tooltip + matching `aria-label`, on a **visible bordered surface** — `.lf-iconbtn
---framed` (not a ghost/naked icon): Instrument Detail **Edit** `Pencil`; Holdings
-**Import** `Upload` / **Export CSV** `Download`. The primary **Add** `Plus` is icon-only
-too but uses the **accent-filled `.lf-iconbtn--primary`** variant to keep primary
-emphasis + discoverability. Ratify at the kitchen sink.
+**Page-action icon-button pattern (RATIFIED 2026-07-11 — DESIGN-SYSTEM §5.5; §11-16).**
+The standard for page-header actions: **ALL** page-header actions are **icon-only
+`.lf-iconbtn`** (lucide icon) with tooltip + matching `aria-label`, on a **visible bordered
+surface** — `.lf-iconbtn--framed` (never a ghost/naked icon). Example set: Instrument
+Detail **Edit** `Pencil`; Holdings **Import** `Upload` / **Export CSV** `Download`. The
+**primary** action (**Add** `Plus`) is icon-only too but uses the **accent-filled
+`.lf-iconbtn--primary`** variant so the primary action keeps its emphasis + discoverability.
 
 **Toast / Snackbar** *(amended 2026-07-10 — Holdings page-build §9-4).* A
 transient, timed, dismissible notification with an optional action slot, provided

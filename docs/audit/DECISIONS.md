@@ -692,15 +692,18 @@ clarifying notes recorded in the guide.
   **deliberately none**. Recorded in SECURITY-BASELINE §3.
 
 - **D-047 AMENDMENT — TickerStrip promoted to the global chrome footer** (owner,
-  2026-07-11; page-chrome §11-17; **PROPOSED**, ratify at kitchen sink). Supersedes the
-  original D-047 "Home Full layout only" scope: the ticker is now a **fixed, always-
-  visible footer strip in the global chrome on every page and width**. Content = the
-  user's holdings + world indices, both from the **frozen contract** (`/portfolio/
-  holdings` + `/markets/global` — the latter already exposes index quotes; **no contract
-  change**). Footer height is a token; shell content reserves the space; mobile safe-area
-  respected; **staleness flagged per item**; marquee **halts under reduced motion** (then
-  static + manually scrollable); **hidden entirely under lock** (D-002 — leaks nothing).
-  Home Full no longer duplicates it in-page. Recorded in IA §4, DESIGN-SYSTEM §5.2.
+  2026-07-11; page-chrome §11-17; **RATIFIED 2026-07-11**). Supersedes the original
+  D-047 "Home Full layout only" scope: the ticker is now a **fixed, always-visible footer
+  strip in the global chrome on every page and width**. Content = the user's holdings +
+  world indices, both from the **frozen contract** (`/portfolio/holdings` +
+  `/markets/global` — the latter already exposes index quotes; **no contract change**).
+  Footer height/gap/scroll-speed are tokens (`--ticker-scroll-duration` ratified at 30s);
+  shell content reserves the space; mobile safe-area respected; **staleness flagged per
+  item**; holdings symbols **link to entity detail** (D-098), indices unlinked; marquee
+  **halts under reduced motion** (then static + manually scrollable); **hidden entirely
+  under lock** (D-002 — leaks nothing; **owner-verified live 2026-07-11**). Home Full no
+  longer duplicates it. Recorded in IA §4, DESIGN-SYSTEM §5.2. Future: per-device speed
+  setting (ROADMAP R-16); indices→Markets link when Markets ships (ROADMAP R-17).
 
 **Post-spec note:** D-089/D-092/D-093 are Holdings page-build decisions recorded
 after the 12-batch spec close (D-001–D-088); they change no earlier decision.

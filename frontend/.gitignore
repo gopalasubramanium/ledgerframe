@@ -5,3 +5,8 @@ coverage
 *.local
 .vite
 *.tsbuildinfo
+
+# Playwright (ADR-0004)
+test-results/
+playwright-report/
+playwright/.cache/
