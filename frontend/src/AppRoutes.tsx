@@ -5,6 +5,7 @@ import { KitchenSink } from "./routes/KitchenSink";
 import { Holdings } from "./routes/Holdings";
 import { Portfolio } from "./routes/Portfolio";
 import { NetWorth } from "./routes/NetWorth";
+import { PricingHealth } from "./routes/PricingHealth";
 import { InstrumentDetail } from "./routes/InstrumentDetail";
 import { NotBuilt } from "./routes/NotBuilt";
 
@@ -27,6 +28,7 @@ export function AppRoutes() {
               <Route path="/holdings" element={<Holdings />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/instrument/:symbol" element={<InstrumentDetail />} />
+              <Route path="/pricing-health" element={<PricingHealth />} />
               {/* Route redirects (D-042/D-022/D-056). */}
               <Route path="/snapshot" element={<Navigate to="/net-worth" replace />} />
               <Route path="/planning" element={<Navigate to="/cash-flow" replace />} />

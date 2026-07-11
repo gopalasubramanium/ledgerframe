@@ -1,0 +1,159 @@
+/* Pricing Health (diagnostics) — worklist template. Token-only. Root padding owned by the shell. */
+.ph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.ph > * {
+  min-width: 0;
+}
+
+.ph__card {
+  padding: var(--space-5);
+}
+.ph__h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-16);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.ph__h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-size-13);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+.ph__note {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-tertiary);
+}
+
+/* Honest no-egress + duplicate banners (status strips). */
+.ph__egress {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--attention);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--attention);
+  font-size: var(--font-size-13);
+}
+.ph__dupbanner {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+}
+.ph__dupbanner strong {
+  color: var(--text-primary);
+}
+
+/* Chips: served label + a semantic tone (colour is never the sole signal — label always shown). */
+.ph__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.ph__chip--ok { color: var(--gain); border-color: var(--gain); }
+.ph__chip--warn { color: var(--attention); border-color: var(--attention); }
+.ph__chip--bad { color: var(--loss); border-color: var(--loss); }
+.ph__chip--neutral { color: var(--text-tertiary); }
+
+.ph__conf {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.ph__num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Confidence card: overall tile + by-band table + status-count strip, wrapping responsively. */
+.ph__confgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+.ph__confgrid > * {
+  min-width: 0;
+}
+.ph__bandtable {
+  width: 100%;
+}
+.ph__statusstrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-content: flex-start;
+}
+.ph__stale {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-13);
+  color: var(--text-tertiary);
+}
+.ph__stale a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.ph__stale a:hover {
+  text-decoration: underline;
+}
+
+/* Details dialog. */
+.ph__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ph__chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.ph__chainlabel {
+  font-size: var(--font-size-13);
+  color: var(--text-secondary);
+}
+.ph__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.ph__factors {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+  font-size: var(--font-size-13);
+  color: var(--text-secondary);
+}
+.ph__factors li {
+  margin: var(--space-1) 0;
+}
+
+/* Correct-source dialog. */
+.ph__correct {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ph__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

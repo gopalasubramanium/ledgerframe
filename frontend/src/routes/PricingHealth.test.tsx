@@ -1,0 +1,133 @@
+import { afterEach, expect, test, vi } from "vitest";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { ThemeProvider } from "../theme/ThemeProvider";
+import { DisplayProvider } from "../theme/DisplayProvider";
+import { RefdataProvider } from "../refdata/RefdataProvider";
+import { ToastProvider } from "../components/ui";
+
+function row(over: Partial<Record<string, unknown>>) {
+  return {
+    id: 1, symbol: "AAPL", label: "AAPL", asset_class: "equity", sector: "Technology", exchange: "NASDAQ",
+    currency: "USD", native_price: 190, market_value: 1900, valuation_method: "market_quote",
+    valuation_label: "Market quote", status: "Fresh", source: "market", entitlement: "delayed",
+    price_ts: "2026-07-11T00:00:00Z", is_stale: false, failure_reason: null, source_override: null,
+    route_lane: "equity", route_source: "market", priority_chain: ["market", "manual"],
+    mapping_required: false, auth_required: false, confidence: 92, confidence_band: "high", confidence_factors: ["Live market quote"],
+    ...over,
+  };
+}
+
+vi.mock("../api/pricing-health", () => ({
+  getPricingHealth: vi.fn(async () => ({
+    ok: true,
+    data: {
+      base_currency: "SGD",
+      holdings: [
+        row({ id: 1, symbol: "AAPL", label: "AAPL", status: "Fresh", is_stale: false, confidence: 92, confidence_band: "high" }),
+        row({ id: 2, symbol: "D05", label: "DBS", status: "Cached", is_stale: true, confidence: 60, confidence_band: "medium", source: "kite", auth_required: true }),
+        row({ id: 3, symbol: null, label: "My Flat", status: "Manual", is_stale: false, confidence: 40, confidence_band: "low", valuation_method: "manual_valuation", source: "manual", priority_chain: [] }),
+        row({ id: 4, symbol: "RELIANCE", label: "Reliance", status: "Delayed", is_stale: true, confidence: 55, confidence_band: "medium" }),
+      ],
+      summary: { Fresh: 1, Cached: 1, Manual: 1, Delayed: 1 },
+      confidence: { overall: 68, overall_band: "medium", by_band: { high: { count: 1, value_pct: 40 }, medium: { count: 2, value_pct: 45 }, low: { count: 1, value_pct: 15 } } },
+    },
+  })),
+  getIdentifierDuplicates: vi.fn(async () => ({ ok: true, data: { duplicates: [], count: 0 } })),
+  getNoEgress: vi.fn(async () => false),
+  refreshHolding: vi.fn(async () => ({ ok: true, data: { ok: true, refreshed: true } })),
+  refreshAllData: vi.fn(async () => ({ ok: true, data: { ok: true, refreshed: 2, total: 4, skipped: 0, succeeded: [], failed: [], errors: [] } })),
+  correctSource: vi.fn(async () => ({ ok: true, data: { ok: true } })),
+}));
+
+vi.mock("../api/client", async (orig) => ({
+  ...(await orig<typeof import("../api/client")>()),
+  apiGet: vi.fn(async () => ({ ok: false, error: "no refdata in test" })),
+}));
+
+import { PricingHealth } from "./PricingHealth";
+import { getIdentifierDuplicates, getNoEgress } from "../api/pricing-health";
+
+function renderPage() {
+  return render(
+    <ThemeProvider>
+      <DisplayProvider>
+        <ToastProvider>
+          <RefdataProvider>
+            <MemoryRouter initialEntries={["/pricing-health"]}>
+              <PricingHealth />
+            </MemoryRouter>
+          </RefdataProvider>
+        </ToastProvider>
+      </DisplayProvider>
+    </ThemeProvider>,
+  );
+}
+
+afterEach(cleanup);
+
+test("per-holding diagnostics render with served status + confidence chips", async () => {
+  renderPage();
+  expect(await screen.findByText("Per-holding diagnostics")).toBeTruthy();
+  await waitFor(() => {
+    expect(screen.getByText("DBS")).toBeTruthy();
+    // Status chips are the served labels (no client invention).
+    expect(screen.getAllByText("Cached").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Delayed").length).toBeGreaterThan(0);
+  });
+});
+
+test("banner-reconciliation invariant (ND-1): page stale count == count of is_stale rows", async () => {
+  renderPage();
+  // Two mocked holdings have is_stale:true → the page's own count must be 2 (what
+  // /portfolio/summary.stale_count — the StaleBanner's source — also derives from value_portfolio).
+  const el = await screen.findByTestId("ph-stale-count");
+  expect(el.textContent).toBe("2");
+});
+
+test("portfolio confidence card shows overall band + by-band table (ND-6, ratified components)", async () => {
+  const { container } = renderPage();
+  await screen.findByText("Portfolio confidence");
+  await waitFor(() => {
+    expect(screen.getByText("Overall confidence")).toBeTruthy();
+    // by-band table has a Value % column (served); no segmented bar.
+    expect(container.querySelector(".ph__bandtable")).toBeTruthy();
+    expect(container.textContent).toMatch(/45\.0%/);
+  });
+});
+
+test("Details row action opens the read-only routing chain + confidence factors (ND-5/ND-8)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  // Open the first row's menu → Details.
+  const menus = await screen.findAllByRole("button", { name: /Actions for/ });
+  await user.click(menus[0]);
+  await user.click(await screen.findByText("Details"));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("Routing")).toBeTruthy();
+  expect(within(dialog).getByText(/Priority chain \(read-only\)/)).toBeTruthy();
+  expect(within(dialog).getByText(/Why this confidence/)).toBeTruthy();
+});
+
+test("identifier-duplicate banner is omitted at zero, shown when count > 0", async () => {
+  const { container, unmount } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await waitFor(() => expect(container.querySelector(".ph__dupbanner")).toBeNull());
+  unmount();
+  vi.mocked(getIdentifierDuplicates).mockResolvedValueOnce({
+    ok: true,
+    data: { count: 1, duplicates: [{ id_type: "isin", value: "US123", instrument_count: 2, instruments: [] }] },
+  });
+  const { container: c2 } = renderPage();
+  await waitFor(() => expect(c2.querySelector(".ph__dupbanner")).not.toBeNull());
+});
+
+test("no-egress disables Refresh all with an honest state (ND-3)", async () => {
+  vi.mocked(getNoEgress).mockResolvedValueOnce(true);
+  renderPage();
+  const btn = await screen.findByRole("button", { name: /Refresh all/ });
+  await waitFor(() => expect((btn as HTMLButtonElement).disabled).toBe(true));
+  expect(await screen.findByText(/Refresh unavailable — no-egress is on/)).toBeTruthy();
+});
