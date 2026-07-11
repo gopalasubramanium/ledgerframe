@@ -740,6 +740,10 @@ instrument picker. None changes an earlier decision.
 | R-20 | External widget API — scoped long-lived keys for read-only summary widgets (read-only only; D-001 LAN/VPN posture) | D-069 |
 | R-21 | External-connectivity adaptors (FIX, ISO 20022) as read-only provider lanes (no order flow; honest stale under no-egress) | Product Guarantee 1 & 5 |
 | R-21a | MCP surface — AI-tool integration, evaluate in the AI-surfaces milestone (not a market-data lane) | D-067, D-068 |
+| R-22 | AI provider configuration — local (Ollama) vs cloud API; key handling via the D-069 token pattern; under no-egress AI is local-only; explicit input to the AI-surfaces milestone plan (incl. whether first-run/Settings gain an AI step there) | D-067, D-068, D-069 |
+| R-23 | RSS / user-defined news feeds as a news provider lane (provenance-labelled; zero calls under no-egress) | owner 2026-07-11 |
+| R-24 | First-boot license acceptance gate — **cannot be a D-045 step (skippable ≠ acceptance)**; a separate blocking gate; revisit only if licensing/distribution posture demands (owner may instead strike + build now) | owner 2026-07-11 |
+| R-25 | Personal-profile fields (name for personalization) — **hard-gated on a deliberate D-045/PRODUCT-SPEC no-profiling amendment + owner re-affirmation against the privacy identity; DOB/gender remain out** | D-045 (amend), PRODUCT-SPEC |
 
 **v2.1 "accounting precision" theme (D-088).** R-6 (`spec` specific-lot cost
 basis), R-8 (historical FX series), and R-14 (FD accrued-interest valuation) are

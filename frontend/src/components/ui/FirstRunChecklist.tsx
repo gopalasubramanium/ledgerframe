@@ -75,6 +75,13 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
   const [pin, setPin] = useState("");
   const set = (id: FirstRunStepId, s: StepState) => setState((m) => ({ ...m, [id]: s }));
   const skip = (id: FirstRunStepId) => set(id, "skipped");
+
+  // Commit-on-pick confirm handlers (F3): choosing a value — EVEN the pre-filled suggestion —
+  // writes it and marks the step confirmed. The dropdown steps use commit-on-pick controls so
+  // re-selecting the suggested value is not a silent no-op.
+  const confirmCurrency = (v: string) => { onBaseCurrency(v); set("currency", "confirmed"); };
+  const confirmTimezone = (v: string) => { onTimezone(v); set("timezone", "confirmed"); };
+  const confirmProvider = (v: string) => { onProvider(v); set("provider", "confirmed"); };
   const confirmedCount = Object.values(state).filter((s) => s === "confirmed").length;
 
   if (!open) return null;
@@ -96,6 +103,10 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
           </button>
         </div>
 
+        {/* Only the step content scrolls — the head and foot stay pinned (D-101 applied to
+            the overlay; walk batch 1, §11-x). Desktop: all five fit with no scroll; below the
+            900px laptop breakpoint the card becomes a full-height sheet and this body scrolls. */}
+        <div className="lf-firstrun__body">
         {/* 1 — Base currency */}
         <div className="lf-firstrun__step">
           <div className="lf-firstrun__step-head">
@@ -104,7 +115,7 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
           </div>
           <div className="lf-firstrun__step-control">
             <MasterSelect master="base_currency" value={baseCurrency} aria-label="Base currency"
-              onChange={(v) => { onBaseCurrency(v); set("currency", "confirmed"); }} />
+              onChange={confirmCurrency} onCommit={confirmCurrency} />
             <button type="button" className="lf-btn" onClick={() => skip("currency")}>Skip</button>
             <Link className="lf-firstrun__link" to={links.general} onClick={onNavigateAway}>More options →</Link>
           </div>
@@ -118,7 +129,7 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
           </div>
           <div className="lf-firstrun__step-control">
             <Combobox options={timezoneOptions} value={timezone} placeholder="Search timezones…" aria-label="Timezone"
-              onChange={(v) => { onTimezone(v); set("timezone", "confirmed"); }} />
+              onChange={confirmTimezone} />
             <button type="button" className="lf-btn" onClick={() => skip("timezone")}>Skip</button>
             <Link className="lf-firstrun__link" to={links.general} onClick={onNavigateAway}>More options →</Link>
           </div>
@@ -164,7 +175,7 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
           </div>
           <div className="lf-firstrun__step-control">
             <Select options={providerOptions} value={provider} aria-label="Data provider"
-              onChange={(v) => { onProvider(v); set("provider", "confirmed"); }} />
+              onChange={confirmProvider} onCommit={confirmProvider} />
             <button type="button" className="lf-btn" onClick={() => skip("provider")}>Skip</button>
             <Link className="lf-firstrun__link" to={links.prices} onClick={onNavigateAway}>Add an API key →</Link>
           </div>
@@ -190,6 +201,7 @@ export function FirstRunChecklist(props: FirstRunChecklistProps) {
           <p className="lf-firstrun__step-note">
             With no egress on, prices won't refresh — cached values are shown and flagged stale.
           </p>
+        </div>
         </div>
 
         <div className="lf-firstrun__foot">

@@ -82,18 +82,58 @@ class YahooMarketDataProvider:
     #: Yahoo stays happy.
     fetch_on_demand = False
 
+    #: 429 handling (first-run F6). Retries within a call honour the server's Retry-After
+    #: (capped); after K *consecutive* 429s the provider trips a cooldown circuit-breaker and
+    #: stops calling Yahoo for a window — callers serve cache / honest-stale instead of
+    #: re-hammering a rate-limited endpoint every worker cycle.
+    _MAX_ATTEMPTS = 3
+    _COOLDOWN_THRESHOLD = 3        # K consecutive 429s trips the breaker
+    _COOLDOWN_SECONDS = 120.0      # default cooldown when the 429 carries no Retry-After
+    _RETRY_AFTER_CAP = 300.0       # never honour a Retry-After (or cooldown) longer than this
+
     def __init__(self) -> None:
-        self._mock = MockMarketDataProvider()  # status + last-resort FX/search/news
+        self._mock = MockMarketDataProvider()  # status + last-resort search/news/status
         # Serialize ALL Yahoo calls with a minimum interval — one shared throttle
         # across the whole process, so the worker's refresh loop can't burst.
         self._lock = asyncio.Lock()
         self._last = 0.0
         self._min_interval = 1.5  # seconds between requests (Yahoo throttles bursts)
+        # Circuit-breaker state (F6): consecutive-429 streak + a monotonic cooldown deadline.
+        self._consecutive_429 = 0
+        self._cooldown_until = 0.0
+
+    def _parse_retry_after(self, raw: str | None) -> float | None:
+        """Parse a 429 ``Retry-After`` header — delta-seconds or an HTTP-date — into a
+        non-negative seconds delay, capped at ``_RETRY_AFTER_CAP`` so a hostile/huge header
+        can never wedge the provider. Returns ``None`` when absent/unparseable."""
+        if not raw:
+            return None
+        raw = raw.strip()
+        try:
+            secs = float(raw)
+        except ValueError:
+            from email.utils import parsedate_to_datetime
+
+            try:
+                dt = parsedate_to_datetime(raw)
+            except (TypeError, ValueError, IndexError):
+                return None
+            if dt is None:
+                return None
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=UTC)
+            secs = (dt - datetime.now(UTC)).total_seconds()
+        return max(0.0, min(secs, self._RETRY_AFTER_CAP))
 
     async def _get(self, url: str, params: dict) -> dict:
-        """Paced GET with 429 backoff. Serialized so we never burst Yahoo."""
+        """Paced GET with 429 backoff (honours Retry-After) + a provider-level cooldown
+        circuit-breaker after K consecutive 429s (F6). Serialized so we never burst Yahoo."""
         async with self._lock:
-            for attempt in range(3):
+            # Circuit-breaker: while cooling down, skip the network entirely so callers
+            # serve cache (quotes) / fall to reference FX — never re-hammer a 429'd endpoint.
+            if time.monotonic() < self._cooldown_until:
+                raise RuntimeError("yahoo in 429 cooldown")
+            for attempt in range(self._MAX_ATTEMPTS):
                 wait = self._min_interval - (time.monotonic() - self._last)
                 if wait > 0:
                     await asyncio.sleep(wait)
@@ -102,14 +142,30 @@ class YahooMarketDataProvider:
                         timeout=httpx.Timeout(12.0, connect=5.0), headers={"User-Agent": _UA},
                     ) as client:
                         r = await client.get(url, params=params)
-                    if r.status_code == 429 and attempt < 2:
-                        await asyncio.sleep(1.5 * (attempt + 1))  # back off, then retry
-                        continue
+                    if r.status_code == 429:
+                        self._consecutive_429 += 1
+                        retry_after = self._parse_retry_after(r.headers.get("Retry-After"))
+                        if self._consecutive_429 >= self._COOLDOWN_THRESHOLD:
+                            # Trip the breaker: cool down for Retry-After (if given) or the default.
+                            self._cooldown_until = time.monotonic() + (
+                                retry_after if retry_after is not None else self._COOLDOWN_SECONDS
+                            )
+                            raise RuntimeError("yahoo rate limited (429) — cooling down")
+                        if attempt < self._MAX_ATTEMPTS - 1:
+                            # Back off, honouring the server's Retry-After when present.
+                            await asyncio.sleep(
+                                retry_after if retry_after is not None
+                                else self._min_interval * (attempt + 1)
+                            )
+                            continue
+                        raise RuntimeError("yahoo rate limited (429)")
                     r.raise_for_status()
+                    self._consecutive_429 = 0     # a clean response ends the streak…
+                    self._cooldown_until = 0.0    # …and lifts any cooldown
                     return r.json()
                 finally:
                     self._last = time.monotonic()
-            raise RuntimeError("rate limited (429)")
+            raise RuntimeError("yahoo rate limited (429)")
 
     async def _chart(self, ysym: str, params: dict) -> dict:
         data = await self._get(_CHART.format(sym=ysym), params)
@@ -209,9 +265,12 @@ class YahooMarketDataProvider:
             if not rate:
                 raise ValueError("no fx rate")
             return FxRate(base=b, quote=qc, rate=price(rate), source=self.name, received_at=now)
-        except Exception as exc:  # noqa: BLE001 — keep valuation working
-            log.warning("yahoo fx fell back to mock for %s/%s: %s", b, qc, exc)
-            return await self._mock.get_fx_rate(base, quote)
+        except Exception as exc:  # noqa: BLE001 — honest-stale, NOT a fabricated mock rate (F6)
+            # Do NOT substitute the mock provider's synthetic FX rate. Return an explicit
+            # unavailable/stale marker (rate 0, is_stale) so fx.get_rate falls to the ECB
+            # reference rate — an honest, sourced number — never a made-up one.
+            log.warning("yahoo fx unavailable for %s/%s (honest-stale, no mock substitute): %s", b, qc, exc)
+            return FxRate(base=b, quote=qc, rate=D(0), source=self.name, received_at=now, is_stale=True)
 
     async def get_news(self, instruments: list[str]) -> list[NewsItem]:
         # Headlines come from the free RSS feeds layer; nothing extra here.

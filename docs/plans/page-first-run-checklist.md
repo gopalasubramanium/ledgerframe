@@ -1,15 +1,17 @@
 # page-first-run-checklist.md — First-run checklist (D-045) build plan
 
-**Status: Phase 0a RATIFIED · Phase 1 + Phase 2 DONE · Phase-3 PRE-PASS findings F1–F11
-triaged + fixed (2026-07-11). STOP — Phase 3 live walk is the owner's.** §9 resolved
-(F-1..F-12); three §5.5 components ratified; wired into `AppShell` after the lock gate.
-Pre-pass fixes (§12): F1 portal z-index token, F2 links close overlay, F3/F4 three-state
-(0/5 fresh), F5/F9/F10 deterministic smoke tooling, F7 resume, **F8 6-digit PIN enforced
-API-side**, F11 test `.env` isolation; **F6 = investigation + PROPOSAL only (awaiting
-approval, NOT built).** Checks: **93 frontend tests + 32 Playwright overflow + 484 backend**
-+ contract current + drift/typecheck/lint/build green; fix-confirmation smoke passed
-(0 console errors, fresh 0/5). Derived from PRODUCT-SPEC §7, D-045, SECURITY-BASELINE §3,
-D-069, chrome C-4.
+**Status: Phase 0a RATIFIED · Phase 1 + Phase 2 DONE · Phase-3 live walk IN PROGRESS — batch 1
+(§11-1) verified live + ratified; batch 2 (§11-2 F3, §11-3/F6) fixed + awaiting owner re-verify
+(2026-07-11). Owner confirms close-out; do NOT self-close Phase 3.** §9 resolved (F-1..F-12);
+three §5.5 components ratified; wired into `AppShell` after the lock gate. Pre-pass fixes (§12):
+F1 portal z-index token, F2 links close overlay, F3/F4 three-state (0/5 fresh), F5/F9/F10
+deterministic smoke tooling, F7 resume, **F8 6-digit PIN enforced API-side**, F11 test `.env`
+isolation; **F6 provider-429 backoff = APPROVED + BUILT (Retry-After · cooldown · honest-stale FX;
+provider-only, contract untouched).** Walk batch 2: **§11-2 F3 confirm-on-pick** (`CommitMenu`;
+choosing the suggested value confirms + writes). Checks: **95 frontend tests + 32 Playwright
+overflow + 487 backend** + contract current + drift/typecheck/lint/build green; fix-confirmation
+smoke passed (0 console errors, fresh 0/5, F3 same-value confirm). Derived from PRODUCT-SPEC §7,
+D-045, SECURITY-BASELINE §3, D-069, chrome C-4.
 
 **This is a gate/overlay, not a content page — it adapts the template** (per the
 `TEMPLATE-page-build.md` shell-adaptation note). Like the chrome, it deviates from the
@@ -258,6 +260,52 @@ confirmed · §3b deltas approved with pinned shapes · Phase-0a component amend
 
 ---
 
+## 11. PHASE-3 WALK FINDINGS (owner live walk, 2026-07-11)
+
+The owner's live acceptance walk. Each finding is recorded here, fixed, then re-verified
+by the owner before the walk continues.
+
+**Batch 1 (owner, 2026-07-11) — recorded + fixed, awaiting owner re-verify.**
+
+- **§11-1 — Overlay layout: pinned header/footer, only the steps scroll (FIXED, D-101 applied
+  to the overlay).** The card was one flat scroll region (the whole `.lf-firstrun` scrolled),
+  so the title/count and the Done control scrolled away with the steps. Restructured to a
+  **capped flex column**: a **pinned header** (title + "N of 5 confirmed") and a **pinned
+  footer** (Done / skip the rest), with a new **`.lf-firstrun__body`** as the *only* scrolling
+  region between them. **Desktop:** the card is height-capped to the viewport
+  (`max-height: calc(100dvh - 2·space-8)`) and the step rhythm tightened (compact) so **all
+  five steps fit with no scroll**. **Below the 900px laptop breakpoint (D-102):** the card
+  becomes a **full-height sheet** (`100dvh`, no radius/gutter) with header/footer pinned and
+  the body scrolling. `FirstRunChecklist.tsx` (body wrapper), `firstrun.css`. **Four smoke
+  screenshots re-captured** (320/375/900/1366, both themes) — no horizontal overflow; header
+  and footer stay pinned; desktop shows no vertical scroll.
+
+**Batch 1 — RATIFIED / verified live by owner (2026-07-11):**
+- **§11-1 overlay layout** (pinned header/footer, no-scroll desktop, sheet at narrow) — verified live.
+- **F3/F4 step copy** ("Confirm or skip each…") — ratified as seen live (was PROPOSED at §12; now ratified).
+
+**Batch 2 (owner, 2026-07-11) — recorded + fixed, awaiting owner re-verify.**
+
+- **§11-2 — Confirming the pre-filled suggestion was impossible (F3 semantics bug, FIXED).**
+  The currency/timezone/provider steps only reached **confirmed** when the value *changed*:
+  the two native-`<select>` steps (currency = MasterSelect, provider = Select) rode on the
+  select's `change` event, and **a native `<select>` emits no `change` for a same-value pick**
+  — so choosing SGD when SGD was suggested was a silent no-op. **Fix: confirmation now fires on
+  the selection/commit event regardless of value equality.** Added a small internal
+  **`CommitMenu`** (button + portaled listbox reusing the `.lf-combo__menu` styles) that fires
+  `onCommit` on **every** pick, incl. re-selecting the current value; `Select` and `MasterSelect`
+  gained an opt-in **`onCommit`** prop that switches to it (native path unchanged when absent, so
+  no regression to Holdings/Instrument-Detail callers). The checklist's three dropdown steps use
+  commit-on-pick (timezone's `Combobox` already did). **Choosing the suggested value writes it +
+  confirms the step.** `CommitMenu.tsx`, `Select.tsx`, `MasterSelect.tsx`, `FirstRunChecklist.tsx`,
+  `inputs.css` (`.lf-commit__trigger`). **Tests:** two component tests (currency + provider
+  select-same-value → confirmed + write issued) + the live smoke's F3 same-value check.
+  DESIGN-SYSTEM §5.5: `Select`/`MasterSelect` gain the `onCommit` (commit-on-pick) note.
+- **§11-3 — F6 provider-429 backoff (APPROVED as scoped, BUILT).** See §12 F6 (now built): the
+  three approved behaviours — respect **Retry-After**, provider-level **cooldown after K
+  consecutive 429s**, **honest-stale FX on failure instead of mock-FX substitution** — landed in
+  the Yahoo provider only (no worker-loop rework); contract untouched; backend tests for all three.
+
 ## 12. PHASE-3 PRE-PASS FINDINGS (F1–F11) — triaged + fixed (owner, 2026-07-11)
 
 Live Playwright smoke pre-pass (dev-only, `frontend/e2e/smoke/`) surfaced these; owner
@@ -298,7 +346,21 @@ re-run passed with **0 console errors**; fresh state shows **0/5** with three-st
   `envfile.ENV_PATH` at a per-test temp file, so `apply_env` (base_currency/timezone/provider)
   writes to a throwaway `.env`. Verified: the real `.env` is byte-unchanged after the
   env-mutating tests.
-- **F6 — provider-429 backoff (INVESTIGATED; PROPOSAL for owner approval — NOT built).**
+- **F6 — provider-429 backoff (APPROVED as scoped + BUILT, owner batch 2 2026-07-11).**
+  Built exactly as scoped, in the **Yahoo provider only** (`app/providers/market/yahoo.py`), **no
+  worker-loop rework, contract untouched**: (1) the 429 backoff now **honours `Retry-After`**
+  (delta-seconds or HTTP-date, capped at 300s) instead of a fixed linear delay; (2) a
+  **provider-level cooldown circuit-breaker** — after **K=3 consecutive 429s** the provider sets
+  `_cooldown_until` and **skips the network** for the window (Retry-After or 120s default), so a
+  sustained rate-limit no longer re-hammers Yahoo every worker cycle; a clean response resets the
+  streak + lifts the cooldown; (3) **honest-stale FX on failure** — `get_fx_rate` no longer
+  substitutes the mock provider's synthetic rate; it returns an explicit unavailable marker
+  (`rate 0`, `is_stale`) so `fx.get_rate` falls to the **ECB reference rate** (honest, sourced),
+  never a fabricated number. **Backend tests** cover all three behaviours
+  (`tests/unit/test_yahoo_provider.py`): Retry-After honoured, cooldown-then-skip-network,
+  honest-stale-not-mock (+ streak-reset). The original investigation is preserved below.
+
+  *Original investigation (retained):*
   *Current behaviour:* the worker (`app/worker.py`) runs `refresh_market_data` on a **5-minute
   interval**, iterating **every** symbol serially. The Yahoo provider (`_paced_get`) serializes
   requests and, on `429`, retries **twice** with a fixed linear backoff (1.5s, 3s) then raises;
@@ -315,3 +377,70 @@ re-run passed with **0 console errors**; fresh state shows **0/5** with three-st
 
 **Checks:** frontend 93 tests + drift/typecheck/lint/build · backend 484 · contract current.
 Smoke fix-confirmation run green (0 console errors). Dev instance left reset + `.env` pristine.
+
+---
+
+### §12a — Reviewed and DECLINED for this milestone (owner, 2026-07-11; no code)
+
+Recorded so these do **not** resurface later as gaps in the first-run flow — each is a
+deliberate exclusion under existing spec, not an oversight:
+
+- **Personal-profile fields (name/etc.)** — DECLINED. The checklist stays no-profiling per
+  **D-045 / PRODUCT-SPEC**. Reopening this needs a deliberate no-profiling **amendment** +
+  owner re-affirmation against the privacy identity; DOB/gender stay out regardless
+  (parked as **ROADMAP R-25**).
+- **Display-axis onboarding steps** (theme / density / contrast / motion) — DECLINED.
+  **D-045 explicitly excludes density** (and the display axes generally) from the checklist;
+  they are plain Settings → Appearance options (per-device, D-078). The five steps stand.
+- **Per-lane provider configuration** in first-run — DECLINED. First-run is provider
+  **selection only** (F-8); per-lane provider **priority/config editing** is parked as
+  **ROADMAP R-13** (no user-editable provider priority in v2). The step links out for keys.
+
+---
+
+## 13. RETROSPECTIVE — first-run checklist milestone (owner-closed 2026-07-11)
+
+Phase 3 CLOSED; the milestone is DONE (owner live re-verify passed: same-value confirm —
+SGD-as-suggested — flips to confirmed). Lessons folded into `TEMPLATE-page-build.md` in the
+same commit.
+
+**PRIMARY LESSON — a scripted pre-pass runs GREEN before the owner walk.** The owner-scripted
+smoke pre-pass (`frontend/e2e/smoke/`, a dev-only Playwright harness against the live app + real
+backend on a reset instance) caught **11 findings (F1–F11) before the walk ever started** —
+crucially including **backend defects no frontend test could see**: F5 (`.env` drift across
+runs), F6 (provider re-hammering a 429'd endpoint every cycle), F8 (PIN length enforced only in
+the UI, not the API), F11 (tests mutating the real `.env`). Unit/component suites were all green
+throughout; these were only visible by **driving the whole flow live**. → **Encoded as a
+standing Phase-3a step in the template:** author the scripted pre-pass, run it to green (0
+console errors, correct fresh state) **before** the owner walk; the owner walk (Phase-3b) then
+carries **judgment items only** (this milestone's walk was two small batches — §11-1 layout,
+§11-2 F3 semantics — not a defect hunt).
+
+**Confirm-on-pick is now a platform pattern.** A select **pre-filled with a suggested value the
+user must confirm by choosing it** cannot be a native `<select>` — the browser emits no `change`
+for a same-value pick, so confirming the suggestion silently no-ops (§11-2 / F3). `CommitMenu` +
+the opt-in **`onCommit`** prop on `Select`/`MasterSelect` is the reusable answer (fires on every
+pick incl. the unchanged one), native path unchanged elsewhere. → template §4 component-usage
+rule + DESIGN-SYSTEM §5.5.
+
+**Gate/overlays follow D-101.** A full-shell gate/overlay pins its header/footer and scrolls
+only its content, caps to the viewport on desktop (all steps fit, no scroll), and becomes a
+full-height sheet below the 900px laptop breakpoint (§11-1). It mounts **after** the lock gate.
+→ template gate/overlay adaptation note.
+
+**Scoped-change discipline held (F6).** An approved backend hardening (provider-429 backoff) was
+kept to the **provider + worker boundary** with the **contract untouched** — Retry-After +
+cooldown breaker + honest-stale FX (no mock substitution), each with a backend test. A provider
+failure now degrades to the **honest ECB reference rate**, never a fabricated number.
+
+**FLAGGED (judgment, not auto-applied) — for the owner:**
+- **Pre-pass depth should scale with page type.** A gate/overlay and a data-entry page clearly
+  warrant a scripted pre-pass; a **pure read-only display page** may not (the smoke harness is
+  real effort). Recommend: pre-pass is **mandatory for gate/overlay + data-entry/mutating
+  pages**, **owner-waivable for read-only display pages** — decide per plan at Phase-3 time
+  rather than hard-mandating a harness for every page. *(Encoded as "standing", but this
+  scope-nuance is the owner's call.)*
+- **The "dirty dev DB" was the owner's own walk state, not a leak.** Verified: the full backend
+  suite (and the first-run/PIN tests) run against temp dirs and leave the real dev DB untouched.
+  No isolation fix needed. If future walks want a one-command "reset + relaunch", that is a small
+  dev-ergonomics add (not built) — flag only.

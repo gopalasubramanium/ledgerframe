@@ -77,3 +77,9 @@
 .lf-field__select:disabled {
   cursor: not-allowed;
 }
+
+/* CommitMenu trigger (Select/MasterSelect onCommit mode): a <button> styled as a select,
+ * so its label reads left-aligned like the native control's value. */
+.lf-commit__trigger {
+  text-align: left;
+}

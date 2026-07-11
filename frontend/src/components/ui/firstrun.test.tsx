@@ -90,6 +90,28 @@ test("FirstRunChecklist: interacting confirms a step (0/5 → 1/5) and writes (�
   expect(container.querySelectorAll(".lf-firstrun__badge.is-confirmed")).toHaveLength(1);
 });
 
+test("FirstRunChecklist: choosing the pre-filled base-currency suggestion (SAME value) confirms + writes (F3)", async () => {
+  const onBaseCurrency = vi.fn();
+  const { container } = renderChecklist({ baseCurrency: "SGD", onBaseCurrency });
+  expect(container.querySelectorAll(".lf-firstrun__badge.is-confirmed")).toHaveLength(0);
+  // Open the commit-menu and pick SGD — the value already shown. A native <select> no-ops
+  // here; the commit-menu writes SGD and confirms the step.
+  await userEvent.click(screen.getByRole("button", { name: "Base currency" }));
+  await userEvent.click(screen.getByRole("option", { name: "SGD" }));
+  expect(onBaseCurrency).toHaveBeenCalledWith("SGD");
+  expect(screen.getByText("1 of 5 confirmed")).toBeTruthy();
+  expect(container.querySelectorAll(".lf-firstrun__badge.is-confirmed")).toHaveLength(1);
+});
+
+test("FirstRunChecklist: choosing the pre-filled provider suggestion (SAME value) confirms + writes (F3)", async () => {
+  const onProvider = vi.fn();
+  const { container } = renderChecklist({ provider: "mock", onProvider });
+  await userEvent.click(screen.getByRole("button", { name: "Data provider" }));
+  await userEvent.click(screen.getByRole("option", { name: "mock" }));
+  expect(onProvider).toHaveBeenCalledWith("mock");
+  expect(container.querySelectorAll(".lf-firstrun__badge.is-confirmed")).toHaveLength(1);
+});
+
 test("FirstRunChecklist: a 'more options' link calls onNavigateAway (closes, does NOT complete — §F-2)", async () => {
   const onNavigateAway = vi.fn();
   const onDismiss = vi.fn();

@@ -1,4 +1,5 @@
 import "./inputs.css";
+import { CommitMenu } from "./CommitMenu";
 
 // Generic select ui primitive for non-master UI scopes (e.g. the QuoteCardRow
 // source selector, D-046). Categorical DATA fields must use MasterSelect
@@ -14,6 +15,10 @@ export interface SelectProps {
   onChange: (value: string) => void;
   options: SelectOption[];
   disabled?: boolean;
+  /** When set, the control commits on EVERY pick — including re-selecting the value already
+   *  shown (a native <select> emits no change for a same-value pick). Used by the first-run
+   *  checklist so confirming a pre-filled suggestion writes + confirms the step (F3). */
+  onCommit?: (value: string) => void;
   "aria-label": string;
 }
 
@@ -22,8 +27,14 @@ export function Select({
   onChange,
   options,
   disabled,
+  onCommit,
   "aria-label": ariaLabel,
 }: SelectProps) {
+  if (onCommit) {
+    return (
+      <CommitMenu options={options} value={value} onCommit={onCommit} disabled={disabled} aria-label={ariaLabel} />
+    );
+  }
   return (
     <span className={`lf-field${disabled ? " lf-field--disabled" : ""}`}>
       <select

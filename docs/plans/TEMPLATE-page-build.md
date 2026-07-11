@@ -54,6 +54,17 @@ the four templates renders inside the shell); and the regression surface is
 one page's tests. New chrome components ratify as a **set** at `/kitchen-sink` before
 assembly (a Phase-0a step). See `page-chrome.md`.
 
+**Gate / overlay plans adapt this template too (first-run retrospective §13).** A one-time
+**gate/overlay** mounted in the shell (first-run checklist, lock) is **not a content page**:
+no route, no nav entry, no figure ownership — §1/§2 describe **step/UI-state** and the
+**settings it writes** (through the same canonical endpoints, never a second code path).
+Acceptance is **behavioural** (skippable, links out, honest), not a single-page happy path.
+**Layout follows D-101:** a full-shell overlay **pins its header/footer and scrolls only its
+content**, **caps to the viewport on desktop** (all steps fit, no scroll), and becomes a
+**full-height sheet below the 900px laptop breakpoint** (D-102). It **mounts after the lock
+gate** (unlock precedes onboarding) and leaks nothing behind either. See
+`page-first-run-checklist.md`.
+
 ---
 
 ## 1. IDENTITY
@@ -156,6 +167,13 @@ affordance is a **§9 NEEDS DECISION** ("mock-backed affordance").
   list **portals to the viewport** (fixed + `max-height` + internal scroll) and
   overlays; it never expands a dialog or adds dialog-level scroll. Verified open
   **inside a dialog** at `/kitchen-sink`.
+- **Suggestion-confirming selects → commit-on-pick (first-run F3, §13).** When a select is
+  **pre-filled with a suggested value the user must be able to CONFIRM by choosing it**, a
+  native `<select>` is wrong: the browser emits **no `change` for a same-value pick**, so
+  re-selecting the suggestion is a silent no-op. Use `MasterSelect`/`Select` with **`onCommit`**
+  (the `CommitMenu` commit-on-pick pattern — fires on **every** pick incl. the unchanged one).
+  This is the platform pattern for any confirm-the-suggestion step; plain change-driven
+  selects stay the default everywhere else.
 - **Cards are LAYERED (D-100)** — sections/panels use `.lf-card` (outer border on
   `--surface-raised`); a section with a headline nests its content in a
   `.lf-card__body` panel (`--surface` + border) for depth, not a flat fill. A card's
@@ -313,13 +331,27 @@ tests. Never assemble the page against an endpoint that does not exist.*
   drift + typecheck + lint green; visual check both themes/densities. **For any
   layout-affecting change, extend the Playwright overflow suite (ADR-0004)** — jsdom
   cannot catch overflow (page-chrome §11-14); `npm run check` runs it.
-- **Phase 3 — Owner acceptance walk (LIVE, Holdings retrospective):** the owner
-  drives the **real rendered app**, because the biggest Holdings defects surfaced
-  only there (silent 500-cap, snapshot-vs-ledger round-trip, 1366px overflow,
-  mock-backed picker), across ~10 walks. Each finding becomes a numbered
-  `page-<name>.md §9-*` entry, fixed and **re-verified live**. A page is **done only
-  after this walk**, not at green suites. Layout/popover/picker items MUST be
-  verified by rendering (screenshots / DOM measurement), not tests.
+- **Phase 3a — Scripted pre-pass, MUST be GREEN before the owner walk (first-run
+  retrospective §13, PRIMARY LESSON):** author an **owner-independent scripted pre-pass**
+  (the `e2e/smoke/` pattern — a dev-only Playwright/driver harness against the **live** app +
+  real backend on a **reset** instance, captured console errors + telemetry, **never wired
+  into `npm run check`/CI**). Drive the whole flow the owner would, in **both themes across
+  the breakpoints**, and **fix everything it surfaces first**. On the first-run milestone this
+  caught **11 findings before the walk — including backend defects no frontend test could see**
+  (F5 `.env` drift, F6 provider-429 re-hammer, F8 API-side PIN length, F11 test `.env`
+  isolation). The pre-pass tooling must be **deterministic** (reset the DB via a scripted
+  reset that snapshots/restores `.env`, reads the active data dir) so it never drifts config
+  across runs. **Do not start the owner walk until the pre-pass returns green (0 console
+  errors, correct fresh state).**
+- **Phase 3b — Owner acceptance walk (LIVE, Holdings retrospective) — JUDGMENT ITEMS ONLY:**
+  the owner drives the **real rendered app**, because the biggest Holdings defects surfaced
+  only there (silent 500-cap, snapshot-vs-ledger round-trip, 1366px overflow, mock-backed
+  picker), across ~10 walks. With Phase 3a green, the walk is **for judgment calls** (copy,
+  layout feel, semantics, ratifications) — not for defects the pre-pass should have caught.
+  Each finding becomes a numbered `page-<name>.md §*` entry, fixed and **re-verified live** by
+  the owner. A page is **done only after this walk**, not at green suites. Layout/popover/picker
+  items MUST be verified by rendering (screenshots / DOM measurement), not tests. **The owner
+  closes the phase — never self-certify it.**
 
 ---
 

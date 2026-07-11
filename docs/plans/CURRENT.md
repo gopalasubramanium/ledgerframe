@@ -610,12 +610,32 @@ shell-plan note). Parked: D-101 scrollbar-thumb (R-18), ticker speed setting (R-
 indices→Markets (R-17). Deferred by prior decision: Ask panel (D-067, C-2), first-run
 checklist (D-045, C-4). Commits: backend `93b717c`; frontend `1c77f58`→ close-out.
 
+## FIRST-RUN CHECKLIST — DONE ✅ (milestone owner-closed, 2026-07-11)
+
+**The first-run checklist (D-045, C-4) milestone is complete and owner-closed.** Phase 0
+(contract deltas: `timezone` + `first_run_complete` settable via `PUT /settings`) → Phase 0a
+(3 §5.5 components ratified: `Switch`, `Combobox`, `FirstRunChecklist`) → Phase 1 (overlay
+mounts in `AppShell` after the lock gate; five steps wired to canonical endpoints) → Phase 2
+(tests) → Phase-3 pre-pass (scripted smoke caught **F1–F11**, all fixed) → Phase-3 live walk
+(batch 1 §11-1 pinned-header/footer layout; batch 2 §11-2 F3 confirm-on-pick + §11-3/F6
+provider-429 backoff). Owner live re-verify passed (SGD-as-suggested confirms). Full record:
+**`page-first-run-checklist.md` §10–§13** (§13 = retrospective). Replaces PersonaOnboarding
+(killed, D-045). Shipped platform patterns: **`CommitMenu`/`onCommit`** commit-on-pick selects
+(DESIGN-SYSTEM §5.5), **gate-overlay D-101 layout** (pinned header/footer, desktop no-scroll,
+sheet <900px). F6 backoff (Retry-After · cooldown breaker · honest-stale FX) is
+provider+worker-only, **contract untouched**. ROADMAP additions this milestone: **R-22..R-25**.
+Owner DECLINED for this milestone (recorded §12a): personal-profile fields, display-axis
+onboarding steps, per-lane provider config. Checks at close: **95 frontend + 32 Playwright +
+487 backend**, contract current.
+
 ## NEXT
 
-1. **First-run checklist plan (D-045, C-4) — via the template loop.** Its own small plan
-   (`docs/plans/page-<name>.md` from `TEMPLATE-page-build.md`): base ccy · timezone · PIN ·
-   provider · no-egress (replaces PersonaOnboarding). The chrome reserves the first-run
-   gate slot; this builds the flow. Surface any NEEDS DECISION before build.
+1. **Portfolio page build (D-023) — via the template loop.** Instantiate
+   `docs/plans/page-portfolio.md` from `TEMPLATE-page-build.md`, **PLAN ONLY first** (owner
+   reviews the plan before any code). Portfolio is the canonical **overview-template** page
+   (Holdings' linked P-1 summary target). Fill every section from the specs; surface any NEEDS
+   DECISION before build; the new template Phase-3a (scripted pre-pass green before the owner
+   walk) applies.
 2. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price

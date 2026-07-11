@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import "./inputs.css";
 import { getMaster } from "../../mocks/refdata";
 import { useRefdataVocabs } from "../../refdata/refdata-context";
+import { CommitMenu } from "./CommitMenu";
 
 // THE select for every categorical field (DESIGN-SYSTEM §5.1 / §6). Fixed-vocab
 // VALUES come from GET /refdata (D-005) when a RefdataProvider is present; the
@@ -13,6 +14,11 @@ export interface MasterSelectProps {
   master: string;
   value: string;
   onChange: (value: string) => void;
+  /** When set, the control commits on EVERY pick — including re-selecting the value already
+   *  shown (a native <select> emits no change for a same-value pick). Used by the first-run
+   *  checklist so confirming a pre-filled suggestion writes + confirms the step (F3).
+   *  Not honoured together with the create flow (first-run currency isn't user-extensible). */
+  onCommit?: (value: string) => void;
   allowCreate?: boolean;
   disabled?: boolean;
   /** Restrict the offered options to this subset of the master's values (still
@@ -26,6 +32,7 @@ export function MasterSelect({
   master,
   value,
   onChange,
+  onCommit,
   allowCreate,
   disabled,
   include,
@@ -52,6 +59,13 @@ export function MasterSelect({
     }
     return base;
   }, [vocabs, master, def.options, value, include]);
+
+  // Commit-on-pick mode (F3): the value is a pre-filled suggestion the user must be able to
+  // CONFIRM by choosing it, even unchanged — a native <select> can't emit that. No create flow
+  // here (currency isn't user-extensible).
+  if (onCommit) {
+    return <CommitMenu options={options} value={value} onCommit={onCommit} disabled={disabled} aria-label={ariaLabel ?? def.label} />;
+  }
 
   if (creating) {
     return (

@@ -30,9 +30,10 @@ test.describe.serial("first-run pre-pass (post-fix)", () => {
 
     const verbatim = (await card.innerText()).trim();
     console.log("\n===== PART 1: VERBATIM OVERLAY COPY =====\n" + verbatim + "\n===== END =====\n");
-    const baseCcy = await page.getByRole("combobox", { name: "Base currency" }).inputValue();
+    // Currency/provider are now commit-menu buttons (F3), timezone stays a Combobox.
+    const baseCcy = (await page.getByRole("button", { name: "Base currency" }).innerText()).trim();
     const tz = await page.getByRole("combobox", { name: "Timezone" }).inputValue();
-    const provider = await page.getByRole("combobox", { name: "Data provider" }).inputValue();
+    const provider = (await page.getByRole("button", { name: "Data provider" }).innerText()).trim();
     console.log("PRE-FILLED DEFAULTS (suggestions, not confirmed):", JSON.stringify({ baseCcy, tz, provider }));
 
     // --- PART 4: BOUNDARY — 4-digit PIN --------------------------------------------------
@@ -71,8 +72,15 @@ test.describe.serial("first-run pre-pass (post-fix)", () => {
     const tzConfirmed = await page.locator(".lf-firstrun__step").filter({ hasText: "Timezone" }).locator(".lf-firstrun__badge.is-confirmed").count();
     console.log("PART 2 — F1 timezone pick worked; step confirmed:", tzConfirmed === 1);
 
-    await page.getByRole("combobox", { name: "Base currency" }).selectOption({ index: 1 });
-    await page.getByRole("combobox", { name: "Data provider" }).selectOption("csv");
+    // F3: choosing the PRE-FILLED suggestion (SGD when SGD is suggested) must confirm + write
+    // — a native <select> no-ops on a same-value pick; the commit-menu does not.
+    await page.getByRole("button", { name: "Base currency" }).click();
+    await page.getByRole("option", { name: "SGD" }).click();
+    const ccyConfirmed = await page.locator(".lf-firstrun__step").filter({ hasText: "Base currency" }).locator(".lf-firstrun__badge.is-confirmed").count();
+    console.log("PART 2 — F3 base-currency SAME-VALUE (SGD) confirm worked:", ccyConfirmed === 1);
+    // Provider: pick csv via the commit-menu.
+    await page.getByRole("button", { name: "Data provider" }).click();
+    await page.getByRole("option", { name: /csv/i }).click();
     const countAfter = await page.locator(".lf-firstrun__count").innerText();
     console.log("PART 2 — confirmed count after 3 confirms + no-egress:", JSON.stringify(countAfter));
 
@@ -80,8 +88,8 @@ test.describe.serial("first-run pre-pass (post-fix)", () => {
     await page.reload();
     await expect(page.locator(".lf-firstrun__card")).toBeVisible();
     const persisted = {
-      ccy: await page.getByRole("combobox", { name: "Base currency" }).inputValue(),
-      provider: await page.getByRole("combobox", { name: "Data provider" }).inputValue(),
+      ccy: (await page.getByRole("button", { name: "Base currency" }).innerText()).trim(),
+      provider: (await page.getByRole("button", { name: "Data provider" }).innerText()).trim(),
       noEgress: await page.getByRole("switch", { name: "No egress" }).getAttribute("aria-checked"),
     };
     console.log("PART 2 — persisted after reload:", JSON.stringify(persisted));

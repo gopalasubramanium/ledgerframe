@@ -98,29 +98,42 @@
   inset: 0;
   z-index: 55;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding: var(--space-8) var(--space-5);
-  overflow-y: auto;
+  overflow-y: auto; /* fallback only — the card itself is height-capped and scrolls internally */
   background: var(--scrim);
 }
+/* Desktop: the card is capped to the viewport so head + foot pin and ONLY the step body
+   scrolls; at a laptop height the five steps fit with no scroll (compact rhythm below). */
 .lf-firstrun__card {
   width: 34rem;
   max-width: 100%;
+  max-height: calc(100dvh - 2 * var(--space-8));
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-6);
   background: var(--surface-raised);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-1);
+  overflow: hidden; /* clip the internal scroll region to the rounded corners */
 }
+/* Pinned header. */
 .lf-firstrun__head {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  padding: var(--space-6);
+  border-bottom: var(--border-width) solid var(--border);
+}
+/* The only scrolling region — the five steps. */
+.lf-firstrun__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-6);
 }
 .lf-firstrun__title {
   margin: 0;
@@ -139,8 +152,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-4) 0;
+  padding: var(--space-3) 0;
   border-top: var(--border-width) solid var(--border);
+}
+/* No divider between the pinned header and the first step (the header already has one). */
+.lf-firstrun__body > .lf-firstrun__step:first-child {
+  border-top: 0;
 }
 .lf-firstrun__step-head {
   display: flex;
@@ -197,12 +214,31 @@
 .lf-firstrun__link:hover {
   text-decoration: underline;
 }
+/* Pinned footer. */
 .lf-firstrun__foot {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding-top: var(--space-4);
+  padding: var(--space-4) var(--space-6);
   border-top: var(--border-width) solid var(--border);
   flex-wrap: wrap;
+}
+
+/* Below the 900px laptop breakpoint (D-102): a full-height sheet — header/footer pinned,
+   the step body scrolls, no rounded corners or gutter. */
+@media (max-width: 900px) {
+  .lf-firstrun {
+    padding: 0;
+    align-items: stretch;
+  }
+  .lf-firstrun__card {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
 }
