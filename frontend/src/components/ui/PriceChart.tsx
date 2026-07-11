@@ -294,7 +294,10 @@ export function PriceChart({
 
       <div className="lf-pricechart__legend">
         <span>Interval: {interval}</span>
-        <span>View: {advanced ? "Advanced" : "Simple"}</span>
+        {/* Honest metadata (page-net-worth §12b2-3): a legend line describes only a control that
+            EXISTS on the page. The Simple/Advanced view line shows only when its toggle is present
+            (`controls`) — never on a page (e.g. Net worth) that has no view toggle. */}
+        {controls && <span>View: {advanced ? "Advanced" : "Simple"}</span>}
         {effOverlays.length > 0 && <span>Overlays: {effOverlays.join(" · ")}</span>}
         {benchmark && <span>Benchmark overlaid (indexed)</span>}
         {comparison && (

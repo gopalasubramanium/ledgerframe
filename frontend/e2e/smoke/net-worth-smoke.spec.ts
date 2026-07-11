@@ -86,6 +86,13 @@ test.describe.serial("net worth pre-pass (live)", () => {
       });
       console.log(`PART 3 — footer↔body value x-offset (${theme}):`, dx);
       expect(dx, `statement total value x-aligned with body value column (${theme})`).toBeLessThanOrEqual(1);
+      // §12b2-1: a visible separator rule sits above the totals section (first tfoot row), both themes.
+      const sep = await page.evaluate(() => {
+        const td = document.querySelector('[data-card="statement"] tfoot tr:first-child .lf-table__td') as HTMLElement | null;
+        return td ? parseFloat(getComputedStyle(td).borderTopWidth) : 0;
+      });
+      console.log(`PART 3 — totals separator border (${theme}):`, sep);
+      expect(sep, `totals section has a separator rule (${theme})`).toBeGreaterThan(0);
     }
     await page.emulateMedia({ colorScheme: "light" });
 
@@ -103,6 +110,28 @@ test.describe.serial("net worth pre-pass (live)", () => {
     });
     console.log("PART 4b — summary card heights:", JSON.stringify(summaryHeights));
     expect(Math.max(...summaryHeights) - Math.min(...summaryHeights), "summary cards equal height per row").toBeLessThanOrEqual(1);
+
+    // §12b2-2: Portfolio summary card — the sparkline must NOT overlap the stat tiles, and all
+    // content stays within the card bounds, at every breakpoint (responsive, collision-free).
+    for (const w of WIDTHS) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.waitForTimeout(120);
+      const res = await page.evaluate(() => {
+        const card = document.querySelector('[data-card="portfolio-summary"]') as HTMLElement;
+        const cr = card.getBoundingClientRect();
+        const prow = card.querySelector(".nw__prow")?.getBoundingClientRect();
+        const spark = card.querySelector(".lf-spark")?.getBoundingClientRect();
+        const overlap = prow && spark ? Math.round(prow.bottom - spark.top) : 0;
+        const within = !spark
+          ? true
+          : spark.right <= cr.right + 1 && spark.bottom <= cr.bottom + 1 && (prow ? prow.right <= cr.right + 1 : true);
+        return { overlap, within, hasSpark: !!spark };
+      });
+      console.log(`PART 4c — portfolio-summary @${w}px:`, JSON.stringify(res));
+      expect(res.overlap, `sparkline does not overlap the stat tiles @${w}px`).toBeLessThanOrEqual(1);
+      expect(res.within, `summary content stays within card bounds @${w}px`).toBe(true);
+    }
+    await page.setViewportSize({ width: 1366, height: 900 });
 
     // PART 5: runway card + honest basis label (ND-9) --------------------------------------------
     await expect(page.getByText(/Basis: liquid assets ÷ recurring monthly net burn/)).toBeVisible();

@@ -6,8 +6,8 @@ Phase-3b acceptance walk.** §9 all-resolved (§9); Phase 0 shipped the ND-3/ND-
 routed + nav-built; tests + overflow suite extended; ND-1 demo snapshots seeded. The pre-pass drives
 the live page on seeded demo and runs GREEN ×3 — populated trend, **on-page statement reconciliation
 to the KPI headline** (795,980.93 == 795,980.93), KPI equal-geometry at 320/375/900/1366, 0 overflow
-× both themes, 0 console errors, no residual skeletons. Build record: §12; Phase-3b walk batch 1 in
-§13. **Next: the owner's re-verify of batch 1.**
+× both themes, 0 console errors, no residual skeletons. Build record: §12; Phase-3b walk batches 1–2
+in §13. **Next: the owner's re-verify of batch 2.**
 
 Net worth is the third **overview-template** page (Portfolio + Home are the others) and the canonical
 home for the net-worth headline, its trend, the liquidity ladder, and cash runway (IA §2/§5).
@@ -520,3 +520,42 @@ Recorded, fixed, pre-pass re-run green, awaiting owner re-verify. (Page NOT clos
 **Checks after batch 1:** frontend **120 vitest + 49 overflow + lint/typecheck/tokens/build** green.
 Live pre-pass GREEN ×3 (centre-aligned KPIs, footer↔body value x-aligned 0px both themes, summary
 cards equal height 443/443, populated trend, on-page reconciliation, 0 overflow, 0 console errors).
+
+**Batch 1 — RATIFIED (owner, 2026-07-12, seen live):** centre-aligned KPI strip (§12b1-1).
+
+## PHASE-3B WALK — batch 2 (owner, 2026-07-12)
+
+Recorded, fixed, pre-pass re-run green, awaiting owner re-verify. (Page NOT closed.)
+
+1. **§12b2-1 — DataTable footer: separator rule above the totals.** Added a visible separator rule
+   above the totals section (the first `<tfoot>` row) **in the component** — every reconciling-totals
+   table inherits it (`.lf-table tfoot .lf-table__foot:first-child .lf-table__td { border-top: …
+   --border-strong }`), both themes. Pre-pass asserts the rule is present (1px) light + dark.
+2. **§12b2-2 — Portfolio summary card: sparkline overlapped the stat tiles (BUG + assertion).** The
+   card body had no vertical-flow discipline (the `width:100%; overflow:visible` Sparkline sat on the
+   stat grid). Fixed: content flows in a **flex column with a gap** (`.nw__psummary`) and the
+   sparkline lives in its own full-width block (`.nw__spark`). **Pre-pass assertion added:** in the
+   `[data-card="portfolio-summary"]` card, the sparkline does **not** overlap `.nw__prow` and all
+   content stays **within the card bounds** at 320/375/900/1366 — verified (−8px gap, within=true).
+3. **§12b2-3 — Honest metadata: PriceChart legend "View: Simple" described an absent control.** The
+   legend showed `View: Simple` even where no Simple/Advanced toggle exists. **Rule recorded: a
+   metadata/legend line describes only a control that EXISTS on the page.** Fixed in `PriceChart` —
+   the View line renders only when `controls` is passed (its toggle is present); Net worth (no toggle)
+   omits it, Instrument Detail (has the toggle) keeps it. **Audit of all `MetaStrip` usages**
+   (InstrumentDetail, KitchenSink): those items describe **data/taxonomy** (Class, Sector, Currency…)
+   or **present controls** (theme/density) — **no absent-control lines**; the only offender was the
+   PriceChart legend, now fixed.
+4. **§12b2-4 — ROADMAP R-28 registered (+ mirrored to DECISIONS.md register).** Liquid-vs-illiquid
+   net-worth trend decomposition — **forward-only + opt-in** per the §12b1-4 schema report + ND-1
+   honesty: worker persists a liquidity split **going forward** (snapshot detail, shape TBD in the
+   plan file); **NO backfill** (grounds recorded: historical FX R-8 + manual-asset fabrication); a
+   **`PriceChart` stacked-area mode is a §5 amendment gate**; plan-file gate standard. **Nothing
+   built** (snapshot shape untouched, no chart mode). ROADMAP.md R-28 + DECISIONS register.
+
+**Reusable outcomes:** the `DataTable` `footer`/`<tfoot>` totals primitive now carries its own
+section separator (any reconciling-totals table inherits it); the **honest-metadata rule** (legend/
+MetaStrip lines describe only present controls) is recorded for future pages.
+
+**Checks after batch 2:** frontend **120 vitest + 49 overflow + lint/typecheck/tokens/build** green.
+Live pre-pass GREEN ×3 (totals separator both themes, no sparkline overlap + in-bounds all
+breakpoints, View line gone, plus all batch-1 + Phase-3a assertions).

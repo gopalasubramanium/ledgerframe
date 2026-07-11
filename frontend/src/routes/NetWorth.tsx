@@ -277,13 +277,17 @@ export function NetWorth() {
           <div className="lf-card__body">
             <CardBody data={summary} onRetry={reload}>
               {(s) => (
-                <>
+                <div className="nw__psummary">
                   <div className="nw__prow">
                     <TrendStat label="Today's change" value={formatSignedMoney(s.day_change)} tone={signOf(s.day_change)} />
                     <TrendStat label="Total return" value={formatSignedPercent(s.total_return_pct)} tone={signOf(s.total_return_pct)} />
                   </div>
-                  {sparkPoints.length >= 2 && <Sparkline points={sparkPoints} tone={signOf(s.total_return_pct)} aria-label="Portfolio performance" />}
-                </>
+                  {sparkPoints.length >= 2 && (
+                    <div className="nw__spark">
+                      <Sparkline points={sparkPoints} tone={signOf(s.total_return_pct)} aria-label="Portfolio performance" />
+                    </div>
+                  )}
+                </div>
               )}
             </CardBody>
           </div>

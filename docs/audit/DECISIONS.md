@@ -763,6 +763,7 @@ earlier decision.
 | R-23 | RSS / user-defined news feeds as a news provider lane (provenance-labelled; zero calls under no-egress) | owner 2026-07-11 |
 | R-24 | First-boot license acceptance gate — **cannot be a D-045 step (skippable ≠ acceptance)**; a separate blocking gate; revisit only if licensing/distribution posture demands (owner may instead strike + build now) | owner 2026-07-11 |
 | R-25 | Personal-profile fields (name for personalization) — **hard-gated on a deliberate D-045/PRODUCT-SPEC no-profiling amendment + owner re-affirmation against the privacy identity; DOB/gender remain out** | D-045 (amend), PRODUCT-SPEC |
+| R-28 | Liquid-vs-illiquid **net-worth trend decomposition** (stacked-area split by liquidity) — **forward-only + opt-in** (worker persists a split going forward, shape TBD in the plan file); **NO backfill** (grounds: historical FX R-8 + manual-asset fabrication, verified page-net-worth §12b1-4); **PriceChart stacked-area = §5 amendment gate**; plan-file gate | owner 2026-07-12, page-net-worth §12b1-4 |
 
 **v2.1 "accounting precision" theme (D-088).** R-6 (`spec` specific-lot cost
 basis), R-8 (historical FX series), and R-14 (FD accrued-interest valuation) are

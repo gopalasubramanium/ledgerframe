@@ -112,6 +112,11 @@
   border-bottom: 0;
   color: var(--text-secondary);
 }
+/* A visible separator rule ABOVE the totals section — every reconciling-totals table inherits it
+   (page-net-worth §12b2-1), both themes. */
+.lf-table tfoot .lf-table__foot:first-child .lf-table__td {
+  border-top: var(--border-width) solid var(--border-strong);
+}
 .lf-table__foot--emph .lf-table__td {
   border-top: var(--border-width) solid var(--border-strong);
   color: var(--text-primary);
