@@ -1,11 +1,11 @@
 # page-pricing-health.md — Pricing Health (diagnostics) page build plan
 
-**Status: PLAN ONLY — owner reviews §9 before any code.** Drafted 2026-07-12 from
-`TEMPLATE-page-build.md` (incl. the §7/§8 fail-first + reproduce-the-defect-first amendments, the
+**Status: §9 RESOLVED (owner 2026-07-12) — building (skip Phase 0; Phase-0a confirm-only).** Drafted
+from `TEMPLATE-page-build.md` (incl. the §7/§8 fail-first + reproduce-the-defect-first amendments, the
 Phase-3a scripted-pre-pass standard, and the progressive-per-card-loading overview standard).
-Verify-first pass done (§10 — read what the freshness/provenance/routing/confidence readers actually
-serve before assuming shapes, D-019). **Nothing is built.** Every ambiguity is in §9; the owner
-resolves them.
+Verify-first pass done (§10). All 13 §9 items resolved (each matched a drafted option; ND-10 overrode
+the draft's rotation assumption). **No §3b deltas → Phase 0 skipped.** Sequence: Phase-0a confirm-only
+→ Phase 1 assembly → Phase 2 (incl. the banner-reconciliation test) → Phase 3a pre-pass.
 
 Pricing Health is the **first Reports-group page** and the canonical home for **provenance,
 confidence, and routing diagnostics** (D-038) — the honest "why is this number what it is" view. The
@@ -23,7 +23,7 @@ global **StaleBanner** is a P-1 summary of this page (its stale count must recon
 | Route | `/pricing-health` | IA §2 |
 | Nav group | **Reports** (Reports · Pricing Health) | IA §3 (D-041) |
 | Page template | **Worklist** (per-holding DataTable + row actions + a summary header) | DESIGN-SYSTEM §3 |
-| Rotation eligibility | Reports pages — **presumably NOT dashboard-rotation eligible; confirm ND-10** | IA §3 (D-044) |
+| Rotation eligibility | **Eligible: YES** (D-044 — any nav page; the user picks the set) | IA §3 (D-044) |
 | One-line purpose | **Pricing Health** — per-holding provenance/confidence/routing diagnostics: the honest "why is this number what it is" view, and the canonical home for provenance + confidence (D-038). Read-only diagnostics + refresh / correct-source controls (no provider-priority editing, D-072). | IA §2/§5, D-038 |
 
 ---
@@ -204,10 +204,58 @@ label or a provider list.
 
 ---
 
-## 9. NEEDS DECISION — OPEN (owner resolves; nothing resolved here)
+## 9. NEEDS DECISION — RESOLVED (owner, 2026-07-12)
 
-Each item is an ambiguity the specs do not settle. Options laid out; **I resolved none.** Items
-flagged **⚠ VERIFY-FIRST DIVERGENCE** contradict a premise in the brief and need an owner call.
+All 13 items resolved. Each matched an option laid out at draft (ND-10 the owner **overrode** the
+draft's "presumably not" with the explicit D-044 text). The detailed option text is retained beneath
+the resolutions as the considered-options record.
+
+**Resolutions (owner, 2026-07-12):**
+- **ND-1 (a).** By-construction reconciliation accepted — both endpoints derive from `value_portfolio`
+  (P-1 satisfied at the reader). The page displays its **own `is_stale` count**; acceptance + a test
+  **demonstrate banner count == page count live**.
+- **ND-2 (a) · divergence recorded.** The banner stays **count + link only**; refresh is a Pricing
+  Health affordance — **per-holding row action + a bulk "Refresh all" → `/system/refresh-data`**.
+  **Brief divergence recorded honestly: the StaleBanner never offered refresh — the brief was wrong.**
+- **ND-3.** Gate = **session `[S]`** (D-069; not destructive → no fresh-PIN prompt, D-103 untouched).
+  **No-egress → zero outbound**, an honest "**refresh unavailable — no-egress is on**" state, stale
+  flags stand (Guarantee 5). Bulk refresh is long-running (40s + 8s/sym): **honest in-progress state**
+  + the served **updated/failed/skipped** summary rendered on completion. **429 honesty rides the F6
+  backoff already in the worker** (no new backoff work here).
+- **ND-4.** `source_override` via **`MasterSelect`** over served options, framed as a per-instrument
+  **CORRECTION** — never priority editing.
+- **ND-5.** **Row-detail** (a Details row action) composing **`MetaStrip` + inline chips**: lane ·
+  priority chain · selected source · auth/mapping flags. **Read-only. NO new component** — if the
+  composition genuinely fails, **STOP and request the amendment** (don't invent one).
+- **ND-6.** Ratified components only: overall band = **`TrendStat`** tile; by-band = a **compact
+  served table** (band · count · value %); status counts = a **chip strip**. **No segmented bar**
+  (consistent with Net worth ND-8).
+- **ND-7.** **Worklist template CONFIRMED.** Reports-group nuance recorded for the following pages:
+  **report/worklist-shaped — a summary header + a diagnostics body**.
+- **ND-8.** **Show `confidence_factors`** in the row-detail, under the routing chain — the served "why
+  this score" list, **verbatim**.
+- **ND-9.** Leave `/system/staleness` **unwired**; recorded as **orphaned** here + a **tech-debt line**
+  (candidate for removal at a future contract-review milestone — contract frozen, no change now).
+- **ND-10.** **Rotation-eligible: YES** — D-044 is explicit (any nav page; the user picks the set).
+  The draft's "presumably not" is **overridden** by the decision text.
+- **ND-11.** **Household-only** confirmed (reader takes no `entity_id`); logged for the Accounts milestone.
+- **ND-12.** **DECLINED** — no CSV here; exports are the Reports page's territory (same rationale as
+  Net worth ND-14). Recorded as **declined, not deferred**.
+- **ND-13.** Show **both flags** as honest per-holding indicators — copy **PROPOSED at build**
+  ("Needs an API key — add in Settings", "Needs identifier mapping"); links land honestly (**NotBuilt**
+  until Settings ships). **Diagnostic-only, no config.**
+
+**Confirms:** served labels throughout (D-005); bands **high≥80 / med≥50 / low<50** as served; **zero
+provider-priority controls** (D-072 — a grep stands in acceptance).
+
+**Build sequence:** no §3b deltas → **skip Phase 0**; **Phase 0a = confirm-only** at the kitchen sink
+(composition of ratified parts, no specimens) → Phase 1 assembly → Phase 2 (incl. the
+banner-reconciliation test) → Phase 3a pre-pass (green before the walk, fail-first standard).
+
+---
+
+**Considered options (draft record — the resolutions above are authoritative).** Items flagged
+**⚠ VERIFY-FIRST DIVERGENCE** contradicted a premise in the brief.
 
 - **ND-1 — StaleBanner ↔ page stale-count reconciliation.** The banner reads
   `/portfolio/summary.stale_count`; the page reads `/portfolio/pricing-health`. **Both derive from the

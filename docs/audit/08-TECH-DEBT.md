@@ -91,4 +91,12 @@ checking:
 - Two large stale session-transcript `.txt` files in the repo root (`2026-06-28…`, `2026-06-30…`)
   and a `09-Jul-2026` file — likely accidental commits / working notes; should be gitignored.
 
+## v2 findings (post-audit)
+
+- **`GET /system/staleness` is orphaned** (found 2026-07-12, page-pricing-health §9 ND-9): the
+  endpoint exists but has **no frontend consumer** — the StaleBanner reads `summary.stale_count` and
+  Pricing Health reads `/portfolio/pricing-health`, both over `value_portfolio`. **Candidate for
+  removal at a future contract-review milestone.** Contract is frozen (API-CONTRACT.json); **no change
+  now** (removal is a contract delta with its own review).
+
 <!-- AUDIT COMPLETE -->
