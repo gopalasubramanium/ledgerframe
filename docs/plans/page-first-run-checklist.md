@@ -1,10 +1,12 @@
 # page-first-run-checklist.md — First-run checklist (D-045) build plan
 
-**Status: PLAN ONLY — owner reviews before build** (drafted 2026-07-11). Derived
-strictly from PRODUCT-SPEC §7, DECISIONS D-045, SECURITY-BASELINE §3 (PIN), D-069
-(Privacy/no-egress), and the chrome milestone (C-4, the reserved first-run gate slot).
-Nothing is resolved here that the specs leave open — every ambiguity is a **§9 NEEDS
-DECISION** for the owner, not improvised.
+**Status: PLAN ONLY — §9 RESOLVED (owner 2026-07-11), awaiting plan sign-off. No build.**
+Drafted 2026-07-11 from PRODUCT-SPEC §7, DECISIONS D-045, SECURITY-BASELINE §3 (PIN),
+D-069 (Privacy/no-egress), and the chrome milestone (C-4). §9 records the owner's
+resolutions; two items remain for the owner at sign-off — **F-4** (timezone option-list
+source, not addressed) and confirmation of **F-10** (canonical base-currency path) +
+**F-12** (demo-data step read as EXCLUDE). §3b deltas approved. **Build does not start
+until sign-off.**
 
 **This is a gate/overlay, not a content page — it adapts the template** (per the
 `TEMPLATE-page-build.md` shell-adaptation note). Like the chrome, it deviates from the
@@ -44,8 +46,8 @@ the same endpoints the (future) Settings page uses. Each step's canonical home i
 
 | Step (D-045 order) | Canonical Settings home | Real setting it writes | Endpoint (frozen contract) |
 |--------------------|-------------------------|------------------------|----------------------------|
-| 1. Base currency | Settings · General | `base_currency` | `PUT /settings` (or `PUT /system/data-source`) — **§9** on which is canonical |
-| 2. Timezone | Settings · General | device `timezone` (D-013) | **NO settable endpoint exists** — contract gap (§3b / §9) |
+| 1. Base currency | Settings · General | `base_currency` | **`PUT /settings`** — canonical (F-10, verified: it also applies to `.env` + reloads + resets FX + restarts the worker); `/system/data-source.base_currency` stays a provider-bundle convenience |
+| 2. Timezone | Settings · General | device `timezone` (D-013) | **`PUT /settings`** after the **F-3 delta** (timezone added to the write surface) |
 | 3. PIN | Settings · Security | first PIN (access lock, D-002) | `POST /auth/set-pin` (first PIN from loopback, no auth) |
 | 4. Data provider | Settings · Prices | `market_provider` (+ optional API key) | `PUT /system/data-source` |
 | 5. No-egress toggle | Settings · Privacy | `privacy_mode` (D-069/D-075) | `PUT /settings` |
@@ -71,15 +73,15 @@ settings and links to Settings. Nothing here duplicates a canonical page's numbe
 | `GET /system/data-source` | read the **served provider list** (`providers`) + current provider (frontend zero-copy, D-005) | `{providers, ...}` |
 | `PUT /system/data-source` | write `market_provider` (+ optional `api_key`, never returned) | `DataSourceIn` |
 
-### 3b. Contract deltas (needed but NOT in the baseline — BUILD BACKEND-FIRST; each is a §9 item for owner approval before any backend work)
+### 3b. Contract deltas (APPROVED by owner 2026-07-11 — BUILD BACKEND-FIRST; regenerate `API-CONTRACT.json` + `docs/openapi.json` same commit)
 
-| kind | Endpoint (current → intended) | Decision | Why the checklist needs it |
-|------|-------------------------------|----------|----------------------------|
-| add/reshape | **timezone is not settable** — `timezone` is read in `GET /settings.defaults` but is **absent from the settings allow-list** and has no other write path | D-013 / D-045 step 2 | Step 2 ("Timezone → Settings · General") cannot function without a way to persist the device timezone. Shape (add `timezone` to the settings allow-list vs a dedicated endpoint) is **§9 / owner**. |
-| add | **first-run state flag** — no `first_run_*` / `onboarding_complete` key exists anywhere in the contract | D-045 | The overlay needs a persisted signal for "has the checklist been seen / dismissed / completed" so it does not reappear every load, and (if resumable) where to resume. Storage + semantics are **§9 / owner**. |
+| kind | Endpoint (current → intended) | Decision | Approved shape |
+|------|-------------------------------|----------|----------------|
+| add/reshape | **timezone settable** — `timezone` is read in `GET /settings.defaults` but absent from the settings write surface | D-013 / D-045 step 2 / **F-3** | **APPROVED:** timezone becomes settable **via the settings write surface** (add `timezone` to the `PUT /settings` allow-list, validated backend-side). |
+| add | **first-run state flag** — no `first_run_*` key exists in the contract | D-045 / **F-5** | **APPROVED:** a **server-persisted settings key** (D-078 rotation precedent — survives a browser wipe), **set on complete OR dismiss**; read to decide whether to show the overlay. |
 
-*No other deltas are assumed. The base-currency dual write path and the provider
-API-key handling are behavioural questions, not new endpoints — see §9.*
+*No other deltas. Base currency needs **no** delta — `PUT /settings` is the canonical path
+(§2/F-10, verified). Provider API-key entry stays in Settings (F-8), not first-run.*
 
 ---
 
@@ -97,16 +99,23 @@ the inventory lacks is a DESIGN-SYSTEM amendment (also listed in §9).*
 | **Toggle/`.lf-iconbtn` or a Settings-style switch** | the no-egress toggle | `PUT /settings{privacy_mode}` | **§9**: is there a ratified toggle/switch, or is it a §5.5 amendment? |
 | **PageHeader / EmptyState / Toast** | overlay heading, per-step "skipped/reason" honesty, save confirmation | — | ratified |
 
-**Affordances the ratified inventory LACKS (amendment required before build — §9):**
-- **A checklist / stepper overlay** — there is **no ratified "checklist", "stepper", or
-  first-run-overlay component**. Building one is a **DESIGN-SYSTEM §5.5 amendment**
-  ratified at `/kitchen-sink` **before** assembly (the chrome's Phase-0a pattern). Scope
-  of the amendment (a bespoke overlay vs. composing Dialog + a list) is **§9 / owner**.
-- **The shell first-run gate slot does not literally exist yet.** C-4 said the chrome
-  "reserves the first-run gate slot"; in practice `AppShell` mounts only the LockScreen
-  gate — **no first-run slot was added**. Mounting the overlay in `AppShell` is an
-  integration point for this milestone (§8), and *where/how* it composes with the lock
-  gate is **§9**.
+**Affordances the ratified inventory LACKS (amendment — APPROVED, ratify at kitchen sink):**
+- **A checklist / stepper overlay (+ the no-egress toggle/switch).** No ratified
+  checklist/stepper/first-run-overlay (or a settings toggle) exists → **APPROVED (F-6):**
+  author as **PROPOSED, DESIGN-SYSTEM §5.5 amendment**, ratified at `/kitchen-sink` in
+  **Phase 0a before assembly** (the chrome Phase-0a pattern). Dismissible card form (F-1).
+- **The shell first-run slot — mounts AFTER the lock gate (F-7).** `AppShell` mounts only
+  the LockScreen today; this milestone **adds the first-run overlay to `AppShell` after
+  the lock gate** — unlock precedes onboarding (restored-DB-with-PIN: lock first, then the
+  checklist). No leak behind either.
+
+**Step-specific rules (resolved):**
+- **Provider step = selection only (F-8/D-069).** It writes `market_provider` inline and
+  **links out** for the API key — it **never renders a key field** (secrets stay in
+  Settings).
+- **Honest interplay copy (F-9, all PROPOSED — ratify at kitchen sink):** the no-egress
+  step states **prices won't refresh**; the provider step **notes when no-egress is
+  already enabled**. No decision IDs in the copy (copy hygiene).
 
 **Component usage rules the build must honour (from the template + chrome):**
 - **Every input is a ratified `ui/` component** — no raw `<input>`/`<select>` (DESIGN-SYSTEM §6).
@@ -171,31 +180,48 @@ vocabulary source pinned** — §9.
 
 - **Phase 0 — Contract deltas (§3b):** with owner-approved shapes only — timezone-settable path + the first-run state flag; regenerate `API-CONTRACT.json` + `docs/openapi.json` same commit; drift + `make api-contract-check` green.
 - **Phase 0a — §5.5 component amendment:** author the checklist/stepper overlay (+ any toggle/switch) as PROPOSED and **ratify at `/kitchen-sink` before assembly** (new components forbidden without an amendment — the chrome Phase-0a pattern).
-- **Phase 1 — Overlay assembly:** compose the ratified overlay into `AppShell` (add the first-run gate slot); wire the five steps to their endpoints; honest skip/empty/error states; each step links to its Settings home; no-egress respected.
+- **Phase 1 — Overlay assembly:** mount the ratified dismissible overlay into `AppShell` **after the lock gate** (F-7); wire the five steps to their endpoints with **inline-minimal controls** (F-2), each also **linking to its Settings home**; provider = selection-only + link-out for keys (F-8); honest interplay copy (F-9); skip/skip-all set the first-run flag = completion (F-1/F-11); no-egress respected.
 - **Phase 2 — Tests:** render/behaviour tests (skippable steps, first-run detection, PIN min-6 + loopback case, no-egress zero-call); **extend the Playwright overflow suite** for the overlay; drift/typecheck/lint green.
 - **Phase 3 — Owner acceptance walk (LIVE):** drive the real app on a **fresh no-PIN, no-settings instance** (both themes + a narrow width): the overlay appears, each step sets/skips, links behave, PIN + no-egress work, it does not reappear after completion. Each finding → numbered §-entry, re-verified live. Done only after this walk.
 
 ---
 
-## 9. NEEDS DECISION (surface to owner BEFORE build — none resolved here)
+## 9. NEEDS DECISION — RESOLVED (owner, 2026-07-11)
 
-| # | Item | Why it blocks | Options / what's needed (OWNER decides) |
-|---|------|---------------|------------------------------------------|
-| F-1 | **Overlay form + trigger.** The owner framed this as a "gate/overlay," but the *form* is unspecified: full-screen **blocking** overlay (like LockScreen) vs a **dismissible** panel/banner vs a **first-run route**. And **how is "first run" detected** — no `first_run`/`onboarding` flag exists in the contract. | Determines §3b (the state flag), §4 (component), and the whole UX. | (a) blocking overlay + a completion flag; (b) dismissible panel + a "seen" flag; (c) other. **+ define the first-run trigger** (empty settings? explicit flag?). |
-| F-2 | **Dependency on the unbuilt Settings page.** D-045 says each step "links to its Settings home," but **Settings is not built** — links land on the `NotBuilt` fallback. Does the checklist **set values inline**, **link out only** (dead-until-Settings), or **both** (inline set + a link)? | The core interaction model; also whether this milestone can complete before Settings exists. | (a) inline set + link; (b) link-only (defer real setting to Settings); (c) inline for the endpoints that exist, link-only for the rest. |
-| F-3 | **Timezone is not settable in the frozen contract** (only read from env). Step 2 needs a write path. | Step 2 cannot function; it is a contract delta (§3b). | (a) add `timezone` to the settings allow-list; (b) a dedicated timezone endpoint; (c) other. **Owner approves the shape before backend work.** |
-| F-4 | **Timezone option source.** No MASTER-DATA timezone vocab exists. | Step 2's picker needs a list. | (a) browser `Intl.supportedValuesOf('timeZone')`; (b) a served list; (c) free text validated backend-side. |
-| F-5 | **First-run state storage + resumability.** Where is "checklist completed/dismissed" persisted, and can a **skipped** checklist be resumed later (and from where — a Settings "finish setup" affordance)? | §3b flag semantics + whether a re-entry affordance is in scope. | Define the flag + resume path (or "no resume — Settings is the home afterward"). |
-| F-6 | **Checklist/stepper component scope.** No ratified checklist/stepper exists → a §5.5 amendment. Bespoke overlay vs compose `Dialog` + a list? Is there a ratified **toggle/switch** for the no-egress step, or is that also an amendment? | Phase 0a can't start without the amendment scope. | Owner approves the amendment scope at `/kitchen-sink`. |
-| F-7 | **The shell first-run slot doesn't literally exist.** `AppShell` mounts only the LockScreen; C-4's "reserved slot" was conceptual. Where does the overlay mount, and **what is the order vs the LockScreen** (PIN-set-in-checklist then lock? checklist over lock? mutually exclusive on first run)? | Assembly integration + no-leak correctness. | Define the compose order of first-run overlay ↔ LockScreen ↔ lock state. |
-| F-8 | **Provider step + API keys.** Some providers (`alphavantage`, `eodhd`, `kite`) need an **API key** (a secret — never in `/settings`). Does step 4 collect the key at first run (via `PUT /system/data-source.api_key`, write-only), or choose the provider only and defer the key to Settings? | Secrets handling + step scope. | (a) provider + key at first run; (b) provider only, key later; (c) provider only, key-required providers flagged. |
-| F-9 | **No-egress ↔ provider ordering/interaction.** If the user enables no-egress, the data-provider step is effectively moot (no outbound). Should step 5 (no-egress) precede step 4 (provider), or should enabling no-egress **conditionally soften** the provider step? | Step order / conditional UX. | Owner decides ordering + any conditional behaviour. |
-| F-10 | **Base-currency write path.** `base_currency` is settable via **both** `PUT /settings` and `PUT /system/data-source`. Which is canonical for the checklist (and does the checklist need to keep them consistent)? | Avoid a second code path / divergence. | Owner picks the canonical write path. |
-| F-11 | **Skip-all / "do this later" affordance.** D-045 makes each step skippable; is there an explicit **"skip all / set up later"** that dismisses the whole overlay, and does that count as "completed" for F-1/F-5? | Overlay dismissal semantics. | Owner defines. |
+All resolved by the owner except **F-4** (not addressed — see below) and **F-12**
+(owner-added; recorded per the owner's stated rationale, confirm at sign-off).
+
+| # | Item | Resolution (owner, 2026-07-11) |
+|---|------|--------------------------------|
+| F-1 | Overlay form + trigger | **Dismissible overlay/card, NOT a blocking gate** (D-045 skippability governs). Shown on first load when the first-run flag is unset; **dismiss = flag set, no re-nag.** |
+| F-2 | Dependency on the unbuilt Settings page | **INLINE-minimal controls per step**, writing the real settings endpoints; each step **ALSO links to its Settings home** as the "more options" path. The link hits the `NotBuilt` fallback until Settings ships — **acceptable, honest.** |
+| F-3 | Timezone not settable | **APPROVED — §3b delta:** timezone becomes settable **via the settings write surface**. Backend-first, contract regenerated same commit. |
+| F-4 | Timezone option-list source | **NOT ADDRESSED in the resolutions — STILL OPEN.** The write path (F-3) is approved, but the *picker's option list source* was not stated. Options unchanged: (a) browser `Intl.supportedValuesOf('timeZone')`; (b) a served list; (c) free text validated backend-side. **Not resolved here — owner to state at sign-off.** |
+| F-5 | First-run state storage + resumability | **APPROVED — §3b delta:** first-run flag as a **server-persisted settings key** (D-078 rotation precedent; survives a browser wipe). **Set on complete OR dismiss.** |
+| F-6 | Checklist/stepper component scope | **APPROVED:** author the checklist/stepper as **PROPOSED (DESIGN-SYSTEM §5.5 amendment)**, ratified at `/kitchen-sink` in **Phase 0a before assembly.** |
+| F-7 | Shell mount + order vs LockScreen | **Mounts inside the shell AFTER the lock gate** — unlock precedes onboarding (the restored-DB-with-PIN case: lock first, then the checklist). |
+| F-8 | Provider step + API keys | **Provider SELECTION only, inline.** API-key entry stays **Settings territory (D-069)** — the step **links out** for keys, **never renders a key field.** |
+| F-9 | No-egress ↔ provider ordering | **Keep the D-045 step order.** **Honest interplay copy required (all PROPOSED):** the no-egress step states that **prices won't refresh**; the provider step **notes when no-egress is already enabled.** |
+| F-10 | Base-currency write path | **Single canonical write path = the same endpoint the future Settings page uses.** **Verified + reported (below):** both `PUT /settings` and `PUT /system/data-source` write the engine-consumed value (no divergence); **`PUT /settings` is canonical** — it is the comprehensive path (DB row + `.env` + reload + FX-cache reset + worker restart); `/system/data-source.base_currency` stays a provider-bundle convenience. **Confirm the canonical pick at sign-off.** |
+| F-11 | Skip-all / "do this later" | **Skip-all = completion:** flag set, **defaults stand, no nag**; everything settable later in Settings. |
+| F-12 | *(owner addition)* demo-data offer as a first-run step | Owner framing: *"include as a step / exclude — D-045's five steps only."* **Recorded as EXCLUDE** (D-045 defines exactly five steps; P-7/D-065 minimal scope) — no demo-data step. **Read from the owner's rationale; confirm at sign-off.** |
+
+**F-10 verification (owner asked to verify + report before Phase 0):** `base_currency`
+is accepted by **two** endpoints, but there is **no divergence** — `PUT /settings`
+writes the DB Setting row **and** applies `LEDGERFRAME_BASE_CURRENCY` to `.env` +
+`reload_settings()` + FX-cache reset + worker restart; `PUT /system/data-source` writes
+the same `.env` value as a side-effect of a provider change. The valuation engine reads
+`get_settings().base_currency` (the env value) — so both ultimately set what the engine
+uses. **Recommended canonical = `PUT /settings`** (the fuller path the Settings page
+will use); this is a report, not a resolution — owner confirms.
 
 ---
 
-**Sign-off to start build:** §9 (F-1..F-11) resolved · §3b deltas (timezone-settable +
-first-run flag) approved with pinned shapes · the Phase-0a checklist/overlay component
-amendment scoped for ratification. **No build — and no owner question resolved — until
-the owner clears these.**
+**Open before Phase 0 (2 items):** **F-4** (timezone option-list source — not addressed)
+and confirmation of the **F-10** canonical pick + **F-12** exclude reading. Everything
+else is resolved; §3b deltas (timezone-settable + server-persisted first-run flag) are
+approved; the Phase-0a component amendment is scoped.
+
+**Sign-off to start build:** F-1..F-3, F-5..F-11 resolved · **F-4 stated** · F-10/F-12
+confirmed · §3b deltas approved with pinned shapes · Phase-0a component amendment scoped.
+**No build until the owner signs off the resolved plan.**
