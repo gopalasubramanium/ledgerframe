@@ -15,7 +15,7 @@ vi.mock("../api/portfolio", () => ({
       allocation_by_class: { equity: 45699.11, cash: 25000, property: 980000 },
       allocation_by_currency: { SGD: 738768, USD: 77203 },
       allocation_by_sector: { Technology: 33171, "Unclassified sector": 229868 },
-      top_gainers: [{ id: 10, label: "VOO", symbol: "VOO", market_value: 1000, day_change: 120, day_change_pct: 1.2 }],
+      top_gainers: [{ id: 10, label: "VOO", symbol: "VOO", price: 466.88, currency: "USD", market_value: 1000, day_change: 120, day_change_pct: 1.2 }],
       top_losers: [], // empty → Detractors EmptyState
     },
   })),
@@ -119,6 +119,15 @@ test("movers are labelled Contributors/Detractors — today (D-024/D-034), never
 test("empty Detractors shows an honest EmptyState (Nothing declined today, ND-9)", async () => {
   renderPage();
   expect(await screen.findByText(/Nothing declined today/)).toBeTruthy();
+});
+
+test("mover rows show the served instrument price alongside the delta (§12b-2)", async () => {
+  const { container } = renderPage();
+  await screen.findByRole("heading", { name: "Contributors — today" });
+  await waitFor(() => {
+    const prices = Array.from(container.querySelectorAll(".pf__moverprice")).map((e) => e.textContent ?? "");
+    expect(prices.some((p) => /USD/.test(p))).toBe(true); // served price + currency, formatted
+  });
 });
 
 test("excluded-liabilities footnote appears ONCE per Allocation section, with asterisk markers (§12-4)", async () => {

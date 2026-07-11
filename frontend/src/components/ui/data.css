@@ -21,6 +21,9 @@
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
+/* Value tone (§12b-1) — colour the figure itself when it IS a signed change (gain/loss). */
+.lf-stat__value--up { color: var(--gain); }
+.lf-stat__value--down { color: var(--loss); }
 .lf-stat__unit {
   color: var(--text-tertiary);
   font-size: var(--font-size-13);
@@ -103,6 +106,15 @@
 }
 .lf-table__td--gain { color: var(--gain); }
 .lf-table__td--loss { color: var(--loss); }
+/* Entity links in cells match the Holdings treatment: accent, no underline (underline on hover)
+   — never default browser blue/underline (§12b-3). */
+.lf-table__td a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.lf-table__td a:hover {
+  text-decoration: underline;
+}
 /* Graceful degradation: long text truncates instead of forcing the table wider
  * than the viewport (no mandatory horizontal scroll at laptop widths). */
 .lf-table__td--trunc {

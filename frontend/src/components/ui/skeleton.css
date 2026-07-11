@@ -10,27 +10,21 @@
   height: var(--font-size-16);
   border-radius: var(--radius-sm);
   background: var(--surface-raised);
-  background-image: linear-gradient(
-    90deg,
-    var(--surface-raised) 0%,
-    var(--border) 50%,
-    var(--surface-raised) 100%
-  );
-  background-size: 200% 100%;
-  animation: lf-skeleton-shimmer 1.4s ease-in-out infinite;
+  /* Subtle pulse/fade (§12b-4) — opacity only; no directional shimmer. */
+  animation: lf-skeleton-pulse 1.6s ease-in-out infinite;
 }
 .lf-skeleton__bar:nth-child(2) { width: 85%; }
 .lf-skeleton__bar:nth-child(3) { width: 65%; }
 .lf-skeleton--block .lf-skeleton__bar {
   height: 12rem;
 }
-@keyframes lf-skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+@keyframes lf-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
+/* Reduced motion → static (no pulse). */
 @media (prefers-reduced-motion: reduce) {
   .lf-skeleton__bar {
     animation: none;
-    background-image: none;
   }
 }

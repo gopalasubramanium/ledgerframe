@@ -128,6 +128,26 @@ async def seed_demo_data(session: AsyncSession) -> bool:
 
     await session.flush()
     await rebuild_holdings_from_transactions(session)
+
+    # Representative tags on a few holdings so the By-tag donut + /portfolio/tags render
+    # populated in demo (page-portfolio §12b-6). Keys match the tag reader — instrument symbol
+    # (or manual label), scoped to the holding's account; the seed-flag convention is unchanged.
+    import json as _json
+
+    from app.models import HoldingTag
+    _seed_tags = {
+        "AAPL": ["core", "dividend"],
+        "MSFT": ["core", "dividend"],
+        "NVDA": ["core", "speculative"],
+        "VOO": ["core"],
+        "BTC": ["speculative"],
+    }
+    for h in (await session.execute(select(Holding).where(Holding.deleted_at.is_(None)))).scalars().all():
+        instr = await session.get(Instrument, h.instrument_id) if h.instrument_id else None
+        key = (instr.symbol if instr and instr.symbol else None) or h.label
+        if key in _seed_tags and h.account_id is not None:
+            session.add(HoldingTag(account_id=h.account_id, holding_key=key, tags=_json.dumps(_seed_tags[key])))
+
     session.add(Setting(key=SEED_FLAG_KEY, value="1"))
     await session.flush()
     return True

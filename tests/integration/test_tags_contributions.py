@@ -15,9 +15,12 @@ async def test_holding_tags_normalise_and_allocate(app_client):
     by = {t["tag"]: t for t in d["tags"]}
     assert "core" in by and "high_conviction" in by
     assert any(h["tags"] == ["core", "high_conviction"] for h in d["holdings"])
-    # Clearing tags removes them.
+    # Clearing THIS holding's tags removes them — "high_conviction" (unique to it) disappears
+    # from the totals; other demo-seeded tags (page-portfolio §12b-6) are unaffected.
     await app_client.put(f"/api/v1/portfolio/holdings/{hid}/tags", json={"tags": []})
-    assert not (await app_client.get("/api/v1/portfolio/tags")).json()["tags"]
+    d2 = (await app_client.get("/api/v1/portfolio/tags")).json()
+    assert all(h["tags"] == [] for h in d2["holdings"] if h["holding_id"] == hid)
+    assert "high_conviction" not in {t["tag"] for t in d2["tags"]}
 
 
 async def test_contributions_monthly_equivalent(app_client):

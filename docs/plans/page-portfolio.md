@@ -535,3 +535,35 @@ Recorded, fixed, pre-pass re-run green, awaiting owner re-verify.
 **Checks after batch 2:** frontend **112 vitest + 41 Playwright** + drift + build; backend **490**
 (+ attribution.csv test), contract current. Live pre-pass green (donut hover readout, Export CSV,
 filter, no residual skeletons, 0 overflow 320/375/900/1366 × both themes, 0 console errors).
+
+**Batch 2 — RATIFIED (owner, seen live):** true-ring donut, donut/chart hover readouts,
+progressive per-card skeletons, centre-aligned concentration/risk tiles.
+
+## PHASE-3B WALK — batch 3 (owner, 2026-07-11)
+
+Recorded, fixed, pre-pass re-run green, awaiting owner re-verify. (Page NOT closed.)
+
+1. **Stat-rail values formatted + centre-aligned.** The tiles passed a **raw `delta` number**
+   (108109.45) which TrendStat rendered unformatted. Fixed by dropping the redundant delta subline
+   (value == the figure) and adding a **`tone`** to TrendStat that **colours the value itself**
+   (gain/loss); the value is the served number **formatted** (comma groups) via the same helper as
+   the rest of the page. Main-rail tiles now get the **ratified centre-aligned** treatment.
+   Movers deltas were already formatted (formatSignedMoney/Percent).
+2. **Movers show the instrument price.** *Verified:* `price` + `currency` are **already served** on
+   each mover row (no reshape) — added them to the mover display (formatted, alongside the delta).
+3. **Attribution symbol links match Holdings.** Added a shared **`.lf-table__td a`** treatment
+   (accent, no underline; underline on hover) so DataTable cell links never diverge to browser
+   blue/underline. Audited the page — movers/net-worth/Reports links were already accent/no-underline.
+4. **Skeleton → subtle pulse/fade** (opacity), not a directional shimmer; **static under
+   reduced-motion**. Kitchen-sink specimen present.
+5. **Sidebar hierarchy (DESIGN-SYSTEM §5.5 amendment, PROPOSED).** Page entries **indented** under
+   their group header (extra left padding); the active rail stays at the left edge. Visual only —
+   D-043 groups/order untouched. Global chrome.
+6. **Demo seed tags.** Added representative tags (**core / dividend / speculative**) to several demo
+   holdings so the **By-tag donut + `/portfolio/tags` render populated** in demo (verified: core
+   40,103 · speculative 20,251 · dividend 17,153). Seed-flag convention unchanged; a tags test was
+   updated for the seeded state.
+
+**Checks after batch 3:** frontend **113 vitest** (+ mover-price) **+ 41 Playwright** + drift +
+build; backend suite green + contract current. Live pre-pass green (comma-formatted rail values,
+By-tag donut populated, mover price, donut hover, no residual skeletons, 0 overflow, 0 console errors).

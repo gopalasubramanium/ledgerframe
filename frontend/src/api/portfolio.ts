@@ -7,6 +7,8 @@ export interface MoverRow {
   id: number;
   label: string | null;
   symbol: string | null;
+  price: number | null;
+  currency: string | null;
   market_value: number | null;
   day_change: number | null;
   day_change_pct: number | null;

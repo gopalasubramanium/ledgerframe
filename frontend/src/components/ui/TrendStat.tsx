@@ -15,6 +15,9 @@ export interface TrendStatProps {
   delta?: DecimalString;
   /** Pre-formatted delta display (e.g. "+612.40 (0.4%)"). */
   deltaDisplay?: string;
+  /** Colour the VALUE itself gain/loss — for tiles where the value IS a signed figure (the
+   *  change), so no redundant delta subline is needed (page-portfolio §12b-1). */
+  tone?: "up" | "down" | "flat";
   unit?: string;
   sparkline?: number[];
   provenance?: ReactNode;
@@ -27,6 +30,7 @@ export function TrendStat({
   value,
   delta,
   deltaDisplay,
+  tone,
   unit,
   sparkline,
   provenance,
@@ -35,7 +39,7 @@ export function TrendStat({
   return (
     <div className="lf-stat">
       <span className="lf-stat__label">{label}</span>
-      <span className="lf-stat__value">
+      <span className={`lf-stat__value${tone ? ` lf-stat__value--${tone}` : ""}`}>
         {value}
         {unit && <span className="lf-stat__unit">{unit}</span>}
       </span>

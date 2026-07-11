@@ -30,6 +30,11 @@ test.describe.serial("portfolio pre-pass (live)", () => {
     console.log("PART 1 — realised label:", JSON.stringify(realisedLabel));
     expect(realisedLabel).not.toContain("YTD");
     expect(realisedLabel).toMatch(/Realised P\/L · \d{4}/);
+    // §12b-1: rail money values are SERVED-formatted (comma groups), never a raw number.
+    const costTile = page.locator(".pf__rail .lf-stat").filter({ hasText: "Cost basis" });
+    const costVal = (await costTile.locator(".lf-stat__value").textContent()) ?? "";
+    console.log("PART 1 — cost basis value:", JSON.stringify(costVal.trim()));
+    expect(costVal, "money value is comma-grouped, not a raw number").toMatch(/\d,\d{3}/);
 
     // --- PART 2: allocation donuts + D-082 bucket + excluded-liabilities footnote ----------
     const donutSegs = await page.locator(".lf-donut__legend .lf-donut__row").count();
@@ -43,10 +48,17 @@ test.describe.serial("portfolio pre-pass (live)", () => {
     expect(await page.locator(".lf-donut__footnote").count(), "footnote is section-level, not per-donut").toBe(0);
     expect(await page.locator(".pf__marker").count(), "affected donuts carry the * marker").toBeGreaterThanOrEqual(3);
 
+    // §12b-6: the By-tag donut renders populated (demo seed tags) — not the empty state.
+    for (const tag of ["core", "dividend", "speculative"]) {
+      await expect(page.getByText(tag, { exact: true }).first()).toBeVisible();
+    }
+
     // --- PART 3: Contributors/Detractors — today (never Gainers/Losers) ---------------------
     await expect(page.getByRole("heading", { name: "Contributors — today", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Detractors — today", exact: true })).toBeVisible();
     expect(await page.getByText(/Gainers|Losers/).count(), "no Gainers/Losers wording").toBe(0);
+    // §12b-2: mover rows show the served instrument price alongside the delta.
+    expect(await page.locator(".pf__moverprice").count(), "movers show a price").toBeGreaterThan(0);
 
     // --- PART 4: performance chart + controls (benchmark, window, include_manual) -----------
     // Wait for the performance card to resolve out of its skeleton (progressive loading, §12-8).

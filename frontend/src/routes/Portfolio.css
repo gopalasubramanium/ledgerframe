@@ -48,10 +48,13 @@
 .pf__costs > * {
   min-width: 0;
 }
-/* Compact: smaller value + padding so all 6 tiles fit a row and money never overflows. */
+/* Compact: smaller value + padding so all 6 tiles fit a row and money never overflows.
+   Centre-aligned label + value (§12b-1, ratified treatment extended to the main rail). */
 .pf__rail .lf-stat {
   min-width: 0;
   padding: var(--space-3);
+  align-items: center;
+  text-align: center;
 }
 .pf__rail .lf-stat__value {
   font-size: var(--font-size-20);
@@ -167,6 +170,15 @@
 }
 .pf__moversym a:hover {
   text-decoration: underline;
+}
+.pf__moverright {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.pf__moverprice {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 .pf__moverval {
   font-variant-numeric: tabular-nums;

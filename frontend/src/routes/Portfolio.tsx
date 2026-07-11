@@ -22,8 +22,10 @@ import { Rows4 } from "../icons";
 import { apiDownload } from "../api/client";
 import {
   formatMoney,
+  formatPrice,
   formatSignedMoney,
   formatSignedPercent,
+  signOf,
 } from "../format/number";
 import {
   getAttribution,
@@ -228,11 +230,11 @@ export function Portfolio() {
         {(s) => (
           <>
             <section className="pf__rail" data-card="rail">
-              <TrendStat label="Today's change" value={formatSignedMoney(s.day_change)} delta={s.day_change} />
-              <TrendStat label="Unrealised P/L" value={formatSignedMoney(s.unrealised_pl)} delta={s.unrealised_pl} />
+              <TrendStat label="Today's change" value={formatSignedMoney(s.day_change)} tone={signOf(s.day_change)} />
+              <TrendStat label="Unrealised P/L" value={formatSignedMoney(s.unrealised_pl)} tone={signOf(s.unrealised_pl)} />
               <RealisedTile realised={realised} />
               <TrendStat label="Cost basis" value={formatMoney(s.cost_basis)} />
-              <TrendStat label="Total return" value={formatSignedPercent(s.total_return_pct)} delta={s.total_return_pct} />
+              <TrendStat label="Total return" value={formatSignedPercent(s.total_return_pct)} tone={signOf(s.total_return_pct)} />
               <TrendStat label="Time-weighted return (TWR)" value={metricDisplay(metric(stats, "Time-weighted return (TWR)"))} />
             </section>
             <p className="pf__netlink">
@@ -426,7 +428,7 @@ function RealisedTile({ realised }: { realised: RealisedResp | null | undefined 
   const value = realised ? formatSignedMoney(realised.base_realised_total_current_fx) : "—";
   return (
     <div className="pf__railtile">
-      <TrendStat label={label} value={value} delta={realised?.base_realised_total_current_fx} />
+      <TrendStat label={label} value={value} tone={realised ? signOf(realised.base_realised_total_current_fx) : undefined} />
       {/* D-100 header-arrow, inside the tile, to the full report on Reports. */}
       <Link className="pf__tilelink" to="/reports" aria-label="Realised P/L report" title="Realised P/L report">↗</Link>
     </div>
@@ -470,9 +472,14 @@ function MoverList({ title, rows, emptyReason }: { title: string; rows: MoverRow
               <span className="pf__moversym">
                 {r.symbol ? <Link to={`/instrument/${encodeURIComponent(r.symbol)}`}>{r.symbol}</Link> : r.label}
               </span>
-              <span className={`pf__moverval ${Number(r.day_change ?? 0) >= 0 ? "pf__up" : "pf__down"}`}>
-                {formatSignedMoney(r.day_change)}
-                {r.day_change_pct != null ? ` (${formatSignedPercent(r.day_change_pct)})` : ""}
+              <span className="pf__moverright">
+                {r.price != null && (
+                  <span className="pf__moverprice">{r.currency ? `${r.currency} ` : ""}{formatPrice(r.price)}</span>
+                )}
+                <span className={`pf__moverval ${Number(r.day_change ?? 0) >= 0 ? "pf__up" : "pf__down"}`}>
+                  {formatSignedMoney(r.day_change)}
+                  {r.day_change_pct != null ? ` (${formatSignedPercent(r.day_change_pct)})` : ""}
+                </span>
               </span>
             </li>
           ))}
