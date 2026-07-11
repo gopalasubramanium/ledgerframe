@@ -24,6 +24,13 @@ _ALLOWED_KEYS = {
     "base_currency", "rotation_seconds", "refresh_interval_seconds", "privacy_mode",
     "reduced_motion", "high_contrast", "voice_enabled", "display_sleep_minutes",
     "ai_model", "focus_page", "rotation_pages",
+    # First-run checklist (D-045, page-first-run-checklist F-3/F-5):
+    # - timezone: the device timezone becomes settable via this write surface (server
+    #   zoneinfo is the validation truth — a client value we reject surfaces an honest
+    #   error, never a silent default).
+    # - first_run_complete: server-persisted flag (D-078 precedent) — set on the
+    #   checklist's complete OR dismiss, so it never re-nags across browsers.
+    "timezone", "first_run_complete",
 }
 
 
@@ -56,6 +63,14 @@ async def update_settings(patch: SettingsPatch, session: AsyncSession = Depends(
     # Validate the reporting currency up front so we never persist a bad value.
     if "base_currency" in patch.values and patch.values["base_currency"].upper() not in SUPPORTED_CURRENCIES:
         raise HTTPException(400, f"base_currency must be one of {SUPPORTED_CURRENCIES}")
+    # Validate the timezone against the server's IANA zoneinfo (F-3/F-4: the backend is
+    # the validation truth; a client value we don't recognise is an honest 400, never a
+    # silent default).
+    if "timezone" in patch.values:
+        from zoneinfo import available_timezones
+
+        if patch.values["timezone"] not in available_timezones():
+            raise HTTPException(400, "timezone must be a valid IANA timezone name")
     applied = {}
     for key, value in patch.values.items():
         if key not in _ALLOWED_KEYS:
@@ -85,5 +100,15 @@ async def update_settings(patch: SettingsPatch, session: AsyncSession = Depends(
         reload_settings()
         fx.clear_cache()
         restarted = await restart_worker()
+
+    # Timezone is read from get_settings() (the env) — e.g. GET /settings.defaults and
+    # the chrome Clock. Persist it to .env + reload so the new zone shows immediately.
+    # Display-only (no valuation impact) → no FX reset / worker restart.
+    if "timezone" in applied:
+        from app.core.config import reload_settings
+        from app.core.envfile import apply_env
+
+        apply_env({"LEDGERFRAME_TIMEZONE": applied["timezone"]})
+        reload_settings()
 
     return {"ok": True, "applied": applied, "restarted_worker": restarted}
