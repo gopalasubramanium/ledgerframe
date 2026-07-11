@@ -167,8 +167,13 @@ canonical page does not show (enforcement corollary).
 rows (world indices / your markets / watchlist+FX) — replaced by the single
 compact quote-card row.
 
-**Ticker strip (D-047):** KEEP but scoped to **Home Full layout only** — never
-Simple, never any other page. Grounds: wall-appliance identity.
+**Ticker strip (D-047 — AMENDED, PROPOSED, page-chrome §11-17):** promoted from
+Home-Full-only to the **global chrome FOOTER** — a fixed, always-visible strip at the
+bottom of the shell on **every page and width** (wall-appliance identity, everywhere).
+Shows the user's holdings + world indices (both from the frozen contract:
+`/portfolio/holdings` + `/markets/global`). Staleness stays flagged per item; the
+marquee halts under reduced motion (then static + manually scrollable); it is hidden
+entirely under lock (D-002). **Home Full no longer duplicates it in-page.**
 
 Detail level is scoped to Home (D-040): Settings control "Home layout: Simple /
 Full"; the global top-bar Simple/Expert toggle is removed as an app-wide control

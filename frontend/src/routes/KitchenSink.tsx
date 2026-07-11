@@ -430,12 +430,19 @@ export function KitchenSink() {
       {/* ---------------------------------------------------------------- */}
       <Section
         title="Data display · quotes (§5.2, D-046/D-047)"
-        note="QuoteCardRow carries a source select; TickerStrip is Home Full only and halts under reduced motion."
+        note="QuoteCardRow carries a source select. TickerStrip (D-047 AMENDMENT, PROPOSED) is now the GLOBAL CHROME FOOTER — holdings + world indices, all widths; halts under reduced motion (then static + manually scrollable); staleness flagged per item; hidden entirely under lock."
       >
         <div className="ks__stack">
           <QuoteCardRow quotes={QUOTES} source={quoteSource} onSourceChange={setQuoteSource} />
-          <Specimen label="TickerStrip (Home Full only)">
-            <TickerStrip quotes={QUOTES} source={quoteSource} />
+          <Specimen label="TickerStrip · global footer (holdings + indices; one item stale)">
+            <TickerStrip
+              quotes={QUOTES.map((q, i) => ({
+                symbol: q.symbol,
+                price: q.price,
+                changePct: q.changePct,
+                stale: i === 1,
+              }))}
+            />
           </Specimen>
         </div>
       </Section>

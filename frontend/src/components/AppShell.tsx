@@ -7,12 +7,14 @@ import {
   LockScreen,
   Sidebar,
   StaleBanner,
+  TickerStrip,
   TopBar,
   UpdateBanner,
 } from "./ui";
 import { DisplayControls } from "./DisplayControls";
 import { fetchAuthState, fetchVersionCheck, unlock as apiUnlock } from "../api/system";
-import { fetchChromeSettings, fetchStaleSummary } from "../api/chrome";
+import { fetchChromeSettings, fetchStaleSummary, fetchTickerQuotes } from "../api/chrome";
+import type { TickerQuote } from "../api/chrome";
 
 // The app SHELL (DESIGN-SYSTEM §5.5, D-066): Sidebar + slim TopBar + status strips +
 // lock gate, composed ONCE around every page. Pages never re-implement chrome. The
@@ -30,6 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [demo, setDemo] = useState(false);
   const [staleCount, setStaleCount] = useState(0);
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [ticker, setTicker] = useState<TickerQuote[]>([]);
 
   // Lock gate (D-002 access lock). If a PIN is set, the app starts locked until this
   // session is unlocked; a no-PIN instance is never gated (D-004 no-auth-when-no-PIN).
@@ -49,6 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     fetchVersionCheck().then((v) => {
       if (alive && v?.update_available) setUpdateVersion(v.latest);
     });
+    fetchTickerQuotes().then((q) => alive && setTicker(q));
     return () => {
       alive = false;
     };
@@ -86,6 +90,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <UpdateBanner version={updateVersion} onDismiss={() => setUpdateDismissed(true)} />
         )}
         <main className="lf-shell__content">{children}</main>
+        {/* Global ticker footer (D-047 amendment, §11-17). It sits at the bottom of the
+            main column so content reserves its space (never hidden behind it). NOT
+            rendered while locked — the lock must leak nothing (D-002/§11-17d). */}
+        {!locked && ticker.length > 0 && (
+          <footer className="lf-shell__ticker">
+            <TickerStrip quotes={ticker} />
+          </footer>
+        )}
       </div>
       <LockScreen open={locked} onUnlock={onUnlock} error={lockError} busy={lockBusy} />
     </div>

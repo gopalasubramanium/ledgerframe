@@ -325,3 +325,30 @@ by the owner. Not self-certified.
   Detail Edit. **Add** goes icon-only too (`Plus`) but keeps the **accent-filled**
   `.lf-iconbtn--primary` for primary emphasis. Tooltip + aria-label on each. Kitchen-sink
   specimen row. `structure.css`, `Holdings.tsx`, `InstrumentDetail.tsx`.
+
+- **§11-17 — TickerStrip global footer (D-047 AMENDMENT, PROPOSED).**
+  - **(4a) Data verified:** the frozen contract already exposes index quotes via
+    **`/markets/global`** (S&P 500, Nasdaq, FTSE, DAX, Nikkei, Hang Seng, Nifty 50,
+    STI…) and holdings quotes via **`/portfolio/holdings`** (symbol, price,
+    day_change_pct, is_stale). **No new endpoint or provider change → indices INCLUDED**
+    (no contract change this batch).
+  - **(4b) D-047 amended:** TickerStrip promoted from Home-Full-only to a fixed, always-
+    visible **global-chrome footer**, all widths. Home Full no longer duplicates it.
+  - **(4c) Requirements met:** footer height is a token (`--ticker-height`); it sits at
+    the bottom of the shell's main column so content **reserves the space** (never hidden
+    behind it); **mobile safe-area** respected (`env(safe-area-inset-bottom)`); quotes =
+    holdings + indices; **staleness flagged per item** (amber `TriangleAlert`).
+  - **(4d) Lock:** the footer is **not rendered at all while locked** (`!locked` guard) —
+    the strongest no-leak guarantee (D-002). **Render test:** lock open ⇒ `.lf-ticker`
+    absent; unlocked ⇒ present.
+  - **(4e) Reduced motion:** the marquee halts and the strip becomes **static + manually
+    scrollable** (`data-motion="reduced"` → `overflow-x:auto`, RATIFICATION §1.6).
+  - Component reshaped to `TickerQuote[]` (`symbol/price/changePct/stale`); reader
+    `fetchTickerQuotes` (holdings + indices, degrades safely). Kitchen-sink specimen +
+    the shell footer are live. `TickerStrip.tsx`, `api/chrome.ts`, `AppShell.tsx/.css`,
+    `data.css`, `tokens.css`, `icons.ts`; IA §4, DESIGN-SYSTEM §5.2, DECISIONS D-047.
+
+**Batch-3 checks:** frontend tests green (incl. the overflow guard + lock-hides-ticker);
+drift/typecheck/lint/build green. **STOP — owner re-verifies live** (320px width, the
+kitchen-sink icon row, the ticker under lock) **+ ratifies the PROPOSED items**
+(lucide icon set, all-icon framed page actions, TickerStrip footer / D-047 amendment).

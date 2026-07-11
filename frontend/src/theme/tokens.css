@@ -161,6 +161,8 @@
   --iconbtn-size: 2rem;
   /* Rendered size of an SVG icon (lucide, ADR-0003) inside a button. */
   --icon-size: 1.125rem;
+  /* Global ticker footer strip height (D-047 amendment, §11-17). */
+  --ticker-height: 2.5rem;
   /* LockScreen backdrop blur radius (D-002). Strong enough to smear all text/figures
      to illegibility; paired with a heavy --lock-scrim so content stays unreadable
      even where backdrop-filter is unsupported (see LockScreen.tsx @supports fallback).

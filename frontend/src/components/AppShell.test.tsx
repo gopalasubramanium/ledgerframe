@@ -15,6 +15,7 @@ interface FetchOpts {
   pinSet?: boolean;
   staleCount?: number;
   version?: { current: string; latest: string; update_available: boolean; url: string };
+  ticker?: boolean;
 }
 
 function stubFetch(opts: FetchOpts = {}) {
@@ -33,6 +34,18 @@ function stubFetch(opts: FetchOpts = {}) {
         return json({ stored: {}, defaults: { timezone: "Asia/Singapore", demo_mode: false } });
       if (url.includes("/portfolio/summary"))
         return json({ has_stale: (opts.staleCount ?? 0) > 0, stale_count: opts.staleCount ?? 0 });
+      if (url.includes("/portfolio/holdings"))
+        return json(
+          opts.ticker
+            ? { holdings: [{ symbol: "AAPL", price: 190.5, day_change_pct: 1.2, is_stale: false }] }
+            : {},
+        );
+      if (url.includes("/markets/global"))
+        return json(
+          opts.ticker
+            ? { groups: [{ items: [{ label: "US · S&P 500", quote: { price: 5000, change_pct: 0.5, is_stale: false } }] }] }
+            : {},
+        );
       if (url.includes("/system/version-check"))
         return json(
           opts.version ?? { current: "2.0.0", latest: "2.0.0", update_available: false, url: "" },
@@ -99,6 +112,19 @@ test("lock gate shows the LockScreen when a PIN is set, and hides it after unloc
   await user.click(screen.getByRole("button", { name: "Unlock" }));
 
   await waitFor(() => expect(screen.queryByRole("heading", { name: "Locked" })).toBeNull());
+});
+
+test("global ticker footer: shown when unlocked, HIDDEN entirely under lock (D-002 §11-17d)", async () => {
+  stubFetch({ ticker: true, pinSet: false });
+  const { unmount } = renderShell(<div>page</div>);
+  await waitFor(() => expect(document.querySelector(".lf-ticker")).not.toBeNull());
+  unmount();
+
+  // Locked → the ticker is NOT in the DOM at all (leaks nothing).
+  stubFetch({ ticker: true, pinSet: true });
+  renderShell(<div>page</div>);
+  await screen.findByRole("heading", { name: "Locked" });
+  expect(document.querySelector(".lf-ticker")).toBeNull();
 });
 
 test("UpdateBanner appears only when an update is available (no-egress → hidden)", async () => {

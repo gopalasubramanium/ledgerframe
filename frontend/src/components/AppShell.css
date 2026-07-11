@@ -18,3 +18,24 @@
   min-width: 0;
   overflow: auto;
 }
+/* Global ticker footer (D-047 amendment, §11-17): fixed at the bottom of the main
+   column (always visible; content above scrolls and reserves this space). Height is a
+   token; the mobile safe-area is respected. */
+.lf-shell__ticker {
+  flex-shrink: 0;
+  height: var(--ticker-height);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: content-box;
+  overflow: hidden;
+}
+.lf-shell__ticker .lf-ticker {
+  height: 100%;
+  box-sizing: border-box;
+  border-bottom: none;
+}
+.lf-shell__ticker .lf-ticker__track {
+  height: 100%;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}

@@ -33,6 +33,8 @@ export {
   Upload,
   Download,
   Plus,
+  // Status
+  TriangleAlert,
 } from "lucide-react";
 
 export type { LucideIcon } from "lucide-react";
