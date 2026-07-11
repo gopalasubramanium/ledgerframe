@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_auth, require_pin
 from app.core.config import get_settings
-from app.core.money import D, money, to_display
+from app.core.money import ZERO, D, money, to_display
 from app.core.provenance import valuation_label
 from app.models import (
     Account,
@@ -71,9 +71,16 @@ async def portfolio_summary(entity_id: int | None = Query(default=None),
     base = get_settings().base_currency
     val = await value_portfolio(session, base, entity_id=entity_id)  # §4.1
     gainers, losers = top_movers(val)
+    # Gross assets (positive holdings) vs liabilities (negative), so allocation weights are a
+    # share of GROSS assets and the excluded liabilities are shown as an honest served figure
+    # (donut footnote), never fabricated on the client (page-portfolio ND-4; GLOSSARY).
+    gross_assets = sum((h.market_value_base for h in val.holdings if h.market_value_base > 0), ZERO)
+    liabilities = sum((h.market_value_base for h in val.holdings if h.market_value_base < 0), ZERO)
     return {
         "base_currency": base,
         "total_value": to_display(val.total_value),
+        "gross_assets": to_display(gross_assets),
+        "liabilities": to_display(liabilities),
         "cost_basis": to_display(val.cost_basis),
         "unrealised_pl": to_display(val.unrealised_pl),
         "day_change": to_display(val.day_change),

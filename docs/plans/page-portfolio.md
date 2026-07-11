@@ -395,3 +395,61 @@ not begin Phase-0a/1 until the owner signs off this report.
 **Sign-off to start Phase-0a/1:** the five open items above resolved · the §5 `PriceChart`
 comparison-mode amendment scoped · everything else in §9 is settled and verified. **No further
 build until the owner signs off this verification report.**
+
+---
+
+## 11. PHASE-0 REOPEN — Batch-13 owner calls executed (2026-07-11)
+
+Owner signed off §10 and made the five calls. Executed below (backend delta = **one commit**,
+contract regenerated, suite green). Sequence next: Phase-0a specimens, then PAUSE for ratification.
+
+- **ND-3a — chart label (DONE) · ⚠ TWR flag (HELD for owner).** Chart line labelled **"Current
+  holdings — price return"** (with the **"include manual assets"** variant when on). GLOSSARY term
+  **added**, defined exactly as the engine computes (today's positions marked-to-market over the
+  window; excludes flows and closed positions; not TWR/money-weighted). **⚠ NOT DONE (contradicted
+  by verification):** the call to *"correct the TWR line to say TWR is not implemented"* and to
+  *register ROADMAP R-26 (flow-aware TWR)* — **verification found flow-aware TWR IS implemented**:
+  `time_weighted_return` (`analytics.py:331`) reconstructs point-in-time holdings and **chain-links
+  daily returns with each day's external capital removed** via `app/core/twr.twr_from_flows`, and it
+  is **served** as the stat-rail **"Time-weighted return (TWR)"** metric (`term-xirr-twr`; returns
+  "Not applicable" on thin history, D-086). Writing "not implemented" would be false and R-26 would
+  duplicate an existing capability. **HELD — owner to confirm:** keep the GLOSSARY TWR line as-is
+  (accurate) and **drop R-26**? (The chart-is-not-TWR distinction is fully captured by the new term.)
+- **ND-3d/e — shared value axis (SETTLED).** Plot the **served portfolio value series** + the
+  **served pre-indexed benchmark series** on **one shared value axis, zero frontend math**. Phase-0a
+  §5 scope: `PriceChart` **"comparison mode"** = a **second same-unit series on the shared axis +
+  legend + provenance sublabel** ("S&P 500 — SPY proxy · price return, excl. dividends"). Nothing more.
+- **ND-4 — BACKEND DELTA (DONE, committed this reopen; contract regen + suite green).** Spec
+  enforcement (D-082 + GLOSSARY):
+  - **(a) D-082 bucket served:** `sector_allocation()` now emits **"Not sector-classified
+    (non-equity)"** (module constant `UNCLASSIFIED_SECTOR_LABEL`) for every positive holding without a
+    sector; the donut sums to gross (`portfolio.py`).
+  - **(b) Denominator = gross assets, liabilities excluded, never allocation rows:** `allocation()`
+    counts **positive holdings only** (no `liability` row; class/currency sum to gross); `tag_allocation`
+    denominator switched to **gross** (`tags.py`); `/portfolio/summary` gains served **`gross_assets`**
+    + **`liabilities`** for the honest donut footnote (no frontend math).
+  - **Verified live:** `allocation_by_class` has no `liability` key and sums to `gross_assets`
+    (1,239,848.4); `allocation_by_sector` includes the D-082 bucket and sums to gross; `tags.total` =
+    gross. **Tests:** `test_allocation_is_gross_and_excludes_liabilities`,
+    `test_sector_allocation_serves_the_d082_null_bucket`. **Contract unchanged** (untyped `dict`
+    endpoints — regen confirms current). **489 backend passed.**
+- **ND-5 — HHI (SETTLED; branch reported: "legacy served it" → already an existing v2 capability,
+  NO delta, NO R-27).** Legacy check: `~/Documents/github/LedgerFrame/audit/04-CALCULATION-ENGINE.md:142`
+  + `PHASE_REPORT.md:729` + `test_help.py` (`term-hhi`) confirm legacy computed HHI. **Verification:
+  v2 STILL computes it** (`risk_metrics`, `analytics.py`) and **serves it live** at
+  **`/portfolio/attribution.risk.hhi` (= 0.6311)** — the Phase-0 "HHI not served" finding was checking
+  the wrong endpoint (`/portfolio/stats`). So the page reads **Largest position + Top-5 from
+  `/portfolio/stats`** and **HHI from `/portfolio/attribution.risk`** — all D-029 figures present, no
+  backend change, **R-27 not registered.**
+- **ND-12 — rail label (SETTLED).** The Realised P/L rail uses the **served report `year`** —
+  **"Realised P/L · {year}"** (e.g. "· 2024"), **never "YTD"**; reads `/portfolio/realised-gains`
+  (`base_realised_total_current_fx` + D-076 caveats verbatim); links to the **Reports** page unchanged.
+
+**Phase-0a scope (final, pending ratification):**
+1. **`PriceChart` comparison-mode §5 amendment (PROPOSED):** second same-unit series on a shared
+   value axis + legend + provenance sublabel (ND-3d/e). Ratify at `/kitchen-sink`.
+2. **AllocationDonut null-bucket + footnote specimens (PROPOSED):** renders the served D-082 bucket
+   as a first-class labelled segment + a footnote line for excluded liabilities (`summary.liabilities`).
+   Ratify at `/kitchen-sink`.
+
+**One open owner item before Phase 1 (beyond Phase-0a ratification): the ⚠ TWR flag above (ND-3a).**

@@ -25,6 +25,10 @@ from app.schemas.common import ValuationMethod
 from app.services import fx
 from app.services.market import get_cached_quote, refresh_quote
 
+#: D-082 served label for the sector-allocation bucket holding every positive-value holding
+#: without a resolved sector (property, cash, deposits, and any equity not yet classified).
+UNCLASSIFIED_SECTOR_LABEL = "Not sector-classified (non-equity)"
+
 log = logging.getLogger("ledgerframe")
 
 # Fallback sector classification for common tickers, used only when the market
@@ -183,20 +187,28 @@ class PortfolioValuation:
         return pct_change(self.total_value, self.cost_basis) if self.cost_basis else None
 
     def allocation(self, key: str) -> dict[str, Decimal]:
-        """Allocation map (base-currency value) keyed by an attribute name."""
+        """Allocation map (base-currency value) keyed by an attribute name.
+
+        Only **positive-value holdings (gross assets)** are counted: liabilities are NEVER
+        allocation rows and negative/zero values are excluded, so weights read as a share of
+        **gross assets** (GLOSSARY 'Allocation weight'; D-033; page-portfolio ND-4). A liability
+        must not net against an asset class or appear as its own negative slice.
+        """
         out: dict[str, Decimal] = defaultdict(lambda: ZERO)
         for h in self.holdings:
-            out[getattr(h, key, "Other") or "Other"] += h.market_value_base
+            if h.market_value_base > 0:
+                out[getattr(h, key, "Other") or "Other"] += h.market_value_base
         return dict(out)
 
     def sector_allocation(self) -> dict[str, Decimal]:
-        """Sector exposure of the stock/fund sleeve (only positive-value holdings
-        that have a resolved sector) — cash, property and unclassified assets are
-        excluded so the mix reads as a clean 'energy / tech / financials' picture."""
+        """Sector exposure over **gross assets** (positive-value holdings). Holdings without a
+        resolved sector roll into an explicit **'Not sector-classified (non-equity)'** bucket
+        (D-082) rather than being silently dropped, so the donut sums to gross assets and no
+        exposure is hidden (D-033 / page-portfolio ND-4)."""
         out: dict[str, Decimal] = defaultdict(lambda: ZERO)
         for h in self.holdings:
-            if h.sector and h.market_value_base > 0:
-                out[h.sector] += h.market_value_base
+            if h.market_value_base > 0:
+                out[h.sector or UNCLASSIFIED_SECTOR_LABEL] += h.market_value_base
         return dict(out)
 
 

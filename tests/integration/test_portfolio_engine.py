@@ -32,6 +32,68 @@ async def test_manual_assets_and_liabilities_net(session):
     assert val.total_value == Decimal("6000.00")
 
 
+async def test_allocation_is_gross_and_excludes_liabilities(session):
+    """ND-4 / D-033 / GLOSSARY: allocation weight = share of GROSS assets — liabilities are
+    never an allocation row, and negatives/zeros are excluded. The map sums to gross assets."""
+    acc = Account(name="A", currency="SGD")
+    session.add(acc)
+    await session.flush()
+    instr = Instrument(symbol="AAPL", currency="SGD", sector="Technology")
+    session.add(instr)
+    await session.flush()
+    session.add(QuoteRow(instrument_id=instr.id, price=Decimal("100"), previous_close=Decimal("100"),
+                         currency="SGD", source="mock", entitlement="delayed"))
+    session.add_all([
+        Holding(account_id=acc.id, instrument_id=instr.id, label="AAPL", asset_class=AssetClass.EQUITY,
+                quantity=Decimal("10"), avg_cost=Decimal("90"), currency="SGD"),
+        Holding(account_id=acc.id, label="Cash", asset_class=AssetClass.CASH, quantity=Decimal("1"),
+                avg_cost=Decimal("10000"), manual_value=Decimal("10000"), currency="SGD"),
+        Holding(account_id=acc.id, label="Loan", asset_class=AssetClass.LIABILITY, quantity=Decimal("1"),
+                avg_cost=Decimal("4000"), manual_value=Decimal("4000"), currency="SGD"),
+    ])
+    await session.flush()
+    val = await value_portfolio(session, "SGD")
+
+    alloc = val.allocation("asset_class")
+    assert "liability" not in alloc  # liabilities are NOT an allocation row
+    assert set(alloc) == {"equity", "cash"}
+    gross = sum(h.market_value_base for h in val.holdings if h.market_value_base > 0)
+    assert sum(alloc.values()) == gross == Decimal("11000")  # 1000 equity + 10000 cash
+    assert val.total_value == Decimal("7000")  # net (gross − 4000 liability) is separate
+
+
+async def test_sector_allocation_serves_the_d082_null_bucket(session):
+    """ND-4 / D-082: positive holdings without a resolved sector roll into an explicit
+    'Not sector-classified (non-equity)' bucket (never dropped); liabilities excluded; sums to gross."""
+    from app.services.portfolio import UNCLASSIFIED_SECTOR_LABEL
+
+    acc = Account(name="A", currency="SGD")
+    session.add(acc)
+    await session.flush()
+    instr = Instrument(symbol="AAPL", currency="SGD", sector="Technology")
+    session.add(instr)
+    await session.flush()
+    session.add(QuoteRow(instrument_id=instr.id, price=Decimal("100"), previous_close=Decimal("100"),
+                         currency="SGD", source="mock", entitlement="delayed"))
+    session.add_all([
+        Holding(account_id=acc.id, instrument_id=instr.id, label="AAPL", asset_class=AssetClass.EQUITY,
+                quantity=Decimal("10"), avg_cost=Decimal("90"), currency="SGD"),
+        Holding(account_id=acc.id, label="Home", asset_class=AssetClass.PROPERTY, quantity=Decimal("1"),
+                avg_cost=Decimal("50000"), manual_value=Decimal("50000"), currency="SGD"),  # sector null
+        Holding(account_id=acc.id, label="Loan", asset_class=AssetClass.LIABILITY, quantity=Decimal("1"),
+                avg_cost=Decimal("4000"), manual_value=Decimal("4000"), currency="SGD"),
+    ])
+    await session.flush()
+    val = await value_portfolio(session, "SGD")
+
+    sec = val.sector_allocation()
+    assert sec.get("Technology") == Decimal("1000")
+    assert sec.get(UNCLASSIFIED_SECTOR_LABEL) == Decimal("50000")  # property, no sector
+    assert UNCLASSIFIED_SECTOR_LABEL == "Not sector-classified (non-equity)"
+    gross = sum(h.market_value_base for h in val.holdings if h.market_value_base > 0)
+    assert sum(sec.values()) == gross == Decimal("51000")  # liability excluded
+
+
 async def test_stale_quote_is_flagged_and_marked_cached(session):
     instr = Instrument(symbol="AAPL", currency="USD")
     session.add(instr)

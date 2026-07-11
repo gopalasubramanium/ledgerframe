@@ -72,17 +72,23 @@ async def tag_allocation(session: AsyncSession, entity_id: int | None = None) ->
 
     by_tag: dict[str, dict] = defaultdict(lambda: {"value": ZERO, "count": 0})
     holdings = []
+    # Denominator = GROSS assets (positive holdings); liabilities are never allocation weight
+    # (GLOSSARY 'Allocation weight'; page-portfolio ND-4). Tag weights are a share of gross.
+    gross = ZERO
     for hv in val.holdings:
         key = hv.symbol or hv.label
         # account-less holdings (account_id None) can't carry tags → same as the [] default.
         tags = lookup.get((hv.account_id, key), []) if hv.account_id is not None else []
         holdings.append({"holding_id": hv.holding_id, "label": hv.label, "symbol": hv.symbol,
                          "value": float(round(hv.market_value_base, 0)), "tags": tags})
+        if hv.market_value_base <= 0:
+            continue  # liabilities/zeros are excluded from allocation weight (never a tag slice)
+        gross += hv.market_value_base
         for t in tags:
             by_tag[t]["value"] += hv.market_value_base
             by_tag[t]["count"] += 1
 
-    total = val.total_value
+    total = gross
     tags_list = sorted(
         ({"tag": t, "value": float(round(v["value"], 0)), "count": v["count"],
           "pct": float(round(v["value"] / total * 100, 1)) if total else 0.0}
