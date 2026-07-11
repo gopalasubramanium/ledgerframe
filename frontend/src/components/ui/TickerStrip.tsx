@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./data.css";
 import { formatPrice, formatSignedPercent, signOf } from "../../format/number";
 import type { DecimalString } from "../../format/number";
@@ -8,11 +9,17 @@ import { TriangleAlert } from "../../icons";
 // holdings (+ world indices). The marquee halts under reduced motion (data-motion=
 // "reduced"; then the strip is static + manually scrollable — data.css). Staleness stays
 // visible per item — the price is FLAGGED, never hidden or faked (Product Guarantee).
+//
+// D-098 (§11-19): a symbol with an `href` links to its entity-detail page; a symbol
+// WITHOUT one renders unlinked (indices have no instrument-detail route — never a dead
+// link).
 export interface TickerQuote {
   symbol: string;
   price: DecimalString;
   changePct: DecimalString;
   stale?: boolean;
+  /** Entity-detail route (holdings → /instrument/{symbol}); omitted for indices. */
+  href?: string;
 }
 
 export interface TickerStripProps {
@@ -30,7 +37,13 @@ export function TickerStrip({ quotes }: TickerStripProps) {
           const sign = signOf(q.changePct);
           return (
             <span className="lf-ticker__item" key={`${q.symbol}-${i}`}>
-              <strong>{q.symbol}</strong>
+              {q.href ? (
+                <Link className="lf-ticker__sym" to={q.href}>
+                  {q.symbol}
+                </Link>
+              ) : (
+                <strong>{q.symbol}</strong>
+              )}
               <span>{formatPrice(q.price)}</span>
               <span className={`lf-chg--${sign}`}>{formatSignedPercent(q.changePct)}</span>
               {q.stale && (

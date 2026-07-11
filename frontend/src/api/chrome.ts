@@ -49,6 +49,8 @@ export interface TickerQuote {
   price: string | null;
   changePct: string | null;
   stale?: boolean;
+  /** Entity-detail link (holdings only, D-098); indices stay unlinked. */
+  href?: string;
 }
 
 const numToStr = (v: unknown): string | null =>
@@ -76,6 +78,8 @@ export async function fetchTickerQuotes(): Promise<TickerQuote[]> {
         price: numToStr(hv.price),
         changePct: numToStr(hv.day_change_pct),
         stale: !!hv.is_stale,
+        // D-098: holdings link to their instrument-detail page.
+        href: `/instrument/${encodeURIComponent(hv.symbol)}`,
       });
     }
   }

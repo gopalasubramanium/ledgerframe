@@ -352,3 +352,39 @@ by the owner. Not self-certified.
 drift/typecheck/lint/build green. **STOP — owner re-verifies live** (320px width, the
 kitchen-sink icon row, the ticker under lock) **+ ratifies the PROPOSED items**
 (lucide icon set, all-icon framed page actions, TickerStrip footer / D-047 amendment).
+
+### Batch 4 (owner, 2026-07-11)
+
+- **§11-18 — TickerStrip tuning: speed + density tokens; faster default (PROPOSED).**
+  Exposed the marquee scroll duration and item spacing as tokens (`--ticker-scroll
+  -duration`, `--ticker-gap`; height already `--ticker-height`). Default speed set
+  **noticeably faster — 22s (was 40s)**; owner ratifies the final value at the kitchen
+  sink. Kitchen-sink specimen shows **three speeds side by side** (Faster 14s · Default
+  22s · Slower 36s). Recorded **"ticker scroll speed as a per-device display setting
+  (D-078)"** as **ROADMAP R-16** for the future Settings page plan — **NOT built now**.
+  `tokens.css`, `data.css`, `KitchenSink.tsx`, `ROADMAP.md`.
+- **§11-19 — Ticker symbol links (D-098).** Each **holdings** symbol links to
+  `/instrument/{symbol}` (reader sets `href`; TickerStrip wraps it in a router `Link`).
+  **Indices took the UNLINKED path** and render as plain `<strong>` — reasoning: an
+  index's ticker label (e.g. "US · S&P 500") has **no instrument-detail record/route**,
+  so linking it would be a dead link; and its canonical home, **Markets, isn't built yet**
+  (a link there would hit the NotBuilt fallback). Unlinked is the honest choice now — when
+  Markets ships, indices can link to their canonical home there (noted as a follow-up).
+  Render test asserts holdings link + index unlinked. `TickerStrip.tsx`, `api/chrome.ts`,
+  `data.css`, `chrome.test.tsx`.
+- **§11-20 — Lock verification assist (information only, no code change).**
+  Set a PIN against the running backend (loopback; the first PIN needs no auth):
+  ```
+  curl -X POST http://127.0.0.1:8321/api/v1/auth/set-pin \
+    -H 'Content-Type: application/json' -d '{"pin":"123456"}'
+  ```
+  (`PinPayload`: `pin`, 4–32 chars; use 6+ digits per the SECURITY-BASELINE §3 policy.
+  Then reload the app → the LockScreen gates it; unlock with the same PIN.) **Clear-PIN:
+  there is NO clear/remove-PIN endpoint in the frozen contract** — the auth surface is
+  `set-pin` · `unlock` · `lock` · `state`. `set-pin` only *changes* an existing PIN (and
+  that requires an unlocked session/token); it cannot clear one. To undo for testing,
+  reset the instance data or clear `User.pin_hash` in the dev DB directly.
+
+**Batch-4 checks:** frontend 83 tests green (incl. overflow guard, lock-hides-ticker,
+ticker links); drift/typecheck/lint/build green; backend untouched. **STOP — owner
+re-verifies live.**

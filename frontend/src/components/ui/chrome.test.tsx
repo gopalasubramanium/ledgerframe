@@ -9,6 +9,7 @@ import {
   NAV_GROUPS,
   Sidebar,
   StaleBanner,
+  TickerStrip,
   TopBar,
   UpdateBanner,
 } from "./index";
@@ -120,6 +121,26 @@ test("TopBar rotation and Detail toggles render a distinct lucide icon per state
   // State-distinct (the rule).
   expect(rotOn).not.toBe(rotOff);
   expect(detailFull).not.toBe(detailSimple);
+});
+
+// --- TickerStrip symbol links (D-098; §11-19) -------------------------------
+test("TickerStrip links holdings symbols to instrument detail; indices stay unlinked", () => {
+  render(
+    <MemoryRouter>
+      <TickerStrip
+        quotes={[
+          { symbol: "AAPL", price: "190", changePct: "1.2", href: "/instrument/AAPL" },
+          { symbol: "US · S&P 500", price: "5000", changePct: "0.4" },
+        ]}
+      />
+    </MemoryRouter>,
+  );
+  // Holdings symbol is a link to its entity-detail page (duplicated by the marquee).
+  const links = screen.getAllByRole("link", { name: "AAPL" });
+  expect(links.length).toBeGreaterThan(0);
+  expect(links[0].getAttribute("href")).toContain("/instrument/AAPL");
+  // The index has no href → never a dead link.
+  expect(screen.queryAllByRole("link", { name: /S&P 500/ })).toHaveLength(0);
 });
 
 // --- StaleBanner (honest: hidden at 0) --------------------------------------

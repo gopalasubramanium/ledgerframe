@@ -184,9 +184,9 @@
 }
 .lf-ticker__track {
   display: inline-flex;
-  gap: var(--space-6);
+  gap: var(--ticker-gap);
   padding: var(--space-3) var(--space-4);
-  animation: lf-ticker-scroll 40s linear infinite;
+  animation: lf-ticker-scroll var(--ticker-scroll-duration) linear infinite;
 }
 /* Reduced motion (setting or OS): the marquee halts and the strip becomes static +
    MANUALLY scrollable (RATIFICATION §1.6, §11-17). */
@@ -198,6 +198,17 @@
   gap: var(--space-2);
   font-size: var(--font-size-13);
   font-variant-numeric: tabular-nums;
+}
+/* Linked symbol (holdings → entity detail, D-098). Looks like the bold symbol; the
+   link affordance shows on hover. Index symbols render as plain <strong> (no link). */
+.lf-ticker__sym {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.lf-ticker__sym:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 /* Staleness stays visible per item — amber flag (§2.1 semantic colour). */
 .lf-ticker__stale {

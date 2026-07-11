@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "./KitchenSink.css";
 import { DisplayControls } from "../components/DisplayControls";
@@ -65,6 +65,19 @@ import {
   Sun, Moon, Monitor, Rows2, Rows4, Contrast, Circle, Disc, Waves, Minus, Wind,
   RotateCw, Ban, LineChart, CandlestickChart, Menu, MoreHorizontal, Pencil, Upload, Download, Plus,
 } from "../icons";
+
+// Ticker demo: holdings LINK to instrument detail (D-098); the two indices are unlinked.
+const TICKER_DEMO = [
+  ...QUOTES.map((q, i) => ({
+    symbol: q.symbol,
+    price: q.price,
+    changePct: q.changePct,
+    stale: i === 1,
+    href: `/instrument/${q.symbol}`,
+  })),
+  { symbol: "US · S&P 500", price: "5000.00", changePct: "0.42" },
+  { symbol: "India · Nifty 50", price: "24500.00", changePct: "-0.18" },
+];
 
 // Every bar icon (lucide, ADR-0003) for the ratification row — all states shown.
 const BAR_ICONS = [
@@ -434,15 +447,20 @@ export function KitchenSink() {
       >
         <div className="ks__stack">
           <QuoteCardRow quotes={QUOTES} source={quoteSource} onSourceChange={setQuoteSource} />
-          <Specimen label="TickerStrip · global footer (holdings + indices; one item stale)">
-            <TickerStrip
-              quotes={QUOTES.map((q, i) => ({
-                symbol: q.symbol,
-                price: q.price,
-                changePct: q.changePct,
-                stale: i === 1,
-              }))}
-            />
+          <Specimen label="TickerStrip · global footer — holdings LINK to instrument detail (D-098); indices unlinked; one stale">
+            <TickerStrip quotes={TICKER_DEMO} />
+          </Specimen>
+          <Specimen label="TickerStrip · scroll-speed options (PROPOSED — ratify final; default = middle)">
+            <div className="ks__stack">
+              {([["Faster", "14s"], ["Default", "22s"], ["Slower", "36s"]] as const).map(
+                ([label, dur]) => (
+                  <div key={dur} style={{ "--ticker-scroll-duration": dur } as CSSProperties}>
+                    <span className="ks__label">{label} · {dur}</span>
+                    <TickerStrip quotes={TICKER_DEMO} />
+                  </div>
+                ),
+              )}
+            </div>
           </Specimen>
         </div>
       </Section>

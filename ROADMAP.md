@@ -26,6 +26,7 @@ merges — the historical-FX item is a single merged entry (D-020 + D-076).
 | R-13 | Per-lane provider priority editing | D-072 | Only on demonstrated need; no user-editable provider priority in v2 (visibility yes, editability no) | parked |
 | R-14 | FD accrued-interest valuation | D-073 | First post-v2 feature. Plan file **must cover day-count conventions, compounding variants, maturity handling, and provenance labelling of calculated values**. `calculated_accrual` retained in the ValuationMethod vocabulary but no v2 lane emits it | parked |
 | R-15 | User-configurable review thresholds | D-084 | The v2 defaults are owner-set (D-084: runway 3 months, goal 180 days, the rest as audited); this makes them user-editable. Each still a named constant with a rationale | parked |
+| R-16 | Ticker scroll speed as a per-device display setting | D-047-amend / D-078 | **Owner-identified 2026-07-11 (page-chrome §11-18).** The ticker scroll duration (+ height/density) are tokens today; this exposes scroll speed as a **per-device** display axis (D-078, localStorage — like theme/density), for the **future Settings page plan**. NOT built now; default speed is owner-ratified at the kitchen sink | parked |
 
 ---
 
