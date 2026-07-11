@@ -17,15 +17,6 @@ export async function fetchVersionCheck(): Promise<VersionCheck | null> {
   return r.ok ? r.data : null;
 }
 
-export interface AuthState {
-  pin_set: boolean;
-}
-
-export async function fetchAuthState(): Promise<AuthState> {
-  const r = await apiGet<AuthState>("/auth/state");
-  return r.ok ? r.data : { pin_set: false };
-}
-
 // Unlock sets a session cookie (sent automatically on same-origin requests).
 export async function unlock(pin: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const r = await apiSend<{ ok: boolean }>("/auth/unlock", "POST", { pin });

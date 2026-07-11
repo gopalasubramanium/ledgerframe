@@ -6,12 +6,6 @@ import { apiGet, apiSend } from "./client";
 
 const TRUTHY = new Set(["1", "true", "yes", "on"]);
 
-export interface ChromeSettings {
-  timezone: string;
-  demo: boolean;
-  noEgress: boolean;
-}
-
 interface SettingsResponse {
   stored?: Record<string, string>;
   defaults?: {
@@ -19,17 +13,6 @@ interface SettingsResponse {
     demo_mode?: boolean;
     base_currency?: string;
     market_provider?: string;
-  };
-}
-
-export async function fetchChromeSettings(): Promise<ChromeSettings> {
-  const r = await apiGet<SettingsResponse>("/settings");
-  if (!r.ok) return { timezone: "UTC", demo: false, noEgress: false };
-  const stored = r.data.stored ?? {};
-  return {
-    timezone: r.data.defaults?.timezone ?? "UTC",
-    demo: !!r.data.defaults?.demo_mode,
-    noEgress: TRUTHY.has((stored.privacy_mode ?? "").toLowerCase()),
   };
 }
 
