@@ -16,6 +16,13 @@ export interface PriceChartProps {
   mode?: "candles" | "line";
   /** Comparison index series (normalized to the price range for overlay). */
   benchmark?: number[];
+  /** PROPOSED comparison mode (page-portfolio ND-3d/e). A SECOND **same-unit** series plotted on
+   *  the SHARED value axis — NOT normalised to its own range like `benchmark` — so relative
+   *  out/under-performance is visible. `label` names it in the legend; `sublabel` is a provenance
+   *  line (e.g. "S&P 500 — SPY proxy · price return, excl. dividends"). Values must be same-unit
+   *  and same-length as `series` (both come pre-indexed to a common start from the engine — zero
+   *  frontend math). */
+  comparison?: { values: number[]; label: string; sublabel?: string };
   interval: string;
   /** Show the Simple/Advanced toggle + period selector (Instrument Detail). */
   controls?: boolean;
@@ -80,6 +87,7 @@ export function PriceChart({
   overlays = [],
   mode = "line",
   benchmark,
+  comparison,
   interval,
   controls = false,
   defaultView = "simple",
@@ -104,10 +112,13 @@ export function PriceChart({
   const ma = useMemo(() => sma(closes, 5), [closes]);
   const sd = useMemo(() => stddev(closes, 5), [closes]);
 
-  const priceMin = Math.min(...lows);
-  const priceMax = Math.max(...highs);
-  const span = priceMax - priceMin || 1;
   const n = series.length;
+  // Comparison mode shares the value axis: fold the second series into the min/max so both fit.
+  const cmpVals = comparison?.values ?? [];
+  const useCmp = comparison != null && cmpVals.length === n;
+  const priceMin = Math.min(...lows, ...(useCmp ? cmpVals : []));
+  const priceMax = Math.max(...highs, ...(useCmp ? cmpVals : []));
+  const span = priceMax - priceMin || 1;
 
   const showRsi = effOverlays.includes("RSI");
   const plotBot = showVolume ? 40 : 46; // leave room for the volume band
@@ -123,6 +134,9 @@ export function PriceChart({
       )
       .join(" ")
       .trim();
+
+  // Comparison series on the SHARED axis (same yAt as the main line) — no re-normalisation.
+  const cmpPath = useCmp ? linePath(cmpVals) : "";
 
   let benchPath = "";
   if (benchmark && benchmark.length === n) {
@@ -236,6 +250,7 @@ export function PriceChart({
             : <path className="lf-pricechart__line" d={linePath(closes)} />}
 
           {benchPath && <path className="lf-pricechart__bench" d={benchPath} />}
+          {cmpPath && <path className="lf-pricechart__cmp" d={cmpPath} />}
 
           {showRsi && (
             <>
@@ -277,6 +292,12 @@ export function PriceChart({
         <span>View: {advanced ? "Advanced" : "Simple"}</span>
         {effOverlays.length > 0 && <span>Overlays: {effOverlays.join(" · ")}</span>}
         {benchmark && <span>Benchmark overlaid (indexed)</span>}
+        {comparison && (
+          <span className="lf-pricechart__cmplegend">
+            <span className="lf-pricechart__swatch lf-pricechart__swatch--cmp" aria-hidden="true" /> {comparison.label}
+          </span>
+        )}
+        {comparison?.sublabel && <span className="lf-pricechart__note">{comparison.sublabel}</span>}
         {/* Honest short-history: never stretched or fabricated. */}
         {coverageNote && <span className="lf-pricechart__note">{coverageNote}</span>}
       </div>

@@ -11,6 +11,10 @@ export interface AllocationDonutProps {
   segments: Segment[];
   legend?: boolean;
   onSegmentClick?: (segment: Segment) => void;
+  /** PROPOSED (page-portfolio ND-4): an honest footnote line under the donut — e.g. excluded
+   *  liabilities ("Liabilities −S$420,000 excluded — allocation is of gross assets"). The excluded
+   *  amount is a **served** figure (`summary.liabilities`), never computed on the client. */
+  footnote?: string;
   "aria-label"?: string;
 }
 
@@ -23,6 +27,7 @@ export function AllocationDonut({
   segments,
   legend = true,
   onSegmentClick,
+  footnote,
   "aria-label": ariaLabel,
 }: AllocationDonutProps) {
   const total = segments.reduce((s, seg) => s + num(seg.value), 0);
@@ -75,6 +80,8 @@ export function AllocationDonut({
           ))}
         </ul>
       )}
+
+      {footnote && <p className="lf-donut__footnote">{footnote}</p>}
     </div>
   );
 }

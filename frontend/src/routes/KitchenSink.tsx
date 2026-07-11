@@ -442,10 +442,28 @@ export function KitchenSink() {
           <Specimen label="AllocationDonut · by sector (non-equity bucket, D-082)">
             <AllocationDonut segments={ALLOCATION_BY_SECTOR} />
           </Specimen>
+          <Specimen label="AllocationDonut · AMENDMENT (PROPOSED, Portfolio ND-4): served D-082 bucket + excluded-liabilities FOOTNOTE (served figure, no client math)">
+            <AllocationDonut
+              segments={ALLOCATION_BY_SECTOR}
+              footnote="Liabilities −S$420,000 excluded — allocation is of gross assets."
+            />
+          </Specimen>
         </div>
         <div className="ks__stack">
           <Specimen label="PriceChart · line + benchmark (Portfolio performance, D-035)">
             <PriceChart series={PRICE_SERIES} mode="line" benchmark={BENCHMARK_SERIES} interval="1M" />
+          </Specimen>
+          <Specimen label="PriceChart · COMPARISON MODE (PROPOSED, Portfolio ND-3d/e): portfolio + benchmark on a SHARED value axis (no re-normalisation) + legend + provenance sublabel">
+            <PriceChart
+              series={PRICE_SERIES}
+              mode="line"
+              interval="1Y"
+              comparison={{
+                values: PRICE_SERIES.map((_, i) => PRICE_SERIES[0].close + i * 0.9 + Math.sin(i / 5) * 3),
+                label: "Benchmark",
+                sublabel: "S&P 500 — SPY proxy · price return, excl. dividends",
+              }}
+            />
           </Specimen>
           <Specimen label="PriceChart · candles + MA + BB + RSI (Instrument Detail)">
             <PriceChart series={PRICE_SERIES} mode="candles" overlays={["MA", "BB", "RSI"]} interval="1M" />

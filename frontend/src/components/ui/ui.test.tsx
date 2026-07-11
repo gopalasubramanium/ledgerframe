@@ -175,6 +175,29 @@ test("AllocationDonut renders a legend percentage per segment", () => {
   expect(pcts.length).toBe(ALLOCATION_BY_CLASS.length);
 });
 
+test("AllocationDonut footnote (PROPOSED, ND-4) renders the excluded-liabilities line", () => {
+  const { container } = render(
+    <AllocationDonut segments={ALLOCATION_BY_CLASS} footnote="Liabilities −S$420,000 excluded — allocation is of gross assets." />,
+  );
+  const foot = container.querySelector(".lf-donut__footnote");
+  expect(foot?.textContent).toContain("Liabilities −S$420,000 excluded");
+});
+
+test("PriceChart comparison mode (PROPOSED, ND-3d/e) plots a second same-axis series + legend", () => {
+  const { container } = render(
+    <PriceChart
+      series={PRICE_SERIES}
+      mode="line"
+      interval="1Y"
+      comparison={{ values: PRICE_SERIES.map((p) => p.close + 5), label: "Benchmark", sublabel: "SPY proxy" }}
+    />,
+  );
+  // The comparison series is a distinct shared-axis path (not the normalised __bench overlay).
+  expect(container.querySelector(".lf-pricechart__cmp")).not.toBeNull();
+  expect(screen.getByText("Benchmark")).toBeTruthy();
+  expect(screen.getByText("SPY proxy")).toBeTruthy();
+});
+
 test("Treemap squarified tiles cover the full area without overlap gaps", () => {
   const { container } = render(<Treemap nodes={TREEMAP_NODES} />);
   const rects = Array.from(container.querySelectorAll("rect"));
