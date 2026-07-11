@@ -94,6 +94,56 @@ async def test_sector_allocation_serves_the_d082_null_bucket(session):
     assert sum(sec.values()) == gross == Decimal("51000")  # liability excluded
 
 
+async def test_class_statement_is_signed_and_reconciles_to_net_worth(session):
+    """page-net-worth ND-4 / D-033: the STATEMENT lists assets positive + liabilities NEGATIVE,
+    orders liabilities last, and Σ(rows) reconciles exactly to the Net worth headline
+    (total_value). It is deliberately distinct from allocation() (gross weight, no liability row)."""
+    acc = Account(name="A", currency="SGD")
+    session.add(acc)
+    await session.flush()
+    instr = Instrument(symbol="AAPL", currency="SGD", sector="Technology")
+    session.add(instr)
+    await session.flush()
+    session.add(QuoteRow(instrument_id=instr.id, price=Decimal("100"), previous_close=Decimal("100"),
+                         currency="SGD", source="mock", entitlement="delayed"))
+    session.add_all([
+        Holding(account_id=acc.id, instrument_id=instr.id, label="AAPL", asset_class=AssetClass.EQUITY,
+                quantity=Decimal("10"), avg_cost=Decimal("90"), currency="SGD"),   # +1000
+        Holding(account_id=acc.id, label="Cash", asset_class=AssetClass.CASH, quantity=Decimal("1"),
+                avg_cost=Decimal("10000"), manual_value=Decimal("10000"), currency="SGD"),  # +10000
+        Holding(account_id=acc.id, label="Loan", asset_class=AssetClass.LIABILITY, quantity=Decimal("1"),
+                avg_cost=Decimal("4000"), manual_value=Decimal("4000"), currency="SGD"),   # -4000
+    ])
+    await session.flush()
+    val = await value_portfolio(session, "SGD")
+
+    rows = val.class_statement()
+    d = dict(rows)
+    assert d["equity"] == Decimal("1000")
+    assert d["cash"] == Decimal("10000")
+    assert d["liability"] == Decimal("-4000")           # liabilities are NEGATIVE
+    assert rows[-1][0] == "liability"                    # liabilities ordered last
+    assert sum((v for _, v in rows), Decimal(0)) == val.total_value == Decimal("7000")  # reconciles to headline
+    assert "liability" not in val.allocation("asset_class")  # statement ≠ allocation (gross weight)
+
+
+async def test_net_worth_statement_and_cash_deposits_reconcile_at_api(app_client):
+    """page-net-worth ND-3/ND-4 at the HTTP boundary: /portfolio/summary serves cash_and_deposits
+    (= cash + fixed_deposit it can be cross-checked against the holdings), and /net-worth/statement
+    nets to the SAME headline total_value, with liabilities negative."""
+    s = (await app_client.get("/api/v1/portfolio/summary")).json()
+    assert "cash_and_deposits" in s
+    hs = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    expect_cd = sum((h["market_value"] or 0) for h in hs
+                    if h.get("asset_class") in ("cash", "fixed_deposit") and (h["market_value"] or 0) > 0)
+    assert abs(s["cash_and_deposits"] - expect_cd) < 1.0  # served figure == the holdings it sums
+
+    st = (await app_client.get("/api/v1/net-worth/statement")).json()
+    assert abs(sum(r["value"] for r in st["rows"]) - st["net_worth"]) < 1.0       # Σ rows = net total
+    assert abs(st["net_worth"] - s["total_value"]) < 1.0                          # reconciles to the headline
+    assert all(r["value"] <= 0 for r in st["rows"] if r["asset_class"] == "liability")  # liabilities negative
+
+
 async def test_stale_quote_is_flagged_and_marked_cached(session):
     instr = Instrument(symbol="AAPL", currency="USD")
     session.add(instr)

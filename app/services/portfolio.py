@@ -212,6 +212,24 @@ class PortfolioValuation:
                 out[h.sector or UNCLASSIFIED_SECTOR_LABEL] += h.market_value_base
         return dict(out)
 
+    def class_statement(self) -> list[tuple[str, Decimal]]:
+        """Signed net-worth **statement** by asset class (D-033 / page-net-worth ND-4).
+
+        An itemised BALANCE: every asset class as a (positive) row, **liabilities NEGATIVE**,
+        ordered assets-desc then liabilities. ``Σ(values)`` reconciles exactly to
+        ``total_value`` — the Net worth headline. This is deliberately **NOT** ``allocation()``:
+        allocation is a gross-asset WEIGHT (positive-only, liabilities excluded, sums to gross);
+        the statement is a signed balance that INCLUDES liabilities and nets to the headline.
+        **Statement ≠ allocation — never interchange them.**
+        """
+        per_class: dict[str, Decimal] = defaultdict(lambda: ZERO)
+        for h in self.holdings:
+            per_class[getattr(h, "asset_class", "other") or "other"] += h.market_value_base
+        assets = sorted(((c, v) for c, v in per_class.items() if c != "liability"),
+                        key=lambda cv: cv[1], reverse=True)
+        liabilities = [(c, v) for c, v in per_class.items() if c == "liability"]
+        return [*assets, *liabilities]
+
 
 def entity_account_filter(model, entity_id: int | None):
     """§4.1 optional entity filter for a holdings/transactions query.

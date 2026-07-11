@@ -1,11 +1,14 @@
 # page-net-worth.md — Net worth (overview) page build plan
 
-**Status: PLAN ONLY — owner reviews §9 before any code.** Drafted 2026-07-12 from
+**Status: §9 RESOLVED (owner 2026-07-12) · Phase 0 BUILT (two approved deltas) — STOPPED for owner
+review of the §11 verification report + Phase-0a scope before Phase-0a/1.** Drafted from
 `TEMPLATE-page-build.md` (incl. the §7/§8 repeat-finding amendments, Phase-3a scripted-pre-pass
-standard, and the progressive-per-card-loading overview standard). Verify-first pass done (§10 — read
-what the engine serves before assuming shapes, D-019). **Nothing is built.** Every ambiguity is in
-§9; the owner resolves them. This page is the reciprocal of Portfolio: it **owns** the Net worth
-headline that Portfolio/Holdings summarise (D-032) — building it completes that wiring.
+standard, and the progressive-per-card-loading overview standard). Verify-first pass done (§10);
+all 14 §9 items resolved (each matched a drafted option). Phase 0 shipped the ND-3 (Cash & deposits)
++ ND-4 (signed statement reader) backend deltas, contract regenerated, backend tests incl.
+statement-reconciles-to-headline (§11). This page is the reciprocal of Portfolio: it **owns** the Net
+worth headline that Portfolio/Holdings summarise (D-032). **No page assembly yet** — Phase-0a/1 after
+owner sign-off.
 
 Net worth is the third **overview-template** page (Portfolio + Home are the others) and the canonical
 home for the net-worth headline, its trend, the liquidity ladder, and cash runway (IA §2/§5).
@@ -92,13 +95,21 @@ are in §10.*
 **Entity scoping:** `liquidity` accepts `entity_id`; `runway`, `net-worth/history`, `insurance` do
 **not** (verified §10). Household-default posture per **ND-10**.
 
-### 3b. Contract deltas (needed but not in the baseline — BUILD BACKEND-FIRST)
+### 3b. Contract deltas — APPROVED + PINNED (owner 2026-07-12), BUILT in Phase 0
 
-**None asserted here.** Per house style, **suspected gaps go to §9, not a §3b guess.** Two owner-facing
-gaps that *may* need a backend delta are raised as **ND-1/ND-3/ND-4** (net-worth history
-backfill/seed; "Cash & deposits" figure; composition-by-class-incl-liabilities reader). If the owner
-chooses a backend route for any, it becomes a §3b delta built **backend-first**, regenerating
-`API-CONTRACT.json` + `docs/openapi.json` in the same commit (`make api-contract-check`).
+Two deltas approved (ND-3, ND-4); pinned shapes below; **built backend-first, contract regenerated
+same commit** (§11). ND-1 stays frontend + demo-seed (no delta). All others assemble over existing
+endpoints.
+
+| kind | Endpoint | Decision | Pinned shape |
+|------|----------|----------|--------------|
+| **field add** | `GET /portfolio/summary` → **`cash_and_deposits`** | ND-3 / D-054 | additive `float` on the existing dict (untyped endpoint → contract unchanged). **`cash_and_deposits = Σ positive market_value_base of holdings with `asset_class ∈ {cash, fixed_deposit}`**, base ccy today's FX — the literal "Cash & deposits" reading of the GLOSSARY definition. Served string; no client math. |
+| **NEW path** | `GET /net-worth/statement` | ND-4 / D-033 | `{ base_currency, rows:[{asset_class, value}], gross_assets, liabilities, net_worth }` — **signed**: asset classes positive, **liability rows negative**, ordered assets-desc then liabilities; `net_worth = value_portfolio.total_value` and **`Σ rows == net_worth == /portfolio/summary.total_value`** (reconciles to the headline). Frontend resolves `asset_class` → label via `/refdata` (D-005). **Contract +1 (→ 129 paths).** |
+
+**Statement ≠ allocation (recorded rule, ND-4):** `allocation_by_class` stays **gross-only** (positive
+weights, liabilities excluded, D-033/page-portfolio ND-4). The **statement** is a signed balance that
+**includes** liabilities and nets to the headline. The two answer different questions and are **never
+interchanged** (enforced in the service docstring `ValuationResult.class_statement`).
 
 ---
 
@@ -241,10 +252,60 @@ assertion rule.*
 
 ---
 
-## 9. NEEDS DECISION — OPEN (owner resolves; nothing resolved here)
+## 9. NEEDS DECISION — RESOLVED (owner, 2026-07-12)
 
-Each item is an ambiguity the specs do not settle. Options are laid out for the owner; **I have
-resolved none.** Items flagged **⚠ CONTRACT GAP** may need a backend delta (then §3b, backend-first).
+All 14 items resolved by the owner. Each resolution below **matched an option laid out at draft**
+(none required re-opening). The detailed option text is retained beneath the resolutions as the
+considered-options record.
+
+**Resolutions (owner, 2026-07-12):**
+- **ND-1 — trend data source (RESOLVED).** Product: honest **EmptyState** ("history accumulates as the
+  appliance runs") + **`coverageNote`** thin-history handling. **Demo seed gains synthetic net-worth
+  snapshots** (demo-only, seed-flag convention — the sanctioned-demo-data pattern, cf. D-104 tags).
+  **Backfill REJECTED — recorded:** a reconstructed history needs **historical FX (ROADMAP R-8,
+  parked)** and would **fabricate history for manual assets** (property/cash have no price series) —
+  contra Guarantee 3. Pre-pass asserts the **demo** chart is populated; the **fresh-instance
+  EmptyState** is covered by a render test.
+- **ND-2 — trend shape/window (RESOLVED).** `PriceChart` **single-series (net_worth only), NO
+  benchmark** on this page. Windows reuse the **ratified set minus intraday** (1M/3M/6M/YTD/1Y/5Y/Max),
+  **default Max** while history is young. Windowing is a **frontend display-slice** of the served
+  series (no param, no math) — the history endpoint stays param-less.
+- **ND-3 — Cash & deposits (RESOLVED, backend delta).** Serve the figure on the net-worth reader per
+  the GLOSSARY definition; frontend renders the served string. **Pinned + built** (§3b): `cash +
+  fixed_deposit`, positive, base ccy. *(Interpretation flag: the GLOSSARY wording "immediately/
+  near-term available cash" is loose; the built figure is the literal "cash & deposits" reading —
+  surfaced in the §11 verification report for confirmation.)* Contract regen same commit.
+- **ND-4 — composition statement (RESOLVED, backend delta).** **Signed per-class STATEMENT reader**
+  (assets by class + liability rows negative + net total reconciling to the headline), **distinct from
+  `allocation_by_class`** (allocation stays gross-only; **statement ≠ allocation** — rule recorded in
+  §3b + the service docstring). **Pinned + built** (§3b), contract +1 (→129).
+- **ND-5 — insurance exclusion line (RESOLVED).** Verbatim D-039/D-081 wording, shown **whenever ≥1
+  insurance policy exists**; with **zero policies the line is omitted** (an exclusion notice with no
+  exclusions is noise). **Judgment flag:** this conditional display is an **owner call on D-039's
+  "stated visibly"** — recorded so a later reader knows it was deliberate, not a drop.
+- **ND-6/7 — ReviewCard + Portfolio-headline summaries (RESOLVED).** Standard **P-1
+  summary-with-reader** pattern, linked, **no figures beyond what the canonical pages show**. Concrete
+  Review reader (`/portfolio/review` vs `/review/centre`) pinned at Phase-1 assembly (non-blocking).
+- **ND-8 — liquidity ladder (RESOLVED).** Renders as a **TABLE** (numbers-first, existing components).
+  A segmented-bar visual is **NOT built** — noted as possible polish, **no ROADMAP entry**.
+- **ND-9 — runway card (RESOLVED).** Card **labels its basis honestly** — the served burn-rate
+  definition + period next to the figure + GLOSSARY [Help]. **Engine basis verified UNAMBIGUOUS**
+  (`runway.py`): `liquid ÷ recurring **monthly** net burn` (recurring expenses − income,
+  monthly-equivalent via `MONTHLY_FACTOR`), at today's FX, `once` excluded (D-057); served
+  `note`+`disclaimer` state it. → No STOP; no new component.
+- **ND-10 — entity scope (RESOLVED).** **Household-default, no selector** (Accounts precedent); log
+  the `entity_id` wiring as a future Accounts item.
+- **ND-11 — rotation (RESOLVED).** **Eligible: YES.**
+- **ND-12/13 — freshness + thin-history (RESOLVED).** Served freshness flags + `coverageNote` copy per
+  the established pattern; **no new invention**.
+- **ND-14 — CSV (DECLINED, not deferred).** **No CSV on this page** — exports are **Reports** territory
+  (D-038/D-050). Recorded as declined.
+
+---
+
+**Considered options (draft record — the resolutions above are authoritative):** each item was an
+ambiguity the specs do not settle; options were laid out for the owner. Items flagged **⚠ CONTRACT
+GAP** were the ones that became backend deltas (ND-3/ND-4).
 
 - **ND-1 — Net-worth trend data source ⚠ CONTRACT/DATA GAP.** `/net-worth/history` returns persisted
   `NetWorthSnapshot` rows written **only by the worker on a 6-hour interval** (`app/worker.py:136`);
@@ -337,5 +398,49 @@ Ran the read-what-the-engine-serves pass before drafting §3/§4. **No shape was
 | Entity scoping | `liquidity` accepts `entity_id`; `runway` / `net-worth/history` / `insurance` do **not** | route signatures |
 
 **Resulting owner sign-off surface (all in §9):** ND-1 (trend data source), ND-3 ("Cash & deposits"
-figure), ND-4 (composition-incl-liabilities reader) are the **potential backend deltas**; everything
-else is assembly over verified endpoints. **No build until the owner resolves §9.**
+figure), ND-4 (composition-incl-liabilities reader) were the **potential backend deltas**; everything
+else is assembly over verified endpoints. **→ §9 now RESOLVED; Phase 0 built ND-3 + ND-4 (§11).**
+
+---
+
+## 11. PHASE 0 — CONTRACT DELTAS BUILT (2026-07-12) — STOP for owner review
+
+Built the two approved deltas backend-first (ND-3, ND-4), contract regenerated in the same commit,
+backend tests added. **Phase 0 completes here and STOPS for the owner** before Phase-0a/1.
+
+**Shipped:**
+1. **ND-3 — `cash_and_deposits` on `GET /portfolio/summary`** (`app/api/v1/routes/portfolio.py`):
+   `Σ positive market_value_base of holdings with asset_class ∈ {cash, fixed_deposit}`, base ccy,
+   `to_display` string. Additive field on the untyped dict endpoint → **contract paths unchanged**.
+2. **ND-4 — `GET /net-worth/statement`** (new): served by `ValuationResult.class_statement()`
+   (`app/services/portfolio.py`) → `{base_currency, rows:[{asset_class, value}], gross_assets,
+   liabilities, net_worth}`; signed (liabilities negative, ordered last); **`Σ rows == net_worth ==
+   summary.total_value`**. **Contract +1 → 129 paths** (`API-CONTRACT.json` + `docs/openapi.json`
+   regenerated, drift green).
+
+**Tests (backend, `tests/integration/test_portfolio_engine.py`):**
+- `test_class_statement_is_signed_and_reconciles_to_net_worth` — **exact Decimal reconciliation** to
+  the headline (7000 = 1000 equity + 10000 cash − 4000 liability), liabilities negative + ordered
+  last, and statement ≠ allocation (no liability row in allocation).
+- `test_net_worth_statement_and_cash_deposits_reconcile_at_api` — HTTP boundary: `cash_and_deposits`
+  served + cross-checked against the holdings it sums; statement nets to the headline; liabilities
+  negative. **Suite: 492 passed** (+2); ruff + contract-drift green.
+
+**⚠ One interpretation to confirm (ND-3):** GLOSSARY defines "Cash & deposits" loosely as
+"immediately/near-term available cash". The built figure is the **literal reading = cash class +
+fixed-deposit class**. If the owner intended a different set (e.g. include mutual-fund/"short"
+liquidity, or cash only), that's a one-line change — **confirm before Phase 1**.
+
+**Resulting Phase-0a scope (as predicted — little):**
+- **No new chart modes.** The trend is `PriceChart` **line mode, single series** (ND-2) — the existing
+  component; **no comparison/benchmark** here.
+- **No new components.** KPI strip = `TrendStat`; net-worth statement + liquidity ladder = `DataTable`
+  (ND-8 table, not a bar); runway = `TrendStat` + served note (ND-9); ReviewCard/sparkline = existing.
+  **No DESIGN-SYSTEM §5 amendment expected** — Phase-0a is a **confirm-at-kitchen-sink** that
+  `PriceChart`(line) + `DataTable` + `TrendStat` cover the page, not an amendment.
+- **Demo-seed synthetic net-worth snapshots (ND-1)** is a Phase-1 data task (demo-only, seed-flag),
+  needed so the Phase-3a pre-pass can assert a populated trend; the fresh-instance EmptyState gets a
+  render test.
+
+**Sign-off to start Phase-0a/1:** confirm the ND-3 interpretation · confirm no §5 amendment is wanted
+(existing components suffice) · then Phase-0a (kitchen-sink confirm) → Phase 1 assembly.

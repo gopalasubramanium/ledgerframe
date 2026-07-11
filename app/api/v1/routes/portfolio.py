@@ -76,11 +76,20 @@ async def portfolio_summary(entity_id: int | None = Query(default=None),
     # (donut footnote), never fabricated on the client (page-portfolio ND-4; GLOSSARY).
     gross_assets = sum((h.market_value_base for h in val.holdings if h.market_value_base > 0), ZERO)
     liabilities = sum((h.market_value_base for h in val.holdings if h.market_value_base < 0), ZERO)
+    # Cash & deposits KPI (D-054 / page-net-worth ND-3): immediately/near-term available cash =
+    # the cash class + deposits (fixed_deposit). A served figure — the frontend renders the
+    # string, never derives it (no client money math, P-1/GLOSSARY 'Cash & deposits').
+    cash_and_deposits = sum(
+        (h.market_value_base for h in val.holdings
+         if h.market_value_base > 0 and (getattr(h, "asset_class", "") or "") in ("cash", "fixed_deposit")),
+        ZERO,
+    )
     return {
         "base_currency": base,
         "total_value": to_display(val.total_value),
         "gross_assets": to_display(gross_assets),
         "liabilities": to_display(liabilities),
+        "cash_and_deposits": to_display(cash_and_deposits),
         "cost_basis": to_display(val.cost_basis),
         "unrealised_pl": to_display(val.unrealised_pl),
         "day_change": to_display(val.day_change),
@@ -838,6 +847,30 @@ async def net_worth_history(session: AsyncSession = Depends(get_db)) -> dict:
              "currency": r.base_currency}
             for r in rows
         ]
+    }
+
+
+@router.get("/net-worth/statement")
+async def net_worth_statement(entity_id: int | None = Query(default=None),
+                              session: AsyncSession = Depends(get_db)) -> dict:
+    """Signed net-worth STATEMENT by asset class (D-033 / page-net-worth ND-4).
+
+    An itemised balance: each asset class as a positive row, **liabilities negative**, and a
+    **net total that reconciles to the Net worth headline** (`/portfolio/summary.total_value`).
+    Deliberately distinct from `allocation_by_class` — allocation is a gross-asset WEIGHT
+    (positive-only, liabilities excluded); the statement INCLUDES liabilities and nets to the
+    headline. Statement ≠ allocation; the two are never interchanged. No client money math."""
+    base = get_settings().base_currency
+    val = await value_portfolio(session, base, entity_id=entity_id)
+    rows = val.class_statement()
+    gross = sum((v for c, v in rows if c != "liability"), ZERO)
+    liab = sum((v for c, v in rows if c == "liability"), ZERO)
+    return {
+        "base_currency": base,
+        "rows": [{"asset_class": c, "value": to_display(v)} for c, v in rows],
+        "gross_assets": to_display(gross),
+        "liabilities": to_display(liab),
+        "net_worth": to_display(val.total_value),  # == summary.total_value (reconciles)
     }
 
 
