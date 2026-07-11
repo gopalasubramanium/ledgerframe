@@ -656,17 +656,22 @@ no §5 amendment. **ND-1 demo snapshots seeded** (26 synthetic, demo-only). New:
 separator, honest-metadata rule, card-fill assertion class, `src/format/metrics.ts`. Full record:
 **`page-net-worth.md` §9–§14** (§14 retrospective). Commits `2282926`→ batch-3 close-out.
 
+## PRICING HEALTH — Phases 0a/1/2 + Phase-3a pre-pass GREEN (2026-07-12) — awaiting owner walk
+
+**`/pricing-health` is built and pre-pass-green; STOPPED for the owner's Phase-3b acceptance walk.**
+First **Reports-group** page (Worklist template), canonical home for provenance/confidence/routing
+diagnostics (D-038). §9 all-resolved; **no §3b deltas** (everything already served) → Phase 0 skipped;
+Phase-0a confirm-only (ratified parts; no §5 amendment). Per-holding diagnostics table + confidence
+card + Details dialog (read-only routing chain + confidence_factors) + Correct-source (`MasterSelect`
+per-instrument correction, never priority editing, D-072) + refresh (per-holding + bulk
+`/system/refresh-data`, `[S]`-gated, honest no-egress). **ND-1 reconciliation:** the banner stays
+link-only; the page shows its own `is_stale` count that **reconciles live** with `summary.stale_count`.
+`/system/staleness` recorded orphaned (08-TECH-DEBT). Full record: **`page-pricing-health.md` §9–§11**.
+Commits `60d2338`→ Phase-3a close-out. **Next: the owner's live Phase-3b walk.**
+
 ## NEXT
 
-1. **Pricing Health page build — via the template loop.** Draft `docs/plans/page-pricing-health.md`
-   **PLAN ONLY first** (owner reviews before any code), instantiating `TEMPLATE-page-build.md`
-   (IDENTITY · OWNERSHIP · API SURFACE with a backend-first *contract delta* list only if needed ·
-   COMPONENTS ratified-only · VOCABULARIES · DECISIONS IN FORCE · ACCEPTANCE · BUILD PHASES · NEEDS
-   DECISION). Then the standard loop: **Phase-0 verify-first** (D-019 — read what the freshness/
-   provenance readers actually serve before assuming shapes; contract gaps → §9, never a §3b guess),
-   Phase-3a **scripted pre-pass GREEN before** the owner's Phase-3b walk, every visual/geometry fix
-   **fail-first** (TEMPLATE §7/§8).
-2. **Accounts page plan (D-065) — future.** When drafted, it **must wire `entity_id` scoping**
+1. **Accounts page plan (D-065) — future.** When drafted, it **must wire `entity_id` scoping**
    across every portfolio reader (all `/portfolio/*` readers already accept `entity_id`; Portfolio
    defaults to household with no selector — page-portfolio ND-8). Entity CRUD + the entity selector
    live here, not on Portfolio.

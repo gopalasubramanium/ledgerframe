@@ -1,11 +1,12 @@
 # page-pricing-health.md — Pricing Health (diagnostics) page build plan
 
-**Status: §9 RESOLVED (owner 2026-07-12) — building (skip Phase 0; Phase-0a confirm-only).** Drafted
-from `TEMPLATE-page-build.md` (incl. the §7/§8 fail-first + reproduce-the-defect-first amendments, the
-Phase-3a scripted-pre-pass standard, and the progressive-per-card-loading overview standard).
-Verify-first pass done (§10). All 13 §9 items resolved (each matched a drafted option; ND-10 overrode
-the draft's rotation assumption). **No §3b deltas → Phase 0 skipped.** Sequence: Phase-0a confirm-only
-→ Phase 1 assembly → Phase 2 (incl. the banner-reconciliation test) → Phase 3a pre-pass.
+**Status: Phases 0a/1/2 + Phase-3a pre-pass GREEN (2026-07-12) — STOPPED for the owner's Phase-3b
+acceptance walk.** §9 all-resolved (§9); **no §3b deltas → Phase 0 skipped**; Phase-0a confirmed
+ratified parts suffice (no §5 amendment); `/pricing-health` assembled + routed + nav-built (first
+Reports-group page, Worklist template). The pre-pass drives the live page on seeded demo GREEN ×3 —
+14 diagnostics rows, **live banner↔page stale-count reconciliation** (ND-1), read-only routing chain +
+no priority config (D-072), correct-source MasterSelect, 0 overflow × both themes, 0 console errors.
+Build record: §11. **Next: the owner's live Phase-3b walk (judgment items).**
 
 Pricing Health is the **first Reports-group page** and the canonical home for **provenance,
 confidence, and routing diagnostics** (D-038) — the honest "why is this number what it is" view. The
@@ -330,5 +331,38 @@ Ran the read-what-the-engine-serves pass before drafting §3/§4. **No shape was
 
 **Owner sign-off surface (all in §9):** the two ⚠ items — ND-2 (the banner does **not** refresh
 today; pick the refresh home + one code path) and the ND-1 banner↔page reconciliation — plus the
-component-shape calls (ND-5 routing chain, ND-6 confidence card) and the confirms. **No further build
-until the owner resolves §9.**
+component-shape calls (ND-5 routing chain, ND-6 confidence card) and the confirms. **→ §9 now
+RESOLVED; Phases 0a/1/2/3a built (§11).**
+
+---
+
+## 11. PHASES 0a / 1 / 2 / 3a — BUILT + PRE-PASS GREEN (2026-07-12) — STOP for the owner's walk
+
+- **Phase 0 skipped** (no §3b deltas). **Phase 0a — CONFIRM ONLY:** ratified parts compose the page
+  (DataTable, ProvenanceBadge, RowMenu, MasterSelect, MetaStrip, Dialog, TrendStat) — **no §5
+  amendment, no kitchen-sink specimen** (ND-5 composed cleanly, ND-6 needed no segmented bar).
+- **Phase 1 — assembly** (`frontend/src/routes/PricingHealth.tsx` + `.css`, `api/pricing-health.ts`;
+  `/pricing-health` routed, nav `built`). Progressive per-card loading over the readers:
+  per-holding **diagnostics DataTable** (Holding · Value · Status chip · Confidence score+band ·
+  Source · RowMenu), a **portfolio confidence card** (overall-band `TrendStat` + a by-band served
+  table + a status-count chip strip — **no segmented bar**, ND-6), the **identifier-duplicate banner**
+  (shown only when `count>0`), a **Details dialog** (`ProvenanceBadge` + a **read-only** routing-chain
+  `MetaStrip`+chips + `confidence_factors`, ND-5/ND-8), a **Correct-source dialog** (`MasterSelect`
+  over served options — a per-instrument **correction**, never priority editing, D-072/ND-4).
+  **Refresh:** per-holding row action + a bulk **"Refresh all" → `/system/refresh-data`** (one code
+  path), `[S]`-gated, with an honest **no-egress** state (ND-2/ND-3). The banner stays link-only; the
+  page shows its **own `is_stale` count** that **reconciles** with `summary.stale_count` (ND-1(a)).
+  **No provider-priority config anywhere** (D-072).
+- **Phase 2 — tests.** `PricingHealth.test.tsx` (6, incl. the **banner-reconciliation invariant** —
+  page stale count == count of `is_stale` rows); overflow suite extended to `/pricing-health`
+  (320/375/900/1366 × both themes) + the shared-inset check. **Frontend check: 126 vitest + 57
+  overflow + lint/typecheck/tokens/build.**
+- **Phase 3a — scripted pre-pass GREEN ×3** (`e2e/smoke/pricing-health-smoke.spec.ts`, dev-only). On
+  seeded demo: 14 populated diagnostics rows; **live banner↔page reconciliation** (page `is_stale` == 
+  `/portfolio/summary.stale_count`, 5==5); the Details routing chain is **read-only** (no controls) and
+  the page has **no priority config** (D-072); the Correct-source dialog opens a served `MasterSelect`;
+  the identifier-duplicate banner is present iff duplicates exist; no residual skeletons; **0 overflow**
+  at all four breakpoints × both themes; **0 console errors**.
+
+**Commits:** `60d2338` (§9 resolutions) · `635f1ce` (Phase 1+2) · Phase-3a close-out. **STOP — the
+Phase-3b acceptance walk is the owner's** (fail-first standard for any geometry fix, TEMPLATE §7/§8).
