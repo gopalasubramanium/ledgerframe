@@ -1,6 +1,7 @@
 # page-markets.md — Markets page build plan
 
-**Status: PLAN ONLY — owner reviews §9 before any code.** Drafted 2026-07-12 from
+**Status: §9 RESOLVED (owner, 2026-07-12) — BUILDING.** Phase 0 skipped (no §3b delta), Phase 0a
+composition-only (no §5 amendment). Drafted 2026-07-12 from
 `TEMPLATE-page-build.md` (incl. the §7/§8 fail-first + reproduce-the-defect-first amendments, the
 Reports-group/worklist-shape note, the Phase-3a scripted-pre-pass standard, and progressive-per-card
 loading). Verify-first pass done (§10 — read what the markets/quotes/indices/watchlist readers
@@ -207,10 +208,61 @@ All quote/status/region/index labels are **served display strings** — render v
 
 ---
 
-## 9. NEEDS DECISION — OPEN (owner resolves; nothing resolved here)
+## 9. NEEDS DECISION — RESOLVED (owner, 2026-07-12)
 
-Each item is an ambiguity the specs do not settle. Options laid out; **I resolved none.** Items
-flagged **⚠ CONTRACT/SCOPE GAP** may need a backend delta or an owner scope call.
+All 11 items resolved. Each matched an option laid out at draft; the ND-2 STOP-gate (below) was
+**verified clear** before recording. The detailed option text is retained beneath the resolutions as
+the considered-options record. **No §3b delta (ND-1 = display-sort) and no §5 amendment** (segmented
+buttons + chip/TrendStat are ratified) — Phase 0 is skipped, Phase 0a is composition-only.
+
+**Resolutions (owner, 2026-07-12):**
+- **ND-1 (a) — display-sort, NO delta.** Gainers/Losers = a **display-sort of the served
+  `change_pct`** over the **full served overview grid** (the universe). **Top/bottom N = 5**; the
+  **losers list shows only entries where `change_pct < 0`** (never a "loser" that rose); **honest
+  empty states** (a Portfolio ND-9 mirror). Framed as **ordering served values, not money math** — no
+  computed ranking. Phase 0 skipped.
+- **ND-2 — region tabs = the SERVED Global groups; grid has NO region filter.** The region tabs are
+  the **served `/markets/global` groups rendered as tabs over the Global view** — **no client
+  country→region mapping, ever** (D-005). The **instrument grid gets search + column sort, no region
+  filter.** Control = the **ratified segmented-button pattern** (the PriceChart-periods precedent);
+  **NO Tabs §5 amendment.** **STOP-gate verified clear:** `/markets/overview` takes no region param
+  and does no backend region mapping of the grid (`markets.py:61`) — v1 never region-filtered the grid
+  via backend mapping, so the conditional (a served-region delta as the only honest path) is **not
+  triggered**.
+- **ND-3 — Hybrid CONFIRMED.** Overview header (**market status + indices + Gainers/Losers**) over a
+  **worklist body** (**instrument grid + watchlists**). Recorded as the **Markets-group shape**
+  (Heatmap/News inherit it).
+- **ND-4 — Watchlist UX as drafted.** Multi-list panel; **add** via the class-aware
+  `InstrumentPicker`; **remove** via `RowMenu`; **create/delete** via `ConfirmDialog`; **all
+  `[S]`-gated.** **Rename: DECLINED** — no endpoint, not a v1 capability. Recorded **declined, not
+  deferred**.
+- **ND-5 — R-17 target = `/markets` plain.** The Global tab lives on the page; **no deep-link
+  anchor.** `fetchTickerQuotes` **sets index `href`s → `/markets`** (holdings still → InstrumentDetail,
+  D-098); **CLOSE the ticker index-link §-entry in `page-chrome.md` this milestone.**
+- **ND-6 — badge per Global-tab index item.** Protected copy matches the **Portfolio benchmark
+  provenance style** ("— via SPY proxy"); **served/verbatim**, a proxy is **never shown as the index**.
+- **ND-7 — visible-not-editable CONFIRMED** (D-072 posture). A user-configurable index universe is
+  **NOT registered** — revisit only on demonstrated need.
+- **ND-8 — CONFIRMED.** The quote-source select is **Home's** (D-046); Markets **renders its sections
+  directly** (grid, Global, watchlists) — no source-select card.
+- **ND-9 — Rotation-eligible: YES** (D-044 — a markets board is the archetypal wall page).
+- **ND-10 — CONFIRMED no `entity_id`** (market data, not portfolio-scoped; readers take none, §10).
+- **ND-11 — CONFIRMED.** Markets **links to `/heatmap`** (D-053), **never embeds** the treemap.
+- **Market-status pill.** The **ratified chip/`TrendStat`** suffices — **no §5 amendment**.
+
+**Confirms:** the **which-list rule** guarded (Gainers/Losers here, never Contributors/Detractors,
+D-024 — a copy test in Phase 2); **served labels** throughout (D-005); watchlist mutations **`[S]`**;
+**no-egress → honest stale** (Guarantee 5).
+
+**Build sequence:** ND-1 = display-sort → **skip Phase 0**; **Phase 0a = composition-only confirm** (no
+§5 amendment) → **Phase 1** assembly (incl. R-17 ticker wiring) → **Phase 2** (the **which-list copy
+test** + the **R-17 ticker-link test**) → **Phase 3a** scripted pre-pass **GREEN before the walk**
+(fail-first standard). STOP after the pre-pass report.
+
+---
+
+**Considered options (draft record — the resolutions above are authoritative).** Items flagged
+**⚠ CONTRACT/SCOPE GAP** were the pre-resolution risk callouts.
 
 - **ND-1 — Gainers/Losers source. ⚠ CONTRACT GAP.** **`/markets/overview` does NOT serve a
   Gainers/Losers list** — it serves the instrument grid (`instruments[].quote.change_pct`). Options:
