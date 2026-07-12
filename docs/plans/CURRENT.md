@@ -751,15 +751,28 @@ composition-only (no §5 amendment — segmented-button region tabs + chip statu
 - **Open at the walk:** the page-chrome ticker index-link §-entry still needs its one-line **CLOSE**
   (ND-5). Commits `72b8630`… (draft) → §9 → Phase 1 → Phase 2 → Phase 3a.
 
+## NEWS — Phases 0/0a/1/2/3a DONE; Phase-3b owner walk PENDING (2026-07-13)
+
+**`/news` is built + pre-pass green; awaiting the owner acceptance walk.** Third Markets-group page
+(overview + worklist hybrid, ND-4). §9 all-resolved (owner 2026-07-13). Full record: **`page-news.md`
+§9–§11**. **Phase 0 (backend-first): ND-2 no-egress guard** — the news/briefing readers make ZERO
+outbound calls under `privacy_mode` (C-3 network-trace pattern; contract unchanged); backend 495→**497**.
+**Phase 0a: extracted `NewsList`** (shared from InstrumentDetail — DESIGN-SYSTEM §5.2; external new-tab
+links, per-symbol InstrumentDetail links, plain-text 2-line clamp ND-12, flows). **Phase 1:** briefing
+card (**deterministic served text; NO AI copy** ND-1 — LLM narration deferred to the AI-surfaces
+milestone; **NO refresh** ND-8) + grouped-headlines body (served buckets **verbatim**, ND-3) + honest
+no-egress/empty/error states; **`[Help]` Briefing + Headlines** (ND-9, added to GLOSSARY). **Phase 2:**
+`News.test.tsx` (6, incl. the sanitisation test) + overflow/single-scroll extended to `/news`. **Phase
+3a:** `news-smoke` GREEN (briefing no-AI-copy, 3 groups/16 headlines, links, no-egress toggle+restore,
+single scroll, 0 overflow × both themes, 0 console errors). **146 unit + 105 Playwright + 497 backend.**
+- **Recorded for later:** feed management deferred to the **Settings plan** (ND-6); **`GET /news`
+  unconsumed** → tech-debt line (ND-7); D-051 region-link divergence noted (ND-3, no mapping invented).
+
 ## NEXT
 
-1. **News page build — via the template loop, PLAN ONLY first** (`docs/plans/page-news.md`; owner
-   reviews before any code). **Markets-group sibling — inherits the overview + worklist hybrid shape**
-   (ND-3). Canonical home for the **briefing + grouped headlines** (D-037/D-051); the **region groups
-   receive the Markets links** (Markets drops region-news → links to News, D-051). Standard loop:
-   **Phase-0 verify-first** (D-019 — read what the news/feeds readers serve; gaps → §9, never a §3b
-   guess), Phase-3a **scripted pre-pass GREEN before** the walk, geometry fixes **fail-first**
-   (TEMPLATE §7/§8, incl. the tooling-guard + vertical-scroll additions).
+1. **News — Phase-3b owner acceptance walk (LIVE).** Judgment items → numbered `page-news.md §*`
+   entries, fixed + re-verified live, geometry fixes fail-first (TEMPLATE §7/§8); owner closes the page.
+   (Phases 0/0a/1/2/3a done above.) **`NewsList` ratifies at this walk** (DESIGN-SYSTEM §5.2, extracted).
 2. **Accounts page plan (D-065) — future.** When drafted, it **must wire `entity_id` scoping**
    across every portfolio reader (all `/portfolio/*` readers already accept `entity_id`; Portfolio
    defaults to household with no selector — page-portfolio ND-8). Entity CRUD + the entity selector

@@ -1,8 +1,7 @@
 # page-news.md — News page build plan
 
-**Status: §9 RESOLVED (owner, 2026-07-13) — BUILDING.** Phase 0 = the ND-2 no-egress guard
-(backend-first, contract unchanged); Phase 0a composition-confirm (extract the InstrumentDetail
-news-list; no §5 amendment expected). Drafted 2026-07-13 from
+**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE, Phase-3b owner walk PENDING (2026-07-13).** Pre-pass
+GREEN; build record in §11. Drafted 2026-07-13 from
 `TEMPLATE-page-build.md` (incl. the tooling-guard fail-first + the ⚠ verify-first divergence-flag +
 vertical-single-scroll additions, and the Markets-group hybrid-shape precedent). Verify-first pass done
 (§10 — read what the news/briefing/feeds readers actually serve before assuming shapes, D-019).
@@ -393,3 +392,52 @@ not §3b.**
 **Owner sign-off surface (all in §9):** ND-1 (briefing/AI scope — the headline call), ND-2 (no-egress
 guard — the one likely §3b delta), ND-3 (region grouping mismatch), ND-5 (headline-list rendering / §5),
 ND-6 (feeds mgmt home), plus ND-4/7/8/9/10/11/12. **No build until the owner resolves §9.**
+
+---
+
+## 11. BUILD RECORD — Phases 0/0a/1/2/3a DONE; Phase-3b (owner walk) PENDING (2026-07-13)
+
+- **Phase 0 — ND-2 no-egress guard (backend-first, HIGHEST PRIORITY).** `no_egress_enabled(session)`
+  in `services/feeds.py`; `fetch_feeds`/`test_feeds` self-guard (return `[]` before constructing any
+  httpx client); `/news` + `/news/grouped` skip `provider.get_news` and carry an honest **`no_egress`**
+  flag; `instrument_news` short-circuits; `generate_briefing` skips AI narration → deterministic
+  template. **Backend test = the C-3 network-trace pattern** (0 `httpx.AsyncClient` constructions under
+  no-egress; non-zero foil off). **Contract unchanged** (behavioral; routes return dict). Backend **495
+  → 497** (+2 no-egress). *(The briefing GET reader was already egress-free — reads stored text.)*
+- **Phase 0a — extract `NewsList` (ND-5).** Extracted the Instrument-Detail news list → shared
+  **`ui/NewsList`** (DESIGN-SYSTEM §5.2, ratify at the walk): external link (new tab, safe rel) + `source
+  · relative-time` + optional per-symbol InstrumentDetail links; **plain-text, 2-line clamp** (ND-12);
+  **flows** (single scroll region). InstrumentDetail refactored to it; kitchen-sink specimens added.
+  **Extraction succeeded — no §5-amendment fallback.** `relativeTime` → `format/time.ts`.
+- **Phase 1 — assembly.** `routes/News.tsx` (+`.css`) + `api/news.ts`, routed at `/news` (nav
+  `built:true`). Hybrid (ND-4): **briefing card** (deterministic served text; **NO AI copy** ND-1; **NO
+  refresh** ND-8; `generated_at` age) over a **grouped-headlines body** — the SERVED `/news/grouped`
+  buckets **verbatim** (no client re-mapping, ND-3), a `NewsList` per group (`showSymbols`). Honest
+  states: no-egress reason (ND-2), empty configure-feeds reason, reader error retry. **`[Help]` on
+  Briefing + Headlines** (ND-9 — authored in GLOSSARY + the frontend slice).
+- **Phase 2 — tests.** `News.test.tsx` (6): briefing no-AI-copy; grouped buckets + symbol links; the
+  **sanitisation test** (markup headline renders inert plain text, ND-12); external new-tab/safe-rel;
+  **no-egress honest reason**; empty. Overflow + single-scroll suite extended to `/news`. **146 unit +
+  105 Playwright** green.
+- **Phase 3a — pre-pass GREEN (first run after 2 selector fixes).** `e2e/smoke/news-smoke.spec.ts` on
+  live app + real backend: briefing populated (deterministic, no AI copy) · 3 groups / 16 headlines ·
+  external + symbol links · `[Help]` terms · **no-egress toggled ON (0 headlines + honest reason) then
+  RESTORED** · single scroll region · 0 overflow 320/375/900/1366 × both themes · **0 console errors.**
+  (Demo briefing generated once via `POST /briefing/refresh` — the worker's job, seeded like clearing
+  first-run.)
+
+**Build-time notes / recorded (for §12 / the walk):**
+- **ND-6 (feeds → Settings):** the `/news/feeds*` endpoints are **deferred to the Settings plan** —
+  News builds no feed management. *(Recorded item for `page-settings`.)*
+- **ND-7 (`/news` flat unconsumed):** the page wires **`/news/grouped`** only; **`GET /news` is
+  UNCONSUMED** — record a **tech-debt line** (the `/system/staleness` precedent), candidate for removal
+  at a future contract-review milestone.
+- **ND-3 (D-051 divergence):** Markets' region-news link lands on **`/news` page-level**; the three
+  groupings don't align and **no mapping is invented** (D-005). News renders its served buckets verbatim.
+- **Briefing under no-egress:** the GET reader shows the last stored text (egress-free) with its age;
+  no refresh (ND-8). Verified honest.
+
+**Verification:** backend **497** · ruff · contract drift clean; frontend **146 unit + 105 Playwright**
+· typecheck/lint/tokens/build green; **live pre-pass GREEN**, 0 console errors. **STOP after the
+pre-pass (owner).** Phase 3b = the owner acceptance walk (judgment items) → numbered `§*` entries,
+fail-first, geometry fixes fail-first; owner closes the page. **Not started.**
