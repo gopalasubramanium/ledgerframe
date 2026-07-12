@@ -670,7 +670,19 @@ Platform legacy (promoted to DESIGN-SYSTEM §5.2): the **shared summary-count qu
 record: **`page-pricing-health.md` §9–§13** (§13 retrospective — the fastest page: verify-first emptied
 §3b, one-pass §9, composition-only Phase-0a). Commits `60d2338`→ batch-1 close-out.
 
-## MARKETS — Phases 1/2/3a DONE; Phase-3b walk IN-PROGRESS (batches 1–2 done, 2026-07-12)
+## MARKETS — Phases 1/2/3a DONE; Phase-3b walk IN-PROGRESS (batches 1–3 done, 2026-07-12)
+
+**Phase-3b batch 3 (owner, 2026-07-12)** — page-markets §12mk3: **§12mk3-1** "Find a symbol" moved to
+the **PageHeader** (beside `+`; standalone card removed; 320px = header flex-wrap drops it to a row
+under the title, bounded input; results in an anchored dropdown) — **PROPOSED, owner ratifies at
+re-verify**. **§12mk3-2 = D-105** quote display precision: formatted in the **backend**
+(`format_price_display`), served as `price_display` (Quote + `HoldingView`), frontend renders verbatim
+(dropped `formatPrice` from every quote surface). Equity/ETF/fund/index → 2dp; **crypto → 6 sig figs**;
+`None` → "—". `HoldingView` is a typed response_model so the field had to be declared (found+fixed);
+API-CONTRACT regenerated (no path change). Portfolio VALUES keep 2dp (unaffected). **§12mk3-3** ticker
+index-click CLOSED the page-chrome §11-19 interim (R-17 shipped, owner-verified). Backend 493 (+1) ·
+frontend 140 unit + 93 overflow · live pre-passes (Markets/Portfolio/Net-worth/Pricing-Health) green, 0
+console errors; D-105 verified live.
 
 **Phase-3b batch 2 (owner, 2026-07-12)** — page-markets §12mk2: **§12mk2-1 Global-tab 30-day
 sparklines** (scoped option (a) approved). Per index row, a 30d `Sparkline` via the existing

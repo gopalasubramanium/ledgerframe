@@ -372,6 +372,9 @@ kitchen-sink icon row, the ticker under lock) **+ ratifies the PROPOSED items**
   Markets ships, indices can link to their canonical home there (noted as a follow-up).
   Render test asserts holdings link + index unlinked. `TickerStrip.tsx`, `api/chrome.ts`,
   `data.css`, `chrome.test.tsx`.
+  - **CLOSED (owner-verified live, 2026-07-12):** R-17 shipped with the Markets build — index
+    entries now link to `/markets` (`fetchTickerQuotes` sets the `href`; owner verified the
+    index-click lands on Markets). The interim "unlinked" path is retired. See page-markets §12mk3-3.
 - **§11-20 — Lock verification assist (information only, no code change).**
   Set a PIN against the running backend (loopback; the first PIN needs no auth):
   ```

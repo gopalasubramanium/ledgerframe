@@ -463,3 +463,33 @@ errors**; typecheck/lint/tokens/build green.
 **Owner's upcoming walk covers:** ticker index-click (→ then CLOSE the page-chrome ND-5 §-entry),
 watchlist CRUD loop, proxy-badge cold read, page search for an off-grid symbol, and the new
 sparklines. **STOP after checks + pre-pass green (owner).**
+
+### Batch 3 (owner, 2026-07-12)
+
+- **§12mk3-1 — "Find a symbol" → PageHeader (PROPOSED, ratify at re-verify).** The standalone search
+  card is removed; the compact search input now sits in the **PageHeader `actions`, beside the
+  new-watchlist `+`**. Results render in a **dropdown anchored to the input** (dismiss on outside
+  click, result click, or clearing). **320px behavior (explicit, simplest ratified-compatible):** the
+  header's existing `flex-wrap` drops the action group (search + `+`) to **its own row under the
+  title**; the search is bounded (`width: 12rem; max-width: 100%`) so it never overflows — no
+  icon-collapse interaction needed. Overflow suite **green at 320/375/900/1366** (+ the header input
+  present at every width). A hit → InstrumentDetail; the grid keeps its own client-side filter.
+- **§12mk3-2 — Quote display precision (D-105, recorded in DECISIONS).** Formatted **in the backend**
+  (`format_price_display`, `app/core/money.py`) and served as `price_display` on the `Quote` schema +
+  `HoldingView`; the frontend renders it **verbatim** (removed `formatPrice` from every quote surface:
+  TickerStrip, Markets movers/grid/watchlists/Global tab, InstrumentDetail quote). **Policy:**
+  equities/ETFs/funds/indices → **2dp**; crypto → **6 significant digits**; grouped; stored precision
+  unchanged. `None` price → "—" (never a fabricated 0). Verified live: SPY/AAPL `189.53`/`580.03` (2dp),
+  **BTC `65,758.5` / ETH (6-sig)**, GLD unavailable → "—". **Contract:** `HoldingView.price_display`
+  added (`/portfolio/holdings` is a typed response_model — the field must be declared or it's stripped;
+  found + fixed); API-CONTRACT regenerated same commit (no path change). **Spot-checks:**
+  Portfolio/Net-worth/Pricing-Health pre-passes green — portfolio **VALUES keep 2dp** money formatting
+  (unaffected; this touches quote prices only). Backend formatter unit test added.
+- **§12mk3-3 — Ticker index-click → CLOSED the page-chrome §11-19 interim.** Owner verified the
+  index-click lands on `/markets` live; `page-chrome.md §11-19` now carries a one-line **CLOSED** entry
+  referencing **R-17 shipped** (the interim "indices unlinked" path is retired).
+
+**Batch-3 verification:** **backend 493 tests** (+1 D-105 formatter) · ruff · contract drift clean;
+**frontend 140 unit + 93 Playwright overflow** · typecheck/lint/tokens/build green; **live pre-passes
+green** — Markets + Portfolio + Net-worth + Pricing-Health, **0 console errors**; D-105 precision
+verified live. **STOP for owner re-verify** (which ratifies the PROPOSED PageHeader search look).
