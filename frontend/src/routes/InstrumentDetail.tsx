@@ -6,6 +6,7 @@ import {
   EmptyState,
   MasterSelect,
   MetaStrip,
+  NewsList,
   PageHeader,
   PriceChart,
   QuantityInput,
@@ -290,18 +291,10 @@ export function InstrumentDetail() {
               <h2 className="ins__h2">News</h2>
               <Link className="ins__link" to="/news">News ↗</Link>
             </div>
-            {news.length > 0 ? (
-              <ul className="ins__news lf-card__body">
-                {news.map((n, i) => (
-                  <li key={i} className="ins__newsitem">
-                    <a href={n.url ?? "#"} target="_blank" rel="noreferrer" className="ins__newshead">{n.headline}</a>
-                    <span className="ins__newsmeta">{n.source} · {n.published_at.slice(0, 10)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState message="No recent news" reason="No provider or feed headlines mention this instrument." />
-            )}
+            <div className="lf-card__body">
+              {/* Extracted shared NewsList (page-news ND-5). Scoped view → no per-symbol links. */}
+              <NewsList items={news} emptyMessage="No recent news" emptyReason="No provider or feed headlines mention this instrument." />
+            </div>
           </section>
         </>
       )}

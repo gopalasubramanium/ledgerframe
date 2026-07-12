@@ -22,6 +22,7 @@ import {
   LockScreen,
   MasterSelect,
   MetaStrip,
+  NewsList,
   MoneyInput,
   PageHeader,
   PercentInput,
@@ -98,6 +99,12 @@ const TICKER_DEMO = [
   })),
   { symbol: "US · S&P 500", priceDisplay: "5,000.00", changePct: "0.42" },
   { symbol: "India · Nifty 50", priceDisplay: "24,500.00", changePct: "-0.18" },
+];
+
+const NEWS_DEMO = [
+  { headline: "Markets steady as investors weigh rate expectations and a long headline that must clamp to two lines with an ellipsis rather than overflow the card width", source: "BBC Business", url: "https://example.com/a", published_at: new Date(Date.now() - 2 * 3600_000).toISOString(), symbols: ["AAPL", "MSFT"] },
+  { headline: "Rupee firms against the dollar on strong inflows", source: "Reuters", url: "https://example.com/b", published_at: new Date(Date.now() - 26 * 3600_000).toISOString(), symbols: [] },
+  { headline: "Headline with no link renders as inert plain text <b>not bold</b>", source: "Feed", url: null, published_at: new Date(Date.now() - 90 * 60_000).toISOString() },
 ];
 
 // Every bar icon (lucide, ADR-0003) for the ratification row — all states shown.
@@ -551,6 +558,12 @@ export function KitchenSink() {
                 ),
               )}
             </div>
+          </Specimen>
+          <Specimen label="NewsList · extracted (page-news ND-5) — external links (new tab), source · relative time, per-symbol links, plain-text clamped headline">
+            <NewsList items={NEWS_DEMO} showSymbols />
+          </Specimen>
+          <Specimen label="NewsList · empty state (honest reason)">
+            <NewsList items={[]} emptyMessage="No recent news" emptyReason="No headlines right now." />
           </Specimen>
         </div>
       </Section>

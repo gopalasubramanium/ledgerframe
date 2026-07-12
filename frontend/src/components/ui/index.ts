@@ -38,6 +38,8 @@ export { Treemap } from "./Treemap";
 export type { TreemapProps } from "./Treemap";
 export { QuoteCardRow } from "./QuoteCardRow";
 export type { QuoteCardRowProps, QuoteSource } from "./QuoteCardRow";
+export { NewsList } from "./NewsList";
+export type { NewsListProps, NewsListItem } from "./NewsList";
 export { TickerStrip } from "./TickerStrip";
 export type { TickerStripProps } from "./TickerStrip";
 
