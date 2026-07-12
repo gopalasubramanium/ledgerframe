@@ -34,22 +34,47 @@ test.describe.serial("news pre-pass (live)", () => {
     // PART 2: grouped headlines — served buckets + NewsList links (ND-3/ND-5) ------------------------
     const heads = page.locator('[data-card="headlines"] .lf-newslist__head');
     await expect(heads.first()).toBeVisible({ timeout: 15_000 });
-    const groupCount = await page.locator('[data-card="headlines"] .nw__group').count();
+    const groupCount = await page.locator('[data-card="headlines"] .nw__seg .nw__segbtn').count();
     const itemCount = await heads.count();
-    console.log("PART 2 — groups:", groupCount, "· headlines:", itemCount);
-    expect(groupCount, "grouped headline buckets render").toBeGreaterThan(0);
-    expect(itemCount, "headlines populated").toBeGreaterThan(0);
-    // An external headline link (those WITH a url render as <a>; url-less ones are inert spans) opens
-    // in a new tab with a safe rel (ND-5).
-    const ext = page.locator('[data-card="headlines"] a.lf-newslist__head').first();
-    await expect(ext, "at least one linked headline").toBeVisible();
-    expect(await ext.getAttribute("target"), "external link opens new tab").toBe("_blank");
-    expect(await ext.getAttribute("rel"), "external link has a safe rel").toContain("noreferrer");
-    // At least one per-symbol link → InstrumentDetail (My holdings group).
-    const symLink = page.locator('[data-card="headlines"] .lf-newslist__sym').first();
-    if (await symLink.count()) {
-      expect(await symLink.getAttribute("href"), "symbol → InstrumentDetail").toContain("/instrument/");
+    console.log("PART 2 — bucket tabs:", groupCount, "· headlines (active bucket):", itemCount);
+    expect(groupCount, "grouped headline buckets render as tabs").toBeGreaterThan(0);
+    expect(itemCount, "active bucket headlines populated").toBeGreaterThan(0);
+    // PART 2b: segmented tabs (§12nw1-2) — one bucket visible; switching shows another. Iterate the
+    // buckets to find an external-linked headline (RSS feeds carry urls; some provider items don't)
+    // and a per-symbol InstrumentDetail link (the "My holdings" bucket) — proving ND-5 links + tabs.
+    const tabs = page.locator('[data-card="headlines"] .nw__seg .nw__segbtn');
+    const tabCount = await tabs.count();
+    console.log("PART 2b — bucket tabs:", await tabs.allInnerTexts());
+    expect(tabCount, "served buckets render as segmented tabs").toBeGreaterThan(0);
+    let foundExt = false;
+    let foundSym = false;
+    for (let i = 0; i < tabCount; i++) {
+      await tabs.nth(i).click();
+      await page.waitForTimeout(120);
+      await expect(page.locator('[data-card="headlines"] .lf-newslist__head').first(), "bucket has headlines").toBeVisible();
+      const a = page.locator('[data-card="headlines"] a.lf-newslist__head').first();
+      if (!foundExt && (await a.count())) {
+        expect(await a.getAttribute("target"), "external link opens new tab").toBe("_blank");
+        expect(await a.getAttribute("rel"), "external link has a safe rel").toContain("noreferrer");
+        foundExt = true;
+      }
+      const sym = page.locator('[data-card="headlines"] .lf-newslist__sym').first();
+      if (!foundSym && (await sym.count())) {
+        expect(await sym.getAttribute("href"), "symbol → InstrumentDetail").toContain("/instrument/");
+        foundSym = true;
+      }
+      if (foundExt && foundSym) break;
     }
+    console.log("PART 2b — external link ok:", foundExt, "· symbol link ok:", foundSym);
+    expect(foundExt, "at least one external-linked headline (ND-5)").toBe(true);
+    await tabs.first().click(); // restore to the first bucket
+
+    // PART 2c: per-card refresh (§12nw1-3, ND-8 reversal) — briefing regenerate works; headlines
+    // refresh button is present + enabled (a re-GET — not clicked here to avoid a second RSS fetch).
+    await page.getByRole("button", { name: "Refresh briefing" }).click();
+    await expect(page.getByText("Briefing updated."), "briefing refresh outcome").toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: "Refresh headlines" })).toBeEnabled();
+    console.log("PART 2c — briefing refresh OK; headlines refresh enabled");
 
     // PART 3: [Help] terms — Briefing + Headlines are GlossaryTerms (ND-9) ---------------------------
     expect(await page.locator('[data-card="briefing"] .lf-term').count(), "Briefing [Help]").toBeGreaterThan(0);
@@ -60,6 +85,9 @@ test.describe.serial("news pre-pass (live)", () => {
     await page.reload(); // full reload so the News readers re-fetch (a hash goto wouldn't re-mount)
     await expect(page.getByText(/no-egress is on/), "honest no-egress reason").toBeVisible({ timeout: 15_000 });
     expect(await page.locator('[data-card="headlines"] .lf-newslist__head').count(), "zero headlines under no-egress").toBe(0);
+    // §12nw1-3: refresh is egress — the buttons render honestly DISABLED under no-egress (never a no-op).
+    await expect(page.getByRole("button", { name: "Refresh briefing" }), "briefing refresh disabled").toBeDisabled();
+    await expect(page.getByRole("button", { name: "Refresh headlines" }), "headlines refresh disabled").toBeDisabled();
     // Restore egress and confirm headlines return.
     await page.request.put(`${API}/settings`, { data: { values: { privacy_mode: "false" } } });
     await page.reload();

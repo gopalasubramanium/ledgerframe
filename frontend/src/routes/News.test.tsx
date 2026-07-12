@@ -1,8 +1,10 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { DisplayProvider } from "../theme/DisplayProvider";
+import { ToastProvider } from "../components/ui";
 
 const BRIEFING = {
   ok: true,
@@ -25,9 +27,13 @@ const GROUPED = {
 
 const getBriefing = vi.fn(async () => BRIEFING);
 const getGroupedNews = vi.fn(async () => GROUPED);
+const getNoEgress = vi.fn(async () => false);
+const refreshBriefing = vi.fn(async () => ({ ok: true, data: { text: "Refreshed briefing. Information only, not financial advice." } }));
 vi.mock("../api/news", () => ({
   getBriefing: () => getBriefing(),
   getGroupedNews: () => getGroupedNews(),
+  getNoEgress: () => getNoEgress(),
+  refreshBriefing: () => refreshBriefing(),
 }));
 
 import { News } from "./News";
@@ -36,9 +42,11 @@ function renderPage() {
   return render(
     <ThemeProvider>
       <DisplayProvider>
-        <MemoryRouter initialEntries={["/news"]}>
-          <News />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={["/news"]}>
+            <News />
+          </MemoryRouter>
+        </ToastProvider>
       </DisplayProvider>
     </ThemeProvider>,
   );
@@ -47,29 +55,35 @@ function renderPage() {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  getNoEgress.mockResolvedValue(false);
 });
 
 test("briefing renders the SERVED deterministic text; the card carries NO AI copy (ND-1)", async () => {
   const { container } = renderPage();
   expect(await screen.findByText(/Information only, not financial advice/)).toBeTruthy();
-  // ND-1: LLM narration is deferred — no AI wording appears on the page.
   expect(container.textContent ?? "").not.toMatch(/\bAI\b|narrat|artificial intelligence/i);
 });
 
-test("grouped headlines render the SERVED buckets verbatim, a NewsList per group (ND-3)", async () => {
+test("headline buckets render as segmented tabs; one group visible at a time (§12nw1-2)", async () => {
+  const user = userEvent.setup();
   renderPage();
-  expect(await screen.findByText("My holdings")).toBeTruthy();
-  expect(screen.getByText("India")).toBeTruthy();
+  // Tabs for each SERVED bucket (labels verbatim).
+  expect(await screen.findByRole("button", { name: /My holdings/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: /India/ })).toBeTruthy();
+  // The first bucket is active → its headline + symbol link show; India's is not yet visible.
   expect(screen.getByText(/Apple steadies/)).toBeTruthy();
-  // A headline's symbol links to InstrumentDetail (showSymbols).
-  const sym = screen.getByRole("link", { name: "AAPL" });
-  expect(sym.getAttribute("href")).toContain("/instrument/AAPL");
+  expect(screen.getByRole("link", { name: "AAPL" }).getAttribute("href")).toContain("/instrument/AAPL");
+  expect(screen.queryByText(/Rupee firms/)).toBeNull();
+  // Switch buckets → India's headline appears.
+  await user.click(screen.getByRole("button", { name: /India/ }));
+  await waitFor(() => expect(screen.getByText(/Rupee firms/)).toBeTruthy());
 });
 
 test("a headline containing markup renders as INERT plain text (ND-12 sanitisation)", async () => {
+  const user = userEvent.setup();
   renderPage();
+  await user.click(await screen.findByRole("button", { name: /India/ }));
   const el = await screen.findByText(/Rupee firms/);
-  // The <script> is a literal text node, never a DOM element — no HTML injection path.
   expect(el.textContent).toContain("<script>alert(1)</script>");
   expect(el.querySelector("script")).toBeNull();
 });
@@ -81,7 +95,23 @@ test("external headline links open in a new tab with a safe rel (ND-5)", async (
   expect(link.getAttribute("rel")).toContain("noreferrer");
 });
 
-test("no-egress renders an honest reason, never fabricated headlines (ND-2)", async () => {
+test("per-card refresh: 'Refresh briefing' regenerates ([S]-gated, ND-8 reversal §12nw1-3)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByText(/Information only/);
+  await user.click(screen.getByRole("button", { name: "Refresh briefing" }));
+  await waitFor(() => expect(refreshBriefing).toHaveBeenCalled());
+});
+
+test("no-egress renders the refresh buttons DISABLED with an honest title (ND-2 governs refresh)", async () => {
+  getNoEgress.mockResolvedValue(true);
+  renderPage();
+  const btn = await screen.findByRole("button", { name: "Refresh briefing" });
+  await waitFor(() => expect((btn as HTMLButtonElement).disabled).toBe(true));
+  expect(btn.getAttribute("title")).toMatch(/no-egress is on/i);
+});
+
+test("no-egress headlines render an honest reason, never fabricated (ND-2)", async () => {
   getGroupedNews.mockResolvedValueOnce({ ok: true, data: { groups: [], total: 0, no_egress: true } });
   renderPage();
   expect(await screen.findByText(/no-egress is on/)).toBeTruthy();
