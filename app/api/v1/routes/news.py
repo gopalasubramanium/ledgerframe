@@ -17,6 +17,7 @@ from app.services.feeds import (
     DEFAULT_FEEDS,
     fetch_feeds,
     get_feed_urls,
+    no_egress_enabled,
     set_feed_urls,
     test_feeds,
 )
@@ -50,15 +51,18 @@ async def news(session: AsyncSession = Depends(get_db)) -> dict:
     # simply show provider headlines.
     import asyncio
 
+    # ND-2 / Guarantee 5: zero outbound under no-egress (fetch_feeds self-guards; skip provider).
+    no_egress = await no_egress_enabled(session)
     try:
         rss = await asyncio.wait_for(fetch_feeds(session, limit=30), timeout=12)
     except (TimeoutError, Exception):  # noqa: BLE001
         rss = []
-    provider_items = await get_provider().get_news(symbols or ["AAPL", "MSFT", "NVDA"])
+    provider_items = [] if no_egress else list(await get_provider().get_news(symbols or ["AAPL", "MSFT", "NVDA"]))
     items = rss + list(provider_items)
     return {
         "items": [i.model_dump(mode="json") for i in items],
         "rss_count": len(rss),
+        "no_egress": no_egress,
     }
 
 
@@ -97,17 +101,22 @@ async def grouped_news(session: AsyncSession = Depends(get_db)) -> dict:
     weights = {h.symbol: float(h.market_value_base / _gross)
                for h in val.holdings if h.symbol and h.market_value_base > 0}
 
+    # ND-2 / Guarantee 5: under no-egress make ZERO outbound calls — fetch_feeds self-guards
+    # (returns []) and the provider news fetch is skipped. The page then shows an honest
+    # no-egress state (empty-with-reason) rather than fabricating headlines.
+    no_egress = await no_egress_enabled(session)
     try:
         items = list(await asyncio.wait_for(fetch_feeds(session, limit=40), timeout=12))
     except (TimeoutError, Exception):  # noqa: BLE001
         items = []
     # Provider news carries per-symbol tags (RSS usually doesn't), so it's what actually
     # populates "My holdings". Best-effort — never blocks the page.
-    try:
-        # sorted() so the held-symbol selection (and thus the feed) is deterministic.
-        items += list(await get_provider().get_news(sorted(held)[:12] or ["AAPL", "MSFT", "NVDA"]))
-    except Exception:  # noqa: BLE001
-        pass
+    if not no_egress:
+        try:
+            # sorted() so the held-symbol selection (and thus the feed) is deterministic.
+            items += list(await get_provider().get_news(sorted(held)[:12] or ["AAPL", "MSFT", "NVDA"]))
+        except Exception:  # noqa: BLE001
+            pass
     now = datetime.now(UTC)
     items.sort(key=lambda x: x.published_at or now, reverse=True)
 
@@ -147,7 +156,7 @@ async def grouped_news(session: AsyncSession = Depends(get_db)) -> dict:
     # Rank "My holdings" by relevance (weight × recency) — most relevant to you first.
     groups["My holdings"].sort(key=lambda c: c.get("relevance", 0.0), reverse=True)
     return {"groups": [{"name": k, "items": v[:6]} for k, v in groups.items() if v],
-            "total": len(seen)}
+            "total": len(seen), "no_egress": no_egress}
 
 
 @router.get("/news/feeds")

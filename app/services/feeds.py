@@ -43,6 +43,17 @@ MAX_ITEMS_PER_FEED = 10
 FETCH_TIMEOUT = 6.0
 
 
+async def no_egress_enabled(session: AsyncSession) -> bool:
+    """True when the no-egress toggle (``privacy_mode``) is on — the device must make
+    ZERO outbound calls (Product Guarantee 5, D-002/D-069/D-075). News/feeds fetching is
+    egress, so under no-egress these readers return empty and **never construct an HTTP
+    client** (page-news ND-2, mirroring the C-3 ``system/version-check`` guard)."""
+    row = (
+        await session.execute(select(Setting).where(Setting.key == "privacy_mode"))
+    ).scalars().first()
+    return bool(row and str(row.value).strip().lower() in ("1", "true", "yes", "on"))
+
+
 async def get_feed_urls(session: AsyncSession) -> list[str]:
     row = (
         await session.execute(select(Setting).where(Setting.key == FEEDS_SETTING_KEY))
@@ -138,6 +149,8 @@ async def test_feeds(session: AsyncSession) -> list[dict]:
     Used by Settings to explain why headlines might be empty (blocked, redirected,
     non-XML, etc.) — the most common cause of "I added feeds but see nothing".
     """
+    if await no_egress_enabled(session):
+        return []  # ND-2 / Guarantee 5: feed-test is egress — none under no-egress
     urls = await get_feed_urls(session)
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)"}
     results: list[dict] = []
@@ -160,6 +173,8 @@ async def test_feeds(session: AsyncSession) -> list[dict]:
 
 
 async def fetch_feeds(session: AsyncSession, limit: int = 30) -> list[NewsItem]:
+    if await no_egress_enabled(session):
+        return []  # ND-2 / Guarantee 5: zero outbound under no-egress — never construct the client
     urls = await get_feed_urls(session)
     if not urls:
         return []

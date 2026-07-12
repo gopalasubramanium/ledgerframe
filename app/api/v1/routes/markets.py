@@ -423,9 +423,12 @@ async def instrument_detail(symbol: str, session: AsyncSession = Depends(get_db)
 async def instrument_news(symbol: str, session: AsyncSession = Depends(get_db)) -> dict:
     """News relevant to one instrument: provider news for the symbol + any RSS/Atom
     headlines mentioning the symbol or company name."""
-    from app.services.feeds import fetch_feeds, fetch_symbol_news
+    from app.services.feeds import fetch_feeds, fetch_symbol_news, no_egress_enabled
 
     sym = symbol.upper()
+    # ND-2 / Guarantee 5: per-instrument news is egress too — none under no-egress (honest empty).
+    if await no_egress_enabled(session):
+        return {"symbol": sym, "items": [], "no_egress": True}
     instr = (await session.execute(select(Instrument).where(Instrument.symbol == sym))).scalars().first()
     name = (instr.name if instr else "").replace(" (DEMO)", "").strip()
     terms = {sym.lower()}

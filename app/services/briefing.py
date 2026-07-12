@@ -120,6 +120,12 @@ def _strip_reasoning(text: str) -> str:
 
 async def generate_briefing(session: AsyncSession) -> str:
     template, facts = await _deterministic_briefing(session)
+    # ND-2 / Guarantee 5: under no-egress make ZERO outbound calls — skip the AI narration
+    # (and its news/market egress) entirely and serve the deterministic template.
+    from app.services.feeds import no_egress_enabled
+
+    if await no_egress_enabled(session):
+        return template
     # If an AI provider is reachable, let it narrate the SAME facts (it may not add
     # any numbers of its own). Otherwise use the deterministic template.
     try:
