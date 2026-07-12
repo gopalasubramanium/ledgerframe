@@ -42,8 +42,12 @@ fi
 
 # 1a) Port pre-check — never silently half-start. If a port is already held, print the owning
 #     PID + a one-line kill hint and exit non-zero, so a stale server can't shadow this one.
-port_held() {  # $1 = port → echoes "PID/cmd" if held, empty otherwise
-  ss -ltnpH "sport = :$1" 2>/dev/null | grep -oE 'pid=[0-9]+' | head -1 | cut -d= -f2
+port_held() {  # $1 = port → echoes PID if held, empty otherwise.
+  # Trailing `|| true`: when the port is FREE, grep matches nothing and (under pipefail) the whole
+  # pipeline returns non-zero — which, via the `pid="$(port_held …)"` assignment below, would trip
+  # `set -e` and abort the script SILENTLY before any server starts. A free port is the normal case,
+  # so swallow that non-zero and just echo the empty result.
+  ss -ltnpH "sport = :$1" 2>/dev/null | grep -oE 'pid=[0-9]+' | head -1 | cut -d= -f2 || true
 }
 blocked=0
 for port in 8321 5173; do
