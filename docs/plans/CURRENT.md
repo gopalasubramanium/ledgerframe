@@ -751,7 +751,18 @@ composition-only (no §5 amendment — segmented-button region tabs + chip statu
 - **Open at the walk:** the page-chrome ticker index-link §-entry still needs its one-line **CLOSE**
   (ND-5). Commits `72b8630`… (draft) → §9 → Phase 1 → Phase 2 → Phase 3a.
 
-## NEWS — Phases 0/0a/1/2/3a DONE; Phase-3b owner walk PENDING (2026-07-13)
+## NEWS — Phases 0/0a/1/2/3a DONE; Phase-3b walk IN-PROGRESS (batch 1 done, 2026-07-13)
+
+**Phase-3b batch 1 (owner, 2026-07-13)** — page-news §12: **NewsList RATIFIED** (§12nw1-1, DESIGN-SYSTEM
+§5.2). **§12nw1-2** headline buckets → **segmented tabs** (Markets Global-tab pattern; one served bucket
+per tab, verbatim, one visible; wraps at 320px) — PROPOSED, ratify at re-verify; segmented buttons now
+recur 3× → extract-candidate recorded. **§12nw1-3 (ND-8 REVERSAL)** per-card refresh on Briefing +
+Headlines: verify-first found **no contract delta** — briefing regenerate = `POST /briefing/refresh`
+(require_auth [S]); headlines = a re-GET of `/news/grouped` (no auth). Refresh is egress → **disabled
+under no-egress** (ND-2 governs), aria-busy in-progress, toast outcome; 429 via per-feed degradation.
+148 unit + 105 overflow green; live pre-pass green (tabs + refresh + no-egress-disable), 0 console errors.
+
+### (prior) Phases 0/0a/1/2/3a — DONE (2026-07-13)
 
 **`/news` is built + pre-pass green; awaiting the owner acceptance walk.** Third Markets-group page
 (overview + worklist hybrid, ND-4). §9 all-resolved (owner 2026-07-13). Full record: **`page-news.md`

@@ -1,7 +1,7 @@
 # page-news.md — News page build plan
 
-**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE, Phase-3b owner walk PENDING (2026-07-13).** Pre-pass
-GREEN; build record in §11. Drafted 2026-07-13 from
+**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE; Phase-3b walk IN-PROGRESS (batch 1 done, owner
+2026-07-13).** Pre-pass GREEN; build record §11, walk log §12. Drafted 2026-07-13 from
 `TEMPLATE-page-build.md` (incl. the tooling-guard fail-first + the ⚠ verify-first divergence-flag +
 vertical-single-scroll additions, and the Markets-group hybrid-shape precedent). Verify-first pass done
 (§10 — read what the news/briefing/feeds readers actually serve before assuming shapes, D-019).
@@ -438,6 +438,37 @@ ND-6 (feeds mgmt home), plus ND-4/7/8/9/10/11/12. **No build until the owner res
   no refresh (ND-8). Verified honest.
 
 **Verification:** backend **497** · ruff · contract drift clean; frontend **146 unit + 105 Playwright**
-· typecheck/lint/tokens/build green; **live pre-pass GREEN**, 0 console errors. **STOP after the
-pre-pass (owner).** Phase 3b = the owner acceptance walk (judgment items) → numbered `§*` entries,
-fail-first, geometry fixes fail-first; owner closes the page. **Not started.**
+· typecheck/lint/tokens/build green; **live pre-pass GREEN**, 0 console errors.
+
+---
+
+## 12. PHASE-3B ACCEPTANCE WALK — batch 1 (owner, 2026-07-13)
+
+- **§12nw1-1 — `NewsList` RATIFIED (seen live).** The extracted shared component (page-news ND-5) is
+  ratified in **DESIGN-SYSTEM §5.2**.
+- **§12nw1-2 — Headline buckets → segmented tabs (PROPOSED, ratify at re-verify).** Replaced the
+  stacked per-bucket tiles with the **ratified segmented-button pattern** (Markets Global-tab
+  precedent): **one tab per SERVED bucket** (labels **verbatim** — the ND-3 no-re-mapping rule
+  unchanged), **one group visible at a time**, a count badge per tab, honest empty state per bucket.
+  Page-local `nw__seg`/`nw__segbtn` (mirroring `mk__seg`). **320px:** the tab bar **wraps** to multiple
+  rows (`flex-wrap`); the active `NewsList` flows below — overflow + single-scroll suites stay green at
+  320/375/900/1366 × both themes. **Recorded tech-debt:** segmented buttons now recur **3×**
+  (PriceChart periods · Markets region tabs · News buckets) → a **candidate for extraction** to a shared
+  `Segmented` primitive (the centralization rule) at a future pass; page-local for now, consistent with
+  Markets.
+- **§12nw1-3 — Per-card refresh (ND-8 REVERSAL).** Independent refresh icon actions on the **Briefing**
+  and **Headlines** card headers (the ratified icon-button). **Verify-first report (owner asked, don't
+  assume):** **NO contract delta** — both endpoints exist. **Briefing refresh = `POST /briefing/refresh`
+  — `require_auth` ([S])** (regenerate; deterministic, AI deferred). **Headlines refresh = a re-GET of
+  `GET /news/grouped`** (the reader fetches live each call — no cache) — **no auth** (GET). **Semantics:**
+  refresh is **EGRESS** → under no-egress the **ND-2 guard governs**: both buttons render **honestly
+  disabled** with a reason (**never a no-op spinner**); **in-progress** = `aria-busy`; the **served
+  updated/failed outcome** is a toast (the Pricing Health bulk-refresh pattern). **429 honesty** rides
+  the existing **per-feed graceful degradation** (a rate-limited feed is skipped, never fatal) — no new
+  backoff needed. No new backend work; `getNoEgress()` (the Pricing Health reader) gates the buttons.
+
+**Batch-1 verification:** frontend **148 unit + 105 Playwright** (tabs + refresh + no-egress-disable) ·
+typecheck/lint/tokens/build green; **live pre-pass green** — 3 bucket tabs, external + symbol links
+across buckets, briefing refresh works, **both refresh buttons disabled under no-egress**, single scroll
+region, 0 overflow × both themes, **0 console errors**. **STOP for owner re-verify** (ratifies the
+PROPOSED segmented tabs). Phase 3b continues; owner closes the page.
