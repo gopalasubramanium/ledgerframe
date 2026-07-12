@@ -1,7 +1,8 @@
 # page-markets.md — Markets page build plan
 
-**Status: §9 RESOLVED — Phases 1/2/3a DONE, Phase-3b walk IN-PROGRESS (batch 1 done, owner
-2026-07-12).** Phase 0 skipped (no §3b delta), Phase 0a composition-only (no §5 amendment). Drafted
+**Status: DONE ✅ — Markets owner-accepted (phone re-verify, 2026-07-13).** Phases 1/2/3a + Phase-3b
+walk (batches 1–4) complete; retrospective in §13. Phase 0 skipped (no §3b delta), Phase 0a
+composition-only (no §5 amendment). Drafted
 2026-07-12 from
 `TEMPLATE-page-build.md` (incl. the §7/§8 fail-first + reproduce-the-defect-first amendments, the
 Reports-group/worklist-shape note, the Phase-3a scripted-pre-pass standard, and progressive-per-card
@@ -519,3 +520,50 @@ watchlists / Global (2dp + BTC 6-sig + honest "—" on unavailable).
 **Batch-4 verification:** **frontend 140 unit + 93 Playwright overflow** · typecheck/lint/tokens/build
 green; **live pre-pass green** — Markets PART 1c (align) at 320/375/880 × both themes, **0 console
 errors**. CSS-only fix (no contract/backend change). **STOP for owner phone re-verify.**
+
+---
+
+## 13. RETROSPECTIVE — Markets DONE (owner-accepted phone re-verify, 2026-07-13)
+
+Markets shipped the Markets-group **overview + worklist hybrid** (ND-3, the shape Heatmap/News
+inherit), unblocked **R-17** (ticker indices → `/markets`), and absorbed the removed `/global` page.
+Four lessons, each folded back into the template/specs **this commit**:
+
+- **(a) A guard never seen to fire is not a guard — fail-first applies to TOOLING guards, not just
+  geometry.** The `dev.sh` **silent-exit** regression (`port_held` under `set -euo pipefail`: a free
+  port made `grep` non-zero → the `pid="$(…)"` assignment aborted the script before any server
+  started) shipped because the port pre-check was **never exercised on its free-port path** — the
+  common case. A new guard / pre-check / degraded-state branch must be **demonstrated firing on the
+  failure it guards**, exactly like a geometry fix is shown red pre-fix. **Encoded in
+  `TEMPLATE-page-build.md` §7/§8.**
+- **(b) An invariant not asserted is an invariant not held — the overflow suite was
+  horizontal-only.** §12mk1-1 (two vertical scrollbars: a tall descendant propagated overflow to
+  `documentElement`) slipped past because ADR-0004 measured only **horizontal** overflow. The
+  **vertical single-scroll invariant** (the document/window never scrolls; only `.lf-shell__content`
+  does) is now a **permanent ALL-PAGES Playwright assertion** (spacer-forced, fail-first proven). When
+  a bug reveals an **unmeasured dimension**, add it to the suite — recorded in TEMPLATE §7.
+- **(c) A per-instance fix of a standard is not a fix — centralize so components can't opt out.** The
+  default-styled-link recurrence (§12mk1-2 — Portfolio §12b3-3 **recurred** on the Markets tables)
+  proved it. The ratified link treatment now lives in **`.lf-table a`** (every table anchor inherits
+  it; a table **cannot** opt back into the browser default) — promoted to **DESIGN-SYSTEM §5.2**. A
+  standard belongs in the shared component/CSS, re-fixing it per page is the smell.
+- **(d) Keep the ⚠ verify-first divergence flag — it caught two premises.** Verify-first (D-019)
+  surfaced, twice, where a build premise diverged from reality: the **banner-refresh premise** (the
+  brief assumed the StaleBanner offered refresh — it never did, Pricing Health §12ph1) and
+  **`/markets/search` shipping unwired** (§11-5 — the InstrumentPicker calls `/instruments/search`, not
+  `/markets/search`, so the endpoint had **no caller**). Explicitly flagging a divergence (⚠) between
+  the plan/brief and what the engine serves is worth keeping — recorded in TEMPLATE §10 (verify-first).
+
+**Platform legacy promoted (DESIGN-SYSTEM / TEMPLATE this commit):** the **single vertical scroll
+region** invariant (`contain: layout` on `.lf-shell__content`; D-101); the **centralized `.lf-table a`
+link treatment**; **D-105 quote-price display precision by asset class** (backend-formatted, rendered
+verbatim — DESIGN-SYSTEM §1); the **30-day Sparkline on Global-tab index rows** (scoped option (a));
+the **segmented-button region-tab** reuse of the PriceChart-periods precedent (no Tabs amendment).
+
+**Milestone shape (the template loop worked):** verify-first emptied §3b (no delta; ND-1 =
+display-sort) → §9 one-pass owner resolution → Phase 0 skipped, Phase 0a composition-only → Phases 1/2
+→ Phase-3a pre-pass **green first run** → Phase-3b walk in **4 batches** (scroll/link/search · sparklines
+· D-105 precision + PageHeader search · row alignment), each fail-first, each closed at owner re-verify.
+**Deltas:** one backend (D-105 `price_display` on `Quote` + `HoldingView`; contract regenerated, no
+path change) — otherwise ratified-component composition throughout. **Open follow-ups:** none blocking;
+the batch history endpoint (batch-2 scoped option (c)) stays **NOT-REGISTERED**, revisit on need.

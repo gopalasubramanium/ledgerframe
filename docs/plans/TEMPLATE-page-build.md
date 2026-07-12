@@ -143,6 +143,18 @@ Each row is built backend-first and regenerates `API-CONTRACT.json` +
 `docs/openapi.json` in the **same commit** (freeze rule). `kind` ∈
 add / rename / remove / reshape.
 
+> **Note (typed responses):** a `response_model` **strips** any dict key it doesn't declare — a served
+> field vanishes silently unless the model has it (page-markets §12mk3-2: `HoldingView.price_display`).
+> When adding a served field to a typed route, add it to the model AND regenerate the contract.
+
+**⚠ Verify-first divergence flag — worth keeping (page-markets §13d).** Verify-first (D-019) reads what
+the engine actually serves before assuming shapes. When it finds that a **plan/brief premise diverges
+from reality**, flag it explicitly with **⚠** in §9/§10 and resolve it — don't silently build to the
+premise. Two catches this pattern earned: the **banner-refresh premise** (the brief assumed the
+StaleBanner offered refresh — it never did) and **a served endpoint shipping unwired** (`/markets/search`
+had no caller; the picker used `/instruments/search`). A divergence surfaced early is a §9 item, not a
+walk finding.
+
 | kind | Endpoint (current → intended) | Decision | Why this page needs it |
 |------|-------------------------------|----------|------------------------|
 
@@ -322,6 +334,13 @@ the theme/density matrix. Written as checkable statements.*
       `e2e/overflow.spec.ts`) to cover this page** — it asserts zero horizontal overflow at
       **320/375/900/1366px × both themes** on the document + `.lf-shell__content`, and is
       wired into `npm run check`.
+- [ ] **Single vertical scroll region — the document never scrolls (page-markets §12mk1-1):** the
+      overflow suite was **horizontal-only**, so a page that scrolled the whole window beside the
+      content scroller slipped through. The permanent ALL-PAGES assertion now also proves **only
+      `.lf-shell__content` scrolls vertically** — the document/window can't (spacer-forced tall
+      content → `window.scrollY` stays 0). *An invariant not asserted is an invariant not held:* when
+      a bug reveals an **unmeasured dimension**, add that dimension to the suite, not just a one-off
+      fix. (The shell guarantees it via `contain: layout`.)
 - [ ] **Every visual/geometry fix ships with a pre-pass assertion (page-portfolio §12b4-1):**
       a layout/geometry finding is NOT closed by the edit alone — a **repeat finding is the
       signature of a fix with no assertion guarding it**. When a fix asserts equal/aligned/
@@ -338,6 +357,13 @@ the theme/density matrix. Written as checkable statements.*
       current build**, then fix, then green. **Measure the actual element** (e.g. the sparkline svg
       AND its `<path>` vs each tile), never container-vs-container. Report the fail-first run in the
       §-entry.
+- [ ] **Fail-first applies to TOOLING guards too, not just geometry (page-markets §13a):** *a guard
+      never seen to fire is not a guard.* Any new **pre-check / degraded-state branch / dev script /
+      CI guard** must be **demonstrated firing on the failure it guards** — exercise its FAILURE path,
+      including the common case. (The `dev.sh` silent-exit regression shipped because the port
+      pre-check was never run on its free-port path — the normal case — where `set -e` + a non-zero
+      `grep` aborted the script before starting anything.) A guard whose red path is never observed is
+      assumed-working, not verified.
 - [ ] **Copy hygiene (page-chrome §11-8):** no decision ID (`D-0…`/`P-…`/`§…`) or
       implementation note (`server-side`, enum/endpoint names) in any user-facing string
       — grep the rendered copy. A changed label is updated **app-wide** (§11-4), not only

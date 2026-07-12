@@ -670,7 +670,20 @@ Platform legacy (promoted to DESIGN-SYSTEM §5.2): the **shared summary-count qu
 record: **`page-pricing-health.md` §9–§13** (§13 retrospective — the fastest page: verify-first emptied
 §3b, one-pass §9, composition-only Phase-0a). Commits `60d2338`→ batch-1 close-out.
 
-## MARKETS — Phases 1/2/3a DONE; Phase-3b walk IN-PROGRESS (batches 1–4 done, 2026-07-13)
+## MARKETS — DONE ✅ (page ACCEPTED, owner phone re-verify, 2026-07-13)
+
+**`/markets` is complete and owner-accepted.** Markets-group home (overview + worklist hybrid, ND-3 —
+the shape Heatmap/News inherit); unblocked **R-17** (ticker indices → `/markets`); absorbed the removed
+`/global` page. Phases 1/2/3a + Phase-3b walk (batches 1–4) + retrospective (page-markets §13). One
+backend delta: **D-105** quote-price display precision (`price_display` on `Quote` + `HoldingView`;
+contract regenerated, no path change) — otherwise ratified-component composition. Platform legacy
+promoted (DESIGN-SYSTEM/TEMPLATE): **single vertical scroll region** invariant (`contain: layout`),
+**centralized `.lf-table a` link treatment**, **D-105 precision**, **30d Sparkline on Global-tab rows**,
+segmented-button region tabs. Retrospective lessons folded into TEMPLATE §7/§8 + §3b (fail-first for
+tooling guards; vertical-scroll invariant; ⚠ verify-first divergence flag). Full record:
+**`page-markets.md` §9–§13**. No open blockers; batch history endpoint stays not-registered.
+
+### (walk log — the batches above are now DONE)
 
 **Phase-3b batch 4 (owner, 2026-07-13)** — page-markets §12mk4. Batch-3 RATIFIED live (PageHeader
 search + 320px flex-wrap; D-105 precision). **§12mk4-1 BUG:** Global-tab index rows misaligned below
@@ -740,9 +753,13 @@ composition-only (no §5 amendment — segmented-button region tabs + chip statu
 
 ## NEXT
 
-1. **Markets — Phase-3b owner acceptance walk (LIVE).** Each finding → a numbered `page-markets.md §*`
-   entry, fixed + re-verified live, geometry fixes fail-first (TEMPLATE §7/§8); close the page-chrome
-   ticker index-link §-entry (ND-5); then the owner closes the page. (Phases 1/2/3a done above.)
+1. **News page build — via the template loop, PLAN ONLY first** (`docs/plans/page-news.md`; owner
+   reviews before any code). **Markets-group sibling — inherits the overview + worklist hybrid shape**
+   (ND-3). Canonical home for the **briefing + grouped headlines** (D-037/D-051); the **region groups
+   receive the Markets links** (Markets drops region-news → links to News, D-051). Standard loop:
+   **Phase-0 verify-first** (D-019 — read what the news/feeds readers serve; gaps → §9, never a §3b
+   guess), Phase-3a **scripted pre-pass GREEN before** the walk, geometry fixes **fail-first**
+   (TEMPLATE §7/§8, incl. the tooling-guard + vertical-scroll additions).
 2. **Accounts page plan (D-065) — future.** When drafted, it **must wire `entity_id` scoping**
    across every portfolio reader (all `/portfolio/*` readers already accept `entity_id`; Portfolio
    defaults to household with no selector — page-portfolio ND-8). Entity CRUD + the entity selector

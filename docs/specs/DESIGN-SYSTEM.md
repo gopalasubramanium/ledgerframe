@@ -39,7 +39,12 @@ private-bank client portals) — not a startup dashboard, not default shadcn.
 1. **Numbers are the interface.** Tabular (monospaced-figure) numerals
    everywhere, **right-aligned**, with **consistent decimal places per unit
    type** (money 2dp, price 6dp, percent 2dp, quantity per-instrument
-   precision). Thin table rules; generous row-density options
+   precision). **Quote-price display precision is by asset class, formatted in
+   the BACKEND (D-105, ratified 2026-07-13):** equities / ETFs / funds / indices
+   → 2dp; crypto → up to 6 significant digits (so sub-cent tokens aren't
+   truncated to `0.00`); served as a display string (`price_display`) the
+   frontend renders **verbatim** — no client formatting of quote prices; stored
+   native precision unchanged. Thin table rules; generous row-density options
    (comfortable/compact, §2.5). Money math is never done in the frontend
    (backend `Decimal` only — PRODUCT-SPEC §4b); components render figures the
    backend computed.
@@ -177,6 +182,15 @@ header-outside-scroll. **Refinement (2026-07-11): the sticky column header owns 
 full width including the reserved gutter** — the last header cell paints the header
 fill + bottom border across the gutter zone (a `box-shadow`, no structural split), so
 the scrollbar track reads as starting BELOW the column header, not beside it.
+**Single vertical scroll region (ratified 2026-07-13, page-markets §12mk1-1):** the
+shell content (`.lf-shell__content`) is the **one** vertical scroller — the
+document/window itself **must never scroll** (a second scrollbar beside the content).
+The shell is `height:100vh; overflow:hidden` with the flex column allowed to shrink
+(`min-height:0`) AND **`contain: layout` on `.lf-shell__content`**, which stops a tall
+descendant from propagating overflow up to `documentElement` (a Chromium quirk). A
+page whose primary tables are overview content lets them **flow** (no `--table-max-h`
+cap) rather than open a nested scrollbar beside the page scroll. Guarded by a permanent
+ALL-PAGES Playwright assertion (the window can't scroll; spacer-forced, fail-first).
 
 ### 2.5 Density modes (D-045 / D-078)
 
@@ -292,7 +306,7 @@ props are backend-computed `Decimal` strings (never client-computed).
 
 | Component | Props (surface) | Usage rules |
 |-----------|-----------------|-------------|
-| **DataTable** | `columns` (`{key,label,align,format,sortable}`), `rows`, `sort`, `onSort`, `filter?`, `onExport?` (server-side), `stickyHeader`, `density`, `rowLink?`, **`footer?`** (`FooterRow[]`: `{key, cells: {byColumnKey}, emphasis?}`) | **One implementation** for every table (Holdings, transactions, tax lots, drift, policy targets, insurance, estate, pricing health, accounts). Sticky header; `aria-sort` on sortable headers; numbers right-aligned + tabular + per-unit dp; **export is server-side** (P-5) — the client never generates the file. Respects density (§2.5). **`<tfoot>` totals primitive (RATIFIED 2026-07-12, Net worth §12b1-2/§12b2-1):** reconciling totals render as `<tfoot>` rows **inside the same `<table>`**, so they share the body's **column grid AND scroll gutter by construction** — a total value can never drift out of alignment with its column (a totals `<dl>` outside the scroll region does). Cells are keyed by column key; `emphasis` = the ruled/bold net row; a **separator rule** is drawn above the totals section (first `<tfoot>` row), both themes. Any table with reconciling totals uses this, never a sibling totals block. **Caption = screen-reader-only (RATIFIED 2026-07-12, Pricing Health §12ph1-3):** a `DataTable` inside a **titled card** keeps its `<caption>` for accessibility but hides it visually (via `.lf-visually-hidden` — 1px dims from `--border-width`, no raw px), because the card header already names the table; a visible caption is a **duplicate title**. |
+| **DataTable** | `columns` (`{key,label,align,format,sortable}`), `rows`, `sort`, `onSort`, `filter?`, `onExport?` (server-side), `stickyHeader`, `density`, `rowLink?`, **`footer?`** (`FooterRow[]`: `{key, cells: {byColumnKey}, emphasis?}`) | **One implementation** for every table (Holdings, transactions, tax lots, drift, policy targets, insurance, estate, pricing health, accounts). Sticky header; `aria-sort` on sortable headers; numbers right-aligned + tabular + per-unit dp; **export is server-side** (P-5) — the client never generates the file. Respects density (§2.5). **`<tfoot>` totals primitive (RATIFIED 2026-07-12, Net worth §12b1-2/§12b2-1):** reconciling totals render as `<tfoot>` rows **inside the same `<table>`**, so they share the body's **column grid AND scroll gutter by construction** — a total value can never drift out of alignment with its column (a totals `<dl>` outside the scroll region does). Cells are keyed by column key; `emphasis` = the ruled/bold net row; a **separator rule** is drawn above the totals section (first `<tfoot>` row), both themes. Any table with reconciling totals uses this, never a sibling totals block. **Caption = screen-reader-only (RATIFIED 2026-07-12, Pricing Health §12ph1-3):** a `DataTable` inside a **titled card** keeps its `<caption>` for accessibility but hides it visually (via `.lf-visually-hidden` — 1px dims from `--border-width`, no raw px), because the card header already names the table; a visible caption is a **duplicate title**. **Link treatment is centralized — tables can't opt out (RATIFIED 2026-07-13, page-markets §12mk1-2):** every anchor in a `.lf-table` inherits the ratified accent, **no-underline-at-rest** link (`.lf-table a`, hover underlines) — a per-instance fix of this standard is not a fix (it recurred: Portfolio §12b3-3 → Markets). Non-table link lists style their anchors to match at the page level. |
 | **TrendStat** | `label`, `value`, `delta?` (with gain/loss colour), `unit`, `sparkline?`, `provenance?` | KPI/stat tiles (Net worth KPI strip, Portfolio stat rail, Today's change). Delta uses `--gain`/`--loss` only. Optional ProvenanceBadge slot. |
 | **MetaStrip** *(new 2026-07-11)* | `items` (`{label, value}[]`) | Compact **label/value metadata** — dense identity/taxonomy that recurs across entity-detail pages (instrument, and future accounts/policies/estate). **Desktop:** one row of equal-width label-over-value pairs; **narrow (< 40rem):** wraps to a tight 2-column grid. Labels `--text-tertiary` small; values below (plain or an `lf-chip`). Display-only (no math). First used on Instrument Detail Identity. |
 | **AllocationDonut** | `segments` (`{label,value}`), `legend`, `onSegmentClick?`, **`footnote?`** | Allocation by class/sector/currency/tag (Portfolio, D-033); one summary donut on Home. **Not** used on Net worth (composition donut dropped, D-054). Slate+accent segments (§4). **Amendment RATIFIED 2026-07-11 (Portfolio Phase-0a, ND-4):** an honest **`footnote`** line under the donut for excluded liabilities/zeros (a **served** figure, no client math) — the sector donut also carries the served D-082 "Not sector-classified (non-equity)" segment. |
@@ -315,7 +329,7 @@ mutating action — e.g. a refresh — refetches so both move together). A page 
 figure it independently computed while claiming it "matches" the chrome — the two would skew under
 fetch timing. Applies to any future chrome↔page count (stale, review-attention, update).
 | **QuoteCardRow** (D-046) | `quotes`, `source` (select: markets/holdings/global/watchlist) | Home's single compact quote-card row with source select; replaces the three separate market rows. |
-| **TickerStrip** (D-047 AMENDMENT, **ratified 2026-07-11** — §11-17) | `quotes` (`TickerQuote[]`: `symbol`, `price`, `changePct`, `stale?`, `href?`) | **Global chrome FOOTER** — a fixed, always-visible strip at the bottom of the shell, **every width** (was Home-Full-only). Holdings (+ world indices); a symbol with an `href` **links to its entity-detail page** (holdings → `/instrument/{symbol}`; indices unlinked, D-098/§11-19). **Staleness flagged per item** (amber). Marquee **halts under reduced motion** → static + manually scrollable; speed/height/gap are tokens (`--ticker-scroll-duration` 30s, `--ticker-height`, `--ticker-gap`). **Hidden entirely under lock** (leaks nothing, D-002). Home Full no longer duplicates it. |
+| **TickerStrip** (D-047 AMENDMENT, **ratified 2026-07-11** — §11-17) | `quotes` (`TickerQuote[]`: `symbol`, `priceDisplay`, `changePct`, `stale?`, `href?`) | **Global chrome FOOTER** — a fixed, always-visible strip at the bottom of the shell, **every width** (was Home-Full-only). Holdings (+ world indices); a symbol with an `href` **links to its canonical home** (holdings → `/instrument/{symbol}`, D-098; **indices → `/markets`** — R-17 **shipped 2026-07-13** with the Markets build, §11-19 closed). Prices are the backend-formatted **`priceDisplay`** string (D-105), rendered verbatim. **Staleness flagged per item** (amber). Marquee **halts under reduced motion** → static + manually scrollable; speed/height/gap are tokens (`--ticker-scroll-duration` 30s, `--ticker-height`, `--ticker-gap`). **Hidden entirely under lock** (leaks nothing, D-002). Home Full no longer duplicates it. |
 
 ### 5.3 Provenance & status
 
