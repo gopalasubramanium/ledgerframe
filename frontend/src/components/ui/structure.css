@@ -118,7 +118,11 @@
   font-weight: var(--weight-semibold);
 }
 /* §12ho2-9: inside a summary tile the verdict rows spread over the height they are given, rather than
- * hugging the header and leaving the bottom half of the card empty. */
+ * hugging the header and leaving the bottom half of the card empty.
+ * §12ho2-12: and the tile's own box is denser than the standalone card's. THE CARD KEEPS ITS THREE
+ * VERDICTS — the owner's intent is that attention IS the page's purpose, so the count and the items
+ * are not what gets cut to win a fit. Padding is. */
+.hm3__cell--review .lf-review { padding: var(--space-4); gap: var(--space-3); }
 .hm3__cell--review .lf-review__section { flex: 1 1 auto; align-items: center; }
 .lf-review__section {
   display: flex;

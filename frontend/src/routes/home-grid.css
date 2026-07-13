@@ -8,18 +8,25 @@
  * gain/loss tones on signed figures and the donut's categorical palette. Hierarchy is SIZE and
  * PLACEMENT — never motion, never a decorative accent. */
 
+/* §12ho3-1 — Home is a NORMAL page. It had a page-local shell: its own padding, its own background
+ * surface, its own full-height box — none of which any other page has. Net worth, Portfolio and
+ * Holdings are simply `display: flex; flex-direction: column; gap`, and the ROOT PADDING IS OWNED BY
+ * THE SHELL (`.lf-shell__content`, page-portfolio §12-1). Home now does the same.
+ *
+ * This SUPERSEDES §12ho2-4: that entry fixed a backdrop that only covered half the page. The backdrop
+ * is gone — there was never supposed to be one, and a bug in a thing that should not exist is best
+ * fixed by deleting the thing. It also hands ~40px of vertical space straight back to the grid
+ * (§12ho2-12 lever 1): the page-local padding was competing with the shell's own. */
 .hm3 {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  /* §12ho2-4 — the backdrop covered only HALF the page: `height: 100%` resolves against the content
-   * region, so once the grid grew past it the background stopped where the box stopped and the rest
-   * of the scrolled page showed the shell behind it — a visible seam. `min-height` makes the surface
-   * span the region AND follow the content, whichever is taller. */
-  min-height: 100%;
-  padding: var(--space-4);
-  background: var(--surface-sunken, var(--surface));
-  box-sizing: border-box;
+  gap: var(--space-4);
+  min-height: 100%; /* the grid may still fill the region when content is short — no half-empty page */
+}
+/* Every top-level section may shrink below its content's min-width, so a wide child scrolls inside
+ * its own wrapper instead of stretching the page (the overflow discipline every page follows). */
+.hm3 > * {
+  min-width: 0;
 }
 
 /* The page header is the ratified PageHeader (§5) — the same component every page opens with. The
@@ -151,7 +158,7 @@
    * donut once asked for 432px — §12ho1-7). Grow, yes; drive the row's height, no. */
   flex: 1 1 auto;
   margin-top: auto;
-  min-height: 3rem;
+  min-height: 2.5rem;
   display: flex;
   align-items: flex-end;
 }
@@ -193,7 +200,15 @@
   overflow-x: auto;
   overflow-y: hidden;
 }
-.hm3__cell--quotes .lf-quote { min-width: 0; }
+/* §12ho2-12 lever: DENSITY, not content. A compact summary card does not need a full form's padding —
+ * and Quotes is what BINDS row 3 (it is taller than the News tile beside it), so this is the change
+ * that actually buys height. Nothing is removed: every card still shows symbol, name, price, change
+ * and its staleness. */
+.hm3__cell--quotes .lf-quote {
+  min-width: 0;
+  padding: var(--space-3);
+  gap: var(--space-1);
+}
 
 /* §12ho2-9 — the donut block FILLS the tile and centres vertically beside its (capped) legend, rather
  * than hugging the top and leaving a band of nothing below. */

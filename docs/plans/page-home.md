@@ -1073,3 +1073,85 @@ overflow · 0 console errors · 0 overlapping text · 0 clipped tiles.** Scroll:
 phrasing implemented; one alternative offered) · §12ho2-7 **News** title · §12ho2-11 **Select** amendment ·
 §12ho2-5 SummaryHead `meta` + QuoteCardRow `summary` · §12ho2-8 Lucide ↗ · **§12ho2-12 the fit lever** ·
 carried: §9-11 strings · §9-13 "Home" · §12ho1-1 subtitle pick · ReviewCard N=3 cap.
+
+---
+
+## §12 — PHASE-3b OWNER WALK, BATCH 3 (2026-07-14)
+
+Fail-first throughout: each defect reproduced (screenshot / failing assertion) **before** the fix.
+
+### §12ho3-1 — Backdrop REMOVED; Home adopts the STANDARD page shell
+
+Home had a **page-local shell**: its own padding, its own background surface, its own full-height box —
+none of which any other page has. Net worth, Portfolio and Holdings are simply
+`display: flex; flex-direction: column; gap`, and **the root padding is owned by the shell**
+(`.lf-shell__content`, page-portfolio §12-1). Home now does the same, and the backdrop is **gone**.
+
+**This SUPERSEDES §12ho2-4**, which fixed a backdrop that only covered half the page. There was never
+supposed to be a backdrop: **a bug in a thing that should not exist is best fixed by deleting the
+thing.** Cross-page assertion added — Home's container uses the same shell classes/tokens as the other
+pages; no page-local shell survives.
+
+### §12ho3-2 — Donut value readout moves to the CENTRE (§5 amendment G, PROPOSED)
+
+Hover **or keyboard focus** renders the **served label + share in the ring's hole**. **Anchored** — it
+cannot overlap the legend or a neighbour; **nothing follows the cursor**; **zero layout shift** (verified:
+the donut's height is identical with the readout shown and hidden). A long class label **ellipsises
+inside the hole** rather than spill over the ring. The `aria-live` readout is **retained, visually
+hidden** — moving the *visual* readout must not cost the *accessible* one. Both themes, all breakpoints.
+**Portfolio inherits it.** Specimen: hover · focus · long-label. Evidence: `12ho3-2-donut-centre.png`.
+
+### §12ho3-3 — Stale badge escaped the quote card
+
+**Guard first, and the first guard was still too kind.** `tile-integrity` gained an **element-containment**
+check — every element that paints inside a card is bounded by that card's box (content inside an *inner*
+scroll container is exempt: that container is doing its job). It went **GREEN**, because the gallery's
+quote cards are **wide** and the defect only appears in a narrow one. **A specimen only proves what it
+exercises.** So a **narrow-card specimen** was added — 9rem, exactly what Home's grid gives a quote card
+— and the guard went **RED**: `lf-stale escapes lf-quote`.
+
+**The defect.** `.lf-quote__sym` was a **nowrap flex with no `min-width: 0`**, so in a narrow card the
+staleness badge was pushed straight out through the card's right border. **The fix:** the symbol row
+**wraps** and its children may shrink — the badge drops to its own line rather than escape — and the
+badge itself ellipsises inside its box. **Per-item staleness is an honesty affordance: it stays legible
+and it stays inside the card.**
+
+### §12ho2-12 RESOLVED — levers spent in order, and each one's real effect MEASURED
+
+**533px → 87px** of overshoot at 1440×900 (live, real dataset). What actually happened:
+
+| # | Lever | Bought | Note |
+|---|---|---|---|
+| 1 | **§12ho3-1** backdrop / page-local shell removed | **~20px** | design, not content |
+| 2 | **Donut ring shrink** (9rem → 8rem) | **~0px** | **the ring was never the constraint** — the *capped legend* (6 rows) is taller than the ring, so the **legend** sets that tile's height. Kept for balance, not for the fit. |
+| — | **Tile density** (quote-card + ReviewCard padding; Quotes was binding row 3) | **~45px** | design, not content. **The ReviewCard KEEPS its three verdicts** — owner intent: *attention is the page's purpose*, so the count and the items are not what gets cut. |
+| 3 | **Top headlines 3 → 2** (§9-9 **SUPERSEDED**) | **~25px** | spent **last**, and only once it was proven to pay — see below. The **Briefing line stays**. |
+
+**The finding worth keeping:** *a content cut that buys nothing is pure loss.* While **Quotes** was the
+taller tile in row 3, cutting a headline bought **zero** — a row is as tall as its **tallest** tile.
+Only after density made **News** the binding tile did lever 3 buy anything. **Measure which tile binds
+before you cut anything.** The same logic exposed lever 2 as a no-op.
+
+**And the gate was still flattering the design.** The specimen frame modelled the *content region*
+(812px) but not the shell's **own 88px of padding** (24 top + 64 reserved for the ticker), which the page
+really does lose. The frame is now **1440 × 724** — the height a page's content **actually gets**. Model
+the box the product has, or the gate lies. *(So the specimen's ~126px overshoot is **not** comparable to
+batch 2's number: it is measured against a box 88px tighter.)*
+
+**Final: 87px at 1440×900 — the target of 0 is NOT met, and I did not cut further to fake it.** The only
+levers left are ones the owner ruled out or did not authorise (ReviewCard 3→2; the Briefing line; Quotes
+to one row). **The CI ratchet stays a ratchet, not a pass** — the overshoot can never grow, and it drops
+to 0 the moment a further lever is spent.
+
+### Batch-3 verification
+
+Backend **622** unchanged. Frontend `npm run check` **exit 0**: lint · typecheck · tokens · **177 unit** ·
+**155 Playwright** (tile-integrity: 5 routes × 5 breakpoints, now with **element containment**).
+Live pre-pass, **both themes × 375 / 768 / 1366 / 1440**: **7/7 cards · 0 skeletons · 9 ↗ · 0 horizontal
+overflow · 0 overlapping text · 0 escaping content · 0 clipped tiles · 0 console errors.**
+Scroll: **1440 → 87px** · 1366 → 220px (accepted, §12ho1-7).
+
+**STOP — owner re-verify. Pending ratification:** §12ho3-2 donut centre readout (+ ring density) ·
+§12ho1-7 legend cap · §12ho2-2 subtitle · §12ho2-7 News title · §12ho2-11 Select amendment · SummaryHead
+`meta` + QuoteCardRow `summary` · Lucide ↗ · §9-11 strings · §9-13 "Home" · §12ho1-1 pick ·
+**the residual 87px (§12ho2-12)**.

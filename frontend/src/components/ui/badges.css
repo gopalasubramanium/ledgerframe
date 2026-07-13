@@ -44,6 +44,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  /* The label never spills its own box: it ellipsises rather than escape (§12ho3-3). The chip is an
+   * honesty flag — clipping it silently would be worse than shortening it, so it truncates visibly. */
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
   padding: var(--space-1) var(--space-3);
   border: var(--border-width) solid var(--attention);
   border-radius: var(--radius-sm);

@@ -181,11 +181,24 @@
 .ks__viewportscroll { overflow-x: auto; }
 .ks__viewport {
   width: 90rem;      /* 1440 */
-  height: 50.75rem;  /* 812 — 900 MINUS the chrome (top bar + ticker), i.e. the region the page gets */
+  /* 724 = 900 − the chrome (top bar + ticker) − the shell's own content padding. This is the height a
+   * page's content ACTUALLY gets. The frame was 812 (region only) and so still flattered the design by
+   * the shell's padding — the same class of error, one layer further in. Model the box the product
+   * has, or the gate lies. */
+  height: 45.25rem;
   flex: 0 0 auto;
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--surface);
   resize: vertical;
+}
+
+
+/* §12ho3-3: force the quote cards to the width Home's grid actually gives them (~9rem), so the stale
+ * badge is exercised in the box it really lives in — not in a gallery-wide card that hides the defect. */
+.ks__narrowquotes .lf-quote {
+  min-width: 0;
+  width: 9rem;
+  flex: 0 0 9rem;
 }

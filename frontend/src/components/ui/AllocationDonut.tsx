@@ -64,6 +64,12 @@ export function AllocationDonut({
 
   return (
     <div className="lf-donut">
+      {/* §12ho3-2 — the value readout lives in the RING'S HOLE, not on a line beneath it. It is
+        * ANCHORED to the centre: it cannot overlap the legend or a neighbouring tile, it does not
+        * follow the cursor, and because it is absolutely positioned inside the ring it causes NO
+        * layout shift when it appears. The hole was empty space; now it answers the question the
+        * hover is asking. Hover AND keyboard focus drive it (the legend rows are focusable). */}
+      <div className="lf-donut__ring">
       <svg className="lf-donut__svg" viewBox="0 0 100 100" role="img" aria-label={ariaLabel ?? "Allocation"}>
         <g transform="rotate(-90 50 50)">
           {arcs.map(({ i, pct, offset }) => (
@@ -84,9 +90,20 @@ export function AllocationDonut({
           ))}
         </g>
       </svg>
+        <div className="lf-donut__centre" aria-hidden="true">
+          {hot && (
+            <>
+              <span className="lf-donut__centrelabel">{hot.seg.label}</span>
+              <span className="lf-donut__centrepct">{formatPercent(String(hot.pct))}</span>
+            </>
+          )}
+        </div>
+      </div>
 
-      {/* Hover/focus readout (aria-live so keyboard users hear the active segment). */}
-      <div className="lf-donut__tip" role="status" aria-live="polite">{tip}</div>
+      {/* The same readout for assistive tech — visually hidden, since the sighted version is now in
+        * the hole. Keyboard users still hear the active segment (it was `role=status` before and it
+        * stays one; moving the VISUAL readout must not cost the ACCESSIBLE one). */}
+      <div className="lf-donut__tip lf-visually-hidden" role="status" aria-live="polite">{tip}</div>
 
       {legend && (
         <ul className="lf-donut__legend">

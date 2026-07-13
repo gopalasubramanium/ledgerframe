@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
 import "./KitchenSink.css";
 import { DisplayControls } from "../components/DisplayControls";
 import { TokenBoard } from "./TokenBoard";
@@ -474,6 +475,30 @@ export function KitchenSink() {
               ))}
             </div>
           </Specimen>
+          {/* §12ho3-2 — the readout is IN THE HOLE. Hover a segment or TAB the legend: the served class
+            * label + share render anchored at the centre. It cannot overlap the legend or a neighbour,
+            * nothing follows the cursor, and there is no layout shift. The long label below is the
+            * case that matters: it must ellipsise inside the hole, never spill over the ring. */}
+          <Specimen label="AllocationDonut · CENTRE READOUT (§12ho3-2) — hover a segment OR tab the legend; capped legend + '+N more ↗'; LONG label must stay inside the hole">
+            <AllocationDonut
+              segments={[
+                { label: "Equities & ETFs", value: "45000" },
+                { label: "Real estate investment trusts (Singapore)", value: "80000" },
+                { label: "Cash & deposits", value: "30000" },
+                { label: "Bonds", value: "20000" },
+                { label: "Crypto", value: "12000" },
+                { label: "Retirement", value: "25000" },
+                { label: "Private", value: "8000" },
+              ]}
+              legendMax={5}
+              legendMore={(n) => (
+                <Link className="lf-donut__morelink" to="#/portfolio" aria-label={`${n} more classes on Portfolio`}>
+                  +{n} more
+                  <ArrowUpRight aria-hidden="true" focusable="false" />
+                </Link>
+              )}
+            />
+          </Specimen>
           <Specimen label="AllocationDonut · categorical palette (8 identities in fixed order)">
             <AllocationDonut
               segments={[
@@ -699,6 +724,28 @@ export function KitchenSink() {
               <GlossaryTerm term="term-gross-assets">Gross assets</GlossaryTerm> minus liabilities;{" "}
               <GlossaryTerm term="term-cash-runway">Cash runway</GlossaryTerm> tracks how long liquid assets last.
             </p>
+          </Specimen>
+          {/* §12ho3-3: the stale badge in a NARROW card — the case the wide gallery specimen hid. In
+            * Home's grid a quote card is ~9rem, and the symbol row was a nowrap flex with no
+            * `min-width: 0`, so the badge was simply pushed out through the card's right border. A
+            * specimen only proves what it exercises. */}
+          <Specimen label="QuoteCardRow · stale badge in a NARROW card (§12ho3-3) — the badge must stay INSIDE the border; the date may drop to a second line, never outside">
+            <div className="ks__narrowquotes">
+              <QuoteCardRow
+                quotes={[
+                  {
+                    symbol: "BTC",
+                    name: "Bitcoin",
+                    price: "66084.9000",
+                    changePct: "-0.50",
+                    currency: "USD",
+                    isStale: true,
+                    asOf: "2026-07-08T18:02:00Z",
+                  },
+                ]}
+                source="holdings"
+              />
+            </div>
           </Specimen>
           <Specimen label="Long / RTL-length labels (overflow behaviour)">
             <div className="ks__stack" dir="rtl">

@@ -49,8 +49,14 @@ import { formatMoney, formatSignedMoney, formatSignedPercent, signOf } from "../
 
 // §9-6: N=3 per movers pair — a summary, never out-detailing its canonical page.
 const MOVERS_N = 3;
-// §9-9: N=3 headlines from the "My holdings" group.
-const HEADLINES_N = 3;
+// §9-9 SUPERSEDED by §12ho2-12 (owner-approved lever 3, 2026-07-14): N=2, not 3.
+//
+// Spent LAST, and only once it was proven to pay: while the Quotes tile was the taller of the two in
+// row 3, cutting a headline bought NOTHING (the row is as tall as its tallest tile). Design levers
+// went first — the page-local shell, tile density — and only when News became the binding tile did
+// this one buy height. A content cut that buys nothing is pure loss, so it is worth measuring which
+// tile actually binds before cutting anything. The Briefing line STAYS.
+const HEADLINES_N = 2;
 // The ReviewCard is a SUMMARY: it shows the top N verdicts, not the whole report. Listing every item
 // would make Home the Review page (P-1: a summary never out-details its canonical page) — and the
 // wired page did exactly that, rendering all of them and blowing the hero row's height. The ATTENTION

@@ -196,12 +196,22 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+/* §12ho3-3 — the symbol row WRAPS, and its children may shrink. It was a nowrap flex with no
+ * `min-width: 0`, so in a narrow card (Home's grid gives each quote ~9rem) the stale badge was simply
+ * pushed out through the card's right border. Per-item staleness is an HONESTY affordance: it must
+ * stay legible and INSIDE the card — so the badge drops to its own line rather than escaping. */
 .lf-quote__sym {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
   font-weight: var(--weight-semibold);
   font-size: var(--font-size-13);
+}
+.lf-quote__sym > .lf-stale {
+  max-width: 100%;
+  min-width: 0;
 }
 .lf-quote__name {
   color: var(--text-tertiary);

@@ -565,3 +565,23 @@ a subtly elevated surface. **Hover:** the border returns. **Focus-visible: the r
 — a11y is not a style to trade away.** Text inputs keep their border: *"type here"* is a different promise
 from *"choose a view"*. Applies at **every** Select site (Home quotes, Markets, Heatmap, …) because it is
 one component. Specimens in `/kitchen-sink`.
+
+
+---
+
+## §5 AMENDMENTS — page-home Phase-3b Batch 3 (PROPOSED 2026-07-14, ratify at re-verify)
+
+**G. `AllocationDonut` — the value readout moves to the RING'S CENTRE (§12ho3-2, platform-wide).**
+Hover **or keyboard focus** on a segment renders the **served class label + share** in the donut hole.
+It is **anchored** at the centre: it cannot overlap the legend or a neighbouring tile, **nothing follows
+the cursor**, and because it is absolutely positioned inside the ring there is **no layout shift** when
+it appears. A long class label **ellipsises inside the hole** rather than spill over the ring. The old
+readout was a text line *beneath* the donut; the hole was empty space, and it is now where the question
+gets answered. **Both themes, all breakpoints.** The `aria-live` readout is **retained** (visually
+hidden) — moving the *visual* readout must not cost the *accessible* one. **Portfolio inherits it**, as
+does every other Donut site. Specimen in `/kitchen-sink` (hover · focus · long-label).
+
+**H. Donut ring density (§12ho2-12 lever 2, folded into G).** The ring is **8rem** (was 9rem) so it sits
+with the capped legend instead of towering over it. **Measured honestly: this bought ~0px of page
+height** — the *capped legend* (6 rows) is taller than the ring, so the **legend**, not the ring, sets
+that tile's height. It is kept because it is better balanced, **not** because it won a fit.

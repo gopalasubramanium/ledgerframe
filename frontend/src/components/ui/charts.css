@@ -38,7 +38,52 @@
   gap: var(--space-6);
   flex-wrap: wrap;
 }
-.lf-donut__svg { width: 9rem; height: 9rem; flex-shrink: 0; }
+/* §12ho3-2 — the ring is the positioning context for the centre readout. */
+.lf-donut__ring {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+}
+/* §12ho2-12 lever 2 (density): the ring shrinks to sit with the CAPPED legend rather than tower over
+ * it. Measured honestly: this buys ~0px of page height, because the capped legend (6 rows) is TALLER
+ * than the ring, so the legend — not the ring — sets the tile's height. It is kept because it looks
+ * better balanced beside a 5-row legend, NOT because it bought a fit. */
+.lf-donut__svg { width: 8rem; height: 8rem; flex-shrink: 0; }
+
+/* The readout, ANCHORED in the hole. `inset` + centring means it never moves and never overlaps; the
+ * padding keeps it inside the hole's diameter, and a long class label ellipsises rather than spill
+ * over the ring. `pointer-events: none` so it can never steal the hover it is describing. */
+.lf-donut__centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 26%;
+  text-align: center;
+  pointer-events: none;
+}
+.lf-donut__centrelabel {
+  max-width: 100%;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.lf-donut__centrepct {
+  font-size: var(--font-size-16);
+  line-height: var(--line-16);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
 .lf-donut__legend {
   list-style: none;
   margin: 0;

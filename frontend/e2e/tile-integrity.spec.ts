@@ -65,6 +65,41 @@ function auditPage(scope: string) {
     }
   }
 
+  // CONTAINMENT (§12ho3-3) — a card's content stays INSIDE the card. The stale badge on a quote card
+  // was hanging out past its right border: the card's box and the badge's box simply did not agree,
+  // and nothing checked that they must. Every element that renders inside a card box is bounded by it.
+  // (A tile may scroll its own overflow — that is what `overflow` is for — so a scroll container's
+  // children are measured against the container's SCROLL extent, not its clipped viewport.)
+  const escapees: string[] = [];
+  for (const card of document.querySelectorAll<HTMLElement>(".lf-quote, .lf-card, .hm3__cell")) {
+    const cs = getComputedStyle(card);
+    if (cs.overflowX !== "visible" || cs.overflowY !== "visible") continue; // it clips/scrolls by design
+    const c = card.getBoundingClientRect();
+    for (const kid of card.querySelectorAll<HTMLElement>("*")) {
+      const ks = getComputedStyle(kid);
+      if (ks.position === "fixed" || ks.display === "none" || ks.visibility === "hidden") continue;
+      if (kid.closest("[role=dialog], [role=tooltip], .lf-popover")) continue;
+      // Skip anything sitting inside an INNER scroll/clip container (a D-101 scrolling panel, the
+      // quote row's sideways overflow): that content is bounded by ITS container, which is doing its
+      // job. Only content that escapes with nothing to catch it is a defect.
+      let inner = false;
+      for (let a = kid.parentElement; a && a !== card; a = a.parentElement) {
+        const as = getComputedStyle(a);
+        if (as.overflowX !== "visible" || as.overflowY !== "visible") { inner = true; break; }
+      }
+      if (inner) continue;
+      // Only measure elements that actually paint something of their own.
+      if (!kid.textContent?.trim() && kid.tagName !== "SVG" && kid.tagName !== "IMG") continue;
+      const k = kid.getBoundingClientRect();
+      if (k.width < 1 || k.height < 1) continue;
+      if (k.right > c.right + 2 || k.left < c.left - 2 || k.bottom > c.bottom + 2 || k.top < c.top - 2) {
+        escapees.push(
+          `${(kid.className.toString().split(" ")[0] || kid.tagName)}:"${kid.textContent?.trim().slice(0, 18)}" escapes ${card.className.split(" ")[0]}`,
+        );
+      }
+    }
+  }
+
   // OVERLAPPING TEXT — the symptom the owner actually sees. Take every element that renders its own
   // visible text (a leaf, so a parent box is not blamed for its child), and assert no two of them
   // occupy the same pixels. Text printed through other text is garbage at any width.
@@ -115,7 +150,13 @@ function auditPage(scope: string) {
     }
   }
 
-  return { count: heads.length, escaped, outside, overlaps: overlaps.slice(0, 8) };
+  return {
+    count: heads.length,
+    escaped,
+    outside,
+    overlaps: overlaps.slice(0, 8),
+    escapees: [...new Set(escapees)].slice(0, 8),
+  };
 }
 
 for (const route of ROUTES) {
@@ -138,6 +179,7 @@ for (const route of ROUTES) {
       expect(report.escaped, "summary headers absolutely positioned out of their tile").toEqual([]);
       expect(report.outside, "summary headers rendering outside their tile's bounds").toEqual([]);
       expect(report.overlaps, "TEXT PRINTED THROUGH OTHER TEXT — the page is garbled here").toEqual([]);
+      expect(report.escapees, "content is spilling OUTSIDE the card that contains it").toEqual([]);
     });
   }
 }
@@ -177,14 +219,18 @@ test("home grid specimen · fits 1440×900 with real-shaped data, and no tile cl
   expect(report.clipped, "a tile is hiding its own content to make the layout fit").toEqual([]);
   expect(report.hOverflow, "the grid must never scroll sideways").toBeLessThanOrEqual(0);
 
-  // THE TARGET IS 0 — AND IT IS NOT MET YET. With real-shaped data the grid still needs ~120px more
-  // than the 1440×900 content region gives it. Closing that gap means cutting content the OWNER set
-  // (headlines 3→2, §9-9; and the ReviewCard's 3 verdicts), so it is not a change to make quietly —
-  // it is recorded in page-home §12ho2-12 for the walk.
+  // THE TARGET IS 0 — AND IT IS STILL NOT MET (§12ho3, batch 3). The owner's lever sequence was spent
+  // in order — design before content — and it took the LIVE page from 533px of overshoot to 87px at
+  // 1440×900. Every lever's real effect was measured, not assumed: the donut ring shrink bought ~0px
+  // (the CAPPED LEGEND, not the ring, sets that tile's height), and cutting headlines bought ~0px until
+  // density had made News the binding tile in its row — a content cut that buys nothing is pure loss.
   //
-  // What this assertion does in the meantime is stop the gap GROWING. It is a ratchet, not a pass: if
-  // a future change pushes the grid further past the viewport, CI says so; and when the owner picks a
-  // lever, this bound comes down to 0 and stays there. Reporting the number beats asserting a fiction.
+  // NOTE the frame under this assertion got 88px STRICTER in the same batch (it now subtracts the
+  // shell's own padding, which the page really does lose), so the number below is not comparable to
+  // batch 2's: the same ~126px against a much tighter box.
+  //
+  // It remains a RATCHET, not a pass: the overshoot can never grow, and it drops to 0 the moment the
+  // owner spends a further lever. Reporting the number beats asserting a fiction.
   const BUDGET_OVERSHOOT = 130;
   expect(
     report.vOverflow,
