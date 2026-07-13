@@ -1,7 +1,9 @@
 # release-readiness.md — defining the finish line
 
-**Status: PLAN ONLY. STOP at §2 (NEEDS DECISION). Nothing here is decided, and no code, LICENSE, README
-or SECURITY-BASELINE change ships from this file.**
+**Status: §2 RESOLVED (owner, one pass, 2026-07-14). §3 checklist DERIVED below — NOT executed.
+STOP for the owner's review of the tracking matrix.**
+Two **decision-independent defects** were fixed immediately (Part B — see §2A): the **data-dir
+divergence** and the **Guarantee-5 egress gap**. Nothing else in §3 has been started.
 
 This is **not** a page plan — it does not use `TEMPLATE-page-build.md`'s structure. It borrows its
 **conventions**: verify-first with `file:line` evidence, a numbered **NEEDS DECISION** section resolved by
@@ -137,6 +139,56 @@ Pricing Health. *(`nav.ts` — 9 entries carry `built: true`.)*
 
 ---
 
+## 2A. §2 RESOLUTIONS — owner, one pass (2026-07-14)
+
+*Resolution first; the considered options are preserved in §2 below, unchanged. Every pairing was
+matched to its §2 item by **number and topic** before recording — no guesses.*
+
+| # | Topic | RESOLVED |
+|---|---|---|
+| **RD-1** | What "first public release" means | **(a) SOURCE RELEASE first.** Container = a **fast-follow milestone**; packaged binaries **deferred**. Sequencing officially recorded. **The installer codebase is confirmed sufficient for the initial release** (§1-2a). |
+| **RD-2** | Licence | **CONFIRM AGPL-3.0-or-later + a Contributor Licence Agreement (CLA).** Keeps open-source integrity for the community while preserving the owner's legal pathway to **dual-license a future proprietary SaaS/hosted engine** under D-001. **Ride-alongs regardless of anything else:** create the root `LICENSE` file; instantiate the frontend `license` field; and make a **dependency-licence compliance audit RELEASE-BLOCKING** — *no public claim may be published before it runs clean*. **The CLA text is an OWNER-AUTHORED artefact behind an owner-STOP gate — never drafted-and-shipped by automation.** Recorded as an **operational alignment decision, not formal legal counsel.** |
+| **RD-3** | R-24 licence-acceptance gate | **Not needed for a source release.** R-24 **remains parked**; the *revisit-at-packaged* milestone dependency is recorded in `ROADMAP.md`. |
+| **RD-4** | Platforms / "tested on" | **Narrowest TRUE claim.** Enumerate only the exact host OSes and architectures that have **actually completed clean test suites**. **Pin the Node execution version.** **No CI-backed ecosystem claims until a real CI pipeline exists.** |
+| **RD-5** | Versioning | **ONE unified product version: `2.0.0`.** Synchronise backend `__init__`, frontend `package.json`, and the **OpenAPI version field**. **Tag `v2.0.0` at the moment of public release.** New `CHANGELOG.md` (Keep-a-Changelog); **the inaugural entry must explicitly declare the version RESET from the inherited v1 lineage (`3.24.0`) — historical honesty, not a silent renumber.** |
+| **RD-6** | Upgrade / migration | **Forward-only.** Downgrade paths **explicitly unsupported**. `update.sh` must **abort unless it detects a fresh DB backup**, or is given an explicit `--no-backup` override. State the policy in the README. |
+| **RD-7** | Disclosure + support | `SECURITY.md` pointing to **security@ledgerframe.org**. **A mailbox-verification gate is MANDATORY *before* SECURITY.md ships claiming that address** — *an unmonitored disclosure inbox is the same defect class as an untested "tested-on" claim*. GitHub Issues **enabled**, with a visible disclaimer defining support boundaries and response expectations. **The Guarantee-5 egress gap is a CRITICAL RELEASE-BLOCKER** → fixed now (Part B/2). |
+| **RD-8** | Demo data | **Default first boot is EMPTY.** The installer wizard prompts explicitly; **`--demo-mode` is the only opt-in** for mock portfolios. `.env.example` must be adjusted so that **the default mock price provider no longer implies pre-seeded portfolio rows** — today `is_demo` (provider == mock) *is* the seed trigger (`app/main.py:114-123`), and those two things must be **decoupled**. |
+| **RD-9** | Scope vs remaining pages | **(b) v2.0 = the built set + a visible roadmap.** Unbuilt **Planning** pages are bypassed for launch. **Legal and Help are ELEVATED TO RELEASE-BLOCKING and jump the queue** (to prevent shipping dead interface links) → `CURRENT.md` NEXT becomes **Legal · Help · then the residual Planning pages**. **Settings is unblocked.** To maintain strict **D-078** compliance, the **write-only rotation keys are REMOVED from the codebase pre-release** via a **backend-first contract delta (spec regenerated in the same commit)**, reintroduced only when functional rotation UI ships. |
+| **RD-10** | Publication hygiene | **Publication isolation.** The working repo stays **private**. `v2.0.0` is published as a **clean public repository**. **`docs/specs/` (the six core specs) IS included** as authoritative architectural documentation. **`docs/plans/` and `docs/evidence/` are excluded entirely.** A mandatory publication-hygiene step runs an **automated secret / PII scan across the public staging branch**. |
+
+### Part B — the two DECISION-INDEPENDENT defects: **FIXED** (they were defects under every option)
+
+**B/1 — data-dir divergence → ONE resolution path.** The repo had **five** answers to *"where is the
+data dir?"*, and **only one of them read `.env`**: `doctor.sh:8` and `benchmark.sh:8` defaulted to
+`/mnt/ledgerframe-data`; `reset-demo-data.sh:7` and `start-dev.sh:8` to `$REPO_DIR/data`; `update.sh:93`
+`sed`-ed it out of `.env`; and `app/core/config.py:40` read it properly. The bash scripts read only the
+**exported** variable — so a user who set `LEDGERFRAME_DATA_DIR` in `.env` (**the documented contract**)
+and ran `./scripts/reset-demo-data.sh` from a plain shell hit that script's own fallback and **operated
+on the wrong directory**. *A destructive script pointed at a directory the user never named is not a
+papercut.* → **`scripts/lib/datadir.sh`** is now the one answer, sourced by every consumer, with
+precedence identical to the app's (exported → `.env` → one documented default) and **that default
+pinned by test to `app/core/config.py`'s**, so they can never drift apart again — otherwise the
+primitive would simply have become a **sixth** answer. **Fail-first: 16 of 18 assertions RED.**
+
+**B/2 — Guarantee 5 was not being kept.** `no_egress_enabled` was consulted from **news, briefing,
+markets-news and version-check only**; **every other outbound path ignored it** — the price providers
+(kite · eodhd · yahoo · external · coingecko · amfi), the **ECB FX feed**, and **both AI providers**.
+Under `privacy_mode` a price refresh, an FX refresh or an **AI call carrying your figures** still went
+out. It looked fine only because a no-egress user usually also runs `market_provider=mock` — **a
+configuration coincidence, not a guard.** → **`app/core/egress.py` is now the ONLY way to obtain an
+HTTP client**; under no-egress it **never constructs one** (no socket, no DNS, no timeout) and raises
+`EgressBlocked`, which the services already treat as *withheld, with a reason* (Guarantee 3). *A guard
+you must remember to call is a guard you will eventually forget* — so it is **structurally enforced**:
+constructing an `httpx.AsyncClient` **anywhere outside the gate is a test failure**. **Fail-first with a
+LIVE provider configured**: the tripwire fired (*"an HTTP client was CONSTRUCTED while no-egress is
+on"*) on coingecko, AMFI, ECB FX and the AI chat path. *Also found and fixed: the AI chat path's
+**non-streaming retry** was making a **second** outbound attempt on a refusal — a refusal is not a
+transient error to retry.* **SECURITY-BASELINE.md now carries the outbound-call inventory as the master
+enforcement record.**
+
+---
+
 ## 2. NEEDS DECISION — **OWNER, ONE PASS. NOTHING BELOW IS DECIDED.**
 
 *Options and honest costs only. Where the plan has a view it is labelled as such and is not a choice.*
@@ -249,50 +301,86 @@ every commit (§1-5d) — reversible only by rewriting history, and not at all o
 
 ---
 
-## 3. CHECKLIST SKELETON — *conditional; gated; derived FROM §2 once resolved*
+## 3. RELEASE CHECKLIST — **DERIVED from §2A. NOT EXECUTED.**
 
-**Nothing here is actionable until §2 is resolved.** Items marked **`[per RD-N]`** cannot even be *written*
-until that decision lands. Every gate that produces **authored copy, a visual, or a legal artefact**
-carries an owner **STOP** (PROPOSED → ratify), per the loop's conventions.
+**Owner reviews this tracking matrix before any item is started.** Nothing below has been done except
+the two items marked **✅ DONE (Part B)** — the decision-independent defects.
 
-**Gate A — Legal foundation `[per RD-2, RD-3]`**
-- [ ] `LICENSE` file added — **the text must match what the code already claims**, or every SPDX header and `pyproject.toml:7` is corrected in the same commit. **No drift between the two.** **STOP: owner ratifies the licence.**
-- [ ] Frontend `package.json` licence field reconciled (`private: true` today) `[per RD-2]`
-- [ ] **Transitive dependency licence audit** — actually run, not asserted (§1-1f). Copyleft findings recorded.
-- [ ] `NOTICE` / third-party attributions **`[per RD-2]`**
-- [ ] **Legal page** built, if release-blocking **`[per RD-9]`** — via `TEMPLATE-page-build.md`. **STOP.**
-- [ ] R-24 acceptance gate **`[per RD-3]`** — build / defer / strike, recorded either way.
+**Legend.** 🧑 **OWNER-AUTHORED** — the owner writes it; automation may not draft-and-ship it.
+🤖 **BUILDABLE** — automation can do it, fail-first where it is code. 🛑 **OWNER-STOP** — a gate that
+does not pass without explicit owner sign-off. 🚫 **RELEASE-BLOCKER**.
 
-**Gate B — Install truth**
-- [ ] **README rewritten as an INSTALL guide** for a stranger (it is a dev doc today, §1-2c). **STOP: owner ratifies the copy.**
-- [ ] **Fix the data-dir divergence (§1-2e) — one resolution path, not four.** Fail-first: a test that a script honours `LEDGERFRAME_DATA_DIR` from `.env`, RED before. *(Not decision-dependent: this is a defect under every option.)*
-- [ ] Node version pinned (`engines` / `.nvmrc`) — nothing pins it today
-- [ ] Fresh-clone → install → first boot rehearsed **on a clean machine**, from the README alone
-- [ ] Empty-data-dir first boot **kept green** (it works today, §1-2d) — pinned by a test
-- [ ] Backup / restore / move-my-data **documented where a user will look** (§1-4d) **STOP: copy.**
-- [ ] Container path verified **`[per RD-1b]`** · packaging + signing **`[per RD-1c]`**
-
-**Gate C — Security, for strangers**
-- [ ] **Decide the egress finding (§1-3): is the unguarded price/FX/AI path release-blocking?** **`[per RD-7]`** If yes: guard at the call site, **fail-first test**, ND-2 class.
-- [ ] **SECURITY-BASELINE re-issued with a DISTRIBUTION column** — every "Accept (ADR)" restated for the stranger case (§1-3). **STOP: owner ratifies the posture.**
-- [ ] The **no-PIN + LAN** combination (gap 7) given an explicit release stance — refuse, warn, or document
-- [ ] `SECURITY.md` + disclosure contact **`[per RD-7]`**
-- [ ] Full-history secret scan **run** (not assumed — §1-5e)
-
-**Gate D — Identity**
-- [ ] **One product version**; `app/__init__.py` and `frontend/package.json` **stop disagreeing** **`[per RD-5]`**
-- [ ] Tag + changelog **`[per RD-5]`**
-- [ ] Upgrade/migration promise **written and tested** **`[per RD-6]`**
-- [ ] Demo-data default set **`[per RD-8]`** (`.env.example` + installer flag agree)
-
-**Gate E — Scope + publication**
-- [ ] Release scope frozen **`[per RD-9]`**; the roadmap for what is *not* in it is **public and honest**
-- [ ] Nav: unbuilt pages either **shipped, hidden, or honestly labelled** (they render `NotBuilt` today)
-- [ ] `docs/plans` + `docs/evidence` disposition **`[per RD-10]`**
-- [ ] "Tested on" statement **`[per RD-4]`** — **claims only what was actually run**
-- [ ] Final: **the release notes may not fabricate a capability**, exactly as the product may not fabricate a figure (Guarantee 3, applied to ourselves).
+**Strict sequencing — a gate does not open until the one before it is closed:**
+**A. Core defects → B. Docs sync → C. Legal + Help pages → D. Version & tag → E. Public hygiene scan
+(runs LAST, against the ACTUAL final public set) → F. Public ingestion.**
 
 ---
 
-**STOP — §2 is the owner's, in one pass. Nothing in §3 begins until it is resolved, and this plan does
-not pause the page queue (Policy is next, in parallel).**
+### GATE A — Core defect resolution *(must close first: everything downstream describes the code)*
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| A1 | **✅ DONE** — data-dir divergence: one shared resolver, sourced by every script; default pinned by test to the app's | 🤖 | 16/18 assertions RED first. `scripts/lib/datadir.sh` |
+| A2 | **✅ DONE** — 🚫 **Guarantee-5 egress gate** [per RD-7]: one choke point; a client cannot be constructed outside it | 🤖 | RED with a **live provider** configured, on coingecko / AMFI / ECB FX / AI chat |
+| A3 | 🚫 **Remove the write-only rotation keys** (`rotation_pages`, `focus_page`) — **backend-first contract delta, spec regenerated IN THE SAME COMMIT** [per RD-9] | 🤖 | D-078: a key that is written and never read must be **consumed or removed**. Fail-first: the key is **accepted** before, **400** after (the `home_layout` precedent, page-home §12ho1-6). Reintroduce only when rotation UI ships. Already logged in `docs/audit/08-TECH-DEBT.md` |
+| A4 | **Decouple the demo seed from the mock provider** [per RD-8] — default first boot is **EMPTY** | 🤖 | Today `is_demo` (provider == mock) **is** the seed trigger (`app/main.py:114-123`). `--demo-mode` becomes the **only** opt-in. Fail-first: empty DB + mock provider must seed **nothing** |
+| A5 | `.env.example` updated so the mock provider no longer implies seeded rows [per RD-8] | 🤖 | `.env.example:36` |
+| A6 | **`update.sh` aborts unless a fresh DB backup exists**, or `--no-backup` is given [per RD-6] | 🤖 | Fail-first: run without a backup ⇒ **non-zero exit, nothing migrated** |
+| A7 | **Pin the Node version** (`engines` + `.nvmrc`) [per RD-4] | 🤖 | Nothing pins it today (§1-2f) |
+| A8 | 🚫 **Dependency-licence audit — the FULL TRANSITIVE graph, actually run** [per RD-2] | 🤖 | §1-1f: only the **direct** set was read. **No public claim may be published before this runs clean.** Tooling added to the repo so it is repeatable, not a one-off |
+
+### GATE B — Documentation synchronisation *(the code is now true; make the words true)*
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| B1 | 🛑 **`LICENSE` file — AGPL-3.0-or-later text at the root** [per RD-2] | 🧑 **OWNER** | The code has **claimed** this in every SPDX header while shipping no licence (§1-1a/1b). The file and the headers must agree — **any drift is a defect, in either direction** |
+| B2 | 🛑 **CLA text** [per RD-2] | 🧑 **OWNER-AUTHORED — automation must NOT draft or ship this** | Explicitly excluded from automation by the resolution |
+| B3 | Frontend `license` field instantiated [per RD-2] | 🤖 | `frontend/package.json` — `private: true`, no licence today (§1-1c) |
+| B4 | `NOTICE` / third-party attributions, **generated from A8's output** [per RD-2] | 🤖 → 🛑 | Owner ratifies the final text |
+| B5 | 🛑 **README rewritten as an INSTALL guide for a stranger** [per RD-1a] | 🧑 **OWNER** (copy) | It is a **developer doc** today and never mentions `install.sh` (§1-2c). Must cover: install, the data dir, **backup / restore / move-my-data** (documented nowhere a user would look — §1-4d), and the **forward-only + backup-first upgrade policy** [per RD-6] |
+| B6 | 🛑 **"Tested on" statement — the NARROWEST TRUE claim** [per RD-4] | 🧑 **OWNER** | Only OSes/architectures that have **actually run clean suites**. **No CI-backed ecosystem claim until CI exists.** *A "tested on" line the project cannot back is the same defect class as a fabricated figure.* |
+| B7 | 🚫🛑 **Mailbox verification: security@ledgerframe.org — test mail SENT and RECEIPT CONFIRMED by the owner** [per RD-7] | 🧑 **OWNER** | **This gate closes BEFORE B8 ships.** *An unmonitored disclosure inbox is the same defect class as an untested "tested-on" claim.* |
+| B8 | 🛑 **`SECURITY.md`** citing the address **[blocked by B7]** [per RD-7] | 🧑 **OWNER** (copy) | Plus the **outbound-call inventory** already recorded in SECURITY-BASELINE (A2) |
+| B9 | 🛑 **SECURITY-BASELINE re-issued with a DISTRIBUTION column** | 🧑 **OWNER** (posture) | §1-3: every "Accept (ADR)" restated for the **stranger** case. **Sharpest: gap 7 — no auth on read when no PIN is set, against a default install that HAS no PIN.** Needs an explicit release stance: refuse / warn / document |
+| B10 | 🛑 **GitHub Issues disclaimer** — support boundaries + response expectations [per RD-7] | 🧑 **OWNER** (copy) | Issues stay **enabled** |
+| B11 | **ROADMAP: R-24 revisit-at-packaged dependency note** [per RD-3] | 🤖 | R-24 **stays parked** |
+| B12 | **CURRENT.md NEXT reordered: Legal · Help · then residual Planning** [per RD-9] | 🤖 | Settings unblocked |
+
+### GATE C — Legal + Help pages *(🚫 release-blocking — they jump the queue)*
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| C1 | 🚫 **Legal page** — built via `TEMPLATE-page-build.md` (geometry gate included) [per RD-9] | 🤖 build → 🛑 **OWNER** ratifies all copy | Surfaces the licence (B1) and the disclaimers. **Blocked by B1** — the page cannot present a licence that does not exist |
+| C2 | 🚫 **Help page** — same [per RD-9] | 🤖 build → 🛑 **OWNER** ratifies all copy | The `[Help]` popovers already ship across built pages and point at a page that **does not exist** |
+| C3 | Nav: the remaining unbuilt pages are **hidden or honestly labelled** — **no dead links in the shipped build** [per RD-9] | 🤖 | They render `NotBuilt` today. Fail-first: a test that **no nav entry in the release build leads to `NotBuilt`** |
+
+### GATE D — Identity & versioning *(only once the shipped surface is final)*
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| D1 | **ONE product version `2.0.0`** — backend `app/__init__.py`, `frontend/package.json`, **and the OpenAPI version field** synchronised [per RD-5] | 🤖 | They disagree today: **3.24.0 / 0.1.0 / "v2"** (§1-4a). Pinned by test so they cannot drift |
+| D2 | 🛑 **`CHANGELOG.md` (Keep-a-Changelog); the inaugural entry MUST declare the version RESET from the inherited v1 lineage** [per RD-5] | 🧑 **OWNER** validates | *Historical honesty — not a silent renumber.* |
+| D3 | **Tag `v2.0.0`** — **at the moment of public release, not before** [per RD-5] | 🤖 | |
+
+### GATE E — Public hygiene *(runs LAST, against the ACTUAL final public set)*
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| E1 | **Assemble the public staging branch:** include `docs/specs/` (the six core specs, as authoritative architecture docs); **EXCLUDE `docs/plans/` and `docs/evidence/` entirely** [per RD-10] | 🤖 | The working repo **stays private** |
+| E2 | 🚫 **Automated secret / PII scan across the public staging branch** [per RD-10] | 🤖 → 🛑 **OWNER** reviews findings | **Runs against the FINAL set, not the working tree** — scanning something other than what ships is not a scan. §1-5e: the earlier pass was *a look, not an audit* |
+| E3 | 🛑 **Publication data cleaning** — anything E2 surfaces | 🧑 **OWNER** | Includes the standing note that publishing the repo publishes the **author email** in every commit (§1-5d) — **irreversible once mirrored** |
+| E4 | Verify **A8 (licence audit) is clean** — **no public claim ships before it is** [per RD-2] | 🤖 | Gate-A item, **re-checked here against the final set** |
+
+### GATE F — Public ingestion
+
+| # | Item | Who | Notes |
+|---|---|---|---|
+| F1 | 🛑 **Publish the clean public repository** [per RD-10] | 🧑 **OWNER** | |
+| F2 | 🛑 **Release notes** — the built set **and the visible roadmap of what is NOT in it** [per RD-9] | 🧑 **OWNER** (copy) | **The release notes may not fabricate a capability, exactly as the product may not fabricate a figure** (Guarantee 3, applied to ourselves) |
+| F3 | **Container image** — the fast-follow milestone [per RD-1b] | 🤖 | **After** F1. Packaged binaries remain **deferred** [per RD-1c]; R-24 revisits **there** [per RD-3] |
+
+---
+
+**STOP — the owner reviews this matrix before any Gate-A3 onward item is executed.**
+Nothing in Gates A3–F has been started. The page queue is unaffected: **Legal and Help now lead it**
+[per RD-9], and Policy follows.

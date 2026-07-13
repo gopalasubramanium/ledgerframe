@@ -925,10 +925,18 @@ widget is a linked summary of the canonical page's reader (P-1/D-038). Shipped:
    posture is LAN/VPN, never internet — the release framing must state this explicitly). Plan file only;
    **no build**.
 
-2. **Planning group — Policy FIRST (`docs/plans/page-policy.md`, PLAN ONLY).**
+2. 🚫 **Legal page — RELEASE-BLOCKING, jumps the queue** (release-readiness **RD-9**, owner 2026-07-14).
+   v2.0 ships the built set + a visible roadmap, so the shipped build must contain **no dead interface
+   links** — and a licensed release wants a licence surface. Blocked on the root `LICENSE` file
+   (RD-2): the page cannot present a licence that does not exist. Via `TEMPLATE-page-build.md`.
+3. 🚫 **Help page — RELEASE-BLOCKING, jumps the queue** (RD-9). The `[Help]` popovers already ship
+   across every built page and point at a page that **does not exist**.
+4. **Planning group — Policy (`docs/plans/page-policy.md`, PLAN ONLY).** *(Was next; deferred behind
+   Legal/Help by RD-9. **Settings is unblocked** — and the write-only rotation keys are REMOVED
+   pre-release per RD-9/D-078, reintroduced only when rotation UI ships.)*
 
-Then the existing queue, unchanged:
-3. **Remaining Planning-group pages** (Policy · Cash flow · Scenarios · Insurance · Estate), **Accounts**
+Then the existing queue:
+5. **Remaining Planning-group pages** (Policy · Cash flow · Scenarios · Insurance · Estate), **Accounts**
    (D-065 — **must wire `entity_id` scoping**; all `/portfolio/*` readers already accept it, Portfolio
    defaults to household with no selector, page-portfolio ND-8; entity CRUD + selector live here),
    **Reports + Reports Pack**, **Settings**, **Help**, **Legal** — each via `TEMPLATE-page-build.md`.
