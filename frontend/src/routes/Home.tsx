@@ -324,22 +324,25 @@ export function Home() {
             </div>
           </section>
 
-          {/* 5 — ReviewCard: the SAME reader Net worth uses; the count reconciles with /review. */}
-          <section className="hm2__card lf-card" data-card="review">
-            <div className="lf-card__body">
-              <Card data={review} onRetry={reload}>
-                {(r) => (
-                  <ReviewCard
-                    sections={reviewSections}
-                    attention={r.count}
-                    link={{ href: "#/review", label: "Review" }}
-                  />
-                )}
-              </Card>
-            </div>
-          </section>
         </>
       ) : null}
+
+      {/* 5 — ReviewCard. In BOTH layouts (D-046: Simple = headline + ReviewCard + briefing). It reads
+        * the SAME reader Net worth's ReviewCard uses, so the attention count reconciles with /review
+        * by construction — Home never recounts. */}
+      <section className="hm2__card lf-card" data-card="review">
+        <div className="lf-card__body">
+          <Card data={review} onRetry={reload}>
+            {(r) => (
+              <ReviewCard
+                sections={reviewSections}
+                attention={r.count}
+                link={{ href: "#/review", label: "Review" }}
+              />
+            )}
+          </Card>
+        </div>
+      </section>
 
       {/* 6 — Briefing summary (+ headlines in Full). Canonical: News. Briefing is PAGE-LOCAL (§9-16). */}
       <section className="hm2__card lf-card" data-card="briefing">

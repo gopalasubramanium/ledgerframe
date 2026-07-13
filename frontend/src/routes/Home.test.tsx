@@ -112,7 +112,11 @@ test("FULL renders the whole D-046 set (served layout)", async () => {
 test("SIMPLE renders ONLY headline + ReviewCard + briefing — and fetches nothing else (D-046)", async () => {
   prefs.mockResolvedValue({ layout: "simple", quoteSource: "holdings" });
   const { container } = renderPage();
+  // SIMPLE = headline + ReviewCard + briefing (D-046) — assert all THREE are present. The first
+  // version of this test only asserted the absences, which is exactly how a missing ReviewCard
+  // reached the pre-pass (Phase 3a caught it). An "is not there" test needs its "is there" half.
   await waitFor(() => expect(container.querySelector('[data-card="headline"]')).not.toBeNull());
+  await waitFor(() => expect(container.querySelector('[data-card="review"]')).not.toBeNull());
   expect(container.querySelector('[data-card="briefing"]')).not.toBeNull();
   // The Full-only widgets are ABSENT — a layout is a composition, not a CSS hide…
   expect(container.querySelector('[data-card="performance"]')).toBeNull();

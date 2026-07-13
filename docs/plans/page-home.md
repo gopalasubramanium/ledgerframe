@@ -417,3 +417,86 @@ never silently build to the code*).
 ---
 
 **§9 is RESOLVED (2026-07-13).** Build record: §11.
+
+---
+
+## 11. BUILD RECORD — Phases 0/0a/1/2/3a DONE; Phase-3b (owner walk) PENDING (2026-07-13)
+
+- **Phase 0 — contract deltas (backend-first, fail-first).** `home_layout` (`simple|full`, **default
+  `full`**) + `home_quote_source` (**default `holdings`**) added to the settings allow-list; both
+  defaults **and both vocabularies** are SERVED (so the frontend carries no vocab copy, D-005). The
+  backend is the validation truth: an unrecognised value is an honest **400** — **`"expert"` is
+  refused**, since §9-1 retired that vocabulary. **`/dashboard/home` RETIRED** (deliberate contract
+  deletion); contract regenerated same commit, drift green. **Fail-first:** 8 of 11 tests RED before
+  (a PUT of `home_layout` was **silently ignored** — the writer skips unknown keys; and the aggregate
+  returned **200**).
+  **Three dependencies the retirement exposed — none papered over:**
+  1. **The SPA catch-all answered ANY unmatched `/api/` path with `index.html` and 200 OK**, so a
+     deleted endpoint was indistinguishable from a live one and the retirement was **unobservable**.
+     An unmatched API path is now an honest **JSON 404**. This also **strengthened the D-030 guard**:
+     `test_d030_rename_review_endpoint` asserted *"the old route isn't JSON"* — true only **because of
+     the catch-all**. It now asserts a real 404 + no payload.
+  2. `system.py` imported **`_HOME_MARKETS`** from the dead module to warm the refresh list. Home has
+     no curated tiles now, and those four symbols are a **strict subset of `_DEFAULT_OVERVIEW`** — so
+     coverage shrinks by **nothing** (pinned by a test).
+  3. The soft-delete **R12 guard** used `dashboard._holding_currencies`. The behaviour it guarded is
+     still live, so the guard **MOVED** to the canonical reader (`summary.allocation_by_currency`)
+     rather than being deleted with the endpoint.
+- **Phase 0a — §9 resolutions recorded; TopBar amendment PROPOSED (§9-15).** No new components
+  (§9-16 keeps the briefing page-local at its 2nd occurrence). API-CONTRACT delta row → *"retired"*.
+  **08-TECH-DEBT** records the **D-078 violation** (rotation keys allow-listed but never consumed) as a
+  queued **chrome** task — out of Home's scope (§9-14).
+- **Phase 1 — chrome edit + assembly.** The **top-bar Detail toggle is REMOVED** (§9-15); `homeLayout`
+  is the only vocabulary; **"Detail level: Simple/Expert" retired** to Deprecated-terms; GLOSSARY gains
+  **"Home"** (PROPOSED) **in the spec** (the parity guard enforces it). `routes/Home.tsx` composes the
+  D-046 set from the canonical readers — each card its own reader, its own skeleton, **no `Promise.all`
+  gate**. `App.tsx` (the boot scaffold) **deleted** — Home replaced it at `/`.
+  **Two things found while assembling, both fixed:** an unreachable `/settings` would have left Home
+  **skeletoning forever** with no reason shown (it now shows an honest error + retry, and **never falls
+  back to an invented layout**); and **QuoteCardRow demanded a full `Provenance`** the quote readers do
+  not serve (`confidence`/`status` are not per-quote and the row never displays them) — requiring it
+  would have forced callers to **invent provenance**, so the prop type is **narrowed to the fields it
+  renders**. No visual change; staleness stays served and shown per item.
+- **Phase 2 — tests (10).** Layout composition per **served** setting; the honest layout-error state;
+  **D-024 label integrity** (both pairs, neither borrowing the other's name); the **served** attention
+  count (Home never recounts); Guarantee 3/5 per widget (stale count, per-item staleness in the quote
+  cards, no-egress reason, empty briefing, unreachable reader). Overflow + single-scroll suites cover
+  `/`. *(One test caught a real race — the Markets pair arrives on its own reader, so a synchronous
+  assertion passed alone and failed in the full run.)*
+- **Phase 3a — scripted pre-pass GREEN** (`e2e/smoke/home-smoke.spec.ts`): served defaults
+  (`full`/`holdings`) · **`/dashboard/home` → 404** · FULL renders all 7 D-046 cards, none left in
+  skeleton · **no page-level ticker** (1 on the page — the chrome footer's; **0 inside Home**) ·
+  reconciliation (**`/portfolio/review` == `/review`**, and Home renders the count **it was served**) ·
+  **both movers pairs** under their canonical labels · the **source select across all four served
+  sources** (Markets 20 · Holdings 7 · Global 15 · Watchlist 8) · **[Help] × 3** · SIMPLE renders
+  headline + ReviewCard + briefing with the Full-only cards **absent** · single scroll + **0 overflow**
+  across **both layouts × both themes × 320/375/900/1366** · **0 console errors**.
+
+  **⚠ The pre-pass caught a REAL composition defect (fail-first, exactly its job): the ReviewCard was
+  MISSING in Simple.** It had been nested inside the Full-only block, so Simple rendered headline +
+  briefing — violating D-046 (*"Simple = headline + ReviewCard + briefing"*). The Phase-2 unit test
+  missed it because it only asserted what Simple must **not** show; **an "is not there" test needs its
+  "is there" half.** Both fixed in the same batch.
+
+  It also caught **a defect in the pre-pass itself**, worth recording: reconciling the **rendered DOM**
+  against a **later** API call is **racy on a live system** — the refresh worker cleared a stale-driven
+  review item between the page's fetch and the check (4 → 3), and the "mismatch" was **our clock, not
+  the product**. The assertion now compares the DOM to **the response the page itself received**.
+
+**Verification:** backend **564** · ruff clean on touched files · **contract drift green**; frontend
+`npm run check` **exit 0** (lint · typecheck · tokens · **179 unit** · **129 Playwright**); **live
+pre-pass GREEN**, 0 console errors.
+
+### Walk instructions (§9-2a — there is no on-page switch until Settings ships)
+
+Flip the layout live with exactly this, then reload `/`:
+
+```bash
+curl -X PUT http://127.0.0.1:8321/api/v1/settings \
+     -H 'Content-Type: application/json' \
+     -d '{"values":{"home_layout":"simple"}}'    # or "full" (the served default)
+```
+
+**STOP for the Phase-3b owner walk (judgment items) — I do NOT self-certify.** Ratifications pending at
+the walk: the **§9-1 label + its Deprecated-terms entry**, the **§9-11 empty-state strings**, the
+**§9-13 GLOSSARY "Home"** term, the **§9-15 TopBar amendment**, and the **layout default (`full`)**.
