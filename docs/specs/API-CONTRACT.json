@@ -757,6 +757,17 @@
             ],
             "title": "Day Change Pct"
           },
+          "day_change_pct_display": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Change Pct Display"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -790,6 +801,17 @@
               }
             ],
             "title": "Market Value"
+          },
+          "market_value_display": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value Display"
           },
           "name": {
             "anyOf": [

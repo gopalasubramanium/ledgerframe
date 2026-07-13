@@ -1,7 +1,9 @@
 # page-heatmap.md — Heatmap page build plan
 
-**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE, Phase-3b owner walk PENDING (2026-07-13).** Pre-pass
-GREEN; build record §11. Drafted 2026-07-13 from
+**Status: Phase-3b BATCH 1 DONE — owner RE-VERIFY pending (2026-07-13).** The owner walked the live page
+and ratified ND-7 (click-through), ND-11 (GLOSSARY "Heatmap") and the ND-12/coverage copy (CLOSE lines in
+§9); Batch 1 (§12) reverses ND-7c and adds the **tile readout** — PROPOSED, ratify at the re-verify.
+Pre-pass GREEN; build record §11, walk record §12. Drafted 2026-07-13 from
 `TEMPLATE-page-build.md`. Verify-first (§10) done before §3/§4/§5 (D-019 — read what the engine serves +
 audit its honesty guards). **Every gap is in §9; I resolved none.**
 
@@ -316,6 +318,24 @@ assembly → Phase 2 tests (+ overflow/single-scroll to `/heatmap`) → Phase 3a
 for the Phase-3b owner walk. Ratifications pending at the walk: **ND-11 GLOSSARY term, ND-7 click-through
 amendment, the two empty strings + the coverage/assets-only notes.**
 
+### CLOSE lines — owner walk, 2026-07-13
+
+- **CLOSE ND-7 (click-through) — RATIFIED 2026-07-13.** The DESIGN-SYSTEM §5.2 Treemap amendment moves
+  **PROPOSED → RATIFIED** (keyboard-operable tile links, no layout shift). *The tooltip half of ND-7 is
+  **REVERSED** on live evidence — see §12hm1-1.*
+- **CLOSE ND-11 — RATIFIED 2026-07-13.** "Heatmap" is a GLOSSARY term. **⚠ Strike found at the walk:**
+  the term had been added to the frontend glossary data (`mocks/glossary.ts`) but **NOT** to
+  `docs/specs/GLOSSARY.md` — the file the CLAUDE.md hard rule actually names. The Phase-1 build record
+  claimed "GLOSSARY gains Heatmap" and was **not true of the spec**. Fixed at the close (GLOSSARY §System).
+- **CLOSE ND-12 + the coverage/assets-only notes — RATIFIED verbatim 2026-07-13.** "No priced holdings to
+  chart." / "No holdings match this filter." / "Showing N of M holdings — unpriced excluded." /
+  "Assets only — liabilities are excluded."
+- **Walk note — the dominant flat "Home (est.)" tile is ACCEPTED, not a defect.** The largest holding has
+  no daily change, so it renders as a large neutral tile. That is honest (size = value, colour = Today's
+  change) and matches v1. **Recorded so it never resurfaces as a defect.** *(Live confirmation: the reader
+  serves `day_change_pct = 0` for it — a manual valuation that genuinely did not move today — so the tile
+  reads "Today's change 0.00%", a real served zero, not the em-dash/absent case.)*
+
 ---
 
 **Considered options (draft record — the resolutions above are authoritative).**
@@ -409,3 +429,77 @@ already ratified; a §5 amendment arises **only** if an interactive/grouping enh
 typecheck/lint/tokens/build green; **live pre-pass GREEN**, 0 console errors. **STOP for the Phase-3b
 owner walk (judgment items) — I do NOT self-certify.** Ratifications pending at the walk: **ND-11 GLOSSARY
 "Heatmap"**, **ND-7 Treemap click-through amendment**, and the coverage/assets-only/empty copy strings.
+
+---
+
+## 12. PHASE-3b OWNER WALK — BATCH 1 (2026-07-13)
+
+Findings from the owner's live walk. Each is reproduced (RED) before the fix; every visual fix ships its
+own pre-pass assertion in the SAME batch. **Ratification pending at the re-verify: the readout amendment.**
+
+### §12hm1-1 — Tile value readout (ND-7c REVERSAL) — DONE, ratify at re-verify
+
+**Owner (live evidence):** the tooltip-DECLINED half of ND-7 is **reversed** — values are wanted on hover.
+Not a new idea, a **reversal on evidence**: the labels + legend alone don't answer "what is this tile
+worth, and what did it do today?" without leaving the page.
+
+**Built as a §5 amendment extension to the (now ratified) Treemap — PROPOSED, ratify at the re-verify:**
+
+- **Readout = name/symbol · value · Today's change** (D-025 — "Today's change" is the only term).
+- **SERVED display strings, backend-first.** `HoldingView` gains **`market_value_display`** (grouped, 2dp)
+  and **`day_change_pct_display`** (signed, U+2212 minus, 2dp, trailing `%`), from two new
+  `app/core/money.py` helpers — the **D-105 posture**: the frontend renders them verbatim and **formats
+  nothing**. The page pairs the served amount with the served `base_currency`; no client money math, no
+  client rounding, no client sign. Contract regenerated in the same commit; drift green.
+- **Hover AND keyboard focus — never hover-only** (WCAG 1.4.13). The click-through amendment already made
+  linked tiles focusable; a tile with a **`readout` but no `href`** (e.g. the property) now gets a
+  focusable target too, so no tile's value is pointer-only. `role=status` / `aria-live=polite` announces
+  the active tile (the AllocationDonut precedent); the link's accessible name stays its **label**, so a
+  link still announces its destination and not a paragraph of figures. Touch: the focus/active state shows it.
+- **No layout shift, and container-safe by construction.** The readout is an **anchored overlay** (map's
+  bottom-left, `pointer-events:none`) rather than a tile-following tooltip — **anchoring is the mechanism**:
+  an edge tile cannot push it past the map boundary at any breakpoint, so it can never clip against the
+  `overflow:hidden` the Phase-3a label fix installed. Being absolutely positioned it is out of flow ⇒ zero
+  layout shift. Both themes (token layer only).
+- **Honesty (Guarantee 3).** A missing figure renders as an **em dash + its reason**
+  ("No prior close to compare."), never a fabricated 0 — the reader serves `null`, not `0`, when there is
+  no Today's change. *(In the demo the property serves a REAL `0.00%`; the em-dash branch is exercised by
+  the unit tests and the `/kitchen-sink` specimen.)*
+- **Kitchen sink:** a new Treemap readout specimen (hover · Tab-focus · **edge tiles** · a tile with **no**
+  Today's change).
+
+**Fail-first evidence (RED before the fix):**
+```
+Error: locator.textContent: Test timeout of 30000ms exceeded.
+  - waiting for locator('.lf-treemap__tip')          ← the readout did not exist
+> 93 |  expect((await tip.textContent())?.trim() || "", "readout is empty until a tile is hovered/focused")
+```
+Then GREEN, with the pre-pass now asserting: readout **empty until** hover/focus · appears on **HOVER** ·
+clears on pointer-leave · appears on **keyboard FOCUS** · carries the **"Today's change"** label ·
+`.lf-treemap__hot` count **== tile count** (every tile reachable) · and **container-bounded for all 12
+tiles at 320px and 1366px** (`readout is inside the map … never clipped`).
+
+**Files:** `app/core/money.py` (`format_money_display`, `format_signed_pct_display`) ·
+`app/api/v1/routes/portfolio.py` (`_hv` + `HoldingView`) · `docs/specs/API-CONTRACT.json` + `openapi.json` ·
+`frontend/src/mocks/types.ts` (`TreemapReadout`) · `components/ui/Treemap.tsx` + `charts.css` ·
+`routes/Heatmap.tsx` · `api/holdings.ts` · `mocks/fixtures.ts` + `routes/KitchenSink.tsx` ·
+tests: `tests/unit/test_money_and_fx.py`, `tests/integration/test_heatmap_reader.py`,
+`components/ui/Treemap.test.tsx`, `routes/Heatmap.test.tsx`, `e2e/smoke/heatmap-smoke.spec.ts`.
+
+### Batch-1 verification
+
+Backend **537** passed · ruff clean on every touched file · **contract drift green**. Frontend `npm run
+check` **exit 0**: lint · typecheck · **tokens** · **172** unit · **129** Playwright (overflow +
+single-scroll, `/heatmap` included). **Live pre-pass GREEN** — 12 tiles; geometry
+`{fillRatio:1, overlapRatio:0, outside:0, maxTileRatio:0.807, overflowX:"hidden", mapWithinCard:true}`;
+readout on hover + focus and **container-bounded on all 12 tiles @320px and @1366px**; region filter 12→4;
+keyboard Enter lands on InstrumentDetail; **0 console errors**; **§7 ECharts-parity checklist all 6 PASS →
+hatch NOT triggered**.
+
+**⚠ Pre-existing, NOT mine, NOT fixed (reported, awaiting the owner's call):** `make lint` is **RED on
+trunk** — 4 × ruff `E741` (ambiguous `l`) in `tests/integration/test_attribution_api.py` and
+`frontend/e2e/smoke/reset.py`, from commit `3cedd36` (Portfolio Phase-3b batch 2). Untouched here because
+it is outside this page's scope and the house rule is that hygiene gets its **own** commit.
+
+**STOP for the owner re-verify. I do NOT self-certify.** Pending: **the readout amendment**
+(DESIGN-SYSTEM §5.2, PROPOSED) and its copy — the readout's "No prior close to compare." reason string.

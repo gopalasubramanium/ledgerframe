@@ -224,6 +224,16 @@ export const TREEMAP_NODES: TreemapNode[] = [
   { label: "Gold", value: 18200, tone: "gain", magnitudePct: 5.2 },
 ];
 
+// §12hm1-1 readout specimen — every figure is a SERVED display string (the component formats
+// nothing). The last tile has NO Today's change: it must render an em dash + the honest reason.
+export const TREEMAP_READOUT_NODES: TreemapNode[] = [
+  { label: "VWRA", value: 159278, tone: "gain", magnitudePct: 0.4, href: "#/instrument/VWRA", readout: { value: "SGD 159,278.00", change: "+0.40%" } },
+  { label: "DBS", value: 114360, tone: "loss", magnitudePct: 1.6, href: "#/instrument/DBS", readout: { value: "SGD 114,360.00", change: "−1.60%" } },
+  { label: "BTC", value: 70590, tone: "gain", magnitudePct: 2.3, href: "#/instrument/BTC", readout: { value: "SGD 70,590.00", change: "+2.30%" } },
+  { label: "Gold", value: 18200, tone: "gain", magnitudePct: 5.2, href: "#/instrument/Gold", readout: { value: "SGD 18,200.00", change: "+5.20%" } },
+  { label: "Home (est.)", value: 96000, tone: "flat", readout: { value: "SGD 96,000.00", change: null, note: "No prior close to compare." } },
+];
+
 // Sample tiles demonstrating the magnitude scale at 0.5% / 2% / 5%+ (both signs).
 export const TREEMAP_SCALE_SAMPLES: TreemapNode[] = [
   { label: "+0.5%", value: 1, tone: "gain", magnitudePct: 0.5 },

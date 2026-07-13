@@ -13,10 +13,14 @@ export interface HoldingRow {
   currency?: string | null;
   price?: number | null;
   market_value?: number | null;
+  // §12hm1-1 served display strings (D-105 posture — rendered verbatim, the frontend formats
+  // nothing). Null when the figure does not exist: shown as "—" + a reason, never fabricated.
+  market_value_display?: string | null;
   cost_basis?: number | null;
   unrealised_pl?: number | null;
   day_change?: number | null;
   day_change_pct?: number | null;
+  day_change_pct_display?: string | null;
   is_stale: boolean;
   price_ts?: string | null; // as-of ISO timestamp (null when unpriced)
   is_priced: boolean;

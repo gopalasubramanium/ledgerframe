@@ -97,6 +97,18 @@ export interface Quote {
   provenance: Provenance;
 }
 
+/** page-heatmap §12hm1-1 (§5 amendment, PROPOSED): the hover/focus readout for one tile. Every
+ *  field is a SERVED display string — the component renders it verbatim and formats nothing (D-105).
+ *  A null figure renders as an em dash with `note` as its honest reason (Guarantee 3). */
+export interface TreemapReadout {
+  /** Position value, e.g. "SGD 1,000.00". Null when the holding carries no value. */
+  value: string | null;
+  /** Today's change (D-025), signed, e.g. "+0.50%". Null when there is no Today's change. */
+  change: string | null;
+  /** Why `change` (or `value`) is absent — shown instead of a fabricated figure. */
+  note?: string | null;
+}
+
 export interface TreemapNode {
   label: string;
   value: number;
@@ -109,6 +121,10 @@ export interface TreemapNode {
    *  "#/instrument/AAPL", D-098). When set, the tile becomes a keyboard-operable
    *  link (focusable, Enter/Space activate); absent ⇒ the tile is non-interactive. */
   href?: string;
+  /** page-heatmap §12hm1-1 (§5 amendment): served display strings shown on hover AND keyboard
+   *  focus. When set, the tile gets a focusable hover/focus target even without an `href`, so the
+   *  readout is never pointer-only (WCAG 1.4.13). */
+  readout?: TreemapReadout;
 }
 
 export interface PricePoint {

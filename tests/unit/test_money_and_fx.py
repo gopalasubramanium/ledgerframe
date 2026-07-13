@@ -7,7 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from app.core.money import D, format_price_display, money, pct_change, price, to_display
+from app.core.money import (
+    D,
+    format_money_display,
+    format_price_display,
+    format_signed_pct_display,
+    money,
+    pct_change,
+    price,
+    to_display,
+)
 from app.services import fx
 from app.services.csv_import import sanitize_cell
 
@@ -64,3 +73,34 @@ def test_csv_formula_injection_neutralised():
     assert sanitize_cell("-cmd").startswith("'")
     assert sanitize_cell("@import").startswith("'")
     assert sanitize_cell("normal") == "normal"
+
+
+# --- page-heatmap §12hm1-1: served display strings (the frontend formats nothing) ---------------
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (Decimal("1000"), "1,000.00"),
+        (Decimal("1234567.891"), "1,234,567.89"),  # grouped, half-up to 2dp
+        (Decimal("0"), "0.00"),
+        (Decimal("-800.5"), "-800.50"),  # a liability keeps its sign
+        (None, None),  # absent stays absent — never a fabricated 0
+    ],
+)
+def test_format_money_display(value, expected):
+    assert format_money_display(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (Decimal("0.5"), "+0.50%"),
+        (Decimal("-1.234"), "−1.23%"),  # U+2212 minus, half-up to 2dp
+        (Decimal("0"), "0.00%"),  # a real zero is served plainly, with no sign
+        (Decimal("1234.5"), "+1,234.50%"),
+        (None, None),  # no Today's change → null, rendered as an em dash + reason
+    ],
+)
+def test_format_signed_pct_display(value, expected):
+    assert format_signed_pct_display(value) == expected

@@ -78,6 +78,7 @@ export function Heatmap() {
     [priced, assetClass, region],
   );
 
+  const baseCcy = data?.base_currency ?? "";
   const nodes = useMemo<TreemapNode[]>(
     () =>
       shown.map((h) => ({
@@ -87,8 +88,16 @@ export function Heatmap() {
         magnitudePct: h.day_change_pct != null ? Math.abs(h.day_change_pct) : undefined,
         // ND-7: a tile links to its InstrumentDetail (D-098); only when a symbol exists.
         href: h.symbol ? `#/instrument/${encodeURIComponent(h.symbol)}` : undefined,
+        // §12hm1-1: the hover/focus readout. Both figures are SERVED display strings — the page
+        // pairs the served amount with the served base currency and formats nothing. A holding with
+        // no Today's change (nothing to compare against) shows an em dash + the reason (Guarantee 3).
+        readout: {
+          value: h.market_value_display != null ? `${baseCcy} ${h.market_value_display}`.trim() : null,
+          change: h.day_change_pct_display ?? null,
+          note: h.day_change_pct_display == null ? "No prior close to compare." : null,
+        },
       })),
-    [shown],
+    [shown, baseCcy],
   );
 
   return (

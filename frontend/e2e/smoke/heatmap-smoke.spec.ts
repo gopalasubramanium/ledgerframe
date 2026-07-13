@@ -87,6 +87,55 @@ test.describe.serial("heatmap pre-pass (live)", () => {
     await page.getByLabel("Filter by region").selectOption({ label: "All regions" });
     await page.waitForTimeout(100);
 
+    // PART 3b: §12hm1-1 — the tile READOUT appears on hover AND on keyboard focus, and stays
+    // CONTAINER-BOUNDED for every tile (incl. edge tiles) at the narrowest breakpoint. -------------
+    const tip = page.locator(".lf-treemap__tip");
+    expect((await tip.textContent())?.trim() || "", "readout is empty until a tile is hovered/focused").toBe("");
+
+    const hots = page.locator(".lf-treemap__hot");
+    const hotCount = await hots.count();
+    expect(hotCount, "every tile has a hover/focus target").toBe(tileCount);
+
+    // Hover: the readout names the tile and labels the metric "Today's change" (D-025).
+    await hots.first().hover();
+    await expect(tip, "readout appears on HOVER").not.toBeEmpty();
+    await expect(tip, "readout carries the Today’s change label (D-025)").toContainText("Today’s change");
+    const hoverText = (await tip.textContent())!.trim();
+    console.log("PART 3b — hover readout:", JSON.stringify(hoverText));
+
+    // Keyboard focus: the SAME readout (never hover-only) — WCAG 1.4.13.
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(80);
+    expect((await tip.textContent())?.trim() || "", "readout clears when the pointer leaves").toBe("");
+    await hots.first().focus();
+    await expect(tip, "readout appears on keyboard FOCUS").not.toBeEmpty();
+    console.log("PART 3b — focus readout:", JSON.stringify((await tip.textContent())!.trim()));
+    await page.locator("body").click({ position: { x: 2, y: 2 } });
+
+    // Container-bounded for EVERY tile (edge tiles included) at 320px and at 1366px.
+    for (const w of [320, 1366]) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.waitForTimeout(120);
+      for (let i = 0; i < hotCount; i++) {
+        await hots.nth(i).hover();
+        const fit = await page.evaluate(() => {
+          const wrap = document.querySelector(".lf-treemap") as HTMLElement;
+          const t = document.querySelector(".lf-treemap__tip") as HTMLElement;
+          const m = wrap.getBoundingClientRect();
+          const r = t.getBoundingClientRect();
+          return {
+            text: (t.textContent || "").trim().length,
+            inside: r.left >= m.left - 1 && r.right <= m.right + 1 && r.top >= m.top - 1 && r.bottom <= m.bottom + 1,
+          };
+        });
+        expect(fit.text, `readout has content on tile ${i} @${w}px`).toBeGreaterThan(0);
+        expect(fit.inside, `readout is inside the map on tile ${i} @${w}px (never clipped)`).toBe(true);
+      }
+      console.log(`PART 3b — readout container-bounded for all ${hotCount} tiles @${w}px`);
+    }
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.mouse.move(0, 0);
+
     // PART 4: tile click-through → InstrumentDetail (pointer AND keyboard) --------------------------
     const firstLink = page.locator(".lf-treemap__link").first();
     await expect(firstLink, "at least one tile links to its instrument").toBeVisible();

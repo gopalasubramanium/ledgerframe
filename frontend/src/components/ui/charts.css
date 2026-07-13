@@ -193,14 +193,15 @@
   inset: 0;
   pointer-events: none;
 }
-/* ND-7 (§5 amendment): the interactive link layer overlays the svg exactly. Each link covers
- * its tile; focus + hover use OUTLINE + inset box-shadow only (no border/size change → no layout
- * shift). Keyboard-operable via the native anchor (Enter) + the component's Space handler. */
+/* ND-7 (§5 amendment): the interactive layer overlays the svg exactly. Each target covers its tile;
+ * focus + hover use OUTLINE + inset box-shadow only (no border/size change → no layout shift).
+ * `__hot` = the hover/focus target on ANY tile (§12hm1-1 readout); `__link` additionally makes it a
+ * keyboard-operable anchor (Enter native + the component's Space handler). */
 .lf-treemap__links {
   position: absolute;
   inset: 0;
 }
-.lf-treemap__link {
+.lf-treemap__hot {
   position: absolute;
   left: var(--tx);
   top: var(--ty);
@@ -208,16 +209,50 @@
   height: var(--th);
   display: block;
   border-radius: var(--radius-sm);
-  cursor: pointer;
 }
-.lf-treemap__link:hover {
+.lf-treemap__link { cursor: pointer; }
+.lf-treemap__hot:hover {
   box-shadow: inset 0 0 0 var(--focus-width) color-mix(in srgb, var(--accent) 60%, transparent);
 }
-.lf-treemap__link:focus-visible {
+.lf-treemap__hot:focus-visible {
   outline: var(--focus-width) solid var(--focus-ring);
   outline-offset: var(--focus-offset);
   z-index: 1;
 }
+
+/* §12hm1-1 (§5 amendment): hover/focus readout. ANCHORED to the map's bottom-left, never following
+ * the tile — an edge tile therefore cannot push it past the boundary (container-safe at every
+ * breakpoint, incl. 320px, where `max-width` lets it wrap instead of clip). Absolutely positioned ⇒
+ * NO layout shift; `pointer-events:none` ⇒ hovering it never steals the hover from the tile. */
+.lf-treemap__tip {
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  max-width: calc(100% - 2 * var(--space-2));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  pointer-events: none;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+}
+.lf-treemap__tip:empty { display: none; }
+.lf-treemap__tip > * {
+  padding: var(--space-1) var(--space-2);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+}
+.lf-treemap__tiplabel {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+.lf-treemap__tipfig { font-variant-numeric: tabular-nums; }
+.lf-treemap__tipnote { color: var(--text-tertiary); }
 
 /* Translucent surface pill keeps labels legible across the full fill range. */
 .lf-treemap__label {

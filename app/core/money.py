@@ -35,6 +35,26 @@ def format_price_display(value: Decimal | None, asset_class: object = None) -> s
     return format(p.quantize(CENTS, rounding=ROUND_HALF_UP), ",.2f")
 
 
+def format_money_display(value: Decimal | None) -> str | None:
+    """A served display string for a MONEY amount: grouped thousands, 2dp (page-heatmap §12hm1-1,
+    D-105 posture — the frontend renders it verbatim and formats nothing). None passes through, so
+    an unpriced field stays honestly empty and is never a fabricated 0 (Guarantee 3)."""
+    if value is None:
+        return None
+    return format(D(value).quantize(CENTS, rounding=ROUND_HALF_UP), ",.2f")
+
+
+def format_signed_pct_display(value: Decimal | None) -> str | None:
+    """A served display string for a SIGNED percentage change: explicit +/− (U+2212 minus, matching
+    the app's signed-figure convention), 2dp, trailing '%'. None passes through (never a fabricated
+    0% — a missing Today's change is shown as an em dash with a reason)."""
+    if value is None:
+        return None
+    p = D(value).quantize(CENTS, rounding=ROUND_HALF_UP)
+    sign = "+" if p > ZERO else "−" if p < ZERO else ""
+    return f"{sign}{format(abs(p), ',.2f')}%"
+
+
 def D(value: object) -> Decimal:
     """Coerce anything reasonable to a Decimal. Raises ValueError on garbage."""
     if isinstance(value, Decimal):

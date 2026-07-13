@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 import "./charts.css";
+import { EMDASH } from "../../format/number";
 import type { TreemapNode } from "../../mocks/types";
 
 // Heatmap (DESIGN-SYSTEM §5.2, D-053): house-SVG, squarified. ECharts escape
@@ -106,6 +108,11 @@ function squarify(nodes: TreemapNode[]): Tile[] {
 
 export function Treemap({ nodes, "aria-label": ariaLabel }: TreemapProps) {
   const tiles = squarify(nodes);
+  // §12hm1-1: the tile under the pointer OR keyboard focus. One state serves both — the readout is
+  // never hover-only (WCAG 1.4.13); on touch the focus/active state shows it.
+  const [active, setActive] = useState<number | null>(null);
+  const hot = active != null ? tiles[active] : null;
+  const readout = hot?.node.readout;
   return (
     <div className="lf-treemap">
       {/* Rects fill the container (distortion is fine for area). Labels are an
@@ -151,32 +158,73 @@ export function Treemap({ nodes, "aria-label": ariaLabel }: TreemapProps) {
           ) : null,
         )}
       </div>
-      {/* ND-7: interactive layer — one keyboard-operable link per tile that carries an href.
-       * It overlays the svg exactly (percentage-positioned), so pointer + keyboard both land on
-       * the right tile; the accessible name is the tile's label. Absent href ⇒ no link rendered. */}
-      {tiles.some((t) => t.node.href) ? (
+      {/* ND-7 + §12hm1-1: interactive layer — one hover/focus target per tile, overlaying the svg
+       * exactly (percentage-positioned) so pointer and keyboard both land on the right tile. A tile
+       * with an `href` is a keyboard-operable LINK (accessible name = its label, so the link still
+       * announces its destination — the readout is announced separately by the live region). A tile
+       * with only a `readout` still gets a focusable target, so the readout is reachable without a
+       * pointer. A tile with neither is not rendered here and stays non-interactive (back-compatible). */}
+      {tiles.some((t) => t.node.href || t.node.readout) ? (
         <div className="lf-treemap__links">
-          {tiles.map((t, i) =>
-            t.node.href ? (
+          {tiles.map((t, i) => {
+            if (!t.node.href && !t.node.readout) return null;
+            const style = {
+              "--tx": `${(t.x / W) * 100}%`,
+              "--ty": `${(t.y / H) * 100}%`,
+              "--tw": `${(t.w / W) * 100}%`,
+              "--th": `${(t.h / H) * 100}%`,
+            } as CSSProperties;
+            const on = {
+              onMouseEnter: () => setActive(i),
+              onMouseLeave: () => setActive((a) => (a === i ? null : a)),
+              onFocus: () => setActive(i),
+              onBlur: () => setActive((a) => (a === i ? null : a)),
+            };
+            return t.node.href ? (
               <a
                 key={i}
-                className="lf-treemap__link"
+                className="lf-treemap__hot lf-treemap__link"
                 href={t.node.href}
                 aria-label={t.node.label}
                 onKeyDown={activateOnSpace}
-                style={
-                  {
-                    "--tx": `${(t.x / W) * 100}%`,
-                    "--ty": `${(t.y / H) * 100}%`,
-                    "--tw": `${(t.w / W) * 100}%`,
-                    "--th": `${(t.h / H) * 100}%`,
-                  } as CSSProperties
-                }
+                style={style}
+                {...on}
               />
-            ) : null,
-          )}
+            ) : (
+              <div
+                key={i}
+                className="lf-treemap__hot"
+                tabIndex={0}
+                role="img"
+                aria-label={t.node.label}
+                style={style}
+                {...on}
+              />
+            );
+          })}
         </div>
       ) : null}
+
+      {/* §12hm1-1: the readout. ANCHORED inside the map (never tile-following) — that is what makes
+       * it container-safe by construction: an edge tile cannot push it past the boundary, at any
+       * breakpoint. It is absolutely positioned, so it causes NO layout shift, and pointer-events
+       * are off so hovering never flickers. `role=status`/`aria-live` announces the active tile to
+       * keyboard users (the AllocationDonut precedent). Every figure is a SERVED string; a missing
+       * one renders as an em dash + its reason — never fabricated (Guarantee 3). */}
+      <div className="lf-treemap__tip" role="status" aria-live="polite">
+        {readout ? (
+          <>
+            <span className="lf-treemap__tiplabel">{hot!.node.label}</span>
+            <span className="lf-treemap__tipfig">{readout.value ?? EMDASH}</span>
+            <span className="lf-treemap__tipfig">
+              Today&rsquo;s change {readout.change ?? EMDASH}
+            </span>
+            {(readout.value == null || readout.change == null) && readout.note ? (
+              <span className="lf-treemap__tipnote">{readout.note}</span>
+            ) : null}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -58,6 +58,7 @@ import {
   PROV_UNAVAILABLE,
   QUOTES,
   TREEMAP_NODES,
+  TREEMAP_READOUT_NODES,
   TREEMAP_SCALE_SAMPLES,
 } from "../mocks/fixtures";
 import type { Holding, Provenance } from "../mocks/types";
@@ -539,6 +540,13 @@ export function KitchenSink() {
               nodes={TREEMAP_NODES.map((n) => ({ ...n, href: `#/instrument/${encodeURIComponent(n.label)}` }))}
               squarified
               aria-label="Interactive holdings heatmap — each tile links to its instrument"
+            />
+          </Specimen>
+          <Specimen label="Treemap readout (PROPOSED, page-heatmap §12hm1-1) — HOVER or Tab-FOCUS any tile (incl. the EDGE tiles) for name · value · Today's change. Served display strings only; the anchored overlay never clips and never shifts layout. The last tile has NO Today's change → em dash + reason.">
+            <Treemap
+              nodes={TREEMAP_READOUT_NODES}
+              squarified
+              aria-label="Holdings heatmap with a hover and focus readout"
             />
           </Specimen>
         </div>

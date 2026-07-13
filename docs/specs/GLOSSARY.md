@@ -228,6 +228,7 @@ These two "documents" ideas are distinct and must not be merged in copy:
 | **No-egress toggle** | The privacy switch that makes the device make zero outbound network calls when enabled — feeds, version check, and banner included (Product Guarantee 5). |
 | **Demo mode** | `market_provider == "mock"` — deterministic DEMO data, entitlement delayed, seeded on empty DB. |
 | **Reports Pack** | A print/export artifact composed from canonical readers with disclaimers preserved — the one sanctioned duplication, reachable from Reports only (D-038/D-061). Not a page in the IA sense. |
+| **Heatmap** | A treemap visualisation of your holdings — tile size is position value, colour is **Today's change**. It owns no figure; every number comes from the canonical readers. Priced holdings only; assets only (liabilities excluded), with an honest coverage note. **[Help]** *(RATIFIED 2026-07-13, page-heatmap ND-11.)* |
 
 ---
 

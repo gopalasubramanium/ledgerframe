@@ -14,7 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_auth, require_pin
 from app.core.config import get_settings
-from app.core.money import ZERO, D, format_price_display, money, to_display
+from app.core.money import (
+    ZERO,
+    D,
+    format_money_display,
+    format_price_display,
+    format_signed_pct_display,
+    money,
+    to_display,
+)
 from app.core.provenance import valuation_label
 from app.core.regions import region_of
 from app.models import (
@@ -60,6 +68,11 @@ def _hv(h) -> dict:
         "unrealised_pl": to_display(h.unrealised_pl_base),
         "day_change": to_display(h.day_change_base),
         "day_change_pct": to_display(h.day_change_pct),
+        # page-heatmap §12hm1-1: SERVED display strings for the tile readout (D-105 posture — the
+        # frontend renders them verbatim, formats nothing). Null when the figure does not exist:
+        # an unpriced value / an absent Today's change shows an em dash + reason, never a made-up 0.
+        "market_value_display": format_money_display(h.market_value_base),
+        "day_change_pct_display": format_signed_pct_display(h.day_change_pct),
         "is_stale": h.is_stale, "is_priced": h.is_priced,
         # Provenance: HOW this value was derived + a concise, honest label + the
         # real as-of timestamp (null when unpriced — never fabricated).
@@ -126,10 +139,12 @@ class HoldingView(BaseModel):
     price: float | None = None
     price_display: str | None = None  # D-105 served display string (class-appropriate quote precision)
     market_value: float | None = None
+    market_value_display: str | None = None  # §12hm1-1 served money display string (2dp, grouped)
     cost_basis: float | None = None
     unrealised_pl: float | None = None
     day_change: float | None = None
     day_change_pct: float | None = None
+    day_change_pct_display: str | None = None  # §12hm1-1 served signed-percent display string
     is_stale: bool
     is_priced: bool
     valuation_method: str | None = None
