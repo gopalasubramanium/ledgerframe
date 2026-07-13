@@ -1,6 +1,6 @@
 # page-heatmap.md — Heatmap page build plan
 
-**Status: PLAN ONLY — nothing built. STOP at §9 (owner resolves, one pass).** Drafted 2026-07-13 from
+**Status: §9 RESOLVED (owner, 2026-07-13) — BUILD IN PROGRESS (Phases 0 → 3a).** Drafted 2026-07-13 from
 `TEMPLATE-page-build.md`. Verify-first (§10) done before §3/§4/§5 (D-019 — read what the engine serves +
 audit its honesty guards). **Every gap is in §9; I resolved none.**
 
@@ -261,9 +261,63 @@ All labels are **served display strings** (D-005) — render verbatim; **never**
 
 ---
 
-## 9. NEEDS DECISION — for the owner (one pass, before any build)
+## 9. NEEDS DECISION — RESOLVED (owner, one-pass, 2026-07-13)
 
-*Everything the specs under-specify. I resolved **none**. New ideas beyond v1 → ROADMAP, not invented here.*
+All 12 items resolved in one pass; each matched a §9 item by **number + topic**. Considered-options table
+preserved beneath.
+
+**Resolutions (owner, 2026-07-13):**
+- **ND-1 (a) — FLAT per-holding tiles** (v1 parity). No nested-treemap amendment, no `sector` reshape for
+  grouping. Grouped views are a future amendment via their own plan only.
+- **ND-2 (a) — size = `market_value`** in base currency.
+- **ND-3 — colour = Today's change % (served `day_change_pct`); (a) EXCLUDE UNPRICED + coverage note;
+  INCLUDE STALE.** Rationale (verbatim): *stale holdings have real cached values — excluding them would
+  hide them (Guarantee 3); their staleness honesty on this page is carried by the global StaleBanner (the
+  P-1 summary of the canonical Pricing Health reader), so a per-tile stale marker is declined as
+  duplication, not forgotten.* Coverage note **"Showing N of M holdings — unpriced excluded."** (PROPOSED,
+  ratify at walk).
+- **ND-4 (a) — EXCLUDE liabilities**, on-page note **"Assets only — liabilities are excluded."**
+  (gross-assets principle; PROPOSED copy).
+- **ND-5 (a) — render all tiles, labels only where they fit.** Revisit threshold (D-094): if a portfolio
+  approaches **~200 positions**, revisit an "Others" floor (plan note, no build).
+- **ND-6 (a) — NO export here** (DECLINED, not deferred — Reports territory).
+- **ND-7 (b, NOT c) — CLICK-THROUGH YES, TOOLTIP NO.** A §5 Treemap amendment: per-tile activation →
+  InstrumentDetail (D-098), `onSelect`/`href` on nodes. **HARD REQUIREMENTS:** keyboard operability (tiles
+  focusable, Enter/Space activate, visible focus ring — WCAG-AA) and **no layout shift** on hover/focus.
+  Author PROPOSED + a `/kitchen-sink` open-state (keyboard) case; ratify at the walk (PriceChart precedent).
+  **Hover tooltip DECLINED for v2** (touch/a11y surface not needed; labels + legend carry symbol + Today's
+  change) — a future amendment if wanted, noted, not ROADMAP-worthy.
+- **ND-8 (b) — KEEP the region filter; approve the §3b reshape.** Additive `HoldingView` fields `country`
+  + served `region` (D-083 six buckets, derived **SERVER-SIDE** from `listing_country` — no client region
+  map, the Markets rule). Backend-first, contract regen same commit, drift green; **fail-first** (test red
+  on the old shape). Filters = `ui/Select` (view-scope): class + region; filter empty-state uses ND-12.
+- **ND-9 — rotation YES** (D-044; empty ⇒ auto-skip).
+- **ND-10 — HOUSEHOLD-ONLY confirmed**; logged for the Accounts milestone.
+- **ND-11 — ADD "Heatmap" to GLOSSARY** (PROPOSED, ratify at walk): a treemap visualisation of your
+  holdings — tile size = value, colour = Today's change; owns no figure (every number from the canonical
+  readers). `[Help]` on **Heatmap** + **Today's change**.
+- **ND-12 — both empty-state strings ACCEPTED verbatim:** **"No priced holdings to chart."** /
+  **"No holdings match this filter."**
+
+**Lower-risk confirms ratified as listed:** served labels (D-005); reporting-only; the honest coverage
+note; house-SVG-first with the checkable ECharts parity gate (§7).
+
+**⚠ Verify-first divergence reconciled in Phase 0 (D-083, §10-9).** The server region derivation
+(`policy.py:region_of`) is the **legacy 3-bucket** (`IN/SG/US` → else "Global"), but D-083 / `/refdata`
+define the **six buckets** (India · Singapore · US · Europe · APAC · Other, MASTER-DATA §4). Phase 0
+reconciles `region_of` to the ratified six-bucket derivation (one canonical server function, reused by
+both the new `HoldingView.region` and the policy region dimension), per-bucket fail-first tests. Recorded
+like the review D-084/D-087 code drift — a ratified model the code hadn't fully implemented.
+
+**Build sequence:** Phase 0 (ND-8 reshape + region reconcile, backend-first, contract regen, fail-first) →
+Phase 0a (ND-7 click-through amendment PROPOSED at `/kitchen-sink`; magnitude scale confirm-only) → Phase 1
+assembly → Phase 2 tests (+ overflow/single-scroll to `/heatmap`) → Phase 3a scripted pre-pass GREEN. STOP
+for the Phase-3b owner walk. Ratifications pending at the walk: **ND-11 GLOSSARY term, ND-7 click-through
+amendment, the two empty strings + the coverage/assets-only notes.**
+
+---
+
+**Considered options (draft record — the resolutions above are authoritative).**
 
 | # | Item | Why it blocks / what's needed | Options (owner picks) |
 |---|------|-------------------------------|-----------------------|
@@ -300,6 +354,7 @@ drafting §3/§4/§5. **No shape assumed; gaps went to §9, not §3b guesses.**
 | 6 | **Legacy v1 heatmap** consumed **`api.holdings`** (+ marketsOverview for quote change_pct & country): **size = `market_value` (floored at 1), colour = daily % change, FLAT per-symbol tiles, filters by asset_class AND region** (region derived from `country`), **priced-only** (`is_priced && market_value>0`) with a **`shown/total` coverage note** + a `size · colour` legend; empty states "noPriced" vs "noMatch"; demo-mode note. **No grouping, no tooltip, no click-through.** | `~/Documents/github/LedgerFrame/frontend/src/pages/Heatmap.tsx` (read-only reference) |
 | 7 | **Terminology:** the colour metric's canonical term is **"Today's change"** (D-025); **"day change"/"Day"/"day_change" are RETIRED** (must not appear in user copy). **"Heatmap" is NOT a GLOSSARY term** → ND-11 (nav label exists, definition doesn't). **Region** = D-083 six buckets, derived from `listing_country`. | `GLOSSARY.md:112/:245–246/:158` |
 | 8 | **`/heatmap` is declared in nav but NOT built** (no route in `AppRoutes` → NotBuilt fallback today); household-only (no `entity_id`); **rotation skips empty/errored pages** (D-044), which the honest empty satisfies. | `frontend/src/components/ui/nav.ts:38`, `DECISIONS.md:319` |
+| 9 | **⚠ Region derivation diverges from D-083.** `region_of` maps only `IN/SG/US` → else **"Global"** (legacy 3-bucket), but D-083 / `/refdata` (`_REGION = ["India","Singapore","US","Europe","APAC","Other"]`) + MASTER-DATA §4 define **six buckets** with an explicit membership table. Phase 0 reconciles `region_of` to the six-bucket derivation (ONE canonical server function, reused by `HoldingView.region` + policy). | `app/services/policy.py:26/29`, `app/api/v1/routes/refdata.py:71`, `MASTER-DATA.md:201–213` |
 
 **Owner sign-off surface (all in §9):** ND-1 (grouping — the headline shape choice), ND-3 (stale/unpriced
 honesty), ND-7 (tooltip/click = §5 amendments?), ND-8 (region filter = §3b reshape?), plus
