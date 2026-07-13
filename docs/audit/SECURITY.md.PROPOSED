@@ -1,0 +1,74 @@
+<!-- ============================================================================
+     PROPOSED — release-readiness Gate B8. 🛑 NOT SHIPPED.
+
+     This file is deliberately NOT at the repo root, and it is deliberately not
+     called SECURITY.md. Publishing it would make a live, public promise that
+     security@ledgerframe.org is monitored — and that has not been verified yet.
+
+     IT IS BLOCKED BEHIND B7: the mailbox must be created, a test mail sent, and
+     RECEIPT CONFIRMED BY THE OWNER. Only then does this move to /SECURITY.md.
+
+     The owner's own framing, and it is right: an unmonitored disclosure inbox
+     is the same defect class as an untested "tested-on" claim. It tells someone
+     holding a vulnerability that a door exists, and the door goes nowhere.
+     ============================================================================ -->
+
+# Security Policy
+
+## Reporting a vulnerability
+
+**Email: security@ledgerframe.org**
+
+Please do **not** open a public GitHub issue for a security problem. Send it to the address above and
+give us a chance to fix it before it is public.
+
+Useful things to include, if you have them: what you found, how to reproduce it, what an attacker could
+actually do with it, and the version/commit you were on. A rough report is much better than no report —
+do not polish it into never sending it.
+
+## What to expect
+
+**This is a single-maintainer project. There is no SLA, and pretending otherwise would be the first
+untrue thing on this page.**
+
+- Your report will be **acknowledged when it is read** — not within a guaranteed window.
+- Fixes are prioritised by real-world impact on a **single-user, local-first** appliance.
+- You will be credited if you want to be, and not if you don't.
+- There is **no bug bounty**, and no payment.
+
+## Scope — read this first, it will save you time
+
+LedgerFrame is a **single-user, local-first** appliance. Several things that look like vulnerabilities
+in a multi-tenant web app are **documented, deliberate design decisions** here — and they are written
+down, with their reasoning, in [`docs/specs/SECURITY-BASELINE.md`](docs/specs/SECURITY-BASELINE.md).
+That document is the place to start.
+
+Specifically, and stated openly so nobody wastes their time proving it to us:
+
+- **There is no multi-user model.** No permissions, no tenant isolation. By design.
+- **No in-app TLS**, and the session cookie is not `Secure`. The app expects loopback, or a VPN where
+  TLS lives at the network layer.
+- **No PIN is required on a loopback-only install.** Enabling LAN access *does* require one.
+- **Secrets live in `.env` (mode 0600)**, reachable by the process. There is no OS keyring.
+
+**These are in `SECURITY-BASELINE.md` with their rationale. A report that simply restates one of them is
+not a finding.** A report that shows one of them is *worse than we documented*, or is exploitable in a
+way we did not anticipate — **that is very much a finding**, and we want it.
+
+## Product Guarantee 5 — no-egress
+
+With no-egress enabled, the device must make **zero** outbound network calls. Not fewer: zero.
+
+It is enforced at a **single choke point** — every HTTP client in the codebase must be created through
+it — and the build fails if any code constructs one another way. The complete, per-call-site inventory
+is maintained in
+[`docs/specs/SECURITY-BASELINE.md` → *Guarantee 5 — the outbound-call inventory*](docs/specs/SECURITY-BASELINE.md).
+
+**Any outbound call that escapes that gate is a security bug, and we want to hear about it.**
+
+## Supported versions
+
+Only the **latest release** receives security fixes. There is no long-term-support branch.
+
+<!-- 🛑 OWNER RATIFIES THIS COPY. It does not ship until:
+       B7 — the mailbox exists, a test mail has been sent, and receipt is CONFIRMED by the owner. -->

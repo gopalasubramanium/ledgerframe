@@ -348,3 +348,47 @@ recorded ruling** — who decided, when, and why — in `scripts/license-adjudic
 
 **E4 re-runs this same mechanism against the final public set** — not a re-read of the Gate-A result,
 because the final set may differ and a ruling may have gone stale in between.
+
+
+---
+
+## DISTRIBUTION POSTURE — the same 14 gaps, restated for STRANGERS
+
+**PROPOSED (release-readiness Gate B9 / RD-7, 2026-07-14). 🛑 Owner ratifies this posture document.**
+
+**The table above is a PERSONAL-deployment document.** Every "Accept (ADR)" in it is rational for *one
+person, on their own loopback, behind their own VPN*. **None of those rationales stop being true when a
+stranger installs it — but several of them stop being SAFE ASSUMPTIONS, because they depend on a
+deployment we no longer control.**
+
+An ADR that says *"acceptable, because the user will only ever run this on loopback"* is not a mitigation
+once we are handing the software to people who will decide that for themselves. **The gap does not
+change. Who is carrying the risk does.** That is what this column records.
+
+| # | Gap | Accepted because (personal) | What changes when a STRANGER runs it | Distribution disposition |
+|---|---|---|---|---|
+| **1** | No multi-user model | "Single-user appliance by design" | **Unchanged, but it must be SAID, not implied.** Someone will otherwise put it on a family NAS and assume the household members are isolated from each other. They are not. | **DOCUMENT, prominently.** README's first section + this file. *"Do not put it on a shared box."* |
+| **2** | Cookie `secure=False` / no in-app TLS | "Loopback by default; TLS lives at the network layer" | A stranger who sets `LEDGERFRAME_ALLOW_LAN=true` gets **cleartext session cookies over their LAN**. Our mitigation is *a deployment assumption we cannot enforce*. | **DOCUMENT + WARN AT THE POINT OF CHOICE** — the installer's LAN question is where a person is actually deciding this, so that is where it must be said. |
+| **3** | No CSRF token | "`samesite=strict` + single-user local model" | Same assumption, same exposure once LAN is on. | **DOCUMENT.** Revisit if LAN ever becomes the common case. |
+| **5** | App writes its own `.env` + runs a sudo helper | "Guardrailed: fixed allow-list, `.env` 0600, install-time opt-in" | **A sudo-capable helper is a very different proposition in software handed to strangers than in one's own appliance.** The guardrails hold; the *trust required to accept them* is now being asked of someone who has not read the code. | **DOCUMENT the exact scope of what the helper may do** — an allow-list nobody can read is not a guardrail, it is a promise. |
+| **6** | Numeric PIN entropy | "6+ digits, Argon2, lockout" | Fine on loopback. Thin the moment anyone exposes the port. | **DOCUMENT.** Passphrase mode is ROADMAP R-1. |
+| **7** | **No auth on read when no PIN is set** | "Deliberate no-PIN-open-local convenience" | ⚠ **The sharpest one. The default install HAS NO PIN.** A stranger who enables LAN before setting one is serving their entire net worth, unauthenticated, to their network. | **OWNER STANCE — DOCUMENT-PLUS-PROMPT:** (a) the **loopback-only default is documented** plainly; (b) the **install wizard gains an ENCOURAGED, SKIPPABLE set-a-PIN step** — it asks, it recommends, it does not coerce; (c) **LAN access keeps the HARD PIN requirement** — that is not a prompt, it is a gate. *Rationale: the convenience is real and the loopback case genuinely does not need it; what was wrong was that nobody was ever ASKED.* |
+| **8** | Secrets reachable by the process (no OS keyring) | "Env-only at `.env` 0600" | Technically unchanged — **but strangers will put real broker API keys in that file**, and they deserve to know exactly what protects them (file permissions, and nothing else). | **DISCLOSE explicitly** in the README's Privacy section: keys live in `.env`, mode 0600, never in the DB, never logged. |
+| **9** | AI validator is heuristic | "Defence-in-depth; deterministic fallback" | Unchanged. The fallback is a correct deterministic template, not a guess. | **DOCUMENT.** No change. |
+| **13** | Restore trusts backup content | "SHA-256 self-consistency + traversal guards + pre-restore safety copy" | ⚠ **A restore path that trusts its input becomes a supply-chain surface once backups can come from somewhere other than the user's own machine.** | **DOCUMENT + WARN in the restore path**: restore only backups *you* created. Hardening beyond the current guards is a future item, not a v2.0 claim. |
+
+**#4, #10, #11, #12, #14 were FIXED in v2** and need no distribution restatement.
+*(#10 — the version-check egress — is now enforced by the same single choke point as every other
+outbound call. See **Guarantee 5 — the outbound-call inventory**, above.)*
+
+### What this section is NOT
+
+It is **not** a claim that the product has been hardened for hostile networks. It has not been, and
+v2.0 does not say it has. **It is a claim that the posture is written down honestly, including the parts
+that are uncomfortable** — so that a stranger can make an informed decision instead of an assumed one.
+
+**The one behavioural change proposed here is gap 7's wizard prompt.** Everything else in this column is
+disclosure — which is the correct response to a risk the *user* now owns and we cannot control.
+
+<!-- 🛑 OWNER RATIFIES. The gap-7 prompt is a code change (installer) and must be built + tested
+     separately, fail-first, once this posture is ratified. -->

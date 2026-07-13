@@ -310,6 +310,13 @@ the two items marked **✅ DONE (Part B)** — the decision-independent defects.
 🤖 **BUILDABLE** — automation can do it, fail-first where it is code. 🛑 **OWNER-STOP** — a gate that
 does not pass without explicit owner sign-off. 🚫 **RELEASE-BLOCKER**.
 
+> **AUTHORSHIP AMENDMENT (owner, 2026-07-14).** **B5 (README), B8 (SECURITY.md) and B10 (Issues
+> disclaimer)** convert from 🧑 OWNER-AUTHORED to **🤖 draft-PROPOSED → 🛑 owner-ratify** — the project's
+> standard copy pattern.
+> **B2 (CLA text) and B6 (tested-on) do NOT convert.** The RD-2 bar on automation drafting CLA text
+> **remains in force**, and automation must not enumerate platforms it has not verified.
+> *(Nothing to discard: **no CLA text was ever drafted** under the prior instruction.)*
+
 **Strict sequencing — a gate does not open until the one before it is closed:**
 **A. Core defects → B. Docs sync → C. Legal + Help pages → D. Version & tag → E. Public hygiene scan
 (runs LAST, against the ACTUAL final public set) → F. Public ingestion.**
@@ -333,18 +340,18 @@ does not pass without explicit owner sign-off. 🚫 **RELEASE-BLOCKER**.
 
 | # | Item | Who | Notes |
 |---|---|---|---|
-| B1 | 🛑 **`LICENSE` file — AGPL-3.0-or-later text at the root** [per RD-2] | 🧑 **OWNER** | The code has **claimed** this in every SPDX header while shipping no licence (§1-1a/1b). The file and the headers must agree — **any drift is a defect, in either direction** |
-| B2 | 🛑 **CLA text** [per RD-2] | 🧑 **OWNER-AUTHORED — automation must NOT draft or ship this** | Explicitly excluded from automation by the resolution |
-| B3 | Frontend `license` field instantiated [per RD-2] | 🤖 | `frontend/package.json` — `private: true`, no licence today (§1-1c) |
-| B4 | `NOTICE` / third-party attributions, **generated from A8's output** [per RD-2] | 🤖 → 🛑 | Owner ratifies the final text |
-| B5 | 🛑 **README rewritten as an INSTALL guide for a stranger** [per RD-1a] | 🧑 **OWNER** (copy) | It is a **developer doc** today and never mentions `install.sh` (§1-2c). Must cover: install, the data dir, **backup / restore / move-my-data** (documented nowhere a user would look — §1-4d), and the **forward-only + backup-first upgrade policy** [per RD-6] |
-| B6 | 🛑 **"Tested on" statement — the NARROWEST TRUE claim** [per RD-4] | 🧑 **OWNER** | Only OSes/architectures that have **actually run clean suites**. **No CI-backed ecosystem claim until CI exists.** *A "tested on" line the project cannot back is the same defect class as a fabricated figure.* |
-| B7 | 🚫🛑 **Mailbox verification: security@ledgerframe.org — test mail SENT and RECEIPT CONFIRMED by the owner** [per RD-7] | 🧑 **OWNER** | **This gate closes BEFORE B8 ships.** *An unmonitored disclosure inbox is the same defect class as an untested "tested-on" claim.* |
-| B8 | 🛑 **`SECURITY.md`** citing the address **[blocked by B7]** [per RD-7] | 🧑 **OWNER** (copy) | Plus the **outbound-call inventory** already recorded in SECURITY-BASELINE (A2) |
-| B9 | 🛑 **SECURITY-BASELINE re-issued with a DISTRIBUTION column** | 🧑 **OWNER** (posture) | §1-3: every "Accept (ADR)" restated for the **stranger** case. **Sharpest: gap 7 — no auth on read when no PIN is set, against a default install that HAS no PIN.** Needs an explicit release stance: refuse / warn / document |
-| B10 | 🛑 **GitHub Issues disclaimer** — support boundaries + response expectations [per RD-7] | 🧑 **OWNER** (copy) | Issues stay **enabled** |
-| B11 | **ROADMAP: R-24 revisit-at-packaged dependency note** [per RD-3] | 🤖 | R-24 **stays parked** |
-| B12 | **CURRENT.md NEXT reordered: Legal · Help · then residual Planning** [per RD-9] | 🤖 | Settings unblocked |
+| B1 | **✅ DRAFTED — 🛑 owner sign-off** — `LICENSE` at the root: **BYTE-EXACT canonical AGPL-3.0** [per RD-2] | 🤖 file → 🧑 **OWNER** signs | Text fetched from **gnu.org** and cross-checked **word-for-word against SPDX** (they differ only in whitespace + `http`→`https`); **SHA-256 pinned by test** — edit a single space and CI fails. **Headers and file agree, drift in EITHER direction** (test). ⚠ **LICENSE kept PRISTINE**, so the copyright placeholder `[OWNER NAME] [YEAR]` lives in **NOTICE** — see the STOP note. |
+| B2 | **✅ MEMO ONLY — 🛑 owner + counsel** — `docs/audit/CLA-OPTIONS.md` [per RD-2] | 🧑 **OWNER-AUTHORED (NOT converted)** | **NO CLA TEXT DRAFTED, AND NONE WILL BE.** The memo covers: individual **and entity** CLAs (an individual-only CLA is a common gap — employers usually own work done on their time); what a CLA grants (the **relicensing clause is the entire point** for RD-2/D-001); **DCO explicitly NOT a CLA** — provenance only, **no relicensing grant, so it does NOT serve the dual-licence intent**; bot-enforced vs manual hookup. **Nothing to discard — no CLA text was ever produced.** |
+| B3 | **✅ DONE** — frontend `license` field [per RD-2] | 🤖 | Was **absent** (`private: true`, no licence). Now `AGPL-3.0-or-later`, agreeing with the root LICENSE. |
+| B4 | **✅ DRAFTED — 🛑 owner ratifies** — `NOTICE`, **GENERATED from A8's adjudicated output** [per RD-2] | 🤖 → 🛑 | `python scripts/license_audit.py --notice`. Lists the **41 RUNTIME** dependencies (a NOTICE is about what a user *receives*; 340 dev tools would bury that). Adjudicated licences are **marked** so a reader sees the copyleft was **decided on, not overlooked**. Carries the copyright placeholder. |
+| B5 | **✅ DRAFTED — 🛑 owner ratifies** — README rewritten as a **stranger's install guide** [per RD-1a] | 🤖 **draft-PROPOSED** (amended) → 🛑 | Covers `install.sh`, the **single data-dir answer** (A1), backup/restore/move-my-data, the **forward-only + backup-first** upgrade policy (A6), the **Node pin** (A7), and the **empty-by-default first boot** (A4). **Every claim is true of the current repo**; what is not built says so. ⚠ It links to `SECURITY.md`, which **does not exist until B8 ships** — see the STOP note. |
+| B6 | **✅ TEMPLATE ONLY — 🛑 owner fills + signs** — `docs/audit/TESTED-ON.template.md` [per RD-4] | 🧑 **OWNER-AUTHORED (NOT converted)** | **Automation deliberately left the table EMPTY.** It could have written a plausible platform list in a second, and **every row would have been a claim nobody had checked**. Defines what \"clean\" means per row, and bars any CI-backed wording until CI exists. |
+| B7 | 🚫🛑 **OPEN — owner only**: create **security@ledgerframe.org**, send a test mail, **CONFIRM RECEIPT** [per RD-7] | 🧑 **OWNER** | **B8 is blocked behind this.** *An unmonitored disclosure inbox is the same defect class as an untested \"tested-on\" claim.* |
+| B8 | **✅ DRAFTED — 🛑 BLOCKED behind B7** — `docs/audit/SECURITY.md.PROPOSED` [per RD-7] | 🤖 **draft-PROPOSED** (amended) → 🛑 | **Deliberately NOT at the repo root and NOT named `SECURITY.md`** — publishing it would make a live public promise that the address is monitored. Contains: the address, **no-SLA stated plainly**, the scope note (several \"vulnerabilities\" are documented design decisions — *restating one is not a finding; showing it is worse than documented very much is*), and the **Guarantee-5 outbound-call inventory** pointer. |
+| B9 | **✅ DRAFTED — 🛑 owner ratifies the posture** — SECURITY-BASELINE **DISTRIBUTION column** | 🤖 → 🛑 | All 9 accepted gaps restated for the **stranger** case. The framing: *the gap does not change — **who carries the risk** does.* **Gap 7 carries the owner's stance (DOCUMENT-PLUS-PROMPT):** loopback default documented · wizard gains an **encouraged, skippable** set-a-PIN step · **LAN keeps the HARD PIN requirement**. ⚠ **The wizard prompt is a CODE change** — built fail-first **after** ratification, not now. |
+| B10 | **✅ DRAFTED — 🛑 owner ratifies** — `docs/audit/ISSUES-DISCLAIMER.PROPOSED.md` [per RD-7] | 🤖 **draft-PROPOSED** (amended) → 🛑 | Long form (pinned issue) + short form (issue-template header). States plainly: **no SLA**, not every issue actioned — *and you will be told, not left waiting*. Routes **wrong-number bugs to the top** (the product's central promise) and security **away from the tracker**. ⚠ Links to `SECURITY.md` — **do not publish before B8**, or it sends someone holding a vulnerability to a 404. |
+| B11 | **✅ DONE** — ROADMAP: R-24 revisit-at-packaged note [per RD-3] | 🤖 | Applied with the RD recording. **Verified present**, not assumed. |
+| B12 | **✅ DONE** — CURRENT.md NEXT reordered: **Legal · Help · residual Planning** [per RD-9] | 🤖 | Applied with the RD recording. **Verified present**, not assumed. |
 
 ### GATE C — Legal + Help pages *(🚫 release-blocking — they jump the queue)*
 

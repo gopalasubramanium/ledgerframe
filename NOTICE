@@ -1,0 +1,66 @@
+LedgerFrame
+Copyright (C) [YEAR] [OWNER NAME]
+
+This program is free software: you can redistribute it and/or modify it under the terms of
+the GNU Affero General Public License as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version. See LICENSE.
+
+===============================================================================
+THIRD-PARTY DEPENDENCIES
+===============================================================================
+
+GENERATED — do not hand-edit. Regenerate with:
+    python scripts/license_audit.py --notice
+
+This lists the RUNTIME set: what a user of LedgerFrame actually receives and runs. Build and
+test tooling is not listed here — it is not distributed — but it IS audited; see
+docs/audit/LICENSES.md for the full transitive graph (backend + frontend, dev included).
+
+LedgerFrame does not vendor or redistribute these packages: a source install fetches them
+from their own registries. They are attributed here because the product depends on them.
+
+Licences marked [ADJUDICATED] carry a recorded owner ruling in
+scripts/license-adjudications.toml — they were decided on, not overlooked.
+
+  aiosqlite 0.22.1 (python) — MIT License
+  alembic 1.18.5 (python) — MIT
+  annotated-doc 0.0.4 (python) — MIT
+  annotated-types 0.7.0 (python) — MIT License
+  anyio 4.14.1 (python) — MIT
+  APScheduler 3.11.3 (python) — MIT License
+  argon2-cffi 25.1.0 (python) — MIT
+  argon2-cffi-bindings 25.1.0 (python) — MIT
+  certifi 2026.6.17 (python) — Mozilla Public License 2.0 (MPL 2.0) [ADJUDICATED]
+  cffi 2.1.0 (python) — MIT-0
+  click 8.4.2 (python) — BSD-3-Clause
+  cookie 1.1.1 (npm) — MIT
+  fastapi 0.139.0 (python) — MIT
+  greenlet 3.5.3 (python) — MIT AND PSF-2.0
+  h11 0.16.0 (python) — MIT License
+  httpcore 1.0.9 (python) — BSD-3-Clause
+  httpx 0.28.1 (python) — BSD License
+  idna 3.18 (python) — BSD-3-Clause
+  itsdangerous 2.2.0 (python) — BSD License
+  lucide-react 1.24.0 (npm) — ISC
+  Mako 1.3.12 (python) — MIT License
+  MarkupSafe 3.0.3 (python) — BSD-3-Clause
+  pycparser 3.0 (python) — BSD-3-Clause
+  pydantic 2.13.4 (python) — MIT
+  pydantic-settings 2.14.2 (python) — MIT
+  pydantic_core 2.46.4 (python) — MIT
+  python-dotenv 1.2.2 (python) — BSD-3-Clause
+  python-multipart 0.0.32 (python) — Apache-2.0
+  react 19.2.7 (npm) — MIT
+  react-dom 19.2.7 (npm) — MIT
+  react-router 7.18.1 (npm) — MIT
+  react-router-dom 7.18.1 (npm) — MIT
+  scheduler 0.27.0 (npm) — MIT
+  set-cookie-parser 2.7.2 (npm) — MIT
+  SQLAlchemy 2.0.51 (python) — MIT
+  starlette 1.3.1 (python) — BSD-3-Clause
+  tenacity 9.1.4 (python) — Apache Software License
+  typing-inspection 0.4.2 (python) — MIT
+  typing_extensions 4.16.0 (python) — PSF-2.0
+  tzlocal 5.4.4 (python) — MIT
+  uvicorn 0.51.0 (python) — BSD-3-Clause
+

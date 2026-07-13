@@ -269,9 +269,55 @@ def adjudicate(rows: list[dict]) -> dict[str, list]:
     return out
 
 
+def write_notice(rows: list[dict], adj: dict) -> None:
+    """Gate B4 — the NOTICE is GENERATED from the audit, not hand-kept.
+
+    It lists the RUNTIME set only: a NOTICE is about what a user actually receives, and padding it
+    with 340 dev tools would bury that. Every adjudicated licence is marked, so a reader can see that
+    the copyleft in here was DECIDED on, not overlooked.
+    """
+    runtime = sorted((r for r in rows if r["scope"] == "runtime"), key=lambda r: r["name"].lower())
+    cleared = {(c["name"], c["eco"]) for c in adj["cleared"]}
+
+    lines = [
+        "LedgerFrame",
+        "Copyright (C) [YEAR] [OWNER NAME]",
+        "",
+        "This program is free software: you can redistribute it and/or modify it under the terms of",
+        "the GNU Affero General Public License as published by the Free Software Foundation, either",
+        "version 3 of the License, or (at your option) any later version. See LICENSE.",
+        "",
+        "=" * 79,
+        "THIRD-PARTY DEPENDENCIES",
+        "=" * 79,
+        "",
+        "GENERATED — do not hand-edit. Regenerate with:",
+        "    python scripts/license_audit.py --notice",
+        "",
+        "This lists the RUNTIME set: what a user of LedgerFrame actually receives and runs. Build and",
+        "test tooling is not listed here — it is not distributed — but it IS audited; see",
+        "docs/audit/LICENSES.md for the full transitive graph (backend + frontend, dev included).",
+        "",
+        "LedgerFrame does not vendor or redistribute these packages: a source install fetches them",
+        "from their own registries. They are attributed here because the product depends on them.",
+        "",
+        "Licences marked [ADJUDICATED] carry a recorded owner ruling in",
+        "scripts/license-adjudications.toml — they were decided on, not overlooked.",
+        "",
+    ]
+    for r in runtime:
+        mark = " [ADJUDICATED]" if (r["name"], r["eco"]) in cleared else ""
+        lines.append(f"  {r['name']} {r['version']} ({r['eco']}) — {r['licence']}{mark}")
+    lines.append("")
+    (REPO / "NOTICE").write_text("\n".join(lines) + "\n")
+    print(f"\nwrote NOTICE ({len(runtime)} runtime dependencies attributed)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="refresh docs/audit/LICENSES.md")
+    ap.add_argument("--notice", action="store_true",
+                    help="regenerate the root NOTICE (third-party attributions) — Gate B4")
     args = ap.parse_args()
 
     rows = audit_backend() + audit_frontend()
@@ -350,6 +396,9 @@ def main() -> int:
             lines.append(f"| {r['scope']} | {r['eco']} | `{r['name']}` | {r['version']} | {r['licence']} | {mark} |")
         out.write_text("\n".join(lines) + "\n")
         print(f"\nwrote {out.relative_to(REPO)}")
+
+    if args.notice:
+        write_notice(rows, adj)
 
     blocking = needs_human + dev_flags + adj["rejected"] + adj["stale"]
     if blocking or adj["new_families"]:
