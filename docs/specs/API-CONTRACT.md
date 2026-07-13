@@ -79,7 +79,7 @@ new path; still **125 paths** (row below).
 | **rename** | `GET /api/v1/review/centre` → `GET /api/v1/review` | **D-030** | "Review Centre" retired to "Review". |
 | **rename** | `GET /api/v1/portfolio/cost-of-ownership` → `…/ongoing-cost` | **D-029** | "Cost of ownership" retired to "Ongoing cost (expense ratio)". |
 | **rename** | `GET /api/v1/portfolio/realised-gains` (+ `.csv`) → "Realised P/L" naming | **D-026** | "Realised gain(s)" retired to "Realised P/L". |
-| **reshape** | `GET /api/v1/dashboard/home` | **D-046** | Home composition: fixed linked-summary set; Simple/Full layouts. |
+| **retired** | ~~`GET /api/v1/dashboard/home`~~ — **DELETED 2026-07-13** | **page-home §9-4** (D-046/D-038) | The legacy v1 aggregate is **gone**, not reshaped. Home composes from the **canonical readers, one card each** (D-038: a summary reuses the canonical page's reader, never a second code path) with **per-card progressive loading** — which an aggregate cannot give (it is a single gate: the slowest reader would blank the page). |
 | **reshape** | `POST /api/v1/ai/chat`, `GET /api/v1/briefing`, instrument explainer | **D-067 / D-068 / P-6** | All AI surfaces ride the single grounded+validated pipeline; no direct model calls. |
 | **present** | `GET/POST /api/v1/tokens`, `DELETE /api/v1/tokens/{id}` | **D-069** | API-token management already in the baseline — no change. |
 | **present** | `GET/POST /api/v1/watchlists` (+ items) | **D-052** | Watchlist management already present (Markets-only in UI). |

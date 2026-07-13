@@ -1,9 +1,10 @@
 # page-home.md — Home page build plan
 
-**Status: PLAN ONLY — §9 OPEN (drafted 2026-07-13). No page code. Do not build.**
+**Status: §9 RESOLVED (owner one-pass, 2026-07-13) — BUILDING. Phases 0/0a/1/2/3a; Phase-3b owner walk
+PENDING.**
 Drafted from `TEMPLATE-page-build.md`. **Verify-first (§10) was done BEFORE §1–§8** (D-019 — read what
-the engine actually serves *and audit its honesty guards*, not just its shapes). **Every gap is in §9; I
-resolved none.**
+the engine actually serves *and audit its honesty guards*, not just its shapes). **Every gap went to §9;
+the owner resolved all 16 in one pass (2026-07-13) — resolutions at the head of §9, options preserved.**
 
 Home is the **Overview-group** landing page at `/` (IA §2/§3) on the **Overview template**
 (DESIGN-SYSTEM §3). It is the purest expression of P-1: it **owns nothing at all** — every figure on it is
@@ -296,10 +297,68 @@ are **never interchanged** (D-024): price-move = **Gainers/Losers** (Markets); c
 
 ---
 
-## 9. NEEDS DECISION — OPEN (owner, one pass)
+## 9. NEEDS DECISION — **RESOLVED** (owner, one pass, 2026-07-13)
 
-*Everything the specs under-specify. **I resolved none of these.** No build starts on any item still open
-here. Ordered: blockers first.*
+> **RESOLUTIONS (owner, 2026-07-13).** All 16 items resolved in one pass; the considered options are
+> preserved in the table below. **Ratifications pending at the walk:** the §9-1 label + its
+> Deprecated-terms entry, the §9-11 empty-state strings, the §9-13 GLOSSARY **"Home"** term, the §9-15
+> TopBar amendment, and the §12-recorded **layout default**.
+>
+> - **9-1 (a) — the control is "Home layout: Simple / Full" EVERYWHERE.** GLOSSARY :227 **stands** (its
+>   stale *"and the ticker strip"* note corrected at close — §10-12); **"Detail level: Simple/Expert"**
+>   (:226) is **RETIRED** to the Deprecated-terms table **with a pointer**. Code renamed
+>   (`detailLevel` → `homeLayout`, aria-labels, test ids); **copy-hygiene grep for "Detail level" /
+>   "Expert" app-wide**.
+> - **9-2 (a) — Home ships at the DEFAULT layout, with NO user-facing switch, until Settings.** **Both
+>   layouts are BUILT and TESTED.** The §8 walk instructions carry the exact `PUT /settings` command to
+>   flip `home_layout` live. CURRENT.md's Settings-candidates list gains *"Home layout control (D-040;
+>   §9-2a interim = default-only)"*.
+> - **9-3 — §3b delta, backend-first.** `home_layout` → `_ALLOWED_KEYS`; values **`simple|full`**;
+>   **server default `full`**; served on the settings read. Contract regen **same commit**; **fail-first**
+>   (the key is rejected/ignored RED before, accepted after; the default asserted).
+> - **9-4 (a) — RETIRE `/dashboard/home`.** A **deliberate contract DELETION**, backend-first, same-commit
+>   regen + drift green. The API-CONTRACT delta row moves from *"reshape — D-046"* to **"retired —
+>   page-home §9-4 (D-038: canonical readers only; per-card loading)"**. **Fail-first:** a test proving the
+>   route is **gone**, **JSON-shape-discriminating** (the Review lesson). Home composes from the canonical
+>   readers, **one card each, progressively loaded**.
+> - **9-5 (a) — the donut is allocation BY CLASS** (served `allocation_by_class`), linking to **Portfolio**
+>   (where all three dimensions live).
+> - **9-6 — movers: N=3 per pair, BOTH pairs**, labels served verbatim and **never interchanged** (D-024):
+>   **Contributors/Detractors → Portfolio**; **Gainers/Losers → Markets**.
+> - **9-7 — VERIFY watchlist quotes first** *(done — see the ✅ below)*. Sources = the **four ratified
+>   view-scope options**; any source with no reader is **dropped and recorded**. **Default `holdings`.**
+>   Persistence: a **`home_quote_source` server settings key** (allow-list delta **rides with 9-3**, same
+>   commit).
+> - **9-8 — the sparkline MIRRORS Portfolio's default view:** same window, same `benchmark` param, same
+>   `include_manual`. It renders **`series` only** — no benchmark line, **no client indexing or math**. The
+>   **unused server-side benchmark computation is ACCEPTED and recorded** (revisit only if it ever costs).
+> - **9-9 (a) — top headlines = the "My holdings" group, N=3**, linking to **News**.
+> - **9-10 — Full order = D-046's listing order:** headline stat block → sparkline → donut → movers pair →
+>   ReviewCard → briefing + headlines → quote cards. **Simple** = headline + ReviewCard + briefing.
+> - **9-11 — all 8 per-widget empty-state strings** drafted **PROPOSED** in this commit (message + reason,
+>   Guarantee 3); **ratify at the walk**.
+> - **9-12 — `[Help]` on Net worth, Today's change, Briefing only.**
+> - **9-13 (a) — GLOSSARY gains "Home"** (PROPOSED): *the summary dashboard; owns nothing — every figure is
+>   a linked summary of its canonical page (P-1/D-038)*. In **`docs/specs/GLOSSARY.md`** — the **parity
+>   guard** (`tests/unit/test_glossary_parity.py`) enforces it (page-heatmap §13-1).
+> - **9-14 (a) — rotation wiring is OUT of Home's scope.** The D-078 violation is recorded as a **queued
+>   chrome task** in CURRENT.md (*"consume `rotation_pages`/`focus_page` or remove the keys — D-044/D-078;
+>   slots with Settings"*) **+ a line in `docs/audit/08-TECH-DEBT.md`**.
+> - **9-15 (a) — the top-bar Detail toggle is REMOVED** (its own chrome commit + §-entry): a **DESIGN-SYSTEM
+>   §5.5 amendment (PROPOSED → ratify at the walk)** deleting `detailLevel?`/`onToggleDetail?` from TopBar
+>   and correcting its toggle note to **rotation-only**. **IA/D-040 stand as written.** Copy/test grep so no
+>   dangling reference remains.
+> - **9-16 (a) — the briefing summary stays PAGE-LOCAL on Home** (2nd occurrence; extraction at the **3rd**,
+>   per the centralization rule).
+>
+> **✅ 9-7 VERIFIED BEFORE BUILDING (the blocker the owner gated on):** **`/watchlists` already serves a
+> quote per item** (`watchlists.py:38–40` — `get_cached_quote` per instrument → `items[].quote`, the same
+> `ServedQuote` shape as `/markets/overview` and `/markets/global`). So the Watchlist source needs **NO new
+> endpoint and NO composition** — and **no source is dropped: all four have a real reader.** *(Pinned by
+> `test_watchlists_serve_a_quote_per_item` so it is never re-litigated.)*
+
+*The table below is the ORIGINAL analysis, preserved — the options the owner chose between. Nothing here
+is open any more.*
 
 | # | Item | Why it blocks / evidence | Options (for the owner — **not** a recommendation) |
 |---|------|--------------------------|-----------------------------------------------------|
@@ -357,5 +416,4 @@ never silently build to the code*).
 
 ---
 
-**STOP — §9 is OPEN. Do not build.** Next action is the **owner's one-pass §9 resolution**; only then does
-Phase 0 begin.
+**§9 is RESOLVED (2026-07-13).** Build record: §11.

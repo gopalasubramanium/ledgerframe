@@ -36,7 +36,8 @@ inconsistent patterns.
 | **Transaction types** | backend `TxnType` (11, incl. `merger`), `api.ts:TXN_TYPES` (10, **omits merger**) | UI cannot record a merger; `merger` absent from frontend entirely |
 | **Reason/label vocab** | service `*_meta` endpoints vs `refdata.ts`/`policyTemplates.ts` client copies | drift |
 | **`strip_reasoning`** | `ai/prompts.py:strip_reasoning` + `services/briefing.py:_strip_reasoning` | 2 near-identical fns |
-| **Portfolio value figures** | `/portfolio/summary`, `/portfolio/holdings`, `/dashboard/home` each re-run `value_portfolio` | recomputation; N calls per Home load |
+| **Portfolio value figures** | `/portfolio/summary`, `/portfolio/holdings` each re-run `value_portfolio` *(`/dashboard/home` **RETIRED** 2026-07-13 — page-home §9-4)* | recomputation |
+| **Rotation settings are WRITE-ONLY (D-078 violation)** | `rotation_pages` + `focus_page` are allow-listed and writable (`settings.py`), but **nothing consumes them**: the top-bar rotation toggle is UI-only state with **no interval and no navigation** (`AppShell.tsx:50`, `TopBar.tsx:78`) | D-078 requires every allow-listed key to be **"either consumed or removed"**. Queued as a **chrome** task (D-044/D-078) — **out of Home's scope** (page-home §9-14); slots with Settings |
 | **Review feeds** | `/portfolio/review` (`review_report`) vs `/review/centre` (`review_centre`) | overlapping reads |
 | **Headlines/news** | `/news`, `/news/grouped`, per-instrument, Home/Markets all fetch feeds | repeated live fetches |
 
