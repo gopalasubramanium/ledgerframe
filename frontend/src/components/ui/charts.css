@@ -168,7 +168,9 @@
 }
 
 /* Treemap — SVG rects fill the box; labels are an HTML overlay (crisp text) */
-.lf-treemap { width: 100%; position: relative; }
+/* overflow:hidden so a label on an edge tile is CLIPPED at the container boundary, never spills
+ * outside the map (page-heatmap Phase-3a geometry fix — §7 "labels clipped, not overflowing"). */
+.lf-treemap { width: 100%; position: relative; overflow: hidden; }
 .lf-treemap__svg { width: 100%; height: 18rem; display: block; }
 .lf-treemap__cell-rect {
   stroke: var(--surface);

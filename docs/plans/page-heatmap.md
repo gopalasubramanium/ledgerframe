@@ -1,6 +1,7 @@
 # page-heatmap.md — Heatmap page build plan
 
-**Status: §9 RESOLVED (owner, 2026-07-13) — BUILD IN PROGRESS (Phases 0 → 3a).** Drafted 2026-07-13 from
+**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE, Phase-3b owner walk PENDING (2026-07-13).** Pre-pass
+GREEN; build record §11. Drafted 2026-07-13 from
 `TEMPLATE-page-build.md`. Verify-first (§10) done before §3/§4/§5 (D-019 — read what the engine serves +
 audit its honesty guards). **Every gap is in §9; I resolved none.**
 
@@ -366,3 +367,45 @@ ND-2/4/5/6/9/10/11/12. **No build until the owner resolves §9.**
 no §5 amendment is required unless an ND-7/ND-3/ND-1 enhancement is chosen. **CURRENT.md correction (fold
 at close):** its "Heatmap needs a treemap §5 amendment" line is **imprecise** — the treemap *render* is
 already ratified; a §5 amendment arises **only** if an interactive/grouping enhancement (§9) is chosen.
+
+---
+
+## 11. BUILD RECORD — Phases 0/0a/1/2/3a DONE; Phase-3b (owner walk) PENDING (2026-07-13)
+
+- **Phase 0 — backend-first (ND-8), fail-first.** `app/core/regions.py` — the ONE canonical
+  **six-bucket** region derivation (D-083 membership, MASTER-DATA §4; a total function, unknown → Other).
+  Reconciled the legacy 3-bucket `policy.py:region_of` (IN/SG/US → else "Global") to it, re-exported so
+  the policy region dimension **and** the new `HoldingView.region` share one function (§10-9 divergence).
+  `HoldingView` + `_hv` gain **`country`** (nullable) + server-derived **`region`**; contract regenerated
+  same commit (drift green). Fail-first proven RED on the pre-reshape shape (git-stash: ModuleNotFound /
+  missing fields); tests: `test_regions.py` (per-bucket) + `test_heatmap_reader.py` (served + derived).
+  **Backend 525.**
+- **Phase 0a — Treemap click-through amendment (ND-7, PROPOSED).** `TreemapNode` gains optional
+  **`href`** → a keyboard-operable overlay `<a>` (focusable, **Enter** native + **Space** handled),
+  accessible name = label, linking to InstrumentDetail (D-098). Focus/hover = outline + inset shadow only
+  (**NO layout shift**), tokenized. Back-compatible (no href ⇒ non-interactive). **Hover tooltip DECLINED**
+  (ND-7). `/kitchen-sink` keyboard specimen; DESIGN-SYSTEM §5.2 amendment PROPOSED. Magnitude scale
+  unchanged (already ratified 2026-07-10; confirmed against ratified tokens).
+- **Phase 1 — assembly.** `routes/Heatmap.tsx` (+`.css`), routed at `/heatmap` (nav `built:true`), over
+  the **existing** `/portfolio/holdings` reader (no page endpoint). Treemap of **priced holdings only**
+  (excludes unpriced + liabilities, gross-assets; **stale INCLUDED**, ND-3): size = `market_value`, tone =
+  sign(`day_change`), magnitude = |`day_change_pct`|; tile `href` → InstrumentDetail (symboled only).
+  Class + region **`ui/Select`** filters (served values; class labels via `/refdata` D-005, region served
+  display-cased). Honest **coverage note** + **assets-only note**; empty states (ND-12); progressive load;
+  **`[Help]`** on Heatmap + Today's change. GLOSSARY gains **Heatmap** (PROPOSED, ND-11).
+- **Phase 2 — tests.** `Heatmap.test.tsx` (5) + `Treemap.test.tsx` (3, the ND-7 keyboard amendment);
+  `/heatmap` added to the overflow + single-scroll suites. **Frontend check green** (129 Playwright + unit
+  + typecheck/lint/tokens).
+- **Phase 3a — pre-pass GREEN.** `e2e/smoke/heatmap-smoke.spec.ts` on live app + real backend: 12 tiles ·
+  RENDERED geometry (fills card, non-overlapping, container-bounded) · region filter 12→4 (US) ·
+  **tile click-through → InstrumentDetail via keyboard Enter** · `[Help]` · single scroll · 0 overflow
+  320/375/900/1366 × both themes · **0 console errors** · the **§7 ECharts-parity checklist all 6 PASS →
+  ECharts hatch NOT triggered (house SVG stands)**. **Fail-first geometry fix (§7 "labels clipped, not
+  overflowing"):** the pre-pass caught an edge-tile label spilling 27px past the map; fixed with
+  `overflow:hidden` on `.lf-treemap` (clip at the boundary) + a computed-`overflowX` assertion in the
+  SAME pre-pass (RED before, GREEN after).
+
+**Verification:** backend **525** · ruff · contract drift clean; frontend **129 Playwright + unit** ·
+typecheck/lint/tokens/build green; **live pre-pass GREEN**, 0 console errors. **STOP for the Phase-3b
+owner walk (judgment items) — I do NOT self-certify.** Ratifications pending at the walk: **ND-11 GLOSSARY
+"Heatmap"**, **ND-7 Treemap click-through amendment**, and the coverage/assets-only/empty copy strings.
