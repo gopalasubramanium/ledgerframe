@@ -1,9 +1,9 @@
 # page-review.md — Review page build plan
 
-**Status: §9 RESOLVED — Phases 0/0a/1/2/3a DONE; Phase-3b owner walk IN-PROGRESS — BATCH 1 (§12rv1-1..7)
-FIXED + pre-pass GREEN, awaiting owner LIVE re-verify (2026-07-13).** Ratifications pending at re-verify:
-Mark-reviewed icon (§12rv1-1), severity semantic colours (§12rv1-4), and the PROPOSED GLOSSARY
-Mark-reviewed + Severity terms (ND-11). Pre-pass GREEN; build record §11, walk record §12. Drafted 2026-07-13 from
+**Status: DONE ✅ — page ACCEPTED (owner, 2026-07-13).** Phases 0/0a/1/2/3a + Phase-3b owner walk Batch 1
+(§12rv1-1..7) all complete; owner live-re-verified and closed the page. §12rv1-1 icon + §12rv1-4 severity
+colours + the ND-11 GLOSSARY terms (Mark reviewed + Severity) RATIFIED. Full record: §9 (decisions), §10
+(verify-first), §11 (build), §12 (walk), §13 (retrospective). Drafted 2026-07-13 from
 `TEMPLATE-page-build.md` (incl. the tooling-guard fail-first, the ⚠ verify-first divergence-flag +
 **audit-guards** additions, the vertical-single-scroll invariant, and the Reports-group worklist-shape
 note). Verify-first pass done (§10 — read what the review reader actually serves **and its honesty
@@ -424,19 +424,23 @@ fail-first, geometry fixes fail-first; the **Mark reviewed + Severity GLOSSARY t
 
 ---
 
-## 12. PHASE-3b OWNER WALK — BATCH 1 (§12rv1-1..7, 2026-07-13)
+## 12. PHASE-3b OWNER WALK — BATCH 1 (§12rv1-1..7) — ACCEPTED (owner, 2026-07-13)
+
+**Owner live-re-verified Batch 1 and ACCEPTED the Review page (2026-07-13).** Ratified at the re-verify:
+**§12rv1-1** Mark-reviewed icon; **§12rv1-4** severity colours (amber `--attention` for `Review`, neutral
+for `Info`, neutral fallback); and the **ND-11 GLOSSARY terms Mark reviewed + Severity** flipped
+PROPOSED → **RATIFIED 2026-07-13** (display-cased values recorded). CLOSE lines below.
 
 Owner walk findings, each fail-first (owner-visible defect reproduced before the fix; every visual fix
 ships its own pre-pass assertion in THIS batch). Two OWNER PICKs were taken before writing copy:
-**§12rv1-3 → "Today" for 0, else "N days ago"**; **§12rv1-7 → "Attention"**. **Pending owner LIVE
-re-verify / ratification:** §12rv1-1 icon, §12rv1-4 colours, and the PROPOSED GLOSSARY terms (ND-11).
-**I do NOT self-certify.**
+**§12rv1-3 → "Today" for 0, else "N days ago"**; **§12rv1-7 → "Attention"**.
 
 - **§12rv1-1 — Mark-reviewed icon (PROPOSED, ratify at re-verify).** The page's one `[S]`-gated write
   gained a Lucide `CircleCheck` icon **beside its KEPT text label** (icon-only DECLINED — WCAG-AA /
   clarity baseline). Composition of the ratified `lf-btn--primary` (no new component); icon added to the
   ADR-0003 `icons.ts` vocabulary. **Pre-pass asserts** the Mark-reviewed button carries an `svg` AND the
   "Mark reviewed" text. Unit test: button keeps text + carries an icon.
+  **CLOSE (owner, 2026-07-13): RATIFIED** — icon + kept text accepted at the live re-verify.
 - **§12rv1-2 — Auto-mark-reviewed DECLINED → ROADMAP R-29.** Auto-recording a review on full-scroll +
   navigate-away declined for v2: (a) `POST /review/log` is `require_auth` `[S]` — a gated write must not
   fire silently; (b) a recorded review is a deliberate `ReviewLog` attestation (GLOSSARY), scroll-past is
@@ -457,6 +461,10 @@ re-verify / ratification:** §12rv1-1 icon, §12rv1-4 colours, and the PROPOSED 
   GATE cleared — the ratified token set already carries `--attention` (no token amendment). **Pre-pass
   asserts** the chip carries `rv__chip--attention` for `Review` and `rv__chip--neutral` for `Info`; unit
   test asserts the tone class per severity. **Verified live** (amber "Review" chips, neutral "Info").
+  **CLOSE (owner, 2026-07-13): RATIFIED** — `Review` → amber `--attention`, `Info` → neutral, neutral
+  fallback for any unknown severity. The severity chip **stays PAGE-LOCAL** (`.rv__chip`, first
+  occurrence of a *severity* chip; other pages' `*__chip` are status/staleness, a different concept) —
+  extraction to a ratified component only at the **3rd recurrence** (centralization rule).
 - **§12rv1-5 — Display casing served, backend-first (D-105 precedent).** `review.py` now serves
   **display-cased** `area`/`severity` labels (`Review`/`Info`, `Data`/`Liquidity`/`Estate`…) via a
   `_title` helper applied at the serialization boundary; the **count reconciliation (ND-3) is computed on
@@ -488,5 +496,49 @@ green; **live pre-pass GREEN** — 5 attention rows
 · `Review`+`rv__chip--attention` · reconciliation **4 == 4 == 4** (page DOM + Net-worth ReviewCard) ·
 Mark-reviewed round-trip (history 0→2) · retired label gone + icon present · history cap 432px · single
 scroll region · 0 overflow 320/375/900/1366 × both themes · **0 console errors**. ROADMAP R-29 added;
-GLOSSARY Severity value casing updated. **STOP for the owner LIVE re-verify (§12rv1-1 icon, §12rv1-4
-colours, ND-11 GLOSSARY terms pending ratification) — I do NOT self-certify.**
+GLOSSARY Severity value casing updated. **Owner live-re-verified and ACCEPTED (2026-07-13)** — §12rv1-1
+icon + §12rv1-4 colours + the ND-11 GLOSSARY terms (Mark reviewed + Severity) RATIFIED. Page CLOSED.
+
+---
+
+## 13. RETROSPECTIVE (Review page — CLOSED 2026-07-13)
+
+**Strike-check first (claims verified against the running system, not the plan prose).** Nothing struck —
+every §11/§12 claim reproduced at close:
+- Backend **501 tests** collected/green (incl. the new `test_review_serves_display_cased_labels`);
+  frontend **158 unit + 117 Playwright**; ruff + contract drift clean (§12rv1-5 was a value change, not a
+  shape change — no regen, verified). Live pre-pass GREEN — reconciliation **4 == 4 == 4** re-observed;
+  `/review` + `/portfolio/review` served display-cased `Review`/`Info`, `Data`/`Liquidity`/`Estate`.
+- Fail-first for §12rv1-5 was **proven RED on the pre-fix reader** (git-stash: `1 failed`), not asserted.
+- The D-030 rename test **discriminates by response shape** (JSON vs the SPA's HTML), not status — verified
+  in `test_review_thresholds.py` (new path `application/json`; old path not JSON).
+
+**Lessons (folded where they belong):**
+1. **A ratified backend VALUE decision needs a same-batch code test — not just a spec edit.** D-084/D-087
+   set the thresholds + over-use signal in the specs, but `review.py` kept serving the legacy 6/90 with no
+   over-use signal; because a value change regenerates no contract, the drift was invisible until this
+   page's **verify-first** pass caught it months later (ND-1). A spec edit alone lets code silently
+   disagree. **Folded into `TEMPLATE-page-build.md` §3b** (value decision ⇒ fail-first pinning test in the
+   same batch). PRODUCT-SPEC §5's stale "deliberately diverge from the code" trailer was **closed** at this
+   close-out (the reconciliation was applied in Phase 0).
+2. **Rename/removal tests must discriminate by SHAPE, not status.** The SPA serves `200` HTML for any
+   unmatched path, so a retired endpoint still returns `200` — a status-code assertion would pass on a
+   broken rename. Assert the **shape** (new = JSON of the intended shape; old = not JSON). **Folded into
+   TEMPLATE §3b.**
+3. **The scripted pre-pass writes pollute `ReviewLog` (tooling note, not a page defect).** Each pre-pass
+   run records a real `Mark reviewed` snapshot (`prepass-*` note) — 2 rows accumulated on the dev instance.
+   Cleared at close via the **seed-sanctioned reset** (`scripts/reset-demo-data.sh`; note its `DATA_DIR`
+   **defaults to `$REPO_DIR/data` and does not read `.env`** — export `LEDGERFRAME_DATA_DIR` so the wipe
+   and the reseed hit the same DB the app uses). Open tooling question for a future pass: the pre-pass
+   should **tag + clean its own `ReviewLog` entries** (or run against a disposable DB) so it leaves no
+   residue — a smoke-harness improvement, tracked as an 08-TECH-DEBT/tooling note, not a Review defect.
+
+**What went well:** verify-first surfaced the D-084/D-087 code drift as a §9 item (not a walk finding);
+the batch was small and one-pass (owner accepted at the first re-verify); every visual fix (icon, chip
+tone, label) shipped its own pre-pass assertion in the same batch, and the pre-pass's own stale
+`"Needs a look"` selector going RED on the rename proved the assertions actually bite. The severity chip
+stayed **page-local** per the centralization rule (first severity-chip occurrence).
+
+**Platform legacy from this page:** the shared **`relativeDays` / `relativeTime` day-copy** (`format/time.ts`,
+now app-wide — Review + News), the **display-cased-at-the-boundary** reader pattern (serve labels, render
+verbatim; logic case-normalises), and the two TEMPLATE §3b notes above. **No open Review blockers.**

@@ -240,7 +240,8 @@ Review threshold **names** are reconciled against the legacy v1 source
 ## Needs decision
 
 - (none) — the Review threshold constant **names** (DEF-7) are reconciled against
-  `app/services/review.py`; **values** now include two owner-set overrides
-  (`_RUNWAY_LOW_MONTHS = 3`, `_GOAL_SOON_DAYS = 180`, D-084) that deliberately
-  diverge from the code, plus the `_OTHER_CLASS_OVERUSE_PCT = 10` signal (D-087).
-  The divergence is recorded in §5 (Batch 12).
+  `app/services/review.py`; the two owner-set overrides (`_RUNWAY_LOW_MONTHS = 3`,
+  `_GOAL_SOON_DAYS = 180`, D-084) and the `_OTHER_CLASS_OVERUSE_PCT = 10` signal
+  (D-087) are now **reconciled in the code** (page-review Phase 0, 2026-07-13) —
+  the earlier deliberate divergence is **closed**, pinned by fail-first tests. §5
+  carries the honest value-provenance audit trail.

@@ -146,6 +146,18 @@ add / rename / remove / reshape.
 > **Note (typed responses):** a `response_model` **strips** any dict key it doesn't declare — a served
 > field vanishes silently unless the model has it (page-markets §12mk3-2: `HoldingView.price_display`).
 > When adding a served field to a typed route, add it to the model AND regenerate the contract.
+>
+> **Note (a ratified backend VALUE needs a same-batch code test — page-review §13).** A decision that
+> sets a **threshold/constant/served-value** (not a shape) regenerates no contract, so a spec edit alone
+> leaves the **code free to silently disagree** — D-084/D-087 set `_RUNWAY_LOW_MONTHS`/`_GOAL_SOON_DAYS`
+> and the over-use signal in the spec, but `review.py` still served the legacy 6/90 with no over-use, and
+> the drift surfaced **only at this page's verify-first pass, months later**. Rule: a ratified value
+> decision ships a **code test pinning the served value in the SAME batch as the spec edit**, fail-first.
+>
+> **Note (rename/removal tests discriminate by SHAPE, not status — page-review §12rv1-5 / test_review_thresholds).**
+> The SPA serves **`200` HTML** for any unmatched path, so a retired endpoint still returns `200` — a
+> status-code assertion passes on a broken rename. Assert the **response shape** instead: the new path is
+> `application/json` of the intended shape; the old path is **not** JSON (it fell through to the shell).
 
 **⚠ Verify-first divergence flag — worth keeping (page-markets §13d).** Verify-first (D-019) reads what
 the engine actually serves before assuming shapes. When it finds that a **plan/brief premise diverges

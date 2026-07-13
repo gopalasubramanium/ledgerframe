@@ -791,10 +791,20 @@ single scroll, 0 overflow × both themes, 0 console errors). **146 unit + 105 Pl
 - **Recorded for later:** feed management deferred to the **Settings plan** (ND-6); **`GET /news`
   unconsumed** → tech-debt line (ND-7); D-051 region-link divergence noted (ND-3, no mapping invented).
 
-## REVIEW — Phase-3b owner walk BATCH 1 FIXED + pre-pass GREEN; awaiting owner LIVE re-verify (2026-07-13)
+## REVIEW — DONE ✅ (page ACCEPTED, owner live re-verify, 2026-07-13)
 
-**Phase-3b Batch 1 (§12rv1-1..7) fixed + pre-pass GREEN — STOP for the owner live re-verify (not
-self-certified).** Two OWNER PICKs taken: relative-time → **"Today"/"N days ago"**; retired-label
+**`/review` is complete and owner-accepted.** Planning-group page (worklist template), canonical home for
+review verdicts + attention list + Mark-reviewed/history + the D-059 threshold table. Phases 0/0a/1/2 +
+Phase-3a pre-pass + **Phase-3b owner walk Batch 1 (§12rv1-1..7) — accepted at the first live re-verify.**
+Reconciled in code this milestone: **D-084/D-087** thresholds + over-use signal (Phase 0, closing the
+long-standing spec-vs-code drift), **D-030** rename `/review/centre → /review`. New: **ROADMAP R-29**
+(implicit "seen" state). Ratified at the walk: §12rv1-1 icon, §12rv1-4 severity colours, and the ND-11
+GLOSSARY terms **Mark reviewed + Severity**. Platform legacy: the shared **`relativeDays`/`relativeTime`
+day-copy** (app-wide, Review + News) and the **display-cased-at-the-boundary** reader pattern. Full record:
+**`page-review.md` §9–§13** (§13 retrospective). No open Review blockers.
+
+**Phase-3b Batch 1 (§12rv1-1..7) — walk log (findings now DONE).** Two OWNER PICKs taken: relative-time →
+**"Today"/"N days ago"**; retired-label
 replacement → **"Attention"**. Findings: **rv1-1** Mark-reviewed gains a `CircleCheck` icon + kept text
 (PROPOSED); **rv1-2** auto-mark-reviewed DECLINED → **ROADMAP R-29** (implicit "seen" state, own plan);
 **rv1-3** ONE shared `relativeDays` formatter app-wide (Review tile + NewsList §11-4), 0/1/N unit-tested;
@@ -804,10 +814,10 @@ precedent) — count on raw, shape unchanged (no regen), frontend verbatim + cas
 worth ReviewCard reflects it; **rv1-6** history DataTable worklist cap confirmed (search/pagination
 DECLINED, ≤24 rows); **rv1-7** retired "Needs a look" label → "Attention" (body copy kept, D-030). Full
 record: **`page-review.md` §12**. Backend **501** · frontend **158 unit + 117 Playwright** · pre-pass GREEN
-(reconciliation 4==4==4, 0 overflow both themes, 0 console errors). **Pending owner ratification:** rv1-1
-icon, rv1-4 colours, ND-11 GLOSSARY terms.
+(reconciliation 4==4==4, 0 overflow both themes, 0 console errors). Owner accepted; dev `ReviewLog`
+pre-pass residue cleared via the seed-sanctioned reset at close (§13 tooling note).
 
-## REVIEW — Phases 0/0a/1/2/3a DONE (2026-07-13)
+## REVIEW — Phases 0/0a/1/2/3a build detail (2026-07-13)
 
 **`/review` is built + pre-pass green; awaiting the owner acceptance walk.** Planning-group page (worklist
 template); canonical home for review verdicts + attention + Mark-reviewed/history + the D-059 threshold
@@ -825,26 +835,33 @@ Open at the walk: **Mark reviewed + Severity GLOSSARY ratify** (ND-11).
 
 ## NEXT
 
-1. **Review — Phase-3b owner acceptance walk (LIVE).** Judgment items → numbered `page-review.md §*`
-   entries, fixed + re-verified live, geometry fixes fail-first (TEMPLATE §7/§8); the **Mark reviewed +
-   Severity GLOSSARY terms ratify at this walk** (ND-11); owner closes the page. (Phases 0/0a/1/2/3a done.)
-2. **Heatmap page build (D-053) — after Review.** Needs a **treemap §5 amendment** (the ratified
-   `Treemap` exists in the inventory but D-053's page treatment ratifies at its own walk); Markets links
-   to `/heatmap` (never embeds, page-markets ND-11).
-3. **Accounts page plan (D-065) — future.** When drafted, it **must wire `entity_id` scoping**
-   across every portfolio reader (all `/portfolio/*` readers already accept `entity_id`; Portfolio
-   defaults to household with no selector — page-portfolio ND-8). Entity CRUD + the entity selector
-   live here, not on Portfolio.
-4. **Help copy task** (for the Help page plan, or a Holdings help section) —
+1. **Heatmap page (D-053) — `docs/plans/page-heatmap.md`, PLAN ONLY first.** The treemap page treatment is
+   a **DESIGN-SYSTEM §5 amendment + the ECharts escape hatch** (D-053) — author PROPOSED, **ratify at
+   `/kitchen-sink` before assembly** (the ratified `Treemap` exists but D-053's page treatment does not).
+   Markets links to `/heatmap` (never embeds, page-markets ND-11).
+2. **Home page** — now unblocked: **every canonical source Home summarises exists** (Net worth, Portfolio,
+   Holdings, Pricing Health, Markets, News, Review). Home Simple/Full composition + ticker strip
+   (D-046/D-047, IA). Via `TEMPLATE-page-build.md`.
+3. **Release-readiness plan — `docs/plans/release-readiness.md`, PLAN ONLY (NEW, owner 2026-07-13).**
+   **Define "first public release" BEFORE the remaining-page count is read as a release date:** source vs
+   packaged distribution; **license**; **R-24 disposition** (first-boot license-acceptance gate — build
+   now vs parked); **upgrade / migration policy**; a **distribution-facing security pass** (the D-001
+   posture is LAN/VPN, never internet — the release framing must state this explicitly). Plan file only;
+   **no build**.
+
+Then the existing queue, unchanged:
+4. **Remaining Planning-group pages** (Policy · Cash flow · Scenarios · Insurance · Estate), **Accounts**
+   (D-065 — **must wire `entity_id` scoping**; all `/portfolio/*` readers already accept it, Portfolio
+   defaults to household with no selector, page-portfolio ND-8; entity CRUD + selector live here),
+   **Reports + Reports Pack**, **Settings**, **Help**, **Legal** — each via `TEMPLATE-page-build.md`.
+   **AI-surfaces milestone remains deferred intact** (D-067/D-068).
+5. **Help copy task** (for the Help page plan, or a Holdings help section) —
    surface the new GLOSSARY corporate-actions canon as in-app [Help] copy:
    **Rights issue** = Buy at rights price; **Buyback** = Sell at offer price
    (existing types, no special form); **Ticker / name change** supported (name
-   edits preserve history); **De-merger / Spin-off** parked (ROADMAP R-7).
-5. **Next page builds** — each via `docs/plans/TEMPLATE-page-build.md`, per the
-   API-CONTRACT delta table: entity CRUD (D-065), the Realised P/L / Review /
-   Ongoing-cost renames (D-026/D-030/D-029), route-rename redirects
-   (D-022/D-056). `/refdata` (D-005) + holdings CSV (D-050) already shipped in the
-   Holdings build.
+   edits preserve history); **De-merger / Spin-off** parked (ROADMAP R-7). Remaining
+   API-CONTRACT delta-table renames still to apply per page: Realised P/L / Ongoing-cost
+   (D-026/D-029), route-rename redirects (D-022/D-056). (Review D-030 rename now applied.)
 6. **Ratify authored DEF-2/DEF-6 vocabularies** (MASTER-DATA §2/§6) — data vocab,
    separate from design tokens.
 
