@@ -58,6 +58,22 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "Grouped news headlines retrieved from your configured sources, deduplicated and grouped by area. Retrieved, never invented; under no-egress none are fetched (honest empty).",
   },
+  // Review terms (page-review ND-11). "Review" trimmed from GLOSSARY.md; Mark reviewed + Severity PROPOSED.
+  "term-review": {
+    term: "Review",
+    definition:
+      "A live 'what needs a look' list derived from existing signals — reporting only, never advice or a required action. 'Mark reviewed' snapshots the state to a recorded review.",
+  },
+  "term-mark-reviewed": {
+    term: "Mark reviewed",
+    definition:
+      "Record the current state (net worth, confidence, attention count) as a dated review snapshot, with an optional note and next-review date. The only acknowledgement in v2.",
+  },
+  "term-severity": {
+    term: "Severity",
+    definition:
+      "How much attention an item warrants: 'review' (worth a look) or 'info' (a low-priority nudge — never a hard wall). Reporting only.",
+  },
 };
 
 export function lookupTerm(id: string): GlossaryEntry | undefined {

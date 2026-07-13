@@ -1,0 +1,77 @@
+/* Review (Planning-group home) — worklist template. Token-only; the shell owns the root padding. */
+.rv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.rv > * {
+  min-width: 0;
+}
+
+.rv__card {
+  padding: var(--space-5);
+}
+.rv__h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-16);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.rv__note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-tertiary);
+}
+
+/* Summary rail — served values only; wraps at narrow widths (no overflow). */
+.rv__rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+}
+.rv__rail > * {
+  min-width: 0;
+}
+.rv__railtile {
+  position: relative;
+}
+.rv__tilelink {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: var(--font-size-13);
+}
+.rv__tilelink:hover {
+  text-decoration: underline;
+}
+
+/* Severity chip — NEUTRAL (ND-4): served string, no semantic colour (info/review are not gain/loss). */
+.rv__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.rv__area {
+  color: var(--text-tertiary);
+}
+
+/* Mark-reviewed dialog fields. */
+.rv__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.rv__label {
+  font-size: var(--font-size-13);
+  color: var(--text-secondary);
+}
