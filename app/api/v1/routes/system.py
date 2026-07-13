@@ -349,8 +349,14 @@ async def reset_data(session: AsyncSession = Depends(get_db)) -> dict:
 
 async def _display_symbols(session: AsyncSession) -> list[str]:
     """All symbols shown across the app: holdings + watchlist + the curated market
-    lists (overview, home tiles, global proxies)."""
-    from app.api.v1.routes.dashboard import _HOME_MARKETS
+    lists (overview, global proxies).
+
+    page-home §9-4: the retired `/dashboard/home` owned a curated "home tiles" list
+    (`_HOME_MARKETS = SPY, QQQ, GLD, BTC`) that also fed this warm-list. Home no longer has curated
+    tiles (its quote cards read holdings/overview/global/watchlist), and those four symbols are a
+    strict SUBSET of `_DEFAULT_OVERVIEW` — so dropping the list shrinks NO refresh coverage
+    (pinned by `test_refresh_coverage_did_not_shrink_when_the_home_tiles_list_died`).
+    """
     from app.api.v1.routes.markets import _DEFAULT_OVERVIEW, global_market_symbols
     from app.models import Holding, Instrument, WatchlistItem
 
@@ -363,7 +369,7 @@ async def _display_symbols(session: AsyncSession) -> list[str]:
         await session.execute(select(Instrument.symbol).where(Instrument.id.in_(ids or [-1])))
     ).scalars().all()
     ordered: list[str] = []
-    for sym in [*instr_syms, *_DEFAULT_OVERVIEW, *_HOME_MARKETS, *global_market_symbols()]:
+    for sym in [*instr_syms, *_DEFAULT_OVERVIEW, *global_market_symbols()]:
         if sym not in ordered:
             ordered.append(sym)
     return ordered

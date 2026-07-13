@@ -12,7 +12,6 @@ from app.api.v1.routes import (
     auth,
     backup,
     coingecko,
-    dashboard,
     ecb,
     estate,
     insurance,
@@ -32,7 +31,6 @@ from app.api.v1.routes import (
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(system.router, tags=["system"])
 api_router.include_router(auth.router, tags=["auth"])
-api_router.include_router(dashboard.router, tags=["dashboard"])
 api_router.include_router(markets.router, tags=["markets"])
 api_router.include_router(portfolio.router, tags=["portfolio"])
 api_router.include_router(refdata.router, tags=["refdata"])

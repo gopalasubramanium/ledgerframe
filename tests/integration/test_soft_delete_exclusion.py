@@ -154,8 +154,7 @@ async def test_soft_delete_excluded_from_performance_series_and_twr(session):
 async def test_guard_readers_exclude_soft_deleted(session):
     """Guard for the display / dedup / targeting readers (R8–R12): each excludes
     soft-deleted rows. A future query that forgets the filter fails here."""
-    from app.api.v1.routes.dashboard import _holding_currencies
-    from app.api.v1.routes.portfolio import list_manual_holdings, list_transactions
+    from app.api.v1.routes.portfolio import list_manual_holdings, list_transactions, portfolio_summary
 
     s = await _seed(session)
     # A second manual holding in EUR, to exercise the currency reader (R12).
@@ -175,7 +174,10 @@ async def test_guard_readers_exclude_soft_deleted(session):
     assert await _batch_already_imported(session, "BATCH-X") is True                     # R10
     accs = {a["id"]: a for a in (await accounts_report(session))["accounts"]}
     assert accs[s["acc"].id]["last_activity"] is not None                                # R11
-    assert "EUR" in await _holding_currencies(session)                                   # R12
+    # R12 — the currency reader. Was `dashboard._holding_currencies`, which died with the retired
+    # /dashboard/home (page-home §9-4). The BEHAVIOUR it guarded is still live, so the guard moves to
+    # the canonical reader rather than being deleted: the summary's currency allocation.
+    assert "EUR" in (await portfolio_summary(entity_id=None, session=session))["allocation_by_currency"]  # R12
 
     # Soft-delete one of each and re-read.
     now = datetime.now(UTC_)
@@ -195,7 +197,7 @@ async def test_guard_readers_exclude_soft_deleted(session):
     assert await _batch_already_imported(session, "BATCH-X") is False                    # R10: re-import unblocked
     accs2 = {a["id"]: a for a in (await accounts_report(session))["accounts"]}
     assert accs2.get(s["acc"].id, {}).get("last_activity") is None                       # R11
-    assert "EUR" not in await _holding_currencies(session)                               # R12
+    assert "EUR" not in (await portfolio_summary(entity_id=None, session=session))["allocation_by_currency"]  # R12
 
 
 async def test_soft_deleted_transaction_can_be_reimported(session):

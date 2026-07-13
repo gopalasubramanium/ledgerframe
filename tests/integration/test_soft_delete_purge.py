@@ -59,7 +59,7 @@ async def test_purge_with_pin_removes_soft_deleted_only(app_client):
     await _soft_delete_one_transaction(app_client)
 
     # Invariants captured AFTER the soft-delete (already excluded from computation).
-    nw_before = (await app_client.get("/api/v1/dashboard/home")).json()["portfolio"]["total_value"]
+    nw_before = (await app_client.get("/api/v1/portfolio/summary")).json()["total_value"]
     live_before = len((await app_client.get("/api/v1/portfolio/transactions")).json()["transactions"])
     total_before, soft_before = await _txn_counts()
     assert soft_before >= 1
@@ -78,7 +78,7 @@ async def test_purge_with_pin_removes_soft_deleted_only(app_client):
 
     # Live ledger + net worth are unchanged by the purge (it only removed excluded rows).
     live_after = len((await app_client.get("/api/v1/portfolio/transactions")).json()["transactions"])
-    nw_after = (await app_client.get("/api/v1/dashboard/home")).json()["portfolio"]["total_value"]
+    nw_after = (await app_client.get("/api/v1/portfolio/summary")).json()["total_value"]
     assert live_after == live_before
     assert nw_after == nw_before
 

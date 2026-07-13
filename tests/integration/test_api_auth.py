@@ -10,9 +10,11 @@ async def test_dashboard_opens_in_demo_mode(app_client):
     r = await app_client.get("/api/v1/system/status")
     assert r.status_code == 200
     assert r.json()["demo_mode"] is True
-    home = await app_client.get("/api/v1/dashboard/home")
+    # page-home §9-4: the legacy /dashboard/home aggregate is retired — the same open-in-demo
+    # invariant is asserted against the canonical reader Home now composes from.
+    home = await app_client.get("/api/v1/portfolio/summary")
     assert home.status_code == 200
-    assert home.json()["portfolio"]["total_value"] is not None
+    assert home.json()["total_value"] is not None
 
 
 async def test_seeded_holdings_present(app_client):

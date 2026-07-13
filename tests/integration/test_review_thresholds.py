@@ -53,14 +53,16 @@ async def test_reviewcard_and_review_page_counts_reconcile(app_client):
 
 
 async def test_d030_rename_review_endpoint(app_client):
-    """D-030 — `/review/centre` retired to `/review`; the centre JSON shape is served at /review.
-    (The old path no longer has an API route — it falls through to the SPA shell, i.e. HTML, not the
-    JSON centre shape.)"""
+    """D-030 — `/review/centre` retired to `/review`; the centre JSON shape is served at /review."""
     r = await app_client.get("/api/v1/review")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("application/json")
     body = r.json()
     assert "sections" in body and "attention" in body and "attention_count" in body
-    # The old path no longer serves the centre JSON (rename applied).
+    # The old path is GONE. This assertion used to read "the response isn't JSON" — which only held
+    # because the SPA catch-all answered any unmatched /api/ path with index.html (HTML, 200 OK).
+    # page-home §9-4 made an unmatched API path an honest JSON 404, so the guard is now direct:
+    # the route 404s and serves none of the centre payload (a retirement you can actually observe).
     old = await app_client.get("/api/v1/review/centre")
-    assert not old.headers.get("content-type", "").startswith("application/json")
+    assert old.status_code == 404
+    assert "sections" not in old.json()

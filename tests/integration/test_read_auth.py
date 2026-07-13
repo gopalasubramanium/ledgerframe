@@ -17,7 +17,7 @@ async def test_reads_gated_when_pin_set(app_client):
 
     # A data read is now refused …
     assert (await app_client.get("/api/v1/portfolio/summary")).status_code == 401
-    assert (await app_client.get("/api/v1/dashboard/home")).status_code == 401
+    assert (await app_client.get("/api/v1/portfolio/review")).status_code == 401
 
     # … but the lock screen's own endpoints stay open.
     assert (await app_client.get("/api/v1/auth/state")).status_code == 200

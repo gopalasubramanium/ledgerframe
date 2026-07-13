@@ -31,7 +31,19 @@ _ALLOWED_KEYS = {
     # - first_run_complete: server-persisted flag (D-078 precedent) — set on the
     #   checklist's complete OR dismiss, so it never re-nags across browsers.
     "timezone", "first_run_complete",
+    # Home (page-home §9-3/§9-7). SERVER-persisted, not per-device: D-078 lists Home layout as a
+    # settings row precisely because "it defines what rotation shows" — a kiosk must survive a
+    # browser wipe. The quote-source choice rides the same posture (§9-7).
+    "home_layout", "home_quote_source",
 }
+
+#: Home layout (D-046/D-040). The vocabulary is Simple/Full — page-home §9-1 RETIRED "Expert".
+HOME_LAYOUTS = ("simple", "full")
+#: Home quote-card sources (D-046/D-052) — the ratified view-scope options, each with a real reader.
+HOME_QUOTE_SOURCES = ("markets", "holdings", "global", "watchlist")
+#: Fresh-install defaults (page-home §9-3/§9-7, owner 2026-07-13).
+HOME_LAYOUT_DEFAULT = "full"
+HOME_QUOTE_SOURCE_DEFAULT = "holdings"
 
 
 @router.get("/settings")
@@ -50,6 +62,12 @@ async def get_settings_endpoint(session: AsyncSession = Depends(get_db)) -> dict
             "ai_enabled": s.ai_enabled,
             "voice_enabled": s.voice_enabled,
             "demo_mode": s.is_demo,
+            # page-home §9-3/§9-7: the fresh-install Home defaults are SERVED, so the frontend never
+            # has to guess a layout or a quote source (and never carries a vocabulary copy — D-005).
+            "home_layout": HOME_LAYOUT_DEFAULT,
+            "home_quote_source": HOME_QUOTE_SOURCE_DEFAULT,
+            "home_layouts": list(HOME_LAYOUTS),
+            "home_quote_sources": list(HOME_QUOTE_SOURCES),
         },
     }
 
@@ -71,6 +89,13 @@ async def update_settings(patch: SettingsPatch, session: AsyncSession = Depends(
 
         if patch.values["timezone"] not in available_timezones():
             raise HTTPException(400, "timezone must be a valid IANA timezone name")
+    # page-home §9-3/§9-7 — the backend is the validation truth here too: an unrecognised layout or
+    # quote source is an honest 400, never silently coerced to a default. ("expert" is refused: the
+    # Simple/Expert vocabulary was RETIRED by §9-1.)
+    if "home_layout" in patch.values and patch.values["home_layout"] not in HOME_LAYOUTS:
+        raise HTTPException(400, f"home_layout must be one of {list(HOME_LAYOUTS)}")
+    if "home_quote_source" in patch.values and patch.values["home_quote_source"] not in HOME_QUOTE_SOURCES:
+        raise HTTPException(400, f"home_quote_source must be one of {list(HOME_QUOTE_SOURCES)}")
     applied = {}
     for key, value in patch.values.items():
         if key not in _ALLOWED_KEYS:

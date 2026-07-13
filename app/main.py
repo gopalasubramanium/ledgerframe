@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -210,6 +210,14 @@ def create_app() -> FastAPI:
         async def spa(full_path: str):
             # API + docs are matched first by FastAPI; everything else returns index.html
             # so client-side routing works.
+            #
+            # …EXCEPT an unmatched /api/ path (page-home §9-4). Without this guard the catch-all
+            # answers a RETIRED or misspelled endpoint with `index.html` and **200 OK** — so a
+            # client cannot tell "this endpoint is gone" from "this endpoint is fine", and a
+            # contract deletion is unobservable. An API path that no route claims is an honest
+            # JSON 404 (Guarantee 3: never answer with something you did not mean).
+            if full_path.startswith("api/"):
+                raise HTTPException(status_code=404, detail="Not Found")
             candidate = dist / full_path
             if full_path and candidate.is_file():
                 return FileResponse(candidate)
