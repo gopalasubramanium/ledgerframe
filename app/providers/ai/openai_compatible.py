@@ -14,6 +14,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
+from app.core.egress import EgressBlocked, egress_client
 from app.schemas.ai import AIChunk, AIRequest, HealthStatus, ModelInfo
 
 log = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ class OpenAICompatibleProvider:
             return HealthStatus(available=False, provider=self.name, detail="no base URL set")
         warn = "sends data off-device"
         try:
-            async with httpx.AsyncClient(base_url=self.base_url, timeout=10) as client:
+            async with await egress_client("AI request", base_url=self.base_url, timeout=10) as client:
                 r = await client.get("/models", headers=self._headers())
                 if r.status_code in (401, 403):
                     return HealthStatus(available=False, provider=self.name,
@@ -155,7 +156,7 @@ class OpenAICompatibleProvider:
         produced = False
         # 1) Try streaming. Surface HTTP errors clearly (raised → grounding shows them).
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async with await egress_client("AI request", timeout=self._timeout) as client:
                 async with client.stream("POST", url, json=body, headers=self._headers()) as resp:
                     if resp.status_code >= 400:
                         detail = (await resp.aread()).decode(errors="replace")[:300]
@@ -180,6 +181,11 @@ class OpenAICompatibleProvider:
             if produced:
                 yield AIChunk(delta="", done=True)
                 return
+        except EgressBlocked:
+            # No-egress is a REFUSAL, not a transient failure. The non-streaming fallback below is a
+            # SECOND outbound attempt — retrying it would be the very thing Guarantee 5 forbids. Let
+            # it propagate: the caller reports "unavailable, and here is why" (Guarantee 3).
+            raise
         except Exception as exc:  # noqa: BLE001 — retry once non-streamed before giving up
             log.warning("openai_compatible streaming failed: %s", exc)
             stream_error: Exception | None = exc
@@ -188,7 +194,7 @@ class OpenAICompatibleProvider:
 
         # 2) Non-streaming fallback (some servers/models don't stream cleanly).
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async with await egress_client("AI request", timeout=self._timeout) as client:
                 r = await client.post(url, json={**body, "stream": False}, headers=self._headers())
                 if r.status_code >= 400:
                     raise RuntimeError(f"{r.status_code}: {r.text[:300]}")

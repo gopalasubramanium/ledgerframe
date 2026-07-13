@@ -23,6 +23,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.egress import egress_client
 from app.models import Setting
 from app.schemas.common import NewsItem
 
@@ -154,7 +155,7 @@ async def test_feeds(session: AsyncSession) -> list[dict]:
     urls = await get_feed_urls(session)
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)"}
     results: list[dict] = []
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT, headers=headers) as client:
+    async with await egress_client("news feed fetch", timeout=FETCH_TIMEOUT, headers=headers) as client:
         for url in urls:
             entry = {"url": url, "ok": False, "count": 0, "error": None, "status": None}
             try:
@@ -179,7 +180,7 @@ async def fetch_feeds(session: AsyncSession, limit: int = 30) -> list[NewsItem]:
     if not urls:
         return []
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)"}
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT, headers=headers) as client:
+    async with await egress_client("news feed fetch", timeout=FETCH_TIMEOUT, headers=headers) as client:
         results = await asyncio.gather(*(_fetch_one(client, u) for u in urls))
     items = [item for sub in results for item in sub]
     items.sort(key=lambda i: i.published_at, reverse=True)
@@ -198,7 +199,7 @@ async def fetch_symbol_news(symbol: str, limit: int = 12) -> list[NewsItem]:
 
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)"}
     url = _SYMBOL_NEWS_URL.format(sym=quote(symbol.strip()))
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT, headers=headers) as client:
+    async with await egress_client("news feed fetch", timeout=FETCH_TIMEOUT, headers=headers) as client:
         items = await _fetch_one(client, url)
     # Tag the symbol so the UI can show it; keep newest first.
     for it in items:

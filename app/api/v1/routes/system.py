@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import __version__
 from app.api.deps import get_db, pin_is_set, require_auth
 from app.core.config import get_settings
+from app.core.egress import egress_client
 from app.providers.ai import get_ai_provider
 
 router = APIRouter()
@@ -497,13 +498,12 @@ async def version_check(session: AsyncSession = Depends(get_db)) -> dict:
         # Zero outbound: never construct the HTTP client. Same response shape.
         return {"current": current, "latest": current, "update_available": False, "url": ""}
 
-    import httpx
 
     latest = current
     available = False
     url = f"https://github.com/{_GITHUB_REPO}/releases/latest"
     try:
-        async with httpx.AsyncClient(timeout=6, follow_redirects=False) as client:
+        async with await egress_client("outbound call", timeout=6, follow_redirects=False) as client:
             # Primary: the /releases/latest redirect carries the tag in its Location
             # header and is NOT subject to the strict (60/hr) unauthenticated API
             # rate limit — so a shared/NATed IP can't yield a false "up to date".

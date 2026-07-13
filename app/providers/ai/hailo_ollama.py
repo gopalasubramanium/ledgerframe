@@ -17,6 +17,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
+from app.core.egress import egress_client
 from app.schemas.ai import AIChunk, AIRequest, HealthStatus, ModelInfo
 
 log = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class HailoOllamaProvider:
         # Bounded connect so an unreachable host fails fast; long read only for
         # generation (slow local models).
         t = httpx.Timeout(float(timeout if timeout is not None else self.timeout), connect=10.0)
-        return httpx.AsyncClient(base_url=self.base_url, timeout=t)
+        return await egress_client("AI request", base_url=self.base_url, timeout=t)
 
     async def list_models(self) -> list[ModelInfo]:
         try:

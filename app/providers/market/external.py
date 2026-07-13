@@ -19,8 +19,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-import httpx
-
+from app.core.egress import egress_client
 from app.core.money import D, price
 from app.core.symbols import currency_for_symbol
 from app.providers.market.mock import MockMarketDataProvider
@@ -113,7 +112,7 @@ class ExternalMarketDataProvider:
     async def _get(self, params: dict) -> dict:
         params = {**params, "apikey": self._key}
         # Tight timeout so a slow/limited provider can't hang dashboard requests.
-        async with self._sem, httpx.AsyncClient(timeout=8) as client:
+        async with self._sem, await egress_client("price refresh", timeout=8) as client:
             r = await client.get(_BASE, params=params)
             r.raise_for_status()
             data = r.json()

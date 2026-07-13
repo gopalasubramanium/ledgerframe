@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 
 import httpx
 
+from app.core.egress import egress_client
 from app.core.money import D, price
 from app.providers.market.mock import MockMarketDataProvider
 from app.schemas.common import (
@@ -138,7 +139,8 @@ class YahooMarketDataProvider:
                 if wait > 0:
                     await asyncio.sleep(wait)
                 try:
-                    async with httpx.AsyncClient(
+                    async with await egress_client(
+                        "price refresh",
                         timeout=httpx.Timeout(12.0, connect=5.0), headers={"User-Agent": _UA},
                     ) as client:
                         r = await client.get(url, params=params)

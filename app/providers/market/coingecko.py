@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 
+from app.core.egress import egress_client
+
 BASE_URL = "https://api.coingecko.com/api/v3"
 VS_CURRENCIES = ("usd", "sgd", "inr", "eur", "gbp")
 
@@ -78,9 +80,8 @@ def parse_simple_price(data: dict) -> dict[str, CoinPrice]:
 
 
 async def fetch_coins_list(timeout: float = 20.0) -> list:
-    import httpx
 
-    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
+    async with await egress_client("crypto price refresh", timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
         r = await c.get(f"{BASE_URL}/coins/list")
         r.raise_for_status()
         return r.json()
@@ -89,14 +90,13 @@ async def fetch_coins_list(timeout: float = 20.0) -> list:
 async def fetch_prices(ids: list[str], timeout: float = 20.0) -> dict:
     if not ids:
         return {}
-    import httpx
 
     params = {
         "ids": ",".join(sorted(set(ids))),
         "vs_currencies": ",".join(VS_CURRENCIES),
         "include_market_cap": "true", "include_last_updated_at": "true",
     }
-    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
+    async with await egress_client("crypto price refresh", timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
         r = await c.get(f"{BASE_URL}/simple/price", params=params)
         r.raise_for_status()
         return r.json()

@@ -18,8 +18,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-import httpx
-
+from app.core.egress import egress_client
 from app.core.money import D, price
 from app.core.symbols import currency_for_symbol
 from app.providers.market.mock import MockMarketDataProvider
@@ -137,7 +136,7 @@ class KiteProvider:
         if not _is_allowed(path):
             # Hard guard: this adapter must never reach a trading/account endpoint.
             raise ValueError(f"refused non-market-data Kite endpoint: {path!r}")
-        async with httpx.AsyncClient(timeout=10, headers=self._headers(), follow_redirects=True) as client:
+        async with await egress_client("price refresh", timeout=10, headers=self._headers(), follow_redirects=True) as client:
             r = await client.get(f"{_BASE}/{path.lstrip('/')}", params=params or {})
             if r.status_code in (401, 403):
                 raise KiteSessionExpired("Kite session expired — regenerate your access token.")
@@ -164,7 +163,7 @@ class KiteProvider:
         """Download the read-only instrument master (CSV). Guarded + auth-checked."""
         if not _is_allowed("instruments"):  # defensive; "instruments" is allow-listed
             raise ValueError("refused")
-        async with httpx.AsyncClient(timeout=30, headers=self._headers(), follow_redirects=True) as client:
+        async with await egress_client("price refresh", timeout=30, headers=self._headers(), follow_redirects=True) as client:
             r = await client.get(f"{_BASE}/instruments")
             if r.status_code in (401, 403):
                 raise KiteSessionExpired("Kite session expired — regenerate your access token.")

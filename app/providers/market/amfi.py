@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
+from app.core.egress import egress_client
+
 # AMFI moved this file to the `portal.` host; the old `www.` URL 302-redirects here.
 # We point at the canonical host AND follow redirects, so it works either way.
 NAV_ALL_URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
@@ -94,10 +96,9 @@ def parse_nav_all(text: str) -> list[SchemeNav]:
 async def fetch_nav_all(timeout: float = 20.0) -> str:
     """Download the official NAVAll.txt (opt-in; never called in tests). Whitelisted
     host only — no arbitrary URLs."""
-    import httpx
 
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)", "Accept": "text/plain, */*"}
-    async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as client:
+    async with await egress_client("mutual-fund NAV refresh", timeout=timeout, headers=headers, follow_redirects=True) as client:
         r = await client.get(NAV_ALL_URL)
         r.raise_for_status()
         return r.text

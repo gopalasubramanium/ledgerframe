@@ -13,6 +13,8 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from xml.etree import ElementTree as ET
 
+from app.core.egress import egress_client
+
 DAILY_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 
 
@@ -42,9 +44,8 @@ def parse_ecb_daily(xml_text: str) -> tuple[str | None, dict[str, Decimal]]:
 
 
 async def fetch_ecb_daily(timeout: float = 20.0) -> str:
-    import httpx
 
-    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
+    async with await egress_client("ECB FX refresh", timeout=timeout, headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True) as c:
         r = await c.get(DAILY_URL)
         r.raise_for_status()
         return r.text

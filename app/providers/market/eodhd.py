@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 
 import httpx
 
+from app.core.egress import egress_client
 from app.core.money import D, price
 from app.core.symbols import currency_for_symbol
 from app.providers.market.mock import MockMarketDataProvider
@@ -134,7 +135,7 @@ class EodhdProvider:
 
     async def _get(self, path: str, params: dict) -> object:
         params = {**params, "api_token": self._key, "fmt": "json"}
-        async with self._sem, httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+        async with self._sem, await egress_client("price refresh", timeout=10, follow_redirects=True) as client:
             for attempt in range(2):  # one retry with backoff
                 try:
                     r = await client.get(f"{_BASE}/{path}", params=params)

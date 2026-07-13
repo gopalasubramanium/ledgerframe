@@ -267,3 +267,61 @@ DEF backfill.
 
 - (none) — the sudo action allow-list is extracted verbatim into §4 from
   `app/api/v1/routes/system.py`. No product decisions outstanding.
+
+
+---
+
+## Guarantee 5 — the OUTBOUND-CALL INVENTORY (master enforcement record)
+
+*Added 2026-07-14 (release-readiness Part B/2, RD-7). This section is the **authoritative record** of
+every outbound transport path and how Guarantee 5 is enforced on it.*
+
+**Guarantee 5 is an absolute:** with no-egress on (`privacy_mode`), the device makes **ZERO** outbound
+calls. Not fewer. Not "none that matter". **Zero.**
+
+### It was not being kept (the defect this section exists to close)
+
+`no_egress_enabled` was consulted from the **news, briefing, markets-news and version-check** surfaces
+**only**. **Every other outbound path ignored it** — the market price providers, the ECB FX feed, and
+both AI providers. Under `privacy_mode` a price refresh, an FX refresh or an AI call **still went out
+over the network**.
+
+It *looked* fine because a no-egress user typically also runs `market_provider=mock` — but **that is a
+configuration coincidence, not a guard.** A guarantee that holds by accident does not hold.
+
+### The enforcement: ONE choke point, not a sprinkling of checks
+
+`app/core/egress.py` is now **the only way to obtain an HTTP client**. It reads `privacy_mode` and,
+when set, **never constructs the client at all** — no socket, no DNS lookup, no timeout to wait out —
+raising `EgressBlocked`, which the surrounding services already treat as "no value, and here is why"
+(Guarantee 3: withheld, never guessed).
+
+**A guard you must remember to call is a guard you will eventually forget** — which is exactly how six
+paths came to ignore this one. So it is **structurally enforced**: constructing an `httpx.AsyncClient`
+anywhere outside `app/core/egress.py` is a **test failure**
+(`tests/integration/test_egress_guard.py::test_no_module_may_construct_an_http_client_outside_the_egress_gate`).
+**A new provider physically cannot forget to ask.**
+
+### The inventory
+
+| Path | Module | Guarded |
+|---|---|---|
+| Price refresh — Kite | `app/providers/market/kite.py` | ✅ via `egress_client` |
+| Price refresh — EODHD | `app/providers/market/eodhd.py` | ✅ |
+| Price refresh — Yahoo | `app/providers/market/yahoo.py` | ✅ |
+| Price refresh — external/router | `app/providers/market/external.py` | ✅ |
+| Crypto prices — CoinGecko | `app/providers/market/coingecko.py` | ✅ |
+| Mutual-fund NAV — AMFI | `app/providers/market/amfi.py` | ✅ |
+| **FX rates — ECB** | `app/providers/market/ecb.py` | ✅ |
+| **AI — OpenAI-compatible** (health · models · **chat**) | `app/providers/ai/openai_compatible.py` | ✅ |
+| **AI — Hailo/Ollama** | `app/providers/ai/hailo_ollama.py` | ✅ |
+| News feeds | `app/services/feeds.py` | ✅ (was already guarded; now via the same gate) |
+| Version check | `app/api/v1/routes/system.py` | ✅ (was already guarded; now via the same gate) |
+
+**One behaviour worth recording:** the AI chat path had a **non-streaming retry** on failure. A
+no-egress refusal was hitting it and making a **second** outbound attempt. `EgressBlocked` now
+propagates past that retry — **a refusal is not a transient error to retry.**
+
+**Fail-first:** every test in `tests/integration/test_egress_guard.py` was **RED against the unguarded
+build with a live provider configured** — the client was constructed and the call went out — and green
+only once the gate landed. Tests that were never red would not have been evidence of anything.
