@@ -167,8 +167,6 @@ the real constants (`_INSURANCE_SOON_DAYS`, `_CORP_ACTION_RECENT_DAYS`).
 disagree (the earlier deliberate divergence is closed; fail-first tests pin it).
 Confidence band `<50` (`confidence.py`) and `LEDGERFRAME_STALE_AFTER_SECONDS`
 (900) are per 04-CALCULATION-ENGINE §10/§11.
-Confidence band `<50` (`confidence.py`) and `LEDGERFRAME_STALE_AFTER_SECONDS`
-(900) are per 04-CALCULATION-ENGINE §10/§11.
 
 ---
 
