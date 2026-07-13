@@ -20,7 +20,7 @@
 .hm3 {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   min-height: 100%; /* the grid may still fill the region when content is short — no half-empty page */
 }
 /* Every top-level section may shrink below its content's min-width, so a wide child scrolls inside
@@ -52,7 +52,7 @@
    * below its content: a tile never hides what it has to say to keep a promise about height. */
   grid-template-rows: repeat(3, auto);
   align-content: stretch;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .hm3__cell {
@@ -60,8 +60,10 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4); /* the grid is dense by design; DENSITY is a legitimate lever, content is not */
+  /* §12ho2-12 FINAL: the last pixels came from DENSITY, not content — the tile's own padding and the
+   * gaps between its parts. Nothing was removed from any tile to reach the fit. */
+  gap: var(--space-2);
+  padding: var(--space-3);
   /* NOT `overflow: hidden`. It was here to stop a tile pushing the page into a scroll — which is
    * exactly how the wired page came to sever the donut, the briefing's third headline and the stale
    * line, while every "does it overflow" check stayed green. Clipping is not fitting (§12ho1-7). */
@@ -80,8 +82,12 @@
 .hm3__cell--brief    { grid-column: 1 / span 6; grid-row: 3; }
 .hm3__cell--quotes   { grid-column: 7 / span 6; grid-row: 3; }
 
-/* The ReviewCard is itself a card — it must fill its cell, not sit inside a second one. */
-.hm3__cell--review > .lf-review { height: 100%; overflow: hidden; }
+/* §12ho4-1 — the ReviewCard IS the card, so its cell must not be a second one. The cell carried the
+ * grid's tile padding and NESTED the card inside it, so the box the user sees was 24px shorter than
+ * its row-mates and inset from the row's top edge — while every check that measured the CELL passed.
+ * The cell contributes no padding of its own; the card fills it, and row 1 is flush. */
+.hm3__cell--review { padding: 0; }
+.hm3__cell--review > .lf-review { flex: 1 1 auto; height: 100%; min-height: 0; }
 
 /* Two ↗ side by side: a tile that summarises TWO canonical pages names both (Movers precedent). */
 .hm3__twohead {
@@ -158,7 +164,7 @@
    * donut once asked for 432px — §12ho1-7). Grow, yes; drive the row's height, no. */
   flex: 1 1 auto;
   margin-top: auto;
-  min-height: 2.5rem;
+  min-height: 2rem;
   display: flex;
   align-items: flex-end;
 }
@@ -167,7 +173,7 @@
   width: 100%;
 }
 /* The lead tile has one figure and one chart, so its chart takes the whole remaining band. */
-.hm3__spark--lead { min-height: 4.5rem; }
+.hm3__spark--lead { min-height: 3.5rem; }
 
 /* §12ho2-5: the hero's "Performance" caption WAS a page-local header variant (its own label class,
  * its own ↗ placement). It is now a plain SummaryHead like every other tile header — so these rules
@@ -185,16 +191,20 @@
   height: 100%;
   min-height: 0;
 }
-/* EXACTLY two rows (§12ho2-6). Free wrapping was the trap: with a source that serves many symbols the
- * row wrapped to four or five rows and became the TALLEST tile on the page, dragging row 3 — and with
- * it the whole grid — past the viewport. Two rows, columns flowing sideways, and the overflow scrolls
- * WITHIN the tile. The page still never scrolls sideways. */
+/* §12ho2-12 FINAL (owner-authorised, 2026-07-14): ONE row — the closing lever that bought the fit.
+ *
+ * It was two (§12ho2-6), which was already a fix for FREE wrapping — with a source serving many symbols
+ * the row wrapped to four or five and became the tallest tile on the page, dragging row 3 and the whole
+ * grid past the viewport. One row is the owner's call, and it is what took the overshoot to zero.
+ *
+ * Nothing is hidden: the row scrolls sideways WITHIN its own tile, and the ↗ goes to Markets, which owns
+ * the full set. The page still never scrolls sideways. */
 .hm3__cell--quotes .lf-quoterow__cards {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: 1fr;
   grid-auto-columns: minmax(9rem, 1fr);
   align-items: stretch;
   overflow-x: auto;
@@ -208,6 +218,7 @@
   min-width: 0;
   padding: var(--space-3);
   gap: var(--space-1);
+  justify-content: center; /* one row fills the tile — centre the content rather than leave a band */
 }
 
 /* §12ho2-9 — the donut block FILLS the tile and centres vertically beside its (capped) legend, rather
@@ -302,8 +313,10 @@
   line-height: var(--line-13);
   color: var(--text-secondary);
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 2 lines leaves room for all THREE headlines (§9-9) — no clipped list */
-  line-clamp: 2;
+  /* ONE line in the summary. The Briefing LINE STAYS (owner) — it is clamped, not removed, and the
+   * tile's ↗ opens News, which owns the full text. This was the last non-content pixel on the page. */
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

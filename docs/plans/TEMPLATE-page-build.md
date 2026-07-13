@@ -46,6 +46,34 @@ mid-build.
   *which* widgets Home shows and in *what order*, the build passed every test and the pre-pass — and the
   page still **failed its purpose**, because "an at-a-glance snapshot" is a **geometry** requirement a
   widget list cannot express. A stacked column of correct cards is a correct list and a wrong page.
+- **THE GATE ARTIFACT MUST MODEL THE BOX THE PRODUCT ACTUALLY HAS (page-home §12ho1-7 / §12ho2-12).**
+  A geometry gate (a mockup, a specimen frame) is only worth the box it is measured in. page-home's
+  mockup was framed as a **bare 1366×768 viewport** — so it promised the page the **chrome's** height on
+  top of its own, the owner ratified a layout against a box that does not exist, and the wired page then
+  **clipped its own donut and headlines**. The frame was corrected twice: first to the **content region**
+  (viewport − chrome), then again to **content region − the shell's own padding**, which is the height a
+  page's content really gets. **Render mockup frames inside the real shell, or subtract the chrome AND
+  the shell padding explicitly — and feed them REAL-SHAPED data** (page-home's demo had 5 asset classes
+  and 3 quotes; the real dataset had 8 and 7, and the difference was the whole fit).
+- **A GUARD MUST EXERCISE THE FAILURE GEOMETRY, AND BE PROVEN RED BEFORE IT IS TRUSTED (page-home
+  §12ho2-1 / §12ho3-3).** page-home shipped **three** guards that reported green over a visibly broken
+  page: one **counted** affordances (8 ↗, all with aria-labels — all true of headers lying in a heap in
+  the wrong corner); one compared **tile boxes** at **one width** (the boxes did not intersect while
+  their *contents* printed through each other at 375px); one checked **containment** against the
+  **gallery's wide** quote cards (the badge only escapes a *narrow* one). Each was fixed by making it
+  assert the thing the human actually sees — **rendered text**, the **painted card box** — at **every
+  breakpoint**, and by giving it a specimen that **reproduces the defect**. *A guard that only looks
+  where the bug was last time is not a guard; a specimen only proves what it exercises.*
+- **MEASURE WHICH ELEMENT BINDS BEFORE CUTTING CONTENT — a cut that buys nothing is pure loss
+  (page-home §12ho2-12).** A grid row is as tall as its **tallest** tile, so trimming any *other* tile
+  buys **zero**. page-home nearly cut a headline (and did shrink the donut ring) for **no height at
+  all**: the ring was never the constraint (the capped **legend** was taller), and the headline cut only
+  paid *after* density made that tile the binding one. **Spend design levers first (padding, gaps, dead
+  bands, layout bugs), and measure each lever's real effect — do not assume it.**
+- **A CI BOUND MAY BE A RATCHET WHILE A DECISION IS PENDING (page-home §12ho2-12).** When a target is
+  not met and closing it needs an **owner decision**, do **not** assert the fiction and do **not** delete
+  the check: assert the **current** number as a ceiling, name the target in the message, and let it fall
+  to the target when the decision lands. Honesty stays green; regressions still fail.
 - **A GLOSSARY term ships to the SPEC, not just the popover data (page-heatmap §13-1).** The glossary
   has **two stores** — `docs/specs/GLOSSARY.md` (canonical; the file CLAUDE.md's hard rule names) and
   `frontend/src/mocks/glossary.ts` (what `[Help]` renders). page-heatmap added a term to the **second

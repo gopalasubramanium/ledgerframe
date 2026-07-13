@@ -890,19 +890,32 @@ keyboard Enter → InstrumentDetail, 0 overflow × both themes, **0 console erro
 `tests/integration/test_attribution_api.py` + `frontend/e2e/smoke/reset.py`, from commit `3cedd36`. Left
 untouched (out of page scope; hygiene gets its own commit).
 
+**Home page — DONE ✅ (owner accepted 2026-07-14).** `docs/plans/page-home.md` — §9 resolutions +
+§12ho1-1..§12ho4-1 + the §13 retrospective. A **composition-only** page: it owns **nothing**, and every
+widget is a linked summary of the canonical page's reader (P-1/D-038). Shipped:
+- **ONE ratified grid** — the Simple layout was REMOVED (**D-046 AMENDMENT**, §12ho1-6). It fits
+  **1440×900 with zero scroll** on the real dataset; 1366×768 scrolls modestly, accepted as honest.
+- **`/dashboard/home` RETIRED** (§9-4) — Home composes from the canonical readers, one card each,
+  progressively loaded. **`home_layout` REMOVED** from the settings contract (it would have been a
+  write-only key, D-078); **`home_quote_source`** stays. `PUT /settings` now **400s an unknown key**
+  instead of silently accepting it.
+- §5 amendments RATIFIED (DESIGN-SYSTEM): **SummaryHead `meta`** + **QuoteCardRow `summary`** (one header
+  anatomy, no page-local variants) · **Lucide ↗** · **Donut centre readout** + legend cap "+N more ↗"
+  (**Portfolio inherits**) · **Select borderless resting state** (platform-wide, focus ring retained).
+- **It took THREE assemblies.** The lessons — *a widget list is not a layout*; *a gate artifact must model
+  the box the product actually has*; *four guards reported green over a visibly broken page*; *a content
+  cut that buys nothing is pure loss* — are folded into **TEMPLATE-page-build.md**. See **§13**.
+
 ## NEXT
 
-1. **Home page — `docs/plans/page-home.md`, PLAN ONLY first.** Now unblocked: **every canonical source Home
-   summarises exists** (Net worth, Portfolio, Holdings, Pricing Health, Markets, News, Review, Heatmap). A
-   **composition-only** page — it owns **nothing**; every widget summarises a canonical reader with a link
-   (P-1/D-038), never a recompute. **D-046 Simple/Full layouts** (+ the D-047 ticker strip in Full) and
-   D-040 Detail level. Via `TEMPLATE-page-build.md`: verify-first (§10) → §1–§8 → **STOP at §9**.
-2. **Release-readiness plan — `docs/plans/release-readiness.md`, PLAN ONLY (owner 2026-07-13).**
+1. **Release-readiness plan — `docs/plans/release-readiness.md`, PLAN ONLY (owner 2026-07-13).**
    **Define "first public release" BEFORE the remaining-page count is read as a release date:** source vs
    packaged distribution; **license**; **R-24 disposition** (first-boot license-acceptance gate — build
    now vs parked); **upgrade / migration policy**; a **distribution-facing security pass** (the D-001
    posture is LAN/VPN, never internet — the release framing must state this explicitly). Plan file only;
    **no build**.
+
+2. **Planning group — Policy FIRST (`docs/plans/page-policy.md`, PLAN ONLY).**
 
 Then the existing queue, unchanged:
 3. **Remaining Planning-group pages** (Policy · Cash flow · Scenarios · Insurance · Estate), **Accounts**

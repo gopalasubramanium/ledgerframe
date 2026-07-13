@@ -234,7 +234,7 @@ export function HomeMockupFull() {
               <p className="hm3__briefing">{BRIEFING}</p>
             </div>
             <h3 className="hm3__sublabel">Top headlines</h3>
-            <NewsList items={HEADLINES} showSymbols clampLines={1} />
+            <NewsList items={HEADLINES.slice(0, 2)} showSymbols clampLines={1} />
           </div>
         </section>
 

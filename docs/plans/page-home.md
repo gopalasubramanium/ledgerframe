@@ -1,9 +1,8 @@
 # page-home.md — Home page build plan
 
-**Status: REBUILT + WIRED, but BLOCKED at §12ho1-7 — the ratified grid does NOT fit one viewport once
-it is wired inside the chrome with real data. Phases 1 and 2 are DONE; Phase 3a CANNOT be certified
-until the owner picks a lever (§12ho1-7). Home ships ONE layout (§12ho1-6 — Simple removed).
-Read §12ho1-7 FIRST.**
+**Status: DONE ✅ — owner accepted 2026-07-14.** Home ships ONE ratified grid (§12ho1-6 — the Simple
+layout was removed); it fits **1440×900 with ZERO scroll** on the real dataset. `/dashboard/home` is
+retired; `home_layout` is gone from the contract. Three assemblies; the story is in **§13**.
 *(Historical: §9 RESOLVED 2026-07-13; Phases 0/0a/1/2/3a and Phase-3b Batch 1 are recorded below — the
 Phase-1 assembly they describe no longer exists. Read §12ho1-4 first.)*
 Drafted from `TEMPLATE-page-build.md`. **Verify-first (§10) was done BEFORE §1–§8** (D-019 — read what
@@ -1155,3 +1154,144 @@ Scroll: **1440 → 87px** · 1366 → 220px (accepted, §12ho1-7).
 §12ho1-7 legend cap · §12ho2-2 subtitle · §12ho2-7 News title · §12ho2-11 Select amendment · SummaryHead
 `meta` + QuoteCardRow `summary` · Lucide ↗ · §9-11 strings · §9-13 "Home" · §12ho1-1 pick ·
 **the residual 87px (§12ho2-12)**.
+
+---
+
+## §12 — PHASE-3b BATCH 4 + CLOSE-OUT (2026-07-14)
+
+### §12ho4-1 — Review tile height (owner's last finding)
+
+**Guard first, proven RED.** `tile-integrity` gained a **per-row equal-height** assertion. Note *what*
+it asserts: not the grid **cell** — those already matched — but the **painted card box**, which is what
+the owner actually looks at. RED at both themes:
+`review is 209px@9520 vs networth 233px@9508`. Before: `12ho4-1-BEFORE-review-tile.png`.
+
+**The defect.** Review is the one tile that is **not itself a `.lf-card`** — the ReviewCard *component*
+is the card. So it sat **nested inside a padded cell**: 24px shorter than its row-mates and inset from
+the row's top edge, while **every check that measured the cell passed**. *(This is the fourth guard on
+this page that measured the wrong box. See §13.)* **Fix:** the cell contributes no padding of its own
+and the card fills it. Row 1 is flush. GREEN, both themes, 1366 + 1440.
+
+### §12ho2-12 FINAL — the fit is MET. **0px overshoot at 1440×900.**
+
+The owner's closing lever: **Quotes to ONE row**. Nothing is hidden — the row scrolls sideways **within
+its own tile**, and the ↗ goes to Markets, which owns the full set.
+
+**The whole journey, measured at 1440×900 with the real dataset:**
+
+| Stage | Overshoot |
+|---|---|
+| Wired (batch 1) | **533px** |
+| Batch 2 (fr-row inflation bug · Quotes 4-5 rows → 2 · ReviewCard detail line · headline clamp) | 170px |
+| Batch 3 (page-local shell removed · tile density · headlines 3→2) | 87px |
+| **Batch 4 (Quotes → 1 row · tile/legend density)** | **0px** ✅ |
+
+**The CI assertion is now a HARD 0**, not a ratchet — and it is measured in a frame that models the
+height a page's content **actually gets** (viewport − chrome − the shell's own padding).
+
+**Only two of those levers were content** (headlines 3→2; Quotes to one row) — **both the owner's own
+calls**. Everything else was a **defect or density**: an `fr`-row inflation bug that let the tallest row
+scale every other row up with it, a page-local shell that should never have existed, tile padding, and
+the donut **legend** (never the ring). **The ReviewCard kept all three verdicts throughout** — owner
+intent: *attention is the page's purpose*.
+
+### §12 — RATIFICATIONS (owner: "all verified", 2026-07-14) — CLOSED
+
+| Item | Status |
+|---|---|
+| §12ho1-7 donut legend cap (top-5 by served weight + **"+N more ↗"**) | ✅ **RATIFIED** — states a count, never an invented "Other"; the ring still draws every segment |
+| §12ho2-2 subtitle — *"Your summary — the ↗ on any card opens the full view."* | ✅ **RATIFIED** (owner's phrasing) — **supersedes §12ho1-1**, whose a/b/c pick is now moot |
+| §12ho2-7 **News** tile title (Briefing = a labelled line inside it) | ✅ **RATIFIED** |
+| §12ho2-11 **Select** borderless resting state | ✅ **RATIFIED** → **DESIGN-SYSTEM §5.2** (focus ring retained; platform-wide) |
+| §12ho2-5 **SummaryHead `meta`** slot + **QuoteCardRow `summary`** | ✅ **RATIFIED** → DESIGN-SYSTEM §5 (one header anatomy; no page-local header variants) |
+| §12ho2-8 **Lucide `arrow-up-right`** + hover pill | ✅ **RATIFIED** |
+| §12ho3-1 standard page shell (no page-local backdrop) | ✅ **RATIFIED** — supersedes §12ho2-4 |
+| §12ho3-2 **donut centre readout** + ring/legend density | ✅ **RATIFIED** → DESIGN-SYSTEM §5 — **Portfolio inherits it** |
+| §12ho3-3 stale-badge containment | ✅ **RATIFIED** |
+| §9-11 per-widget empty-state strings | ✅ **RATIFIED** |
+| §9-13 GLOSSARY **"Home"** | ✅ **RATIFIED** |
+| ReviewCard N=3 verdicts on Home | ✅ **RATIFIED** (owner intent — attention is the page's purpose) |
+
+### Close-out verification
+
+Backend **622**. Frontend `npm run check` **exit 0**: lint · typecheck · tokens · **177 unit** ·
+**157 Playwright**. Live pre-pass, **both themes × 375 / 768 / 1366 / 1440**: **7/7 cards · 0 skeletons ·
+9 ↗ · 0 horizontal overflow · 0 overlapping text · 0 escaping content · 0 clipped tiles · row tiles
+equal height · 0 console errors** · **1440×900 fits with ZERO scroll**; 1366 scrolls 129px (accepted,
+§12ho1-7). Final: `12-FINAL-1440-light.png` · `12-FINAL-1440-dark.png` · `12-FINAL-375-light.png`.
+
+---
+
+## 13. RETROSPECTIVE — what this page cost, and what it taught
+
+**Home took THREE assemblies.** That is the headline, and it is worth being blunt about why.
+
+**1. A widget list is not a layout.** §9 resolved *which* widgets Home shows and in *what order*. The
+first build passed **every** test and the scripted pre-pass — and **failed the page's purpose**, because
+"an at-a-glance snapshot" is a **geometry** requirement a widget list cannot express. A stacked column of
+correct cards is a correct list and a wrong page. **Folded: TEMPLATE now requires the grid map, density
+and viewport target in the plan, owner-approved BEFORE assembly.** *(Already folded at §12ho1-3; verified
+still present.)*
+
+**2. The gate artifact must model the box the product actually has.** The mockup was framed as a bare
+**1366×768 viewport**. The real page never gets one: it sits inside the chrome, and inside the shell's
+own padding. So the gate promised the design ~88px of height that does not exist, the owner **ratified a
+layout against a box that is not real**, and the wired page clipped its own donut and headlines. The
+frame was corrected **twice** — to the content region, then to content-region-minus-shell-padding — and
+fed **real-shaped data** (the demo had 5 asset classes and 3 quotes; reality had 8 and 7, and that
+difference *was* the fit). **Folded into TEMPLATE.**
+
+**3. Four guards reported green over a visibly broken page.** This is the most uncomfortable lesson.
+- The §12ho1-2 checks **counted** affordances — *8 ↗, all with aria-labels* — all still true of headers
+  lying in a **heap in the wrong corner**. A count is not a geometry.
+- The first tile-integrity compared **tile boxes** at **one width**. At 375px the page was garbage and it
+  reported **zero overlaps**: the boxes did not intersect while their **contents printed through each
+  other**.
+- The containment check went green against the gallery's **wide** quote cards — the badge only escapes a
+  **narrow** one. *A specimen only proves what it exercises.*
+- The equal-height check would have measured the grid **cell**, which was already correct, while the
+  **painted card** was 24px short.
+
+  Each was fixed by asserting **what the human sees** — rendered text, the painted box — at **every**
+  breakpoint, with a specimen that **reproduces the defect**, and by being **proven RED first**.
+  **Folded into TEMPLATE.**
+
+**4. A content cut that buys nothing is pure loss.** A grid row is as tall as its **tallest** tile, so
+trimming any other tile buys **zero**. We shrank the donut ring for **~0px** (the capped **legend** was
+taller than the ring all along), and cutting a headline bought **nothing** until density had made that
+tile the binding one. **Measure which element binds before cutting anything the owner asked for.**
+**Folded into TEMPLATE.**
+
+**5. A CI bound can be a ratchet while a decision is pending.** Twice the fit target was unmet and
+closing it needed an owner decision. The bound was set to the **current** number with the target named in
+the failure message — so honesty stayed green, regressions still failed, and the number came down to a
+**hard 0** the moment the decision landed. **Folded into TEMPLATE.**
+
+**6. The thing that went right.** Twice the builder was asked for a green viewport-fit assertion it could
+not honestly produce, and **twice it refused to fake it** — reporting the measured number and the levers
+instead. Both times the owner's decision (accept 1366 scrolling; Quotes to one row) was **better than any
+fudge would have been**, and it could only be made because the number was real. **Reporting a number beats
+asserting a fiction** — and the corollary: an agent that quietly makes its own tests pass is worse than
+useless on a page whose whole product promise is *"never fabricate a figure."*
+
+---
+
+## §14 — CHANGED FILES THIS MILESTONE (for the wholesale re-upload)
+
+Verified against `git diff a4fc4f6..HEAD` — **not** from memory.
+
+| File | What changed |
+|---|---|
+| **`docs/plans/page-home.md`** | This plan: §9 resolutions · the build record · **§12ho1-1..§12ho4-1** (regression, rebuild, mockup gate, Simple removal, wiring, three walk batches, close-out) · **§13 retrospective** · this table. |
+| **`docs/specs/DESIGN-SYSTEM.md`** | §5 amendments **RATIFIED**: **SummaryHead `meta` slot** + **QuoteCardRow `summary`** (one tile-header anatomy; no page-local header variants) · **Lucide `arrow-up-right`** ↗ + hover pill · **AllocationDonut**: **centre readout** (hover + keyboard focus, anchored, no layout shift; **Portfolio inherits**), **`legendMax`/`legendMore`** cap, ring + legend density · **NewsList `clampLines`** · **§5.2 Select** borderless resting state (platform-wide; **focus ring retained**) · Home template note (ONE layout, not Simple/Full). |
+| **`docs/specs/GLOSSARY.md`** | **"Home"** added (RATIFIED, §9-13) · the Home entry no longer names a layout control · **Deprecated terms ×2**: *"Detail level: Simple/Expert"* and *"Home layout: Simple / Full"* (the second retired the first, and then was itself retired) · **News / Briefing** used verbatim for the two things they name (§12ho2-7). |
+| **`docs/audit/DECISIONS.md`** | **D-046 AMENDMENT** — Home has **ONE layout**; the Simple definition is RETIRED; the D-046 row itself marked amended so the table never reads as current alone. Records the owner-approved **content widening** (Gross assets / Liabilities on the hero tile — P-1 holds). |
+| **`docs/specs/API-CONTRACT.md`** | **`/dashboard/home` RETIRED** (deliberate deletion) · settings: **`home_quote_source` added**, **`home_layout` removed** (it would have been a write-only key — D-078) · **`PUT /settings` now 400s an unknown key** (it used to return 200 and change nothing). ⚠ Noted in the table: **an allow-list key is invisible to a shape check**, so these are pinned by **served-value tests**, not the schema. |
+| **`docs/specs/INFORMATION-ARCHITECTURE.md`** | The *"rotating to Home uses the configured layout"* and *"Detail level scoped to Home"* lines corrected — there is nothing left to configure or branch on. |
+| **`docs/plans/TEMPLATE-page-build.md`** | The four folded lessons: the **geometry gate** (already folded at §12ho1-3, re-verified) · **the gate artifact must model the box the product actually has** · **a guard must exercise the failure geometry and be proven RED** · **measure which element binds before cutting content** · **a CI bound may be a ratchet while a decision is pending**. |
+| **`docs/plans/CURRENT.md`** | Home → **DONE ✅**; NEXT re-ordered to **1. release-readiness plan (PLAN ONLY)**, **2. Planning group — Policy first (PLAN ONLY)**; the rest of the queue unchanged. |
+| **`docs/evidence/page-home/`** | 19 screenshots — the regression, the mockup gate, each walk batch, and the finals. |
+
+**Deliberately NOT changed:**
+- **`ROADMAP.md`** — **R-19 (customisable Home) stays PARKED, unamended.** The widget set is still FIXED; nothing this milestone unparks it.
+- **`docs/specs/API-CONTRACT.json` / `docs/openapi.json`** — regenerated, **no diff**. `/settings` serves a free dict, so **a shape check cannot see an allow-list key**. That is not an omission; it is the reason the served-value tests exist, and it is now stated in API-CONTRACT.md.

@@ -219,21 +219,74 @@ test("home grid specimen · fits 1440×900 with real-shaped data, and no tile cl
   expect(report.clipped, "a tile is hiding its own content to make the layout fit").toEqual([]);
   expect(report.hOverflow, "the grid must never scroll sideways").toBeLessThanOrEqual(0);
 
-  // THE TARGET IS 0 — AND IT IS STILL NOT MET (§12ho3, batch 3). The owner's lever sequence was spent
-  // in order — design before content — and it took the LIVE page from 533px of overshoot to 87px at
-  // 1440×900. Every lever's real effect was measured, not assumed: the donut ring shrink bought ~0px
-  // (the CAPPED LEGEND, not the ring, sets that tile's height), and cutting headlines bought ~0px until
-  // density had made News the binding tile in its row — a content cut that buys nothing is pure loss.
+  // THE TARGET IS 0, AND IT IS MET (§12ho2-12 FINAL). This is a HARD assertion now, not a ratchet:
+  // Home's grid fits the 1440×900 content region with real-shaped data (8 asset classes, a long
+  // briefing, a full quote row), inside a frame that models the height the page ACTUALLY gets — the
+  // viewport minus the chrome minus the shell's own padding.
   //
-  // NOTE the frame under this assertion got 88px STRICTER in the same batch (it now subtracts the
-  // shell's own padding, which the page really does lose), so the number below is not comparable to
-  // batch 2's: the same ~126px against a much tighter box.
-  //
-  // It remains a RATCHET, not a pass: the overshoot can never grow, and it drops to 0 the moment the
-  // owner spends a further lever. Reporting the number beats asserting a fiction.
-  const BUDGET_OVERSHOOT = 130;
-  expect(
-    report.vOverflow,
-    `the grid overshoots the 1440×900 content region by ${report.vOverflow}px (target 0; ratchet ${BUDGET_OVERSHOOT}px — see §12ho2-12)`,
-  ).toBeLessThanOrEqual(BUDGET_OVERSHOOT);
+  // Getting here took 533px, spent design-first: the fr-row inflation bug, the page-local shell, tile
+  // density, the donut LEGEND (never the ring), and exactly two content decisions the owner made
+  // himself (headlines 3→2, Quotes to one row). Two levers that "obviously" would help bought nothing,
+  // and were only shown to be no-ops because each one was measured instead of assumed.
+  expect(report.vOverflow, "Home's grid must fit the 1440×900 content region with real-shaped data").toBeLessThanOrEqual(0);
 });
+
+
+// §12ho4-1 — TILES IN ONE GRID ROW ARE THE SAME HEIGHT.
+//
+// The grid cells already matched; what did NOT match was the CARD the user actually sees. The Review
+// tile is the one cell that is not itself a `.lf-card` — the ReviewCard component is the card — so it
+// sat NESTED inside a padded cell: 24px shorter than its neighbours and inset from the row's top edge.
+// Every "is the cell the right size" check passed while the visible box was plainly wrong.
+//
+// So this asserts the VISIBLE card box, not the layout cell: within a grid row, every tile's painted
+// card has the same top and the same height.
+//
+// It runs on the GRID SPECIMEN, not the live route: this suite has no backend, so the live Home renders
+// honest empty states and the ReviewCard — the whole point of the check — never appears. A guard aimed
+// at a page that cannot render the defect is the third lying guard this page has produced; the specimen
+// carries real-shaped data and always renders every tile.
+// (Themes only — the specimen frame is a fixed 1440-wide box, so a viewport loop would just run the
+// same layout twice.)
+for (const theme of ["light", "dark"] as const) {
+  test(`home grid · row tiles are equal height · ${theme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.setViewportSize({ width: 1600, height: 1000 });
+      await page.goto("/#/kitchen-sink");
+      await page.locator(".ks__viewport .hm3__grid").waitFor({ state: "visible", timeout: 15_000 });
+      await page.waitForTimeout(800);
+
+      const rows = await page.evaluate(() => {
+        const byRow: Record<string, { card: string; top: number; height: number }[]> = {};
+        for (const cell of document.querySelectorAll<HTMLElement>(".ks__viewport .hm3__cell")) {
+          // The painted card: the cell itself when it IS a card, else the card it wraps.
+          const box = cell.classList.contains("lf-card")
+            ? cell
+            : (cell.querySelector<HTMLElement>(".lf-card, .lf-review") ?? cell);
+          const r = box.getBoundingClientRect();
+          const key = String(Math.round(cell.getBoundingClientRect().top));
+          (byRow[key] ??= []).push({
+            card: cell.className.split(" ").pop()?.replace("hm3__cell--", "") ?? "?",
+            top: Math.round(r.top),
+            height: Math.round(r.height),
+          });
+        }
+        return byRow;
+      });
+
+      const mismatches: string[] = [];
+      for (const [rowTop, tiles] of Object.entries(rows)) {
+        if (tiles.length < 2) continue;
+        const h = tiles[0].height;
+        const t0 = tiles[0].top;
+        for (const tile of tiles) {
+          if (Math.abs(tile.height - h) > 2 || Math.abs(tile.top - t0) > 2) {
+            mismatches.push(
+              `row@${rowTop}: ${tile.card} is ${tile.height}px@${tile.top} vs ${tiles[0].card} ${h}px@${t0}`,
+            );
+          }
+        }
+      }
+    expect(mismatches, "tiles in the same grid row must be the same painted height").toEqual([]);
+  });
+}
