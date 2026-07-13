@@ -40,6 +40,18 @@ async def test_other_class_overuse_failure_is_isolated(app_client, monkeypatch):
     assert not [i for i in body["items"] if "reclassify" in i["title"].lower()]  # the guarded item is absent
 
 
+async def test_reviewcard_and_review_page_counts_reconcile(app_client):
+    """ND-3 — Net worth's ReviewCard (`/portfolio/review`) and the Review page (`/review`) derive their
+    attention count from the SAME `review_report`, so they reconcile BY CONSTRUCTION (never two numbers
+    that can skew). Add an 'other'-overuse item first so the count is non-zero and meaningful."""
+    await app_client.post("/api/v1/portfolio/manual-holdings", json={
+        "label": "Big misc", "asset_class": "other", "value": 100_000_000, "currency": "SGD",
+    })
+    card = (await app_client.get("/api/v1/portfolio/review")).json()
+    page = (await app_client.get("/api/v1/review")).json()
+    assert card["count"] == page["attention_count"] >= 1
+
+
 async def test_d030_rename_review_endpoint(app_client):
     """D-030 — `/review/centre` retired to `/review`; the centre JSON shape is served at /review.
     (The old path no longer has an API route — it falls through to the SPA shell, i.e. HTML, not the
