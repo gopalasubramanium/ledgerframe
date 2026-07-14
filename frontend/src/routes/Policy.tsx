@@ -15,6 +15,7 @@ import {
   StalenessChip,
   StatusChip,
   useToast,
+  Button,
 } from "../components/ui";
 import type { Column, StatusChipTone } from "../components/ui";
 import {
@@ -214,10 +215,9 @@ export function Policy() {
           policy ? (
             // §12po1-2 / §12po2-2 — the verb follows the STATE (you cannot "edit" a policy you have
             // not set), and the icon rides WITH the text label, never instead of it.
-            <button type="button" className="lf-btn lf-btn--primary pol__btn" onClick={openEditor}>
-              <Pencil aria-hidden="true" />
+            <Button variant="primary" icon={Pencil} onClick={openEditor}>
               {hasTargets ? "Edit policy" : "Set policy"}
-            </button>
+            </Button>
           ) : undefined
         }
       />
@@ -258,10 +258,9 @@ export function Policy() {
               message="No policy defined."
               reason="Set target allocations to see how far your holdings sit from your own targets."
               action={
-                <button type="button" className="lf-btn lf-btn--primary pol__btn" onClick={openEditor}>
-                  <Pencil aria-hidden="true" />
+                <Button variant="primary" icon={Pencil} onClick={openEditor}>
                   Set policy
-                </button>
+                </Button>
               }
             />
           )}

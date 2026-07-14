@@ -46,15 +46,7 @@
 }
 
 /* Mark reviewed — the page's one [S]-gated write; icon + KEPT text label (§12rv1-1, WCAG-AA). */
-.rv__markbtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.rv__markicon {
-  width: var(--icon-size, 1em);
-  height: var(--icon-size, 1em);
-}
+/* Mark-reviewed button MIGRATED to the ratified `Button` (§9-13) — no page-local copy remains. */
 
 /* History table cap (§12rv1-6) — the DataTable worklist standard (--table-max-h, 60vh) bounds both
    the attention and history tables so they scroll internally; the page keeps ONE scroll region.

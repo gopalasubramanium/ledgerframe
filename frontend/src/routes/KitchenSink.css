@@ -202,3 +202,10 @@
   width: 9rem;
   flex: 0 0 9rem;
 }
+
+/* The Cash flow specimen must SCROLL like the real page does (§9-10: ONE page scroll region).
+   The Home frame is `overflow: hidden` because that grid must FIT one viewport — a worklist must
+   not, and a frame that cannot scroll would hide two of the three sections from the gate. */
+.ks__viewport--scroll {
+  overflow-y: auto;
+}

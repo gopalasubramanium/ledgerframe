@@ -6,6 +6,7 @@ import "./KitchenSink.css";
 import { DisplayControls } from "../components/DisplayControls";
 import { TokenBoard } from "./TokenBoard";
 import { HomeMockupFull } from "./HomeMockup";
+import { CashFlowMockup } from "./CashFlowMockup";
 import {
   AllocationDonut,
   Clock,
@@ -682,6 +683,22 @@ export function KitchenSink() {
       </Section>
 
       {/* ---------------------------------------------------------------- */}
+      <Section
+        bleed
+        title="Cash flow — LAYOUT SPECIMEN (page-cash-flow §9-10) — PROPOSED, AWAITING RATIFICATION"
+        note="THE GEOMETRY GATE. Static, unwired — it exists so the geometry can be ratified BY LOOKING, before the page is assembled. The ruling: THREE STACKED SECTIONS (Obligations · Contributions · Goals) + the runway summary, each table internally capped and scrolled so the PAGE keeps ONE scroll region however long a list grows. The frame is the REAL content region (1440×724 = viewport − chrome − shell padding), and the data is REAL-SHAPED on purpose: 12 obligations, 7 contributions, 5 goals, long names, multi-currency, a `once` row with NO monthly rate (renders '—', never '0.00' — excluded from the burn is not the same as free), and a goal with no basis (progress '—', never '0%'). A specimen fed a toy dataset flatters the design and the gate lies."
+      >
+        <div className="ks__stack">
+          <Specimen label="Cash flow · 1440×724 (the real content region) — runway summary, then Obligations · Contributions · Goals.">
+            <div className="ks__viewportscroll">
+              <div className="ks__viewport ks__viewport--scroll">
+                <CashFlowMockup />
+              </div>
+            </div>
+          </Specimen>
+        </div>
+      </Section>
+
       {/* ---------------------------------------------------------------- */}
       <Section
         bleed

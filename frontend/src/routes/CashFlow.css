@@ -1,0 +1,79 @@
+/* Cash flow — GEOMETRY (page-cash-flow §9-10, PROPOSED; ratify at the gate).
+   Three STACKED sections + the runway summary. Each table is capped and scrolls INTERNALLY
+   (`--table-max-h`, the DataTable default), so the PAGE keeps ONE scroll region however long any
+   one list grows. Tokens only. */
+
+.cf__runway,
+.cf__section {
+  min-width: 0;
+}
+
+/* The runway card: Net worth's figures, from Net worth's reader (§9-3) — never re-derived here. */
+.cf__runwaybody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+.cf__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 8rem;
+}
+.cf__figlabel {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+}
+.cf__figvalue {
+  color: var(--text-primary);
+  font-size: var(--font-size-20);
+  line-height: var(--line-20);
+  font-variant-numeric: tabular-nums;
+}
+.cf__note {
+  flex: 1 1 16rem;
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+}
+
+/* A card header: title left, its total beside it, the add action right — on ONE row.
+   ⚠ FINDING (not silently fixed here): `.lf-card` and `.lf-card__body` are ratified, but the card
+   HEADER is page-local on every page that has one (`.nw__cardhead`, Pricing Health's, News's) — and
+   `.lf-card__header`, which Policy uses, has NO CSS RULE AT ALL (it renders as a plain block; its
+   stale chip falls under the title by accident, not by design). That is a centralization candidate,
+   but Policy is an ACCEPTED page and a geometry gate is not the place to silently restyle it.
+   Recorded for the owner instead. */
+.cf__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.cf__head .lf-card__title,
+.cf__head h2 {
+  margin: 0;
+  font-size: var(--font-size-16);
+  line-height: var(--line-16);
+}
+/* The total sits WITH its heading, so a figure and the thing it totals cannot drift apart. */
+.cf__total {
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  font-variant-numeric: tabular-nums;
+}
+/* The action hugs the right edge, with or without a total beside the title. */
+.cf__head .lf-btn,
+.cf__head .lf-summarylink {
+  margin-left: auto;
+}
+
+/* Each list is capped so three long lists cannot turn the page into an endless scroll. */
+.cf__section .lf-table-wrap {
+  --table-max-h: 22rem;
+}

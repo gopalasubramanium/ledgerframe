@@ -257,8 +257,3 @@
    ⚠ This is the SECOND icon+label button (Review · Policy). Per the centralization rule the THIRD
    occurrence EXTRACTS the shared treatment (the Segmented/StatusChip precedent) — recorded in
    page-policy §12po3-1, not pre-emptively built here. */
-.pol__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}

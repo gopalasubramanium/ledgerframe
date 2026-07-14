@@ -15,6 +15,7 @@ import {
   useToast,
   SummaryLink,
   StatusChip,
+  Button,
 } from "../components/ui";
 import type { Column, StatusChipTone } from "../components/ui";
 import { CircleCheck } from "../icons";
@@ -124,10 +125,9 @@ export function Review() {
         title="Review"
         subtitle="What needs a look — reporting only, not advice or a required action"
         actions={
-          <button type="button" className="lf-btn lf-btn--primary rv__markbtn" onClick={() => { setNote(""); setNextDate(""); setDialogOpen(true); }}>
-            <CircleCheck className="rv__markicon" aria-hidden />
+          <Button variant="primary" icon={CircleCheck} onClick={() => { setNote(""); setNextDate(""); setDialogOpen(true); }}>
             Mark reviewed
-          </button>
+          </Button>
         }
       />
 

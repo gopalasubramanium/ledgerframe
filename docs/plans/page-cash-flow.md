@@ -537,3 +537,84 @@ semantics**) · *Contribution* (:180, **and it states the runway exclusion**) ·
   `contributions._apply` (`:58`) truncates to 3 chars. **A free-text categorical on a write path** — the
   **A9 defect, in three more places**, and the §12po1-6 ruling (fix at the source, app-wide) **did not reach
   these endpoints**. → **§9-6.**
+
+---
+
+## 11. BUILD RECORD — Phase 0 → Phase 0a (2026-07-15)
+
+**Phase 0 (backend-first, contract regenerated in the same commit). All fail-first.**
+
+| Item | RED evidence (before the fix) |
+|------|-------------------------------|
+| **9-1** — pin **both §0 D-057 invariants** *(shipped FIRST, alone, before anything else touched these services)* | Both invariants **held**, so the tests passed on first write — which proves nothing. **Seen RED against deliberately broken implementations:** letting contributions into the burn **collapsed the runway 60.4 → 1.2 months** (`assert 1.2 == 60.4`; `assert 152000.0 == 2000.0`); adding `"once"` to `MONTHLY_FACTOR` turned a one-off tax bill into a monthly burn (`assert 92000.0 == 2000.0`; `assert 90000.0 == 0`). **Both perturbations reverted.** |
+| **9-4** — per-row `monthly_equivalent`, server-side | `KeyError: 'monthly_equivalent'` |
+| **9-5** — `*_display` on all four readers (D-105) | `KeyError: 'target_base_display'` |
+| **9-6** — user-plain `detail` + `currency` ∈ the master | `raw tuple served: "kind must be one of ('expense', 'income')"` |
+| **9-7b** — `DELETE` of a missing id → 404 | `assert 200 == 404` |
+| **9-9** | Nine `present` rows + the behaviour deltas (doc-only). |
+
+**Two decisions inside 9-4 worth stating, because a "0" would have been the easy wrong answer:**
+- A **`once` obligation serves `monthly_equivalent: null`, NOT `0`.** A one-off has **no monthly rate**;
+  a served `0` would read as *"this costs nothing per month"*. **Excluded from the burn is not the same as
+  free** (D-057). Same for a `once` contribution.
+- A goal with **`basis = none`** serves **`null`** progress, not `0%`. *A goal without a basis is not a goal
+  at zero* (Guarantee 3).
+
+**⚠ A guard of mine was too crude, and I fixed the GUARD.** My first §9-6 assertion banned **apostrophes**
+outright — which would also have banned **quoting the offending value** (`'zzz'`), i.e. *good copy*. It was
+tightened to ban the **tuple/list literal** specifically. *The guard must catch the defect, not the good
+copy that resembles it.*
+
+**⚠ The app-wide grep 9-6 demanded found one more, outside this page:** `PUT /settings` served
+*"unknown setting key(s): `['foo']`"* — a raw Python **list**. **Fixed in the same sweep** (the §12po1-6
+rule is app-wide, and a copy fix is never only where it was spotted).
+
+**Phase 0a**
+
+- **9-13 — `Button` EXTRACTED** (DESIGN-SYSTEM §5.4 amendment, **PROPOSED**). The **3rd occurrence** fired
+  the trigger page-policy §12po3-1 recorded. **Review's `.rv__markbtn`/`.rv__markicon` and Policy's
+  `.pol__btn` are MIGRATED onto it and DELETED — none remains** (grep-verified). The **icon-button guard was
+  RETARGETED at the shared class, not removed** — *a migration that drops its guard stops being proven* —
+  and it **passes on both migrated buttons, both themes**.
+- **9-10 — the STATIC LAYOUT SPECIMEN** ships at `/kitchen-sink`, in the **real content region**
+  (1440×724 = viewport − chrome − shell padding), **both themes**, with **real-shaped data**: 12
+  obligations · 7 contributions · 5 goals, long names, multi-currency, **a `once` row rendering "—"**, and
+  **a basis-less goal rendering "—"**. The specimen **scrolls like the real page does** (the Home frame is
+  `overflow: hidden` because that grid must *fit*; a worklist must not), and **each table caps and scrolls
+  inside itself** — asserted: the 12-row list scrolls **within its own table**, so the **page keeps ONE
+  scroll region**.
+
+### ⚠ Two defects the guards caught in MY OWN specimen — both real, both mine
+
+1. **I hand-rolled the ↗ summary link** (`.lf-summarylink` — which is `position: absolute`) inside an
+   unpositioned header, and **the glyph ESCAPED ITS CARD**. This is **the exact defect that killed the
+   first Home build** (§12ho1-4), and the **tile-integrity guard caught it**. Replaced with the **ratified
+   `SummaryHead`**. *"There are no page-local variants" is the rule — and this is why.*
+2. **I broke the Home-grid guard by ordinal position.** It located its frame with
+   `querySelector(".ks__viewport")` — *"the first frame in the gallery"* — which **silently became a
+   different specimen** the moment I added one above it. **Fixed to locate the Home frame by its CONTENT.**
+   *A guard that depends on document order is a guard that quietly changes what it measures.*
+
+### ⚠ FINDING — recorded, deliberately NOT fixed here
+
+**`.lf-card__header` has no CSS rule at all.** `.lf-card` and `.lf-card__body` are ratified, but the card
+**header** is **page-local on every page that has one** (`.nw__cardhead`, Pricing Health's, News's) — and
+**Policy uses `.lf-card__header`, which styles nothing** (its stale chip falls under the title by accident,
+not by design). That is a **centralization candidate** — but **Policy is an ACCEPTED page, and a geometry
+gate is not the place to silently restyle it.** Cash flow uses its own `.cf__head` for now. **Owner's call.**
+
+---
+
+## 12. ⏸ STOP — GEOMETRY GATE (awaiting the owner's ratification)
+
+**Phases 1–3a do not start until the owner ratifies the §9-10 geometry from the specimen.**
+
+**To review:** `/kitchen-sink` → *"Cash flow — LAYOUT SPECIMEN (§9-10) — PROPOSED, AWAITING
+RATIFICATION"*. Screenshots (both themes, top/mid/end) in `frontend/e2e/smoke/artifacts/cf-specimen-*.png`.
+
+**What is being ratified:** three **stacked** sections (Obligations · Contributions · Goals) + the runway
+summary card; each table **internally capped** (`--table-max-h: 22rem`) so the **page keeps one scroll
+region**; the section header carrying **title + its total + the add action on one row**.
+
+**Also pending ratification:** the `Button` extraction + both migrations · the empty-state copy (9-8) ·
+the goal-delete warning copy (9-7c) · the GLOSSARY additions (9-12) · the §9-6 validation strings.

@@ -12,9 +12,12 @@ import { test, expect } from "@playwright/test";
 //
 // This is the 2nd icon+label button (Review · Policy). Per the centralization rule, the 3rd occurrence
 // EXTRACTS a shared treatment — recorded in the plan, not pre-emptively built here.
+// §9-13 — both buttons are now the RATIFIED `Button` component (`.lf-btn--icon`); the page-local
+// copies (.rv__markbtn, .pol__btn) are DELETED. The guard is RETARGETED at the shared class, not
+// removed — a migration that drops its guard is a migration that stops being proven.
 const BUTTONS = [
-  { name: "review · Mark reviewed", hash: "#/review", selector: ".rv__markbtn" },
-  { name: "policy · Edit/Set policy", hash: "#/policy", selector: ".pol__btn" },
+  { name: "review · Mark reviewed", hash: "#/review", selector: ".lf-btn--icon" },
+  { name: "policy · Edit/Set policy", hash: "#/policy", selector: ".lf-btn--icon" },
 ];
 
 for (const theme of ["light", "dark"] as const) {

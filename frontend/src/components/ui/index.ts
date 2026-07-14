@@ -51,6 +51,8 @@ export type { TickerStripProps } from "./TickerStrip";
 // §5.3 Provenance & status
 export { ProvenanceBadge } from "./ProvenanceBadge";
 export type { ProvenanceBadgeProps } from "./ProvenanceBadge";
+export { Button } from "./Button";
+export type { ButtonProps, ButtonVariant } from "./Button";
 export { StatusChip } from "./StatusChip";
 export type { StatusChipProps, StatusChipTone } from "./StatusChip";
 export { StalenessChip } from "./StalenessChip";

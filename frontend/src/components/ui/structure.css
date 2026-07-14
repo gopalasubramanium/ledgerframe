@@ -398,3 +398,17 @@
 .lf-review__more:hover {
   text-decoration: underline;
 }
+
+/* §9-13 — THE icon+label button treatment (DESIGN-SYSTEM §5.4 amendment, PROPOSED 2026-07-15).
+   Extracted at the THIRD occurrence (Review's Mark reviewed · Policy's Edit policy · Cash flow's
+   Add …), per the trigger page-policy §12po3-1 recorded. Both page-local copies (.rv__markbtn +
+   .rv__markicon, .pol__btn) are MIGRATED onto `Button` and DELETED — none remains.
+
+   A centred inline-flex row with a token gap, so the icon lands on the label's OPTICAL CENTRE
+   instead of baseline-aligning against it. The icon's SIZE is already global (`.lf-btn svg` →
+   `--icon-size`), which is why a per-call-site `size` prop is a lie about what controls it. */
+.lf-btn--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

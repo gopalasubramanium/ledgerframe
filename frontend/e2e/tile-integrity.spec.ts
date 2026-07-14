@@ -201,7 +201,11 @@ test("home grid specimen · fits 1440×900 with real-shaped data, and no tile cl
   await page.locator(".hm3--full").waitFor({ state: "attached", timeout: 15_000 });
 
   const report = await page.evaluate(() => {
-    const frame = document.querySelector(".ks__viewport") as HTMLElement;
+    // Locate the HOME frame by its CONTENT, not by ordinal position. It used to be
+    // `querySelector(".ks__viewport")` — "the first frame in the gallery" — which silently became a
+    // DIFFERENT specimen the moment another one was added above it (page-cash-flow §9-10). A guard
+    // that depends on document order is a guard that quietly changes what it measures.
+    const frame = (document.querySelector(".hm3--full") as HTMLElement).closest(".ks__viewport") as HTMLElement;
     const clipped: string[] = [];
     for (const cell of frame.querySelectorAll<HTMLElement>(".hm3__cell")) {
       const name = cell.className.split(" ").pop() ?? "?";
