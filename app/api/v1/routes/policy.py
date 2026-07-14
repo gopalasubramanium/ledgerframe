@@ -51,7 +51,16 @@ async def get_policy(session: AsyncSession = Depends(get_db)) -> dict:
 @router.get("/policy/drift")
 async def get_drift(entity_id: int | None = Query(default=None),
                     session: AsyncSession = Depends(get_db)) -> dict:
-    return await compute_drift(session, entity_id=entity_id)
+    """Live drift for the household. An entity filter is rejected: policy targets are
+    household-wide, so drift for a single entity would compare it against a policy that is not
+    its own."""
+    # page-policy §9-21. Targets are household-global (one active policy, no entity FK), so scoping
+    # the ACTUALS to one entity yields an answer that looks precise and means nothing. A silently
+    # meaningless comparison is an API honesty trap — reject it, never ignore it. Per-entity
+    # policies would be a data-model change (ROADMAP R-33).
+    if entity_id is not None:
+        raise HTTPException(400, "policy is household-scoped: drift cannot be filtered to one entity")
+    return await compute_drift(session)
 
 
 @router.put("/policy", dependencies=[Depends(require_auth)])

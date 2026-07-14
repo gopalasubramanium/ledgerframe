@@ -308,7 +308,9 @@ async def review_centre(session: AsyncSession) -> dict:
             # A10: the policy verdict carries its input quality, so a Review section computed off
             # stale prices can never present as fresh either (the drift reader is the same one the
             # Policy page reads — one derivation, one honesty layer).
-            "policy": {"out_of_band": _out_of_band(drift), "has_targets": drift.get("dimensions") != [],
+            # 9-8: read the SERVED `has_targets` rather than re-deriving it here. One fact, one
+            # expression — they agreed only by coincidence of matching rules, and nothing enforced it.
+            "policy": {"out_of_band": _out_of_band(drift), "has_targets": drift.get("has_targets", False),
                        "stale_inputs": drift.get("stale_inputs", 0),
                        "inputs_stale": drift.get("inputs_stale", False)},
             "liquidity": {"liquid_pct": ladder["liquid_pct"], "runway_status": run["status"],

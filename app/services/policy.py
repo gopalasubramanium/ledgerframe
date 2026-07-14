@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import SUPPORTED_CURRENCIES, get_settings
+from app.core.money import format_money_display, to_display
 
 # D-083: region is the six-bucket model (India · Singapore · US · Europe · APAC · Other), derived
 # server-side from listing_country. The canonical derivation lives in app.core.regions.
@@ -127,14 +128,19 @@ async def compute_drift(session: AsyncSession, entity_id: int | None = None) -> 
                 "drift_pct": _q(actual_pct - t.target_pct, 1),
                 "lower_pct": _q(lower, 1), "upper_pct": _q(upper, 1),
                 "status": status,
+                # 9-6 / D-105: money is formatted in the BACKEND and rendered verbatim. The gap is a
+                # GAP — a factual distance from the user's own target. It is never a trade (D-055).
                 "gap_base": _q(gap_base, 0),
+                "gap_base_display": format_money_display(gap_base),
                 "actual_value": _q(av, 0),
+                "actual_value_display": format_money_display(av),
             })
             covered += t.target_pct
             seen.add(t.bucket)
 
         untargeted = [
-            {"bucket": k, "actual_pct": _q(v / gross * 100, 1), "actual_value": _q(v, 0)}
+            {"bucket": k, "actual_pct": _q(v / gross * 100, 1),
+             "actual_value": _q(v, 0), "actual_value_display": format_money_display(v)}
             for k, v in sorted(actual_val.items(), key=lambda kv: kv[1], reverse=True)
             if k not in seen
         ]
@@ -155,9 +161,13 @@ async def compute_drift(session: AsyncSession, entity_id: int | None = None) -> 
             if w > limit:
                 concentration.append({
                     "label": h.name or h.label,
+                    # 9-17 / D-098: an entity reference LINKS. A manual asset has no symbol, so it
+                    # renders as plain text — an honest null, never a guessed route.
+                    "symbol": h.symbol,
                     "weight_pct": _q(w, 1),
                     "limit_pct": _q(limit, 1),
                     "value": _q(h.market_value_base, 0),
+                    "value_display": format_money_display(h.market_value_base),
                 })
         # weight_pct is always _q(...) -> float; the dict is str|float so mypy widens it to object.
         concentration.sort(key=lambda c: cast(float, c["weight_pct"]), reverse=True)
@@ -171,7 +181,14 @@ async def compute_drift(session: AsyncSession, entity_id: int | None = None) -> 
 
     return {
         "base_currency": base,
-        "total_value": _q(val.total_value, 0),
+        # 9-3: the denominator the weights are actually OF. `total_value` (NET of liabilities) is
+        # GONE from this payload — it could not be reconciled against gross-denominated weights, and
+        # Net worth is its canonical home (P-1). Serving both was a Guarantee-3 trap.
+        # Served at FULL precision, exactly as /portfolio/summary serves it — the equality is the
+        # point (A11: one denominator, one home). Rounding here would make the same figure print as
+        # two different numbers on two pages.
+        "gross_assets": to_display(gross),
+        "gross_assets_display": format_money_display(gross),
         "has_targets": any(policy.targets),
         "max_position_pct": _q(policy.max_position_pct, 1) if policy.max_position_pct is not None else None,
         "dimensions": dimensions,

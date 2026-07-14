@@ -101,3 +101,19 @@ checking:
   now** (removal is a contract delta with its own review).
 
 <!-- AUDIT COMPLETE -->
+
+## Untyped policy routes — `response_model` DEFERRED (page-policy §9-10, owner 2026-07-14)
+
+`GET /api/v1/policy` and `GET /api/v1/policy/drift` return a bare `dict` (`routes/policy.py`), so their
+response shape is **not pinned in the OpenAPI contract** — only their served **values** are pinned, by
+tests.
+
+**Typing them is DEFERRED, deliberately, and it was NOT bundled into the page-policy build.** The reason
+is the **page-markets §12mk3-2 hazard**: a `response_model` **silently strips any key it does not
+declare**. The page-policy Phase 0 batch *added* served fields (`gross_assets`, the `*_display` strings,
+`concentration[].symbol`, the A10 staleness annotation) — adding a `response_model` in the same change is
+exactly how one of those fields vanishes **unnoticed**, with the contract regenerating cleanly around the
+hole.
+
+**When it is done:** as its **own change**, with an assertion that **every currently-served key survives**
+the typing. Until then the status quo (untyped, value-pinned) blocks nothing.

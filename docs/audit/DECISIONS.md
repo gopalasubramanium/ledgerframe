@@ -746,6 +746,19 @@ clarifying notes recorded in the guide.
   formatting). **Policy:** equities / ETFs / funds / indices → **2dp**; crypto →
   **up to 6 significant digits** (so sub-cent tokens aren't truncated to `0.00`).
   Grouped thousands; **stored native precision is unchanged — display only.**
+  - **⚠ SCOPE AMENDMENT (owner, 2026-07-14; page-policy §9-6). D-105 BINDS ALL MONEY, not just quote
+    prices.** As written, D-105 was scoped to *quote-price display precision*, which left every other
+    money field ambiguous — and `frontend/src/format/number.ts` existed, so a page could legitimately
+    read the decision either way. **Ruled: money is formatted in the BACKEND and rendered verbatim,
+    wherever it appears.** The frontend formats **no money**. **Percentages are OUT of scope** — they
+    continue to format client-side (D-105 is about *money*, and a percentage carries no currency,
+    precision-by-asset-class, or grouping decision). The general helper is
+    **`format_money_display(value)`** (`app/core/money.py`) — grouped thousands, 2dp, **`None` passes
+    through** so an absent figure stays honestly empty and is never a fabricated `0` (Guarantee 3).
+    First applied beyond quotes by the page-policy build: `gap_base_display`,
+    `actual_value_display`, `value_display`, `gross_assets_display` on `GET /policy/drift`.
+    *(This does not change D-105's original quote-price ruling; it settles the scope question that
+    ruling left open.)*
   - **Where:** `format_price_display(price, asset_class)` in `app/core/money.py`,
     applied in the quote display path (`get_cached_quote` / `refresh_quote`, so
     overview / global / watchlist / instrument-detail quotes carry it) and the

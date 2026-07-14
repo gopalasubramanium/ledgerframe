@@ -230,3 +230,77 @@ async def test_policy_currency_weights_are_portfolios_allocation_weights(app_cli
     for ccy, value in summary["allocation_by_currency"].items():
         expected = round(value / gross * 100, 1)
         assert rows[ccy]["actual_pct"] == pytest.approx(expected, abs=0.1)
+
+
+# --------------------------------------------------------------------------- #
+# PHASE 0 — the §9 one-pass contract deltas (9-3, 9-6, 9-17, 9-21, 9-18).
+# --------------------------------------------------------------------------- #
+
+
+async def test_drift_serves_gross_assets_and_not_a_net_total(app_client):
+    """9-3 — the denominator the weights are actually OF, and no net total beside them.
+
+    `total_value` was NET of liabilities while every % divides by GROSS assets. Serving both
+    meant serving two numbers that cannot be reconciled the moment a liability exists. Net worth
+    is canonical for the net total (P-1), so the drift payload does not carry it at all.
+    """
+    d = (await app_client.get("/api/v1/policy/drift")).json()
+    assert "total_value" not in d          # the unreconcilable figure is GONE, not relabelled
+    assert d["gross_assets"] > 0
+    assert d["gross_assets_display"]       # D-105: served, rendered verbatim
+
+    summary = (await app_client.get("/api/v1/portfolio/summary")).json()
+    # One denominator, one home (A11) — Policy's base IS Portfolio's gross assets.
+    assert d["gross_assets"] == summary["gross_assets"]
+    # ...and it is NOT the net total (the demo carries a liability, so these genuinely differ).
+    assert summary["total_value"] != summary["gross_assets"]
+
+
+async def test_drift_money_is_served_as_display_strings(app_client):
+    """9-6 — D-105 binds ALL money: the frontend renders, it never formats."""
+    await app_client.put("/api/v1/policy/targets", json={"targets": [
+        {"dimension": "asset_class", "bucket": "equity", "target_pct": 30}]})
+    await app_client.put("/api/v1/policy", json={"max_position_pct": 5})
+    d = (await app_client.get("/api/v1/policy/drift")).json()
+
+    row = d["dimensions"][0]["rows"][0]
+    assert isinstance(row["gap_base_display"], str)
+    assert isinstance(row["actual_value_display"], str)
+    assert "," in row["actual_value_display"] or "." in row["actual_value_display"]  # formatted
+    for u in d["dimensions"][0]["untargeted"]:
+        assert isinstance(u["actual_value_display"], str)
+    assert d["concentration"], "the demo breaches a 5% limit"
+    assert isinstance(d["concentration"][0]["value_display"], str)
+    # Percentages stay raw numbers — 9-6 scopes D-105 to MONEY (owner ruling).
+    assert isinstance(row["actual_pct"], float)
+
+
+async def test_concentration_rows_carry_a_nullable_symbol(app_client):
+    """9-17 — D-098: an entity reference links. A symbol-less manual asset renders plain text."""
+    await app_client.put("/api/v1/policy", json={"max_position_pct": 1})
+    d = (await app_client.get("/api/v1/policy/drift")).json()
+    assert d["concentration"]
+    for c in d["concentration"]:
+        assert "symbol" in c                       # present on EVERY row...
+        assert c["symbol"] is None or isinstance(c["symbol"], str)   # ...nullable, never guessed
+    # The demo's dominant position is a manual property (no symbol) — it must be honestly null,
+    # not a fabricated route.
+    assert any(c["symbol"] is None for c in d["concentration"])
+
+
+async def test_drift_rejects_an_entity_scope(app_client):
+    """9-21 — policy targets are HOUSEHOLD-global, so scoping the actuals to one entity would
+    compare it against a policy that was never its own. A silently meaningless comparison is an
+    API honesty trap; it is an honest 400 instead."""
+    r = await app_client.get("/api/v1/policy/drift", params={"entity_id": 1})
+    assert r.status_code == 400
+    assert "household" in r.json()["detail"].lower()
+    # The household read still works.
+    assert (await app_client.get("/api/v1/policy/drift")).status_code == 200
+
+
+async def test_default_band_pct_is_five(app_client):
+    """9-18 — the ratified default band. A ratified VALUE ships a code test pinning the SERVED
+    value in the same batch as the spec edit (the D-084 rule) — a spec edit alone leaves the code
+    free to silently disagree."""
+    assert (await app_client.get("/api/v1/policy")).json()["default_band_pct"] == 5.0

@@ -7967,6 +7967,7 @@
     },
     "/api/v1/policy/drift": {
       "get": {
+        "description": "Live drift for the household. An entity filter is rejected: policy targets are\nhousehold-wide, so drift for a single entity would compare it against a policy that is not\nits own.",
         "operationId": "get_drift_api_v1_policy_drift_get",
         "parameters": [
           {
