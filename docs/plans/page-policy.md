@@ -836,3 +836,79 @@ addendum**; each was **fail-first** and shipped in **one commit**.
   trust. The first version of the test asserted the convenient fiction (`inputs_stale is False`) and was
   **corrected to assert what is true**. *The fixture was not "wrong" — the verdict was simply never honest
   about it before.*
+
+---
+
+## 11. BUILD RECORD — Phases 0 → 3a (2026-07-14)
+
+**Phase 0 (contract deltas, backend-first, contract regenerated in the same commit).** 9-3 `gross_assets`
+served / net `total_value` **dropped** · 9-6 `*_display` money strings (**D-105 scope amendment** recorded
+in `docs/audit/DECISIONS.md`) · 9-17 nullable `concentration[].symbol` · 9-21 `?entity_id` **rejected 400**
+· 9-8 Review reads the served `has_targets` · 9-18 `default_band_pct = 5` pinned by test · 9-9 four
+`present` rows + the delta rows in `docs/specs/API-CONTRACT.md` · 9-10 typing **deferred** to
+`docs/audit/08-TECH-DEBT.md`. **All fail-first; every RED recorded in its commit message.**
+
+⚠ **A Phase-0 item surfaced in Phase 1 and was done properly, not hacked around:** **`/refdata` now serves
+the `currency` vocabulary.** MASTER-DATA §3's amendment makes `SUPPORTED_CURRENCIES` the canonical currency
+master, so it is a **fixed vocabulary** and belongs on `/refdata` (D-005) — the endpoint's own docstring
+still called currency "extensible", which the amendment had just made false. Without it the bucket
+`MasterSelect` had **no served vocabulary** for the currency dimension. A test pins the **picker's options
+== the A9 validator's list**, so they can never drift apart. *(The alternative — hardcoding a currency list
+in the frontend — would have been a D-005 violation to avoid a contract change.)*
+
+**Phase 0a — `StatusChip` EXTRACTED** (§5 amendment, **PROPOSED**), `ph__chip` + `rv__chip` **migrated and
+deleted**, kitchen-sink specimens shipped. ⚠ **A conflict in the 9-15 ruling was surfaced, not silently
+resolved** — see the DESIGN-SYSTEM row: *"variants neutral / attention"* + *"no behaviour change"* cannot
+both hold, because `ph__chip` has **four** tones (Pricing Health colours **Fresh** green and
+**Unavailable** red). A two-variant chip would have **silently deleted those semantics**. The chip ships a
+**superset**; Policy is **barred** from `positive`/`negative` (9-16). **Owner ratifies the superset.**
+
+**Phase 1 — assembly.** GLOSSARY **first**, then the popover store (8 terms). Segmented + one drift table +
+concentration card + the [S]-gated bulk-replace editor + the empty state.
+
+**Phase 2 — tests, every guard PROVEN RED on the defect it exists to catch.** All 8 frontend tests passed
+first run, so the two that matter were **mutation-tested**: trade language in the gap column (`"Gap to
+target"` → `"Amount to sell"`) took the **D-055 grep RED**; a silently-dropped row took the **bulk-replace
+guard RED** (`expected […(2)] to have a length of 3`). Both perturbations reverted. Plus the **live
+Policy↔Review reconciliation** (ND-3 posture) and `/policy` added to the **overflow + single-scroll** suite.
+
+**Phase 3a — scripted pre-pass: GREEN.** Live app + real backend, **reset instance**, both themes × 320 /
+375 / 900 / 1366, **real-shaped data (all 13 asset classes)**, editor round-trip against the real PIN-gated
+write path. **0 console errors.** Live reconciliation: **Policy displays 15 out-of-band, Review serves 15.**
+
+### What the pre-pass and the screenshot caught that the unit tests could not
+
+| # | Finding | Resolution |
+|---|---------|------------|
+| **§11-1** | **A `GlossaryTerm` inside an `<h2>` DESTROYS the heading's accessible name.** It carries `role="button"` + `aria-label`, so the "Drift" heading's name became *"Out of band — definition"*. Invisible to every unit test; caught the moment the pre-pass looked for the heading by role. | **FIXED.** Headings are plain text; the `[Help]` terms live in a **definitions strip** under the table, where the words actually are. *(Treatment PROPOSED — ratify at the walk.)* |
+| **§11-2** | **`term-concentration` was referenced but never existed in the popover store** — the popover would have silently rendered nothing. | **FIXED.** Added (it was already in `GLOSSARY.md`). |
+| **§11-3** | ⚠ **D-005 VIOLATION IN MY OWN CODE: the page was title-casing bucket keys client-side** — it rendered **"Etf"** and **"Mutual fund"** while `/refdata` **serves** the proper display labels (**"ETF"**). *Only visible by LOOKING at the rendered page.* | **FIXED.** The page now renders the **served** labels via `useLabelFor()` — the UI hardcodes no value→label mapping. |
+| **§11-4** | **A pre-pass assertion was WRONG, not the page.** My chip-containment check compared the chip's **absolute viewport x** against the viewport width and went RED at 320px. **Measuring instead of believing the theory** (page-net-worth §12b3-1) showed the `DataTable`'s own `.lf-table__scroll` is `overflow-x: auto` **by design** (585px of table in a 208px box); the chip is **inside its row**, and the document + shell do **not** overflow. | **ASSERTION FIXED** to measure **containment within the row** — the real invariant. The page was never broken. |
+
+### ⚠ §11-5 — AN HONEST FINDING I AM **NOT** FIXING SILENTLY (owner decides at the walk)
+
+**A policy target can be set on the `liability` asset class — and it can never be satisfied.**
+
+`master_buckets("asset_class")` (Gate A9) offers all **13** `AssetClass` values, **including `liability`**.
+But **gross assets exclude liabilities by construction** (D-033 — *a mortgage cannot distort a weight*), so
+a `liability` bucket's actual share is **permanently 0.00%**. The page will therefore report it as
+**"Under"** its band **forever**, with a gap that **can never close** — a figure that is arithmetically
+correct and practically meaningless. It is visible in the Phase-3a screenshot (Liability · 0.00% · Under).
+
+This is a **product/vocabulary decision, not an implementation bug**, so I have not resolved it:
+
+- **(a) PROPOSED — bar `liability` from the `asset_class` bucket master for POLICY** (a policy allocates
+  **assets**; it cannot target a share of a denominator that excludes it). One line in `master_buckets`,
+  plus a fail-first test.
+- **(b)** Leave it: a user may deliberately want a liability line, accepting the permanent under-band.
+
+*Recorded rather than quietly patched — the A9 master is a ratified vocabulary, and narrowing it is the
+owner's call.*
+
+### Pending owner ratification at the Phase-3b walk
+
+`StatusChip` **+ its superset** and the two migrations · the **9-13 / 9-18 / 9-19** strings · the **9-16**
+treatment · the **8 GLOSSARY terms** · the **D-105 scope amendment** record · the **[Help] definitions
+strip** (§11-1) · **§11-5** above.
+
+**Phase 3b (owner acceptance walk) is the gate. Nothing here is self-certified.**

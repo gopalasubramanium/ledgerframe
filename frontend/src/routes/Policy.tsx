@@ -23,6 +23,7 @@ import {
   saveTargets,
 } from "../api/policy";
 import type { DriftResp, DriftRow, PolicyResp, PolicyTarget } from "../api/policy";
+import { useLabelFor } from "../refdata/refdata-context";
 import { formatPercent } from "../format/number";
 import "./Policy.css";
 
@@ -82,6 +83,11 @@ const toDraft = (t: PolicyTarget): DraftTarget => ({
 
 export function Policy() {
   const toast = useToast();
+  // D-005 — the UI NEVER hardcodes a value->label mapping. /refdata SERVES the display labels
+  // ("ETF", not "Etf"; "Mutual fund", not "Mutual_fund"), and they are rendered verbatim.
+  const labelFor = useLabelFor();
+  const bucketLabel = (dimension: string, bucket: string) =>
+    labelFor(DIM_MASTER[dimension as Dimension] ?? dimension, bucket);
   const [drift, setDrift] = useState<DriftResp | null>();
   const [policy, setPolicy] = useState<PolicyResp | null>();
   const [dim, setDim] = useState<Dimension>("asset_class");
@@ -145,7 +151,7 @@ export function Policy() {
   );
 
   const columns: Column<DriftRow>[] = [
-    { key: "bucket", label: "Bucket", sortable: true, render: (r) => bucketLabel(r.bucket) },
+    { key: "bucket", label: "Bucket", sortable: true, render: (r) => bucketLabel(dim, r.bucket) },
     {
       key: "target_pct",
       label: "Target",
@@ -206,9 +212,7 @@ export function Policy() {
       {/* DRIFT — the page's owned figures. */}
       <section className="lf-card pol__card">
         <header className="lf-card__header">
-          <h2 className="lf-card__title">
-            <GlossaryTerm term="term-out-of-band">Drift</GlossaryTerm>
-          </h2>
+          <h2 className="lf-card__title">Drift</h2>
           {/* A10 — a verdict resting on stale/low-confidence prices can never present as fresh. The
               flag rides the SAME payload the figures come from: no second fetch, nothing to skew. */}
           {drift?.inputs_stale && (
@@ -292,6 +296,17 @@ export function Policy() {
                     are excluded.
                   </p>
 
+                  {/* [Help] targets (§9-14). The popovers live where the words are — NOT inside a
+                      heading: GlossaryTerm carries role="button" + aria-label, so nesting one in an
+                      <h2> REPLACES the heading's accessible name. Caught by the Phase-3a pre-pass. */}
+                  <p className="pol__legend">
+                    <GlossaryTerm term="term-target">Target</GlossaryTerm>
+                    <GlossaryTerm term="term-band">Band</GlossaryTerm>
+                    <GlossaryTerm term="term-out-of-band">Out of band</GlossaryTerm>
+                    <GlossaryTerm term="term-gap-to-target">Gap to target</GlossaryTerm>
+                    <GlossaryTerm term="term-concentration">Concentration</GlossaryTerm>
+                  </p>
+
                   {active.untargeted.length > 0 && (
                     <div className="pol__untargeted">
                       <h3 className="pol__subtitle">
@@ -301,7 +316,7 @@ export function Policy() {
                       <ul className="pol__untargetedlist">
                         {active.untargeted.map((u) => (
                           <li key={u.bucket}>
-                            <span>{bucketLabel(u.bucket)}</span>
+                            <span>{bucketLabel(dim, u.bucket)}</span>
                             <span className="pol__num">{formatPercent(u.actual_pct)}</span>
                             <span className="pol__num">{u.actual_value_display}</span>
                           </li>
@@ -320,9 +335,7 @@ export function Policy() {
       {drift?.has_targets !== undefined && drift?.max_position_pct !== null && drift && (
         <section className="lf-card pol__card">
           <header className="lf-card__header">
-            <h2 className="lf-card__title">
-              <GlossaryTerm term="term-concentration">Concentration</GlossaryTerm>
-            </h2>
+            <h2 className="lf-card__title">Concentration</h2>
           </header>
           <div className="lf-card__body">
             {drift.concentration.length === 0 ? (
@@ -527,9 +540,3 @@ function effectiveBand(target: string, band: string, edge: "min" | "max"): strin
   return String(v);
 }
 
-/** Buckets are SERVED values (asset_class keys, currency codes, region names). Present the key
- *  readably without inventing a vocabulary — the labels themselves come from /refdata elsewhere. */
-function bucketLabel(bucket: string): string {
-  if (bucket === bucket.toUpperCase()) return bucket; // currency codes, regions like "US"
-  return bucket.charAt(0).toUpperCase() + bucket.slice(1).replace(/_/g, " ");
-}

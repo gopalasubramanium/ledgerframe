@@ -10,6 +10,11 @@ export interface GlossaryEntry {
 export const GLOSSARY: Record<string, GlossaryEntry> = {
   // Policy (page-policy §9-14). Added to docs/specs/GLOSSARY.md FIRST, then here — the two-store
   // rule (page-heatmap §13-1); tests/unit/test_glossary_parity.py polices the spellings.
+  "term-concentration": {
+    term: "Concentration",
+    definition:
+      "Share of gross assets in the biggest positions. Kept distinct from allocation weight — never interchanged.",
+  },
   "term-policy-investment": {
     term: "Policy (investment)",
     definition:

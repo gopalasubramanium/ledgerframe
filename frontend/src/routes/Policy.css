@@ -110,3 +110,16 @@
   font-size: var(--font-size-12);
   line-height: var(--line-12);
 }
+
+/* [Help] definitions strip — the popover targets sit where the words are, never inside a heading
+   (a GlossaryTerm carries role="button" + aria-label and would REPLACE the heading's accessible
+   name). PROPOSED treatment — ratify at the walk. */
+.pol__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+}

@@ -103,8 +103,9 @@ test("drift renders: served money verbatim, band status as a LABELLED chip, cove
   expect(await screen.findByText("406,000.00")).toBeTruthy();
   expect(screen.getByText("-175,000.00")).toBeTruthy();
 
-  // The gap column is a GAP, not an instruction (§9-19).
-  expect(screen.getByText("Gap to target")).toBeTruthy();
+  // The gap column is a GAP, not an instruction (§9-19). (It also appears in the [Help] strip.)
+  expect(screen.getAllByText("Gap to target").length).toBeGreaterThan(0);
+  expect(screen.getByRole("columnheader", { name: /gap to target/i })).toBeTruthy();
 
   // Status is a LABELLED chip — never the raw enum key.
   expect(screen.getByText("Over")).toBeTruthy();
@@ -137,7 +138,7 @@ test("§9-16 — over and under BOTH carry the amber attention tone; in-band is 
 test("D-055 — no served or rendered string names or implies a trade", async () => {
   mockFetch();
   const { container } = renderPage();
-  await screen.findByText("Gap to target");
+  await screen.findAllByText("Gap to target");
   const text = (container.textContent ?? "").toLowerCase();
   for (const banned of ["rebalance", "amount to sell", "amount to buy", "sell ", "buy ", "trim", "top up"]) {
     expect(text).not.toContain(banned);
