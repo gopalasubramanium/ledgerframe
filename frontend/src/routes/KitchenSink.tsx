@@ -48,7 +48,7 @@ import {
   UpdateBanner,
   useToast,
 } from "../components/ui";
-import type { Column, QuoteSource, SortState } from "../components/ui";
+import type { Column, QuoteSource, SortState, Verdict } from "../components/ui";
 import {
   ALLOCATION_BY_CLASS,
   ALLOCATION_BY_SECTOR,
@@ -758,6 +758,22 @@ export function KitchenSink() {
                   { label: "1 holding needs a source mapping", verdict: "attention" },
                   { label: "No goals due in 180 days", verdict: "info" },
                 ]}
+              />
+            </Specimen>
+            {/* §12po2-1 — THE MANY-ITEMS SPECIMEN. The owner's defect: 17 attention items grew the
+                card to ~1240px and broke the Net worth row, displacing the Portfolio card beside it.
+                A specimen only proves what it exercises, so the gallery now carries the case that
+                actually broke: capped list + internal scroll + "+N more ↗" to the canonical page. */}
+            <Specimen label="ReviewCard · MANY items (17) — contained, never breaks its row">
+              <ReviewCard
+                attention={17}
+                maxItems={5}
+                link={{ href: "#/review", label: "Open Review" }}
+                sections={Array.from({ length: 17 }, (_, i) => ({
+                  label: `Attention item ${i + 1} with a title long enough to wrap onto a second line`,
+                  verdict: (i % 3 === 0 ? "attention" : i % 3 === 1 ? "info" : "ok") as Verdict,
+                  detail: "Policy",
+                }))}
               />
             </Specimen>
             <Specimen label="ReviewCard · all clear">

@@ -276,3 +276,25 @@ test("§12po1-8 — an unsatisfiable policy shows the SERVED error inline, and t
   // The dialog stays OPEN so the user can fix it where they are.
   expect(screen.getByRole("dialog")).toBeTruthy();
 });
+
+
+test("§12po2-2 — the action button carries the pencil icon ALONGSIDE its text label", async () => {
+  // Claimed done in batch 1; it was not. The edit silently matched nothing and I reported it
+  // shipped without ever looking at the render. The assertion exists so that cannot recur.
+  mockFetch();
+  renderPage();
+  const btn = await screen.findByRole("button", { name: /edit policy/i });
+  // Icon PRESENT...
+  expect(btn.querySelector("svg"), "the pencil icon renders").toBeTruthy();
+  // ...and the text label KEPT (an icon is never a label on its own).
+  expect(btn).toHaveTextContent("Edit policy");
+});
+
+test("§12po2-2 — the empty state's action uses the SAME verb", async () => {
+  mockFetch({ drift: { ...DRIFT, has_targets: false, dimensions: [], concentration: [] },
+              policy: { ...POLICY, targets: [] } });
+  renderPage();
+  const btns = await screen.findAllByRole("button", { name: /set policy/i });
+  expect(btns.length).toBeGreaterThan(0);
+  expect(btns[0].querySelector("svg")).toBeTruthy();
+});

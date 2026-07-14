@@ -102,9 +102,6 @@
   line-height: var(--line-13);
   color: var(--text-secondary);
 }
-.pol__edittable {
-  width: 100%;
-}
 .pol__editnote {
   margin: 0;
   font-size: var(--font-size-12);
@@ -138,13 +135,6 @@
 /* §12po1-4 / §12po1-5 — the editor fits its dialog without horizontal scroll, and every row sits
    on one baseline. Numeric inputs are sized to their CONTENT (a percent is 3 characters, not a
    full-width field), and Band is ONE grouped Min–Max pair rather than two full columns. */
-.pol__edittable .lf-field {
-  width: auto;
-}
-.pol__edittable .lf-field__input--num {
-  width: 4.5rem;
-  text-align: right;
-}
 .pol__bandpair {
   display: inline-flex;
   align-items: center;
@@ -162,21 +152,92 @@
   line-height: var(--line-12);
   white-space: nowrap;
 }
-.pol__actioncol {
-  width: 1%;
-  white-space: nowrap;
-}
 .pol__emptyrow {
   color: var(--text-tertiary);
 }
 /* The editor's table scrolls inside the dialog, never the dialog itself (D-101). */
-.pol__editscroll {
-  max-height: 45vh;
-}
 .pol__editfoot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+/* §12po2-3 — THE EDITOR IS ONE GRID, IN ONE SCROLL CONTAINER.
+   The nested table-scroller is gone: the Dialog body is the single scroll region, the header block
+   STICKS to it, and every row shares ONE grid template — so the columns line up across every row and
+   across every dimension tab, by construction rather than by luck. */
+.pol__editor {
+  /* The band column must FIT two percent inputs + the separator. It did not, so the max input was
+     clipped off the right edge — and the "no horizontal overflow" assertion still passed, because
+     the dialog CLIPS rather than scrolls. An assertion can be green over a visible defect (§13). */
+  --pol-cols: minmax(7rem, 1fr) 6rem 15rem 2.5rem;
+}
+/* Numeric inputs are sized to their CONTENT — a percent is a few characters, not a full-width field
+   (§12po1-4). This was lost when the table markup went; it is re-established on the grid. */
+.pol__editor .lf-field {
+  width: auto;
+  min-width: 0;
+}
+.pol__editor .lf-field__input--num {
+  width: 4rem;
+  text-align: right;
+}
+.pol__grid {
+  display: grid;
+  grid-template-columns: var(--pol-cols);
+  gap: var(--space-3);
+  align-items: start;
+}
+/* ONE header block. It is opaque and raised above the rows, so nothing can print through it while
+   the rows scroll underneath (which is what read as a "duplicate header"). */
+.pol__edithead {
+  position: sticky;
+  /* Sticky offsets are measured from the scroll container's CONTENT edge, so `top: 0` would pin the
+     header one padding-length BELOW the top of the dialog body — leaving a gutter for rows to scroll
+     through ABOVE it. That gutter is exactly what the owner saw. Cancel the body's padding so the
+     header pins FLUSH to the top of the scroll region, and re-add it as the header's own padding so
+     nothing shifts. */
+  top: calc(var(--space-6) * -1);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* Bleed horizontally to the dialog body's edges and re-pad, so a row scrolling past cannot appear
+     in the gutter BESIDE the header. No negative TOP margin: that would offset the sticky box and
+     leave a band above the pinned header for rows to peek through. The header is fully OPAQUE —
+     that is what stops content printing through it (§12po2-3). */
+  margin-inline: calc(var(--space-6) * -1);
+  padding: calc(var(--space-6) + var(--space-3)) var(--space-6) var(--space-3);
+  background: var(--surface);
+}
+.pol__gridhead {
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-width) solid var(--border);
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  font-weight: var(--weight-semibold);
+  align-items: center;
+}
+.pol__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pol__row {
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-width) solid var(--border);
+}
+/* The band pair + its inherited-band note share one cell; the note keeps a RESERVED lane (rendered
+   even when empty) so an inheriting row and a non-inheriting row are exactly the same height. */
+.pol__bandcell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.pol__emptyrow {
+  margin: 0;
+  color: var(--text-tertiary);
 }

@@ -46,7 +46,7 @@ test.describe.serial("policy pre-pass (live)", () => {
     console.log("PART 1 — empty state OK (reason + way forward + protected copy)");
 
     // PART 2: EDITOR ROUND-TRIP against the REAL PIN-gated write path -----------------------------
-    await page.getByRole("button", { name: "Set targets" }).first().click();
+    await page.getByRole("button", { name: /set policy/i }).first().click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
@@ -71,23 +71,78 @@ test.describe.serial("policy pre-pass (live)", () => {
     await page.getByRole("button", { name: /edit policy/i }).first().click();
     const editor = page.getByRole("dialog");
     await expect(editor).toBeVisible();
-    const scroller = editor.locator(".lf-table__scroll");
-    await expect(scroller, "the editor table has its OWN scroll region").toHaveCount(1);
-    const headTopBefore = await editor.locator(".lf-table__th").first().boundingBox();
-    await scroller.evaluate((el) => el.scrollTo(0, 400));
-    await page.waitForTimeout(150);
-    const headTopAfter = await editor.locator(".lf-table__th").first().boundingBox();
-    expect(await scroller.evaluate((el) => el.scrollTop), "the table actually scrolled").toBeGreaterThan(50);
-    expect(
-      Math.abs(headTopAfter!.y - headTopBefore!.y),
-      "the header stays pinned while the rows scroll under it",
-    ).toBeLessThanOrEqual(1);
-    console.log("PART 2b — editor sticky header pinned after scroll");
+    // §12po2-3 — ONE header, ONE scroll container, and NOTHING prints through the header.
+    const scroller = editor.locator(".lf-dialog__body");
+    await expect(editor.locator(".pol__edithead"), "exactly ONE header block").toHaveCount(1);
+    await expect(editor.locator(".pol__gridhead"), "exactly ONE column header").toHaveCount(1);
+    await expect(editor.locator(".lf-table__scroll"), "no nested scroll region").toHaveCount(0);
 
-    // §12po1-4 — no horizontal overflow in the dialog at desktop width.
+    // ⚠ ASSERT THE OWNER-SEEN GEOMETRY, NOT A THEORY OF IT (§13). My first version asserted "the
+    // header never moves" — but a STICKY header MUST travel from its resting place to its pinned
+    // place. It went red on a correct page. What the owner actually sees is: after scrolling, the
+    // header is STILL THERE, pinned to the top of the scroll region, with the rows under it.
+    await scroller.evaluate((el) => el.scrollTo(0, 300));
+    await page.waitForTimeout(200);
+    expect(await scroller.evaluate((el) => el.scrollTop), "the dialog body actually scrolled").toBeGreaterThan(50);
+    const headBox = (await editor.locator(".pol__edithead").boundingBox())!;
+    const portBox = (await scroller.boundingBox())!;
+    expect(headBox.y - portBox.y, "the header is PINNED to the top of the scroll region").toBeLessThanOrEqual(2);
+    expect(headBox.y - portBox.y, "…and no gap opens above it for rows to peek through").toBeGreaterThanOrEqual(-2);
+    await expect(editor.locator(".pol__gridhead"), "the column header is still visible after scroll").toBeVisible();
+    // STILL exactly one header after scrolling — a "duplicate" is what the owner reported seeing.
+    await expect(editor.locator(".pol__gridhead"), "still ONE header after scroll").toHaveCount(1);
+
+    // Nothing paints through the header: probe points ACROSS the header band — whatever is painted
+    // at each one must belong to the header itself. (Content printing through an opaque header is
+    // what the owner reported as a "duplicate header", §12ho3-3.)
+    const bleed = await editor.evaluate(() => {
+      const head = document.querySelector(".pol__edithead")!.getBoundingClientRect();
+      const ys = [head.top + 4, (head.top + head.bottom) / 2, head.bottom - 4];
+      const xs = [head.left + 20, (head.left + head.right) / 2, head.right - 20];
+      const through: string[] = [];
+      for (const y of ys) {
+        for (const x of xs) {
+          const el = document.elementFromPoint(x, y);
+          if (el && !el.closest(".pol__edithead")) through.push(`${el.className} at ${Math.round(x)},${Math.round(y)}`);
+        }
+      }
+      return [...new Set(through)];
+    });
+    expect(bleed, "no content prints through the sticky header").toEqual([]);
+    console.log("PART 2b — ONE sticky header, pinned, opaque (nothing prints through)");
+
+    // §12po2-3 — every row's columns line up. A grid template, not luck.
+    const cols = await editor.evaluate(() => {
+      const rows = [...document.querySelectorAll(".pol__row")].slice(0, 8);
+      return rows.map((r) => [...r.children].map((c) => Math.round(c.getBoundingClientRect().left)));
+    });
+    expect(cols.length).toBeGreaterThan(2);
+    const first = cols[0];
+    for (const row of cols) {
+      row.forEach((x, i) => {
+        expect(Math.abs(x - first[i]), `column ${i} aligns across every row`).toBeLessThanOrEqual(1);
+      });
+    }
+    console.log(`PART 2b — ${cols.length} rows, all columns aligned on one grid`);
+
+    // §12po1-4 / §13 — CONTAINMENT, not just "does it scroll". The dialog CLIPS its overflow, so a
+    // scrollWidth check stays green while an input is cut off the right edge — which is exactly what
+    // happened. Assert what the owner SEES: every control in every row is fully inside the dialog.
+    const clipped = await editor.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const out: string[] = [];
+      el.querySelectorAll(".pol__row *").forEach((c) => {
+        const b = (c as HTMLElement).getBoundingClientRect();
+        if (b.width > 0 && (b.right > box.right + 1 || b.left < box.left - 1)) {
+          out.push((c as HTMLElement).getAttribute("aria-label") ?? (c as HTMLElement).className);
+        }
+      });
+      return [...new Set(out)];
+    });
+    expect(clipped, "no editor control is clipped by the dialog").toEqual([]);
     const dlgOverflow = await editor.evaluate((el) => el.scrollWidth - el.clientWidth);
-    expect(dlgOverflow, "the editor does not scroll horizontally at 1366").toBeLessThanOrEqual(1);
-    console.log("PART 2b — editor has no horizontal overflow at 1366");
+    expect(dlgOverflow, "the editor does not scroll horizontally").toBeLessThanOrEqual(1);
+    console.log("PART 2b — no control clipped, no horizontal overflow");
 
     await page.keyboard.press("Escape");
     await page.reload();

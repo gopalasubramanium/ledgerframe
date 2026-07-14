@@ -18,9 +18,22 @@ export interface ReviewCardProps {
   attention: number;
   /** Link to the canonical Review page. */
   link: { href: string; label: string };
+  /**
+   * How many sections to render before collapsing the rest into "+N more" (§12po2-1).
+   * The full list lives ONLY on the Review page (P-1) — this card is a summary, never a second
+   * copy of it. Home shows 3; Net worth shows 5. Omit for no cap.
+   */
+  maxItems?: number;
 }
 
-export function ReviewCard({ sections, attention, link }: ReviewCardProps) {
+export function ReviewCard({ sections, attention, link, maxItems }: ReviewCardProps) {
+  // §12po2-1 — CONTAINMENT LIVES IN THE COMPONENT, not in each placement.
+  // The card used to render every section it was handed, so its HEIGHT WAS A FUNCTION OF THE DATA:
+  // 17 attention items grew it to ~1240px, which broke the Net worth row and displaced the Portfolio
+  // card beside it. A card whose height depends on the week's news can be torn apart at ANY
+  // placement, so the fix belongs here — not in whichever page happened to be caught.
+  const shown = maxItems === undefined ? sections : sections.slice(0, maxItems);
+  const hidden = sections.length - shown.length;
   return (
     <section className="lf-review" aria-label="Review">
       {/* §12ho2-5: the SAME header anatomy as every other summary tile — title left, trailing meta,
@@ -40,7 +53,10 @@ export function ReviewCard({ sections, attention, link }: ReviewCardProps) {
         </a>
       </div>
 
-      {sections.map((s) => (
+      {/* The list is CAPPED to the viewport-relative height and scrolls internally (the
+        * `--table-max-h` posture), so even an uncapped placement can never grow past its row. */}
+      <div className="lf-review__list">
+        {shown.map((s) => (
         <div className="lf-review__section" key={s.label}>
           <span
             className={`lf-review__verdict lf-review__verdict--${s.verdict}`}
@@ -51,8 +67,16 @@ export function ReviewCard({ sections, attention, link }: ReviewCardProps) {
             {s.detail && <div className="lf-review__detail">{s.detail}</div>}
           </div>
         </div>
-      ))}
+        ))}
+      </div>
 
+      {hidden > 0 && (
+        // The canonical page is the ONLY full list (P-1). The card states what it is NOT showing —
+        // it never silently truncates — and routes there.
+        <a className="lf-review__more" href={link.href}>
+          +{hidden} more ↗
+        </a>
+      )}
     </section>
   );
 }

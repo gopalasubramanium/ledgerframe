@@ -374,3 +374,27 @@
 .lf-page a:hover {
   text-decoration: underline;
 }
+
+/* §12po2-1 — the ReviewCard's list is CONTAINED: capped height + internal scroll (the DataTable
+   `--table-max-h` posture). Its height can no longer be a function of the DATA, so no placement can
+   be torn apart by a bad week — the defect the owner hit on Net worth, where 17 attention items grew
+   the card to ~1240px and displaced the Portfolio card sharing its row. */
+.lf-review__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: var(--review-max-h, 22rem);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.lf-review__more {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  color: var(--accent);
+  text-decoration: none;
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+}
+.lf-review__more:hover {
+  text-decoration: underline;
+}

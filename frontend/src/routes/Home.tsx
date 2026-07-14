@@ -177,7 +177,10 @@ export function Home() {
   // A SUMMARY carries the verdict and the title — not the per-item `area` sub-line. That detail is
   // Review's to show (P-1), and on Home it cost a third of the hero row's height for information the
   // ↗ already leads to. The COUNT is untouched: it is served, and still reconciles with /review.
-  const reviewSections: ReviewSection[] = (review?.items ?? []).slice(0, REVIEW_N).map((i) => ({
+  // §12po2-1 — pass the FULL list and let the component cap it. Home used to slice to REVIEW_N here,
+  // which truncated SILENTLY: the user was never told there were more. The component now shows
+  // "+N more ↗" to the canonical page (P-1: the full list lives only on Review).
+  const reviewSections: ReviewSection[] = (review?.items ?? []).map((i) => ({
     label: i.title,
     verdict: reviewVerdict(i.severity),
   }));
@@ -301,6 +304,7 @@ export function Home() {
               <ReviewCard
                 sections={reviewSections}
                 attention={r.count ?? 0}
+                maxItems={REVIEW_N}
                 link={{ href: "#/review", label: "Review" }}
               />
             )}

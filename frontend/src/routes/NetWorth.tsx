@@ -305,7 +305,7 @@ export function NetWorth() {
 
         <div className="nw__reviewcell" data-card="review">
           <CardBody data={review} lines={4} onRetry={reload}>
-            {() => <ReviewCard sections={reviewSections} attention={review?.count ?? 0} link={{ href: "#/review", label: "Review" }} />}
+            {() => <ReviewCard sections={reviewSections} attention={review?.count ?? 0} maxItems={5} link={{ href: "#/review", label: "Review" }} />}
           </CardBody>
         </div>
       </div>

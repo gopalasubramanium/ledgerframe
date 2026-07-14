@@ -959,3 +959,57 @@ difference is a measurement.**
 both migrations · **9-13 / 9-18 / 9-19** strings · **9-16** treatment · the **8 GLOSSARY terms** · the
 **D-105 scope amendment** record · the **[Help] strip** · **§12po1-6** served-copy strings · **§12po1-10**
 focus amendment · **§12po1-2** button-label alternative.
+
+---
+
+## 12b. OWNER RE-VERIFY — BATCH 2 (§12po2-N, 2026-07-14)
+
+**Two items in this batch were CLAIMED DONE in Batch 1 and were not.** That is recorded plainly below,
+and it is the source of the §13 candidate.
+
+| # | Finding | Fix | RED evidence |
+|---|---------|-----|--------------|
+| **§12po2-1** | ⚠ **ReviewCard breaks its row — a COMPONENT defect, at every placement.** 17 attention items stretched the card to **1243px** on Net worth, displacing the **Portfolio** card sharing its row. The card rendered **every** section it was handed, so **its height was a function of the DATA** — meaning *any* placement could be torn apart by a bad week. | **Fixed at the COMPONENT, not the page that happened to get caught.** The list is **contained**: capped height + internal scroll (the `--table-max-h` posture), so no placement can break its row **no matter how many items arrive**. Plus a **`maxItems`** cap with a **"+N more ↗"** route to the canonical page. **Net worth caps at 5** (proposed); **Home keeps 3** — and Home now passes the **full** list so the component caps it, because Home had been truncating **silently**: the user was never told there were more. **The full list stays only on Review (P-1).** | **RED: `card height with 17 items (1243px)` — expected ≤ 560.** Guard runs at **every** ReviewCard placement with the **17-item** fixture; kitchen-sink gains the **many-items specimen**. |
+| **§12po2-2** | ⚠ **Pencil icon: CLAIMED IN BATCH 1, ABSENT IN THE BUILD.** | The Batch-1 edit **silently matched nothing** — a `.replace()` against a string that no longer existed — so **only the empty-state button** got the icon while the header button kept the old label. **I reported it shipped without ever looking at the render.** Now implemented as specified: **Lucide pencil + KEPT text label** on both, verb state-adaptive. | **RED: `the pencil icon renders: expected null to be truthy`.** |
+| **§12po2-3** | ⚠ **Editor header "duplicated" + rows misaligned. CLAIMED FIXED IN BATCH 1.** | **Reproduced first, and the owner's reading was right even though my diagnosis was not:** the DOM **never contained a cloned node** — there was always exactly one header. What the owner saw was **row content printing through / sliding half-under** a sticky `<th>`, which is visually indistinguishable from an overlapping duplicate (**the §12ho3-3 lesson, again**). The **root cause** was structural: a **nested table-scroller inside a dialog that already scrolls** — two scroll regions fighting. **Rebuilt:** the **dialog body is the ONE scroll container**, **ONE header block** sticks to it (fully opaque), and **every row shares ONE grid template** so columns align across rows *and* across dimension tabs, **by construction**. ⚠ Sticky offsets are measured from the scroll container's **content edge**, so `top: 0` pinned the header **one padding-length down**, leaving a gutter for rows to scroll through **above** it — *that gutter was the defect*. Cancelled explicitly. | **RED by mutation** on the pre-fix structure. Assertions: **exactly ONE header after scroll** · **pinned flush to the scrollport** · **nothing paints through it** (9-point probe across the header band) · **per-column x-alignment across all rows** · **no control clipped**. |
+
+### ⚠ A guard passed over a visible defect — again, inside this very batch
+
+While fixing §12po2-3 I asserted *"no horizontal overflow in the dialog"* and it was **GREEN** — while the
+**max band input was clipped off the right edge**, plainly visible in the screenshot. The dialog **CLIPS**
+its overflow rather than scrolling, so `scrollWidth === clientWidth` stayed true **over a cut-off control**.
+The assertion was replaced with **CONTAINMENT** — *every control in every row is fully inside the dialog* —
+and **proven RED** on the pre-fix state.
+
+I also wrote a sticky-header assertion that went **RED on a correct page**, because I asserted *"the header
+never moves"* — but a sticky header **must** travel from its resting place to its pinned place. **I was
+asserting my theory of the geometry, not the geometry the owner sees.**
+
+### §13 CANDIDATE (for the retrospective) — **a written assertion can pass while the visible defect remains**
+
+> **The assertion must reproduce the OWNER-SEEN geometry.**
+>
+> This batch produced **four** instances in one sitting:
+> 1. A **`.replace()` that matched nothing** shipped as "done" — **an edit that silently no-ops is a
+>    claim, not a change.** Never report a UI change without **looking at the render**.
+> 2. *"No horizontal overflow"* stayed **green over a clipped input**, because the container **clips**
+>    instead of scrolling. **Assert CONTAINMENT (is the thing inside its box?), not the container's
+>    scroll metrics.**
+> 3. *"The header never moves"* went **red on a correct page** — the theory of the geometry, not the
+>    geometry.
+> 4. The ReviewCard guard would have proved **nothing** on a 3-item fixture. **A specimen only proves
+>    what it exercises: the fixture must be the case that broke** (17 items).
+>
+> This is the **tile-integrity lesson recurring** (page-home §12ho2-1: three guards reported green over a
+> visibly broken page). **Recurrence is the signal that the lesson was recorded but not mechanised.**
+> Rule to fold into `TEMPLATE-page-build.md`: *for any owner-visible defect, the assertion must (a) be
+> written against the **rendered** artefact the owner looked at, (b) be **seen RED on that exact state**,
+> and (c) carry the **fixture that reproduces it** — a guard whose fixture cannot express the defect is
+> decoration.*
+
+### Carried ratifications (unchanged)
+
+`StatusChip` **superset** + both migrations · **9-13 / 9-18 / 9-19** strings · **9-16** treatment · the
+**8 GLOSSARY terms** · the **D-105 scope amendment** record · the **[Help] strip** · the **§12po1-10 focus
+amendment** · **§11-5** · the **§12po1-2 button-label pick** ("Set/Edit policy" vs a single "Add/Edit
+policy") · **NEW: the Net worth `maxItems={5}` cap** and the **"+N more ↗"** affordance.

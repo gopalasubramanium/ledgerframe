@@ -212,8 +212,11 @@ export function Policy() {
         subtitle="Your investment policy: targets, bands and drift. Reporting, never a trade instruction."
         actions={
           policy ? (
+            // §12po1-2 / §12po2-2 — the verb follows the STATE (you cannot "edit" a policy you have
+            // not set), and the icon rides WITH the text label, never instead of it.
             <button type="button" className="lf-btn lf-btn--primary" onClick={openEditor}>
-              {policy.targets.length ? "Edit policy" : "Set targets"}
+              <Pencil size={16} aria-hidden="true" />
+              {hasTargets ? "Edit policy" : "Set policy"}
             </button>
           ) : undefined
         }
@@ -434,111 +437,118 @@ export function Policy() {
             </label>
           </div>
 
-          {/* §12po1-9 — the editor MIRRORS the display: one dimension at a time. This drops the
-              per-row Dimension column (which was the widest thing in the dialog — §12po1-4) and
-              makes "which axis am I editing?" a fact of the layout rather than a value in a cell. */}
-          <Segmented
-            aria-label="Edit dimension"
-            value={editDim}
-            onChange={(v) => setEditDim(v as Dimension)}
-            options={DIMENSIONS.map((d) => ({
-              value: d,
-              label: (
-                <>
-                  {DIM_LABEL[d]}
-                  {countIn(draft, d) > 0 && <span className="lf-segbtn__count">{countIn(draft, d)}</span>}
-                </>
-              ),
-            }))}
-          />
-
-          {/* §12po1-3 — the table lives in the RATIFIED wrapper, so its sticky header pins to its
-              OWN scroll region. Before, a raw <table> sat directly in the dialog: the header had no
-              container to stick to and slid away under the rows. */}
-          <div className="lf-table-wrap">
-            <div className="lf-table__scroll pol__editscroll">
-              <table className="lf-table pol__edittable">
-                <thead>
-                  <tr>
-                    <th className="lf-table__th">Bucket</th>
-                    <th className="lf-table__th lf-table__th--num">Target</th>
-                    {/* §12po1-4 — Band is ONE grouped Min–Max pair, not two full columns. */}
-                    <th className="lf-table__th lf-table__th--num">Band (min–max)</th>
-                    <th className="lf-table__th pol__actioncol" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rowsFor(draft, editDim).length === 0 && (
-                    <tr className="lf-table__tr">
-                      <td className="lf-table__td pol__emptyrow" colSpan={4}>
-                        No {DIM_LABEL[editDim].toLowerCase()} targets yet.
-                      </td>
-                    </tr>
-                  )}
-                  {rowsFor(draft, editDim).map(({ row, index }) => (
-                    <tr key={index} className="lf-table__tr">
-                      <td className="lf-table__td">
-                        <MasterSelect
-                          master={DIM_MASTER[editDim]}
-                          value={row.bucket}
-                          onChange={(v) => updateRow(setDraft, index, { bucket: v })}
-                          aria-label="Bucket"
-                        />
-                      </td>
-                      <td className="lf-table__td lf-table__td--num">
-                        <PercentInput
-                          value={row.target_pct}
-                          onChange={(v) => updateRow(setDraft, index, { target_pct: v })}
-                          min={0}
-                          max={100}
-                          aria-label="Target"
-                        />
-                      </td>
-                      <td className="lf-table__td lf-table__td--num">
-                        {/* §12po1-5 — the pair sits on ONE baseline; the inherited-band helper
-                            copy hangs BELOW it so it cannot break the row's rhythm. */}
-                        <span className="pol__bandpair">
-                          <PercentInput
-                            value={row.min_pct}
-                            onChange={(v) => updateRow(setDraft, index, { min_pct: v })}
-                            min={0}
-                            max={100}
-                            placeholder={effectiveBand(row.target_pct, band, "min") || undefined}
-                            aria-label="Minimum"
-                          />
-                          <span className="pol__bandsep" aria-hidden="true">
-                            –
-                          </span>
-                          <PercentInput
-                            value={row.max_pct}
-                            onChange={(v) => updateRow(setDraft, index, { max_pct: v })}
-                            min={0}
-                            max={100}
-                            placeholder={effectiveBand(row.target_pct, band, "max") || undefined}
-                            aria-label="Maximum"
-                          />
-                        </span>
-                        {inheritedBand(row, band) && (
-                          <small className="pol__inherits">inherits {inheritedBand(row, band)}</small>
-                        )}
-                      </td>
-                      <td className="lf-table__td pol__actioncol">
-                        <RowMenu
-                          aria-label={`Actions for ${row.bucket || "new target"}`}
-                          items={[
-                            {
-                              label: "Remove",
-                              danger: true,
-                              onClick: () => setDraft((rows) => rows.filter((_, j) => j !== index)),
-                            },
-                          ]}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* §12po2-3 — ONE header block, sticky inside the dialog's SINGLE scroll container.
+              Before: the table had its OWN nested scroller inside a dialog that already scrolls, and
+              rows slid half-under a sticky <th> — which reads exactly like a duplicated header
+              overlapping the content. (There was never a cloned NODE; the DOM always had one header.
+              What the owner saw was content printing through it — the §12ho3-3 lesson again.)
+              Now: the dialog body is the one scroll region, the header sticks to it, and every row
+              sits on the SAME grid template, so columns line up across rows AND across dimensions. */}
+          <div className="pol__edithead">
+            <div className="pol__metarow">
+              <label className="pol__field">
+                <span>Default band</span>
+                <PercentInput value={band} onChange={setBand} min={0} max={100} aria-label="Default band" />
+                <small className="pol__muted">
+                  Applied either side of a target that sets no band of its own.
+                </small>
+              </label>
+              <label className="pol__field">
+                <span>Concentration limit</span>
+                <PercentInput
+                  value={maxPos}
+                  onChange={setMaxPos}
+                  min={0}
+                  max={100}
+                  aria-label="Concentration limit"
+                />
+                <small className="pol__muted">Leave empty for no limit.</small>
+              </label>
             </div>
+
+            <Segmented
+              aria-label="Edit dimension"
+              value={editDim}
+              onChange={(v) => setEditDim(v as Dimension)}
+              options={DIMENSIONS.map((d) => ({
+                value: d,
+                label: (
+                  <>
+                    {DIM_LABEL[d]}
+                    {countIn(draft, d) > 0 && <span className="lf-segbtn__count">{countIn(draft, d)}</span>}
+                  </>
+                ),
+              }))}
+            />
+
+            <div className="pol__grid pol__gridhead" role="row">
+              <span role="columnheader">Bucket</span>
+              <span role="columnheader" className="pol__num">Target</span>
+              <span role="columnheader" className="pol__num">Band (min–max)</span>
+              <span />
+            </div>
+          </div>
+
+          <div className="pol__rows" role="table" aria-label={`${DIM_LABEL[editDim]} targets`}>
+            {rowsFor(draft, editDim).length === 0 && (
+              <p className="pol__emptyrow">No {DIM_LABEL[editDim].toLowerCase()} targets yet.</p>
+            )}
+            {rowsFor(draft, editDim).map(({ row, index }) => (
+              <div className="pol__grid pol__row" role="row" key={index}>
+                <MasterSelect
+                  master={DIM_MASTER[editDim]}
+                  value={row.bucket}
+                  onChange={(v) => updateRow(setDraft, index, { bucket: v })}
+                  aria-label="Bucket"
+                />
+                <PercentInput
+                  value={row.target_pct}
+                  onChange={(v) => updateRow(setDraft, index, { target_pct: v })}
+                  min={0}
+                  max={100}
+                  aria-label="Target"
+                />
+                {/* The band pair and its inherited-band note share ONE cell, and the note sits in a
+                    RESERVED lane (always present, hidden when empty) so a row that inherits and a
+                    row that does not are exactly the same height — the rhythm cannot break. */}
+                <span className="pol__bandcell">
+                  <span className="pol__bandpair">
+                    <PercentInput
+                      value={row.min_pct}
+                      onChange={(v) => updateRow(setDraft, index, { min_pct: v })}
+                      min={0}
+                      max={100}
+                      placeholder={effectiveBand(row.target_pct, band, "min") || undefined}
+                      aria-label="Minimum"
+                    />
+                    <span className="pol__bandsep" aria-hidden="true">
+                      –
+                    </span>
+                    <PercentInput
+                      value={row.max_pct}
+                      onChange={(v) => updateRow(setDraft, index, { max_pct: v })}
+                      min={0}
+                      max={100}
+                      placeholder={effectiveBand(row.target_pct, band, "max") || undefined}
+                      aria-label="Maximum"
+                    />
+                  </span>
+                  <small className="pol__inherits" aria-hidden={!inheritedBand(row, band)}>
+                    {inheritedBand(row, band) ? `inherits ${inheritedBand(row, band)}` : "\u00a0"}
+                  </small>
+                </span>
+                <RowMenu
+                  aria-label={`Actions for ${row.bucket || "new target"}`}
+                  items={[
+                    {
+                      label: "Remove",
+                      danger: true,
+                      onClick: () => setDraft((rows) => rows.filter((_, j) => j !== index)),
+                    },
+                  ]}
+                />
+              </div>
+            ))}
           </div>
 
           <div className="pol__editfoot">
