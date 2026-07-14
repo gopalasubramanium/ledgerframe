@@ -1,7 +1,7 @@
 # page-policy — build plan (PLAN ONLY — nothing is built)
 
-**Status: DRAFT · §9 AWAITING THE OWNER'S ONE-PASS · ▶ NEXT IN THE QUEUE (RD-9 Timing Amendment 3, owner
-2026-07-14).**
+**Status: ✅ §9 RESOLVED (owner one-pass, 2026-07-14) · BUILD UNBLOCKED · Phases 0 → 3a in progress.
+Phase 3b (owner walk) is the acceptance gate — nothing here is self-certified.**
 
 > **Policy RESUMES FIRST.** Amendment 3 makes the release gate **full completion**, so the Planning group
 > returns to the **front** of the queue in merit order — Policy leads it. *(Amendment 2 had parked this
@@ -468,7 +468,46 @@ PRODUCT-SPEC §5's own table draws the line explicitly in its last row:
 
 ---
 
-## 9. NEEDS DECISION
+## 9. NEEDS DECISION — ✅ **RESOLVED, OWNER ONE-PASS 2026-07-14**
+
+**All 21 items are ruled. Build is unblocked.** The rulings are below, **resolution-first**; the original
+**options and evidence are PRESERVED VERBATIM in the table that follows** — a resolved question keeps its
+reasoning, or the next reader inherits a verdict with no argument.
+
+**Matched by NUMBER AND TOPIC before recording** — all 21 agree; no mismatch, no STOP.
+
+| # | Topic | ✅ RULING (owner, 2026-07-14) |
+|---|-------|------------------------------|
+| **9-1** | Editing scope | **SHIP [S]-GATED CRUD as proposed.** P-7 explicit (the capability ships; only its UI is missing). Auth = the served `require_auth` — **ambient PIN session (D-103), NO second prompt on save.** |
+| **9-2** | Editor shape | **BULK-REPLACE. One `Dialog` editor. No per-row delta, no contract change.** Acceptance **and** a test prove **editing one row never drops the others**. |
+| **9-3** | Net total vs gross weights | **§3b RESHAPE: serve `gross_assets`** (the actual denominator) and **DROP `total_value`** from the drift payload — **Net worth is canonical for it (P-1)**. **Fail-first.** |
+| **9-4** | One weight derivation | ✅ **CLOSED by A11** (§10-A) — resolved as *"same figure"*: drift reads Portfolio's canonical `allocation()`. **§2's Portfolio cross-link is unblocked.** |
+| **9-5** | Stale-input honesty | ✅ **CLOSED by A10 + the wording ratification** (§10-A). Copy and served fields **RATIFIED**; **no second Review attention item**. |
+| **9-6** | D-105 scope | **(a) D-105 BINDS ALL MONEY.** **§3b:** drift/target **money** fields gain served **`*_display`** strings, **rendered verbatim**. **Percentages format client-side as today.** **Record the D-105 scope amendment in DECISIONS.** |
+| **9-7** | `bucket` free-text enum | ✅ **CLOSED by A9** (§10-A) — validated against the dimension's master; unknown → 400. |
+| **9-8** | `has_targets` re-derivation | **Read the SERVED `has_targets`.** One line. |
+| **9-9** | API-CONTRACT.md silence | **Four `present` rows** in the delta table. **Doc-only, no contract change.** |
+| **9-10** | `response_model` typing | **DEFER.** One line in `08-TECH-DEBT.md` citing the **§12mk3-2 stripping hazard** (a `response_model` silently strips any key it does not declare). **NOT bundled into this build** — typing alongside a field addition is exactly how a field vanishes unnoticed. |
+| **9-11** | Rotation | **Rotation-eligible; the empty-skip is INTENDED BEHAVIOUR** — a kiosk shows Policy only once the user has one. |
+| **9-12** | Composition | **ONE table + the ratified `Segmented` dimension switcher** (asset class / currency / region) **+ concentration as its own card.** Geometry follows this ruling; the **pre-pass measures inside the REAL SHELL with REAL-SHAPED data (13 classes)** — not a 3-row toy. |
+| **9-13** | Empty state | **"No policy defined. Set target allocations to see how far your holdings sit from your own targets."** + a **[Set targets]** action opening the editor. **PROPOSED — ratify at the walk.** **NO first-run checklist step** (the checklist stays minimal, D-045). |
+| **9-14** | GLOSSARY gaps | **Add to `docs/specs/GLOSSARY.md` FIRST, then `mocks/glossary.ts`** (the two-store rule, page-heatmap §13-1; the parity guard polices it): **Target · Band · In band · Out of band · Gap to target · Untargeted · Coverage**, plus a **"Policy (investment)"** disambiguation vs the **insurance** policy. **All PROPOSED → owner ratifies at the walk.** **The nav label stays "Policy"** (IA is normative). |
+| **9-15** | Band-status chip | **EXTRACT `StatusChip`** — **DESIGN-SYSTEM §5 amendment, Phase 0a, kitchen-sink specimen.** Variants **neutral / attention (amber)**, **text label MANDATORY**. **MIGRATE `ph__chip` (Pricing Health) and the review severity chip onto it** — **no behaviour change; pre-passes green after migration** (the `Segmented` extraction precedent: *per-instance copies of a standard are the defect*). |
+| **9-16** | Out-of-band treatment | **Amber `--attention` for BOTH `over` and `under`; neutral for `in_band`. NEVER `--gain`/`--loss`.** Label **always textual** (meaning never colour-alone). **Ratify at the walk.** |
+| **9-17** | Concentration → instrument link | **§3b RESHAPE: concentration rows serve a NULLABLE `symbol`.** Rows link to **`/instrument/{symbol}`** (D-098); a **symbol-less manual asset renders as plain text — never a guessed route.** **Fail-first.** |
+| **9-18** | Band inheritance | Editor shows the **EFFECTIVE band as an inherited placeholder** with **inheritance copy** (string **PROPOSED**, ratify at walk). **`default_band_pct = 5` RATIFIED**, with a **same-batch code test pinning the served value** (the D-084 rule: a ratified value ships its test in the same batch as the spec edit). |
+| **9-19** | The gap column's label | **"Gap to target"** (exact string **ratified at the walk**). **The §7 copy grep bars trade-instruction phrasings PERMANENTLY** — *"amount to sell/buy"*, *"rebalance by"*. **Policy reports a gap; it never names a trade** (D-055). |
+| **9-20** | Export | **DECLINED.** Drift's export home is the **Reports Pack** (D-061), composed from **this page's canonical reader**. No `/policy` export, no §3b delta. |
+| **9-21** | Entity scope | **HOUSEHOLD-ONLY — and `/policy/drift` REJECTS `?entity_id` with an honest `400`** (*"policy is household-scoped"*). **A silently meaningless comparison is an API honesty trap:** targets are household-global, so scoping the actuals to one entity compares it against a policy that was never its own. **Fail-first (the param is ACCEPTED today = RED).** **Per-entity policies → ROADMAP one-liner.** |
+
+**Still PENDING RATIFICATION AT THE WALK** (built, but not owner-accepted): the **`StatusChip`** amendment
++ its two migrations · the **9-13 / 9-18 / 9-19** strings · the **9-16** colour treatment · the **GLOSSARY
+set (9-14)** · the **D-105 scope amendment** record.
+
+---
+
+### The original questions, options and evidence — PRESERVED
+
 
 *Everything the specs under-specify. **I resolved none of these.** The owner resolves them **one-pass**;
 build starts on **none** of them while open. Proposals are for the owner to approve, amend or reject.*
