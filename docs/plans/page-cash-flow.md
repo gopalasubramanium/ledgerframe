@@ -677,3 +677,52 @@ formatted date. D-105 covers **money**, not dates, so this is a **copy/polish ju
 a defect — raised rather than silently changed.
 
 **Phase 3b (owner acceptance walk) is the gate. Nothing here is self-certified.**
+
+---
+
+## 14. OWNER WALK — BATCH 1 (§12cf1-N, 2026-07-15)
+
+### RATIFICATIONS — owner "rest fine" (2026-07-15). CLOSE lines:
+
+| Item | Status |
+|------|--------|
+| **`Button` extraction + BOTH migrations** (Review's `.rv__markbtn`/`.rv__markicon`, Policy's `.pol__btn`) | ✅ **RATIFIED — CLOSED.** DESIGN-SYSTEM §5.4 PROPOSED → **RATIFIED**. Both page-local copies **deleted**; the icon-button guard was **retargeted, not removed**. |
+| **`StatusChip` `positive`/`negative` — FIRST sanctioned use** (the green *"Cash-flow positive"*) | ✅ **RATIFIED — CLOSED.** A runway status is a **cash fact** and implies no trade. **Policy's bar on those tones stands unchanged** — there, a colour would *value* a gap (D-055). |
+| **The three empty states** (9-8) | ✅ **RATIFIED — CLOSED** *(copy updated by §12cf1-2)*. |
+| **Goal-delete warning copy** (9-7c) | ✅ **RATIFIED — CLOSED.** |
+| **The 5 GLOSSARY terms** (9-12) | ✅ **RATIFIED — CLOSED.** |
+| **§9-6 validation strings** | ✅ **RATIFIED — CLOSED.** |
+| **Date display** | ✅ **RULED: served ISO dates STAND** — *platform-consistent beats per-page prettiness*, and a date format is a **locale** decision, not a page one. **ROADMAP R-31 (i18n) gains "locale date formatting"** in its scope note: it lands **once, for every page**. |
+
+### The batch
+
+| # | Finding | Fix | RED evidence |
+|---|---------|-----|--------------|
+| **§12cf1-1** | ⚠ **Table header stops short of the right border — a PLATFORM-WIDE component defect.** `scrollbar-gutter: stable` reserves a strip the `<table>` cannot cover, so the card showed through the top-right corner: **filled on the left, empty on the right.** | **The header band is now painted by the SCROLL CONTAINER's own background** (two token layers: the fill + the header's bottom border), anchored to the top of the scrollport so it stays under the sticky header while rows scroll beneath it. ⚠ **The previous fix — a `box-shadow` on `.lf-table__th:last-child` — CANNOT WORK and is DELETED:** that shadow is painted **into the scrollbar gutter of the very container that CLIPS it**. **Computed styles said the shadow was there; the rendered pixels said otherwise.** *One component, no page-local patches.* | **A PIXEL guard** (`e2e/table-header-fill.spec.ts`) samples the header band mid-width and inside the gutter and requires them **identical**. **RED with the fix reverted, GREEN with it**, both themes. Screenshots before/after in `artifacts/`. |
+| **§12cf1-2** | **"Obligations" mislabels income** — calling an incoming salary an *obligation* is the **model's** word, not the user's. | **UI vocabulary only; the MODEL is untouched** (one record type, `kind ∈ {expense, income}`, same endpoint). Section **"Income & expenses"**; button **"Add income or expense"**; column **"Obligation" → "Name"**; the dialog title follows the button; the **served** runway empty-copy now reads *"Add recurring income and expenses…"* (Net worth reads that same reader). The **geometry specimen** was updated too, so it stays truthful. **GLOSSARY's `Obligation` entry gains the display-grouping note.** **Strings PROPOSED → ratify at re-verify.** | Copy grep. |
+| **§12cf1-3** | **The editor dialogs were full of dead space** (a label + a 40px input occupied a **160px** band). | **Root cause: `.cf__field` carried `flex: 1 1 10rem` inside a COLUMN flex container, so every field STRETCHED vertically.** Rebuilt on a **two-column grid** (the Policy editor pattern): row wrappers are `display: contents`, so every control **lines up across rows by construction**; fields `align-self: start` (no growth); Name/Note span the row; **one column below the laptop breakpoint** (the sheet). | **RED on all three editors:** *"no field is a stretched empty band"* → e.g. `Name: 160px around a 40px control`. **12 cases green** (3 forms × 1366/1440 × both themes). |
+| **§12cf1-4** | **Card footnotes touched the card's border** (zero gap) — they read as part of the table's frame, not a note about it. | **`.lf-card__footnote`** — a **token** inset at the **component** level, not a per-page nudge. | Measured: `gapAboveNote: 0` → **8px** after. |
+| **§12cf1-5** | **Goal surfacing** (owner product question). | **Recorded, no UI change:** goals surface **canonically here** + **Review's goal-soon signal** — and **nowhere else, for now**. **ROADMAP R-34** names the two candidate homes so they cannot be smuggled in as riders: a **Home widget** (an R-19 evolution) and a **Reports Pack section** (**decided at the Reports plan**). *Deliberate scope, not an omission.* | — |
+
+### ⚠ My guards were broken in a way that would have failed CI — and I found it by running the whole suite
+
+Both new guards (§12cf1-1's pixel check, and the icon-button guard) **passed in isolation and TIMED OUT in the
+full run**. The cause was mine: **the CI e2e suite runs with NO BACKEND**, so the product pages render **empty
+tables** and Policy renders **no action button at all** — my guards were waiting for content that **cannot
+exist there**. They were green only because a dev backend happened to be running.
+
+**Both are now measured in the GALLERY** (a `Button` specimen was added), which is **static and backend-free**
+— *a component guard must not depend on a page having data*. **Rule earned:** *a guard that needs a backend to
+find its subject is not a component guard; it is a page test wearing a component's name.*
+
+*(A second self-inflicted flake: the pixel patch was sampled **7px from the rounded border**, so antialiasing
+bled into it — green alone, red ~1 run in 3. Moved clear of the radius; **5 consecutive clean runs** before it
+was trusted.)*
+
+### Carried to the re-verify
+
+The **§12cf1-2 strings** · the four fixes above. **Noted, not fixed:** two served strings outside this page
+still say *"obligations"* — Scenarios' `obligation_due` note and Review's `obligations` attention area. They
+belong to **other pages' copy** (one unbuilt, one **accepted**), so they are **raised, not silently changed**.
+
+**Phase 3b re-verify is the gate. Nothing here is self-certified.**

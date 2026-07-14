@@ -57,7 +57,7 @@ async def runway_report(session: AsyncSession) -> dict:
         runway_date = _add_months(datetime.now(UTC).date(), int(min(months, Decimal(1200)))).isoformat()
 
     note = {
-        "no_data": "Add recurring obligations (and income) to see a runway.",
+        "no_data": "Add recurring income and expenses to see a runway.",
         "positive": "Cash-flow positive — recorded income covers recurring expenses; liquid assets aren't being drawn down.",
         "finite": "At your recorded recurring net burn, your liquid assets would last this long.",
     }[status]

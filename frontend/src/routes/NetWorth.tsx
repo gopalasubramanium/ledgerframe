@@ -58,7 +58,7 @@ function windowCutoff(w: string): Date | null {
 
 // Basis label for the runway card (ND-9) — the engine's honest basis, stated next to the figure.
 const RUNWAY_BASIS =
-  "Basis: liquid assets ÷ recurring monthly net burn (recurring expenses − income), at today's FX; one-off obligations excluded.";
+  "Basis: liquid assets ÷ recurring monthly net burn (recurring expenses − income), at today's FX; one-offs excluded.";
 
 function reviewVerdict(severity: string): Verdict {
   // §12rv1-5 — the reader now serves display-cased severity ("Review"/"Info"); normalise before mapping.
@@ -255,7 +255,7 @@ export function NetWorth() {
                   <div className="nw__totrow nw__totrow--net"><dt>Net monthly burn</dt><dd className="nw__num">{formatMoney(r.net_monthly_burn)}</dd></div>
                 </dl>
                 <p className="nw__note">{RUNWAY_BASIS} {r.disclaimer}</p>
-                <p className="nw__note"><Link to="/cash-flow">Edit obligations →</Link></p>
+                <p className="nw__note"><Link to="/cash-flow">Edit income &amp; expenses →</Link></p>
               </div>
             )}
           </CardBody>

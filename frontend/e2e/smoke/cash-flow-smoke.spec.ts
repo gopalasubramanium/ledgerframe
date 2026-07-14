@@ -34,7 +34,7 @@ test.describe.serial("cash flow pre-pass (live)", () => {
     // a real user sees, not an edge case.
     await page.goto("/#/cash-flow");
     await expect(page.getByRole("heading", { name: "Cash flow", exact: true })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("No obligations recorded.")).toBeVisible();
+    await expect(page.getByText("No income or expenses recorded.")).toBeVisible();   // §12cf1-2 vocabulary
     await expect(page.getByText("No contributions recorded.")).toBeVisible();
     await expect(page.getByText("No goals recorded.")).toBeVisible();
     console.log("PART 1 — all three empty states render with a reason + a way forward");

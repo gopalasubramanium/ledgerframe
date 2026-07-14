@@ -339,6 +339,30 @@ baseline-aligning against it. **The text label is always kept — an icon is nev
 ⚠ **2nd occurrence** (Review's *Mark reviewed* · Policy's *Edit policy*), each with a page-local flex row.
 **The 3rd occurrence EXTRACTS the shared treatment** (the `Segmented` / `StatusChip` centralization rule).
 
+**`Button` — THE button, and THE icon+label treatment (§5.4 AMENDMENT — RATIFIED 2026-07-15, page-cash-flow
+§9-13).** Props: `children` (the **mandatory** text label — an icon is never a label on its own), `icon?`
+(lucide; sized by `--icon-size`, which `.lf-btn svg` already applies globally — a per-call `size` prop is a
+lie about what controls it), `variant?` (`default`|`primary`). **Extracted at the THIRD occurrence** (Review's
+*Mark reviewed* · Policy's *Set/Edit policy* · Cash flow's *Add …*), per the trigger page-policy §12po3-1
+recorded. **Both page-local copies (`.rv__markbtn`/`.rv__markicon`, `.pol__btn`) are MIGRATED onto it and
+DELETED.** A centred inline-flex row with a token gap, so the icon lands on the label's **optical centre**
+instead of baseline-aligning against it.
+
+**THE TABLE HEADER PAINTS EDGE-TO-EDGE (RATIFIED 2026-07-15, page-cash-flow §12cf1-1).** `scrollbar-gutter:
+stable` reserves a strip the `<table>` cannot cover, so the header fill stopped short of the right border and
+the card showed through the top-right corner — **filled on the left, empty on the right**. The header band is
+therefore painted by the **scroll CONTAINER's own background** (two token layers: the fill + the header's
+bottom border), which *does* cover the gutter, anchored to the top of the scrollport so it stays under the
+sticky header while rows scroll beneath it. ⚠ **The previous fix — a `box-shadow` on `.lf-table__th:last-child`
+— CANNOT WORK and is deleted:** that shadow is painted into the scrollbar gutter of the very container that
+**clips** it. *Computed styles said the shadow was there; the rendered pixels said otherwise — which is why the
+guard asserts **pixels** (`e2e/table-header-fill.spec.ts`), not styles.*
+
+**CARD FOOTNOTE (RATIFIED 2026-07-15, page-cash-flow §12cf1-4).** A legend/disclaimer line under a card's
+content uses **`.lf-card__footnote`** — a **token** inset at the component level, never a per-page nudge.
+Without it the line sat **flush against the table's border** (zero gap) and read as part of the table's frame
+rather than a note about it.
+
 ### 5.2 Data display
 
 | Component | Props (surface) | Usage rules |

@@ -57,9 +57,26 @@
    at the top of THIS container; the scrollbar/thumb sits inside the border, below
    the toolbar, with a reserved gutter so it never overlaps the border. */
 .lf-table__scroll {
+  /* The header row's height, from the same tokens the header is built from — never a magic px. */
+  --lf-head-h: calc(var(--cell-pad-y) * 2 + var(--line-13) + var(--border-width));
   max-height: var(--table-max-h, 60vh);
   overflow: auto;
   scrollbar-gutter: stable;
+  /* Two layers, top-anchored: the header's bottom border, over the header fill. Both span the FULL
+     width of the scrollport — including the reserved gutter the table itself cannot reach. */
+  background-image:
+    linear-gradient(var(--border), var(--border)),
+    linear-gradient(var(--surface-raised), var(--surface-raised));
+  background-repeat: no-repeat, no-repeat;
+  background-size:
+    100% var(--border-width),
+    100% var(--lf-head-h);
+  background-position:
+    left calc(var(--lf-head-h) - var(--border-width)),
+    left top;
+  /* NOT `local`: the band must stay pinned to the top of the scrollport, under the sticky header,
+     while the rows scroll beneath it. */
+  background-attachment: scroll, scroll;
 }
 .lf-table {
   width: 100%;
@@ -79,15 +96,17 @@
   border-bottom: var(--border-width) solid var(--border);
   white-space: nowrap;
 }
-/* D-101 refinement (visual middle path, no structural split) — the sticky column
-   header owns its FULL width including the reserved scrollbar gutter: the last
-   header cell paints the header fill + bottom border across the gutter zone, so the
-   scrollbar track reads as starting BELOW the header row, not beside it. */
-.lf-table__th:last-child {
-  box-shadow:
-    var(--scrollbar-size) 0 0 0 var(--surface-raised),
-    var(--scrollbar-size) var(--border-width) 0 0 var(--border);
-}
+/* §12cf1-1 — THE HEADER BAND IS PAINTED BY THE SCROLL CONTAINER, NOT BY THE LAST CELL.
+   `scrollbar-gutter: stable` reserves a strip the <table> does not cover, so the header fill
+   stopped short of the right border and the card showed through the top-right corner — filled on
+   the left (the header's own background follows the radius), empty on the right.
+   The previous fix put a box-shadow on `.lf-table__th:last-child` spanning `--scrollbar-size`. It
+   CANNOT work: that shadow is painted into the scrollbar gutter of the very container that CLIPS
+   it (`.lf-table__scroll { overflow: auto }`). Computed styles said the shadow was there; the
+   rendered pixels said otherwise — so the fill now comes from the container's own background,
+   which DOES cover the gutter, and the guard asserts PIXELS (e2e/table-header-fill.spec.ts).
+   The band is anchored to the top of the scrollport, so it stays under the sticky header while the
+   rows scroll beneath it. */
 .lf-table__th--num { text-align: right; }
 .lf-table__th--sortable { cursor: pointer; user-select: none; }
 .lf-table__sortglyph { color: var(--text-tertiary); margin-left: var(--space-2); }

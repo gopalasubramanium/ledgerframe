@@ -66,7 +66,7 @@ const GOALS: GoalRow[] = [
 ];
 
 const OB_COLS: Column<ObRow>[] = [
-  { key: "name", label: "Obligation", sortable: true, truncate: true },
+  { key: "name", label: "Name", sortable: true, truncate: true },
   { key: "kind", label: "Kind", sortable: true, render: (r) => <StatusChip label={r.kind} tone="neutral" /> },
   { key: "recurrence", label: "Recurrence", sortable: true },
   { key: "amount", label: "Amount", align: "right", sortable: true },
@@ -126,7 +126,7 @@ export function CashFlowMockup() {
             <span className="cf__figlabel">Monthly income</span>
             <span className="cf__figvalue">13,140.00</span>
           </div>
-          <p className="cf__note">
+          <p className="lf-card__footnote">
             Liquid assets ÷ your recorded recurring net burn, at today's FX. Contributions do not
             reduce it.
           </p>
@@ -137,12 +137,12 @@ export function CashFlowMockup() {
           keeps ONE scroll region no matter how long any one list grows. */}
       <section className="lf-card cf__section">
         <header className="cf__head">
-          <h2 className="lf-card__title">Obligations</h2>
+          <h2 className="lf-card__title">Income &amp; expenses</h2>
           <span className="cf__total">Next 12 months · 74,285.00</span>
-          <Button icon={Plus} variant="primary">Add obligation</Button>
+          <Button icon={Plus} variant="primary">Add income or expense</Button>
         </header>
         <div className="lf-card__body">
-          <DataTable<ObRow> caption="Obligations" columns={OB_COLS} rows={OBLIGATIONS} />
+          <DataTable<ObRow> caption="Income and expenses" columns={OB_COLS} rows={OBLIGATIONS} />
         </div>
       </section>
 

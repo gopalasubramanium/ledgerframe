@@ -39,6 +39,7 @@ import {
   Sidebar,
   Skeleton,
   StaleBanner,
+  Button,
   StalenessChip,
   StatusChip,
   TextInput,
@@ -717,6 +718,26 @@ export function KitchenSink() {
       </Section>
 
       {/* ---------------------------------------------------------------- */}
+      <Section
+        title="Button (§5.4) — THE icon+label treatment (RATIFIED 2026-07-15)"
+        note="Extracted at the 3rd occurrence (Review's Mark reviewed · Policy's Set/Edit policy · Cash flow's Add …); both page-local copies are migrated onto it and DELETED. The label is MANDATORY — an icon is never a label on its own. The icon is sized by --icon-size (already global on `.lf-btn svg`, which is why a per-call `size` prop is a lie about what controls it), on a centred inline-flex row with a token gap, so it lands on the label's OPTICAL CENTRE instead of baseline-aligning against it. Guarded HERE — the gallery is backend-free, so a component guard runs without depending on a page having data."
+      >
+        <div className="ks__row">
+          <Specimen label="Button · primary + icon">
+            <Button variant="primary" icon={Plus}>Add income or expense</Button>
+          </Specimen>
+          <Specimen label="Button · default + icon">
+            <Button icon={Pencil}>Edit policy</Button>
+          </Specimen>
+          <Specimen label="Button · label only (no icon)">
+            <Button variant="primary">Save</Button>
+          </Specimen>
+          <Specimen label="Button · disabled">
+            <Button icon={Plus} disabled>Add goal</Button>
+          </Specimen>
+        </div>
+      </Section>
+
       <Section title="Structure & chrome (§5.4)">
         <div className="ks__stack">
           <Specimen label="Card / panel (D-100, ratified w/ amendment) — LAYERED: outer --surface-raised card + nested --surface body panel (the Holdings net-worth family)">

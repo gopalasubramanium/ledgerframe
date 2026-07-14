@@ -15,9 +15,14 @@ import { test, expect } from "@playwright/test";
 // §9-13 — both buttons are now the RATIFIED `Button` component (`.lf-btn--icon`); the page-local
 // copies (.rv__markbtn, .pol__btn) are DELETED. The guard is RETARGETED at the shared class, not
 // removed — a migration that drops its guard is a migration that stops being proven.
+// ⚠ MEASURED IN THE GALLERY, NOT ON A LIVE PAGE. The CI e2e suite runs with NO BACKEND, so Policy
+// renders no action button at all (it has no policy to edit) and this guard TIMED OUT there — green
+// locally against a dev backend, red in the suite. A COMPONENT guard must not depend on a page
+// having data. The gallery specimen is static, so it can never render zero.
+// Review is kept as the live case: its button renders regardless of data.
 const BUTTONS = [
+  { name: "kitchen-sink · Button specimen", hash: "#/kitchen-sink", selector: ".lf-btn--icon" },
   { name: "review · Mark reviewed", hash: "#/review", selector: ".lf-btn--icon" },
-  { name: "policy · Edit/Set policy", hash: "#/policy", selector: ".lf-btn--icon" },
 ];
 
 for (const theme of ["light", "dark"] as const) {

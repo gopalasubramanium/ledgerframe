@@ -32,12 +32,10 @@
   line-height: var(--line-20);
   font-variant-numeric: tabular-nums;
 }
-.cf__note {
+/* The runway card's note sits BESIDE the figures (not under a table), so it keeps its own flow. */
+.cf__runwaybody .lf-card__footnote {
   flex: 1 1 16rem;
   margin: 0;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-12);
-  line-height: var(--line-12);
 }
 
 /* A card header: title left, its total beside it, the add action right — on ONE row.
@@ -78,23 +76,32 @@
   --table-max-h: 22rem;
 }
 
-/* Editor — ONE record at a time (§9-2). */
+/* Editor — ONE record at a time (§9-2), on a TWO-COLUMN GRID (§12cf1-3).
+   The fields used to be flex items in a COLUMN flex container with `flex: 1 1 10rem` — so each one
+   STRETCHED vertically and a label-plus-40px-input became a 160px band. The form read as full of
+   holes. A field is a label + ONE control (+ an optional hint), and the grid gives it exactly that:
+   no growth, no dead space, and the dialog's height is its content's height. */
 .cf__editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  align-content: start;
 }
+/* A row wrapper contributes NOTHING of its own — its children join the same grid, so every control
+   lines up across rows by construction (the Policy §12po2-3 lesson). */
 .cf__fieldrow {
-  display: flex;
-  gap: var(--space-4);
-  flex-wrap: wrap;
+  display: contents;
 }
 .cf__field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  min-width: 10rem;
-  flex: 1 1 10rem;
+  align-self: start;          /* never stretch to fill the row */
+  min-width: 0;
+}
+/* Full-width fields: a name and a note want the whole row. */
+.cf__field--wide {
+  grid-column: 1 / -1;
 }
 .cf__field > span {
   font-size: var(--font-size-13);
@@ -102,9 +109,10 @@
   color: var(--text-secondary);
 }
 .cf__field--switch {
-  flex: 0 0 auto;
+  align-self: end;
 }
 .cf__muted {
+  grid-column: 1 / -1;
   margin: 0;
   color: var(--text-tertiary);
   font-size: var(--font-size-12);
@@ -112,6 +120,7 @@
 }
 /* The SERVED validation message, in place, where the user is working. */
 .cf__error {
+  grid-column: 1 / -1;
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid var(--loss);
@@ -119,4 +128,10 @@
   color: var(--loss);
   font-size: var(--font-size-13);
   line-height: var(--line-13);
+}
+/* Below the laptop breakpoint the dialog is a sheet: one column, so nothing is cramped. */
+@media (max-width: 56rem) {
+  .cf__editor {
+    grid-template-columns: 1fr;
+  }
 }

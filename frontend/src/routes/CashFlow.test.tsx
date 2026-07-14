@@ -185,7 +185,7 @@ test("§9-2 — PER-ROW CRUD: adding an obligation POSTs exactly that record (re
   const user = userEvent.setup();
   renderPage();
 
-  await user.click((await screen.findAllByRole("button", { name: /add obligation/i }))[0]);
+  await user.click((await screen.findAllByRole("button", { name: /add income or expense/i }))[0]);
   const dialog = await screen.findByRole("dialog");
   await user.type(within(dialog).getByLabelText("Name"), "School fees");
   await user.type(within(dialog).getByLabelText("Amount"), "3500");
@@ -244,7 +244,7 @@ test("§9-8 — each empty list states a REASON and offers the way forward", asy
               cons: { ...CONS, contributions: [] },
               goals: { ...GOALS, goals: [] } });
   renderPage();
-  expect(await screen.findByText("No obligations recorded.")).toBeTruthy();
+  expect(await screen.findByText("No income or expenses recorded.")).toBeTruthy();
   expect(screen.getByText("No contributions recorded.")).toBeTruthy();
   expect(screen.getByText("No goals recorded.")).toBeTruthy();
   expect(screen.getByText(/never reduce your cash runway/i)).toBeTruthy();

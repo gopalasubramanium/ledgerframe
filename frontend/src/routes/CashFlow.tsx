@@ -184,7 +184,7 @@ export function CashFlow() {
   // --- columns ------------------------------------------------------------------------------- //
 
   const obCols: Column<Obligation>[] = [
-    { key: "name", label: "Obligation", sortable: true, truncate: true },
+    { key: "name", label: "Name", sortable: true, truncate: true },
     { key: "kind", label: "Kind", sortable: true, render: (r) => <StatusChip label={labelFor("obligation_kind", r.kind)} /> },
     { key: "recurrence", label: "Recurrence", sortable: true, render: (r) => labelFor("obligation_recurrence", r.recurrence) },
     { key: "amount_base", label: "Amount", align: "right", sortable: true, render: (r) => r.amount_base_display },
@@ -270,7 +270,7 @@ export function CashFlow() {
   ];
 
   const editorOpen = Boolean(obDraft || conDraft || goalDraft);
-  const editorTitle = obDraft ? (obDraft.id ? "Edit obligation" : "Add obligation")
+  const editorTitle = obDraft ? (obDraft.id ? "Edit income or expense" : "Add income or expense")
     : conDraft ? (conDraft.id ? "Edit contribution" : "Add contribution")
       : goalDraft ? (goalDraft.id ? "Edit goal" : "Add goal") : "";
 
@@ -317,7 +317,7 @@ export function CashFlow() {
                 <span className="cf__figvalue">{runway.monthly_income_display}</span>
               </div>
               {/* The served note + disclaimer, verbatim. Protected: contributions do not reduce it. */}
-              <p className="cf__note">{runway.note} {runway.disclaimer}</p>
+              <p className="lf-card__footnote">{runway.note} {runway.disclaimer}</p>
             </>
           )}
         </div>
@@ -326,7 +326,7 @@ export function CashFlow() {
       {/* OBLIGATIONS */}
       <section className="lf-card cf__section" data-card="obligations">
         <header className="cf__head">
-          <h2 className="lf-card__title">Obligations</h2>
+          <h2 className="lf-card__title">Income &amp; expenses</h2>
           {obs && obs.obligations.length > 0 && (
             <span className="cf__total">
               <GlossaryTerm term="term-next-12-months">Next 12 months</GlossaryTerm>
@@ -335,22 +335,22 @@ export function CashFlow() {
           )}
           <Button variant="primary" icon={Plus}
             onClick={() => { setFormError(null); setObDraft({ ...OB_NEW }); }}>
-            Add obligation
+            Add income or expense
           </Button>
         </header>
         <div className="lf-card__body">
           {obs === undefined && <Skeleton lines={4} />}
-          {obs === null && <EmptyState message="Obligations are unavailable." reason="They could not be loaded just now."
+          {obs === null && <EmptyState message="Income and expenses are unavailable." reason="They could not be loaded just now."
             action={<Button onClick={reload}>Retry</Button>} />}
           {obs && obs.obligations.length === 0 && (
             <EmptyState
-              message="No obligations recorded."
-              reason="Add your recurring expenses and income to see a cash runway. One-off bills can go here too."
-              action={<Button variant="primary" icon={Plus} onClick={() => { setFormError(null); setObDraft({ ...OB_NEW }); }}>Add obligation</Button>}
+              message="No income or expenses recorded."
+              reason="Add your recurring income and expenses to see a cash runway. One-off bills can go here too."
+              action={<Button variant="primary" icon={Plus} onClick={() => { setFormError(null); setObDraft({ ...OB_NEW }); }}>Add income or expense</Button>}
             />
           )}
           {obs && obs.obligations.length > 0 && (
-            <DataTable<Obligation> caption="Obligations" columns={obCols} rows={obs.obligations} />
+            <DataTable<Obligation> caption="Income and expenses" columns={obCols} rows={obs.obligations} />
           )}
         </div>
       </section>
@@ -384,7 +384,7 @@ export function CashFlow() {
           {cons && cons.contributions.length > 0 && (
             <>
               <DataTable<Contribution> caption="Contributions" columns={conCols} rows={cons.contributions} />
-              <p className="cf__note">{cons.disclaimer}</p>
+              <p className="lf-card__footnote">{cons.disclaimer}</p>
             </>
           )}
         </div>
@@ -413,7 +413,7 @@ export function CashFlow() {
           {goals && goals.goals.length > 0 && (
             <>
               <DataTable<Goal> caption="Goals" columns={goalCols} rows={goals.goals} />
-              <p className="cf__note">{goals.disclaimer}</p>
+              <p className="lf-card__footnote">{goals.disclaimer}</p>
             </>
           )}
         </div>
@@ -440,7 +440,7 @@ export function CashFlow() {
 
           {obDraft && (
             <>
-              <label className="cf__field">
+              <label className="cf__field cf__field--wide">
                 <span>Name</span>
                 <TextInput value={obDraft.name} onChange={(v) => setObDraft({ ...obDraft, name: v })}
                   maxLength={80} aria-label="Name" />
@@ -478,7 +478,7 @@ export function CashFlow() {
                   <DateInput value={obDraft.due_date} onChange={(v) => setObDraft({ ...obDraft, due_date: v })} aria-label="Due date" />
                 </label>
               </div>
-              <label className="cf__field">
+              <label className="cf__field cf__field--wide">
                 <span>Note</span>
                 <TextInput value={obDraft.note} onChange={(v) => setObDraft({ ...obDraft, note: v })}
                   maxLength={1000} aria-label="Note" />
@@ -488,7 +488,7 @@ export function CashFlow() {
 
           {conDraft && (
             <>
-              <label className="cf__field">
+              <label className="cf__field cf__field--wide">
                 <span>Name</span>
                 <TextInput value={conDraft.name} onChange={(v) => setConDraft({ ...conDraft, name: v })}
                   maxLength={120} aria-label="Name" />
@@ -547,7 +547,7 @@ export function CashFlow() {
 
           {goalDraft && (
             <>
-              <label className="cf__field">
+              <label className="cf__field cf__field--wide">
                 <span>Name</span>
                 <TextInput value={goalDraft.name} onChange={(v) => setGoalDraft({ ...goalDraft, name: v })}
                   maxLength={80} aria-label="Name" />
@@ -580,7 +580,7 @@ export function CashFlow() {
                   <DateInput value={goalDraft.target_date} onChange={(v) => setGoalDraft({ ...goalDraft, target_date: v })} aria-label="Target date" />
                 </label>
               </div>
-              <label className="cf__field">
+              <label className="cf__field cf__field--wide">
                 <span>Note</span>
                 <TextInput value={goalDraft.note} onChange={(v) => setGoalDraft({ ...goalDraft, note: v })}
                   maxLength={1000} aria-label="Note" />

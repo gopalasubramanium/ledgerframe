@@ -412,3 +412,14 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/* §12cf1-4 — CARD FOOTNOTE. A legend/disclaimer line under a card's content (a served disclaimer, a
+   legend) sat FLUSH against the table's border — zero gap — so it read as part of the table's frame
+   rather than a note about it. The inset is a TOKEN at the component level, not a per-page nudge, so
+   every card footnote gets it by using the class. */
+.lf-card__footnote {
+  margin: var(--space-3) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+}
