@@ -24,6 +24,9 @@ from app.services import fx
 POLICY_TYPES = ["term_life", "whole_life", "health", "critical_illness", "disability",
                 "personal_accident", "property", "motor", "travel", "other"]
 FREQUENCIES = ["monthly", "quarterly", "annual", "single"]
+# Fixed vocab (page-insurance §9-10) — served via /refdata; enforced in _apply exactly like
+# policy_type/premium_frequency (unknown → default). Only `active` policies count toward the totals.
+POLICY_STATUSES = ["active", "lapsed", "expired"]
 _FREQ_MULT = {"monthly": 12, "quarterly": 4, "annual": 1, "single": 0}
 _RENEWAL_SOON_DAYS = 60
 
@@ -99,6 +102,8 @@ def _apply(p: InsurancePolicy, data: dict) -> None:
         p.policy_type = "other"
     if p.premium_frequency not in FREQUENCIES:
         p.premium_frequency = "annual"
+    if not p.status or p.status not in POLICY_STATUSES:
+        p.status = "active"
 
 
 async def create_policy(session: AsyncSession, data: dict) -> dict:

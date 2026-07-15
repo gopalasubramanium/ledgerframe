@@ -23,7 +23,7 @@ from app.services.estate import (
     WILL_STATUSES,
 )
 from app.services.insurance import FREQUENCIES as PREMIUM_FREQUENCIES
-from app.services.insurance import POLICY_TYPES
+from app.services.insurance import POLICY_STATUSES, POLICY_TYPES
 from app.services.planning import GOAL_BASES, OBLIGATION_KINDS, RECURRENCES
 
 router = APIRouter()
@@ -143,6 +143,7 @@ async def refdata() -> dict[str, list[dict[str, str]]]:
         "account_kind": list(ACCOUNT_KINDS),
         "policy_type": list(POLICY_TYPES),
         "premium_frequency": list(PREMIUM_FREQUENCIES),
+        "policy_status": list(POLICY_STATUSES),
         "id_type": _ID_TYPE,
         "source_override": _source_override_values(),
     }

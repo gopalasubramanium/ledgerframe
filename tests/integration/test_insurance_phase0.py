@@ -58,3 +58,24 @@ async def test_money_served_as_display_strings(app_client):
     no_cash = next(p for p in rep["policies"] if p["name"] == "No Cash")
     assert no_cash["cash_value_display"] is None
     assert no_cash["premium_display"] is None
+
+
+# --------------------------------------------------------------------------- #
+# 9-10 — policy_status is a fixed vocab (active/lapsed/expired), enforced like its siblings.
+# --------------------------------------------------------------------------- #
+async def test_policy_status_vocab_served_and_enforced(app_client):
+    """/refdata serves `policy_status` as {value,label}; an unknown status is forced to the default,
+    exactly as an unknown policy_type → 'other'. RED today: the vocab is absent and status is free text."""
+    refdata = (await app_client.get("/api/v1/refdata")).json()
+    assert [o["value"] for o in refdata["policy_status"]] == ["active", "lapsed", "expired"]
+    assert refdata["policy_status"][1]["label"] == "Lapsed"          # titleized via the standard path
+    base = await _base(app_client)
+    r = (await app_client.post("/api/v1/insurance", json={
+        "name": "Bogus Status", "policy_type": "health", "currency": base,
+        "premium_frequency": "annual", "status": "not-a-real-status"})).json()
+    assert r["status"] == "active"                                   # unknown → default (sibling of policy_type)
+    # a valid non-default value is preserved
+    r2 = (await app_client.post("/api/v1/insurance", json={
+        "name": "Lapsed", "policy_type": "health", "currency": base,
+        "premium_frequency": "annual", "status": "lapsed"})).json()
+    assert r2["status"] == "lapsed"

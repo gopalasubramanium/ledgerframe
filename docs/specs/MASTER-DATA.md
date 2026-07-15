@@ -71,6 +71,7 @@ D-010; `02` = from the schema audit.
 | **Account.kind** | `accounts.kind` | 7 | `brokerage, bank, retirement, wallet, property, manual, other` | DEF-3 |
 | **InsurancePolicy.policy_type** | `insurance_policy.policy_type` | 10 | `term_life, whole_life, health, critical_illness, disability, personal_accident, property, motor, travel, other` | DEF-4 |
 | **InsurancePolicy.premium_frequency** | `insurance_policy.premium_frequency` | 4 | `monthly, quarterly, annual, single` | DEF-4 |
+| **InsurancePolicy.status** | `insurance_policy.status` | 3 | `active, lapsed, expired` | page-insurance §9-10 |
 | **EstateDocument.category** | `estate_document.category` | 9 | `will, insurance, property, loan, identity, bank, tax, medical, other` | DEF-5 |
 | **EstateContact roles** | `estate_contact.roles` (JSON list) | 5 | `nominee, beneficiary, executor, emergency, guardian` | DEF-5 |
 | **Instrument.asset_subclass** | `instruments.asset_subclass` | 6 (PROPOSED) | `crypto, derivative, equity, etf, mutual_fund, reit` (authored — per-value table below) | DEF-2 † |
@@ -99,6 +100,15 @@ D-010; `02` = from the schema audit.
 - `InsurancePolicy.premium_frequency` — the value set is `..., single` (a
   paid-once policy), **not** `once`; distinct from `Contribution.frequency`
   (`..., once`). Do not conflate them.
+- `InsurancePolicy.status` (page-insurance §9-10) — `active / lapsed / expired`;
+  only `active` policies count toward the insurance totals and `count`. It is
+  **enforced in code** (`insurance.py:_apply` forces an unknown value to
+  `active`), exactly like its siblings `policy_type` / `premium_frequency` — it
+  joins the **same family-wide disposition** §1 records: these fixed-vocab
+  columns are unconstrained `String` today with the **DB CHECK deferred to v2**.
+  Adding `status` this way introduces **no new conflict** (it matches the
+  siblings' pending-CHECK posture); the DB CHECK for the whole family remains the
+  one deferred item, not a per-vocab decision.
 - `EstateContact roles` — this is the `CONTACT_ROLES` vocabulary into which the
   former free-text `relationship` field is **folded** (D-010); the separate
   `relationship` field is dropped. Stored as a JSON list on `estate_contact.roles`.
