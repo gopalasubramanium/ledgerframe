@@ -1,0 +1,61 @@
+/* Scenarios — GEOMETRY (page-scenarios §9-1, PROPOSED; ratify at the gate).
+   Exposures strip · one shock DataTable · liquidity what-ifs card. Tokens only. */
+
+.sc__exposures,
+.sc__section { min-width: 0; }
+
+/* A10 staleness annotation — a slim strip above the content, amber attention only. */
+.sc__stale {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+}
+.sc__stalenote { color: var(--text-secondary); }
+
+/* Exposures: equal-width KPI tiles in one row (wraps narrow). */
+.sc__expbody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+.sc__expbody > * { flex: 1 1 8rem; min-width: 0; }
+
+/* Section header: title left, its meta right, on one row. */
+.sc__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.sc__head .lf-card__title { margin: 0; font-size: var(--font-size-16); line-height: var(--line-16); }
+.sc__nw {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  font-variant-numeric: tabular-nums;
+}
+.sc__head .lf-summarylink { margin-left: auto; }
+
+/* A shock's impact is a factual loss (§9-5) — never a gain colour. */
+.sc__loss { color: var(--loss); }
+
+/* Liquidity what-ifs: a row per what-if, verdict chip inline. */
+.sc__liqbody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sc__whatif {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.sc__wlabel { flex: 1 1 14rem; color: var(--text-secondary); font-size: var(--font-size-13); line-height: var(--line-13); }
+.sc__wvalue { font-variant-numeric: tabular-nums; font-size: var(--font-size-16); line-height: var(--line-16); color: var(--text-primary); }
+.sc__wnote { flex: 1 1 100%; color: var(--text-tertiary); font-size: var(--font-size-12); line-height: var(--line-12); }

@@ -7,6 +7,7 @@ import { DisplayControls } from "../components/DisplayControls";
 import { TokenBoard } from "./TokenBoard";
 import { HomeMockupFull } from "./HomeMockup";
 import { CashFlowMockup } from "./CashFlowMockup";
+import { ScenariosMockup } from "./ScenariosMockup";
 import {
   AllocationDonut,
   Clock,
@@ -679,6 +680,30 @@ export function KitchenSink() {
           </Specimen>
           <Specimen label="NewsList · empty state (honest reason)">
             <NewsList items={[]} emptyMessage="No recent news" emptyReason="No headlines right now." />
+          </Specimen>
+        </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      <Section
+        bleed
+        title="Scenarios — LAYOUT SPECIMEN (page-scenarios §9-1) — PROPOSED, AWAITING RATIFICATION"
+        note="THE GEOMETRY GATE. Static, unwired — the geometry is ratified BY LOOKING before assembly. The ruling: an exposures TrendStat strip · the 7 shocks as ONE DataTable · the two liquidity what-ifs as a card with StatusChip verdicts. Real content region (1440×724 = viewport − chrome − shell padding), real-shaped data. BOTH honesty cases are staged: (a) the A10 STALENESS annotation strip; (b) the NEAR-ZERO net-worth variant, where the % column is suppressed and only the base-currency amount shows (§9-9). Deltas are factual losses (§9-5), never gains. The protected disclaimer sits once at the table foot (§9-13), never per row."
+      >
+        <div className="ks__stack">
+          <Specimen label="Scenarios · populated (with the A10 staleness annotation)">
+            <div className="ks__viewportscroll">
+              <div className="ks__viewport ks__viewport--scroll">
+                <ScenariosMockup />
+              </div>
+            </div>
+          </Specimen>
+          <Specimen label="Scenarios · NEAR-ZERO net worth — the % is suppressed, only the amount shows (§9-9)">
+            <div className="ks__viewportscroll">
+              <div className="ks__viewport ks__viewport--scroll">
+                <ScenariosMockup nearZero />
+              </div>
+            </div>
           </Specimen>
         </div>
       </Section>

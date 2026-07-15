@@ -465,3 +465,50 @@ to the **gross-positive exposure**, and `pct_change = delta / nw` (`:53`) expres
 worth** — honest for a scenario (the delta is a real change to net worth), but **unstable when `nw` is
 near-zero or negative** (§9-9). Liabilities are **not shocked** (correct — an equity-fall scenario does not
 move a mortgage's balance). GLOSSARY: **Exposure** as its own term is missing (§9-6).
+
+---
+
+## 11. BUILD RECORD — Phase 0 → Phase 0a (2026-07-15)
+
+**Phase 0 (backend-first, contract regenerated in the same commit). All fail-first.**
+
+| Item | RED evidence (before the fix) |
+|------|-------------------------------|
+| **9-3** — `*_display` on every money figure | `KeyError: 'net_worth_display'` |
+| **9-2** — the A10 staleness annotation | `'stale_inputs' not in {...}` — served from the **shared** `confidence.portfolio_input_quality` (extracted, not a 4th copy) |
+| **9-4** — ONE derivation (A11 class closed) | The private holdings loop is **deleted**; exposures read `allocation()`; an equality test pins `crypto`/`property`/`equities`/`foreign_fx` to the canonical `/portfolio/summary` buckets |
+| **9-7** — named shock constants | `module has no attribute 'EQUITY_SHOCKS'` — magnitudes extracted with rationale lines; **values unchanged** (a value-preserving test pins the 7 shocks + the 2×/3× determinism) |
+| **9-8** — `?entity_id` rejected | `assert 200 == 400` |
+| **9-10** — SN-1 note | `'expenses' in 'if the next 12 months of recorded obligations were paid'` |
+| **9-11** | one `present` row + the behaviour/reshape deltas in `API-CONTRACT.md`; typing **deferred** (08-TECH-DEBT) |
+
+**Recorded, not done here (08-TECH-DEBT):** the A10 input-quality helper is duplicated in `policy.py` /
+`review.py`; they should migrate onto the shared `confidence.py` helper as their **own behaviour-neutral
+task**, not rewired mid-Scenarios-build on accepted pages.
+
+**Phase 0a — the §9-1 STATIC LAYOUT SPECIMEN** ships at `/kitchen-sink`, in the **real content region**
+(1440×724), **both themes**, with **both honesty cases staged**:
+- **populated** — exposures `TrendStat` strip · the **7 shocks as one `DataTable`** (Impact rendered as a
+  factual **loss**, never a gain — §9-5) · the **liquidity what-ifs** card with **StatusChip verdicts**
+  (`Covered` → positive, `Not covered` → attention — §9-5) · the **A10 staleness strip** (§9-2) · the
+  protected disclaimer **once at the table foot** (§9-13) · the **"expenses"** vocabulary (SN-1/§9-10).
+- **near-zero net worth** — the **% column is suppressed** (em dash) and only the base-currency amount shows,
+  with an honest footnote (§9-9); the header net worth reflects the near-zero value so the specimen is
+  internally consistent.
+
+Screenshots (both themes, top / near-zero / liquidity) in `frontend/e2e/smoke/artifacts/sc-*.png`.
+
+---
+
+## 12. ⏸ STOP — GEOMETRY GATE (awaiting the owner's ratification)
+
+**Phases 1–3a do not start until the owner ratifies the §9-1 geometry from the specimen.**
+
+**To review:** `/kitchen-sink` → *"Scenarios — LAYOUT SPECIMEN (§9-1) — PROPOSED, AWAITING RATIFICATION"*
+(two frames: populated + near-zero).
+
+**What is being ratified:** the exposures strip + the single shock table + the liquidity card; the staleness
+annotation's placement; the near-zero % suppression; the disclaimer at the table foot.
+
+**Also pending ratification at the walk:** the §9-5 chip/loss treatment · the §9-6 GLOSSARY additions
+(`Shock`, `Exposure`) · the §9-9 / §9-13 copy · the §9-2 staleness wording.
