@@ -8,6 +8,18 @@ export interface GlossaryEntry {
 }
 
 export const GLOSSARY: Record<string, GlossaryEntry> = {
+  // Scenarios (page-scenarios §9-6). Added to docs/specs/GLOSSARY.md FIRST, then here — the
+  // two-store rule; tests/unit/test_glossary_parity.py polices the spellings.
+  "term-shock": {
+    term: "Shock",
+    definition:
+      "A single hypothetical move applied to an exposure — e.g. equities fall 20%. Deterministic arithmetic on today's values, never a forecast.",
+  },
+  "term-exposure": {
+    term: "Exposure",
+    definition:
+      "The base-currency amount a shock is applied to — your holdings grouped by what would move together (equities, crypto, property, foreign currencies). A share of gross assets; liabilities are not exposures.",
+  },
   // Cash flow (page-cash-flow §9-12). Added to docs/specs/GLOSSARY.md FIRST, then here — the
   // two-store rule; tests/unit/test_glossary_parity.py polices the spellings.
   "term-net-monthly-burn": {

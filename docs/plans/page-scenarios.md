@@ -500,9 +500,9 @@ Screenshots (both themes, top / near-zero / liquidity) in `frontend/e2e/smoke/ar
 
 ---
 
-## 12. ⏸ STOP — GEOMETRY GATE (awaiting the owner's ratification)
+## 12. GEOMETRY GATE — ✅ RATIFIED (owner, 2026-07-15)
 
-**Phases 1–3a do not start until the owner ratifies the §9-1 geometry from the specimen.**
+**The §9-1 specimen is RATIFIED as shown (both frames: populated + near-zero).** Phases 1–3a proceed on the ratified geometry.
 
 **To review:** `/kitchen-sink` → *"Scenarios — LAYOUT SPECIMEN (§9-1) — PROPOSED, AWAITING RATIFICATION"*
 (two frames: populated + near-zero).
@@ -512,3 +512,48 @@ annotation's placement; the near-zero % suppression; the disclaimer at the table
 
 **Also pending ratification at the walk:** the §9-5 chip/loss treatment · the §9-6 GLOSSARY additions
 (`Shock`, `Exposure`) · the §9-9 / §9-13 copy · the §9-2 staleness wording.
+
+---
+
+## 13. BUILD RECORD — Phases 1 → 3a (2026-07-15)
+
+**Geometry gate PASSED** (owner, 2026-07-15) — the §9-1 specimen was ratified as shown (both frames), and
+assembly proceeded on the ratified geometry.
+
+**Phase 1 — assembly.** GLOSSARY **first**, then the popover store (`Shock`, `Exposure`; parity guard green).
+Composed on the ratified geometry: the exposures `TrendStat` strip · the **7 shocks as one `DataTable`**
+(Impact rendered as a factual **loss**, never a gain) · the **liquidity what-ifs** card with **StatusChip
+verdicts** (Covered → positive, Not covered → attention). Read-only — no editor. Honest states: **empty
+portfolio** (reason + route to Holdings), **near-zero net worth** (% suppressed, amount shown, honest note),
+**stale/low-confidence inputs** (the A10 annotation + a Pricing Health link, riding the same payload — no
+second fetch). Protected D-058 copy in the subtitle **and** once at the table foot (§9-13). Route + nav wired
+— **the `/scenarios` `NotBuilt` fallback is gone** (Gate C3).
+
+**Phase 2 — tests (7 frontend + the backend suite), every guard PROVEN RED on the defect it exists to catch.**
+
+| Guard | Mutation → RED |
+|---|---|
+| **D-058 — no forecast language** | renaming a heading to *"Liquidity forecast"* → the grep fails (forecast word outside the protected copy) |
+| **§9-5 — a shock impact is a LOSS, never a gain** | colouring the impact `sc__gain` → **`expected 'sc__gain' to contain 'sc__loss'`** |
+
+Also pinned: served money rendered **verbatim** (no client money math); the A10 annotation renders with its
+Pricing Health route; the **near-zero % suppression** (every % cell an em dash + the honest footnote); the
+**empty-portfolio** reason + Holdings route; the **covered/not-covered** chip tones. `/scenarios` added to the
+**overflow · single-scroll · shared-shell · themed-link** cross-page guards.
+
+**Phase 3a — pre-pass GREEN on a live instance.** The page renders the **real 7 shocks + exposures +
+liquidity** on the seeded demo → **D-058 clean on the rendered page** → the **single derivation holds LIVE**
+(exposures == Portfolio's served allocation-by-class; `liquid` == Net worth's runway reader) → **`?entity_id`
+rejected (400)** → geometry clean at 320/375/900/1366 × both themes → **0 console errors**.
+
+### Two of my own test mistakes, recorded
+1. **Ambiguous locators, not page bugs.** `312,400.00` appears in **both** the exposures tile **and** the
+   shock table, so a page-wide `findByText` was ambiguous — rescoped to the specific shock row.
+2. **A wrong test-harness pattern:** I re-rendered after `cleanup()` in one test (*"Cannot update an unmounted
+   root"*). Split into two independent tests. *(Both were my tests, not the page — fixed the tests.)*
+
+### For the walk — pending ratification
+The **§9-5** chip/loss treatment · the **§9-6** GLOSSARY terms (`Shock`, `Exposure`) · the **§9-9** empty /
+near-zero copy · the **§9-13** disclaimer cadence · the **§9-2** staleness wording.
+
+**Phase 3b (owner acceptance walk) is the gate. Nothing here is self-certified.**
