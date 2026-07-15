@@ -74,7 +74,7 @@ vi.mock("../api/net-worth", () => ({
       disclaimer: "Indicative — liquid assets ÷ your recorded recurring net burn.",
     },
   })),
-  getInsurance: vi.fn(async () => ({ ok: true, data: { base_currency: "SGD", count: 0, total_cash_value: 0 } })),
+  getInsurance: vi.fn(async () => ({ ok: true, data: { base_currency: "SGD", count: 0, total_cash_value: 0, total_cash_value_display: "0.00" } })),
   getReview: vi.fn(async () => ({
     ok: true,
     // §12rv1-5 — the shared review reader serves display-cased severity ("Review"/"Info").
@@ -163,8 +163,9 @@ test("insurance exclusion line is OMITTED with zero policies (ND-5)", async () =
 });
 
 test("insurance exclusion line shows the verbatim wording when ≥1 policy (D-039/D-081, ND-5)", async () => {
-  vi.mocked(getInsurance).mockResolvedValueOnce({ ok: true, data: { base_currency: "SGD", count: 2, total_cash_value: 15000 } });
+  vi.mocked(getInsurance).mockResolvedValueOnce({ ok: true, data: { base_currency: "SGD", count: 2, total_cash_value: 15000, total_cash_value_display: "15,000.00" } });
   renderPage();
   expect(await screen.findByText(/Insurance cash value \(excluded\):/)).toBeTruthy();
+  expect(await screen.findByText("15,000.00")).toBeTruthy();   // the SERVED display string, verbatim (D-105)
   expect(await screen.findByText(/see Insurance/)).toBeTruthy();
 });

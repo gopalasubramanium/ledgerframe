@@ -267,7 +267,7 @@ export function NetWorth() {
         {(ins) =>
           ins.count > 0 ? (
             <p className="nw__exclusion">
-              Insurance cash value (excluded): <strong>{formatMoney(ins.total_cash_value)}</strong> — <Link to="/insurance">see Insurance</Link>
+              Insurance cash value (excluded): <strong>{ins.total_cash_value_display}</strong> — <Link to="/insurance">see Insurance</Link>
             </p>
           ) : null
         }

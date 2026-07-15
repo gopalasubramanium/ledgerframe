@@ -645,3 +645,25 @@ Commits `2282926`→ batch-3 close-out. No open blockers.
 **Judgment-flagged (owner calls, not derivable from specs):** ND-3 "Cash & deposits" = cash +
 fixed_deposit (KPI scope on record, §3b); the Portfolio-summary redesign (2×2 + fill); R-28 shape
 (forward-only, opt-in). Each recorded with its rationale.
+
+---
+
+## 15. CROSS-PAGE DELTA — the D-081 exclusion line changed (2026-07-16, page-insurance §9-4 + §9-10 / Amendment A)
+
+**An accepted page's rendered figures changed — recorded here, never silently.** The Insurance Phase-0 build
+(page-insurance §9-4 + §9-10, owner Amendment A) reshaped `GET /insurance`, which Net worth summarises on its
+**"Insurance cash value (excluded)"** line (`NetWorth.tsx`, the `.nw__exclusion` block; `net-worth.ts`
+`InsuranceResp`). Two changes reach this line:
+
+1. **Money is now a served display string (D-105).** The line rendered `formatMoney(ins.total_cash_value)`
+   (client formatting of a raw float); it now renders the **served `total_cash_value_display`** verbatim — no
+   client money math (P-1/D-031). `InsuranceResp` gains `total_cash_value_display: string`.
+2. **`count` is ACTIVE-only.** `count` was `len(all policies)`; it is now **active policies only**, agreeing
+   with `total_cash_value` (which was always active-only). The line's `ins.count > 0` guard is unchanged in
+   code, but its **meaning tightened**: a register of only lapsed/expired policies now yields `count = 0` and
+   the line is **correctly omitted** (there is no active cash value to exclude).
+
+**Re-verified:** `NetWorth.test.tsx` updated (the ≥1-policy case now asserts the **served display string**
+renders; the zero-policy omission case unchanged) → **7 unit tests green**; the **live Net worth pre-pass
+re-run GREEN** (`net-worth-smoke`, demo has 0 policies → exclusion line omitted, 0 console errors, 0 overflow
+320/375/900/1366 × both themes). No layout change. Full Insurance record: `page-insurance.md` §11.

@@ -61,11 +61,13 @@ export interface RunwayResp {
   disclaimer: string;
 }
 
-// Insurance valued exclusion line (D-039/D-081) — only total_cash_value + count are used here.
+// Insurance valued exclusion line (D-039/D-081) — only the served display total + count are used here.
+// `count` is ACTIVE policies only (page-insurance §9-10, Amendment A), agreeing with the cash-value total.
 export interface InsuranceResp {
   base_currency: string;
   count: number;
   total_cash_value: number;
+  total_cash_value_display: string; // served display string (D-105) — rendered verbatim, no client math
 }
 
 // Review summary (D-038) — the same reader the (unbuilt) Review page will own; P-1 summary only.

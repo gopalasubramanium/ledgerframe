@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.core.money import format_money_display
 from app.models import InsurancePolicy
 from app.services import fx
 
@@ -57,9 +58,16 @@ def _serialize(r: InsurancePolicy) -> dict:
     return {
         "id": r.id, "name": r.name, "insurer": r.insurer, "policy_type": r.policy_type,
         "policy_number": r.policy_number, "insured_person": r.insured_person,
-        "cover_amount": float(r.cover_amount or 0), "currency": r.currency,
+        # Money is served as a display string (D-105); the raw float stays alongside for callers that
+        # still read it (e.g. Net worth's exclusion line reads the total's display). None passes through
+        # so a missing cash value / premium stays honestly empty, never a fabricated 0 (Guarantee 3).
+        "cover_amount": float(r.cover_amount or 0),
+        "cover_amount_display": format_money_display(r.cover_amount or Decimal("0")),
+        "currency": r.currency,
         "cash_value": (float(r.cash_value) if r.cash_value is not None else None),
+        "cash_value_display": format_money_display(r.cash_value),
         "premium": (float(r.premium) if r.premium is not None else None),
+        "premium_display": format_money_display(r.premium),
         "premium_frequency": r.premium_frequency,
         "start_date": r.start_date, "renewal_date": r.renewal_date,
         "nominee": r.nominee, "linked_goal_id": r.linked_goal_id,
@@ -125,10 +133,12 @@ async def insurance_report(session: AsyncSession) -> dict:
     today = datetime.now(UTC).date()
     by_type: dict[str, float] = {}
     total_cover = total_cash = total_prem = Decimal("0")
+    active_count = 0
     upcoming: list[dict] = []
     for r in rows:
         if r.status != "active":
             continue
+        active_count += 1
         cb = await _to_base(r.cover_amount, r.currency, base)
         by_type[r.policy_type] = by_type.get(r.policy_type, 0.0) + float(cb)
         total_cover += cb
@@ -145,12 +155,18 @@ async def insurance_report(session: AsyncSession) -> dict:
                 pass
     return {
         "base_currency": base,
-        "policies": [_serialize(r) for r in rows],
-        "count": len(rows),
+        "policies": [_serialize(r) for r in rows],   # ALL rows (inactive visible, excluded from totals)
+        # `count` is ACTIVE policies only, so it agrees with the totals it rides beside on Net worth's
+        # D-081 excluded line (page-insurance §9-10, Amendment A). The records table uses policies.length.
+        "count": active_count,
         "total_cover": float(round(total_cover, 0)),
+        "total_cover_display": format_money_display(total_cover),
         "total_cash_value": float(round(total_cash, 0)),
+        "total_cash_value_display": format_money_display(total_cash),
         "total_annual_premium": float(round(total_prem, 0)),
-        "cover_by_type": sorted(({"type": k, "value": round(v, 0)} for k, v in by_type.items()),
+        "total_annual_premium_display": format_money_display(total_prem),
+        "cover_by_type": sorted(({"type": k, "value": round(v, 0),
+                                  "value_display": format_money_display(v)} for k, v in by_type.items()),
                                 key=lambda x: x["value"], reverse=True),
         "upcoming_renewals": sorted(upcoming, key=lambda x: x["days"]),
         "disclaimer": "Records and reminders only — not an assessment of whether your cover is "
