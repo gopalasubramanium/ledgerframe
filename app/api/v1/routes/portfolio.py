@@ -995,9 +995,14 @@ async def realised_gains_export(year: int | None = Query(default=None),
 async def scenarios(entity_id: int | None = Query(default=None),
                     session: AsyncSession = Depends(get_db)) -> dict:
     """Factual 'what if' stress scenarios on today's holdings — scenario, not forecast (W6)."""
+    # page-scenarios §9-8. `entity_id` is REJECTED, not ignored: the asset shocks would scope to one
+    # entity while the liquidity what-ifs stay household (runway/obligations have no entity scope), a
+    # silently meaningless mix. A precise-looking, meaningless comparison is an API honesty trap.
+    if entity_id is not None:
+        raise HTTPException(400, "scenarios are household-scoped: they cannot be filtered to one entity")
     from app.services.scenarios import scenario_report
 
-    return await scenario_report(session, entity_id=entity_id)
+    return await scenario_report(session)
 
 
 @router.get("/portfolio/tags")

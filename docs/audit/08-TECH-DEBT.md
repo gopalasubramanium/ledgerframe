@@ -196,3 +196,21 @@ retired **`.rv__chip`** — stale since that migration, and only surfaced now be
 Review pre-pass since. Selectors updated (`.rv__chip` → `.lf-statuschip`); the assertions are unchanged.
 **Lesson (already the §11-4 rule):** a selector/label migration must grep **the dev-only smoke specs too**,
 not just shipped code and CI tests — they are the ones that rot unseen because they run by hand.
+
+
+## `/portfolio/scenarios` untyped — `response_model` DEFERRED (page-scenarios §3b, 2026-07-15)
+
+`GET /api/v1/portfolio/scenarios` returns a bare `dict`; its shape is pinned by **values** (tests), not by
+the OpenAPI contract. Typing it is **deferred** for the §12mk3-2 reason a `response_model` **silently strips
+any undeclared key** — and the Phase-0 batch *added* served fields (`*_display`, the A10 annotation), exactly
+the moment a strip vanishes a field unnoticed. When done, as its own change, with an assertion that every
+served key survives.
+
+## Input-quality helper duplicated across readers (recorded 2026-07-15)
+
+The Gate-A10 *(stale, low-confidence)* input-quality logic now lives in **`confidence.portfolio_input_quality`
+/ `inputs_quality_note`** (extracted for page-scenarios, which uses it — no new copy). But **`policy.py` and
+`review.py` still carry their own copies** (`_input_quality`, `_inputs_note`, and Review's two inline sums).
+Per the centralization rule they should migrate onto the shared helper — **as its own behaviour-neutral
+task**, NOT rewired mid-Scenarios-build on accepted pages (their pre-passes would need re-verifying). Recorded
+so the consolidation is a decision, not forgotten.

@@ -77,3 +77,32 @@ def summarise(scored: list[tuple[Decimal, int]]) -> dict:
         },
         "disclaimer": "Data-quality signal only — how well-sourced each value is. Not advice.",
     }
+
+
+def portfolio_input_quality(val) -> tuple[int, int]:
+    """(stale, low-confidence) counts over the positive-value holdings a figure is computed FROM.
+
+    The rules every reader honours (the Gate-A10 shape): a stale priced holding, and the ``< 50``
+    low-confidence band (PRODUCT-SPEC §5). Extracted here so a derived-figure reader (drift,
+    scenarios) can flag that its inputs may not be fresh — Guarantee 3 does not exempt a derived
+    figure. (Policy/Review still carry their own copies; consolidating them onto this is recorded
+    in 08-TECH-DEBT — not rewired mid-build on accepted pages.)
+    """
+    priced = [h for h in val.holdings if h.market_value_base > 0]
+    stale = sum(1 for h in priced if h.is_stale and h.symbol)
+    low = sum(1 for h in priced if score_holding(h)["confidence"] < 50)
+    return stale, low
+
+
+def inputs_quality_note(stale: int, low: int) -> str | None:
+    """An honest, SERVED reason a derived figure may be off — or None when there is nothing to
+    warn about. States a FACT about the inputs; names no trade, no field, no endpoint (copy
+    hygiene). PROPOSED copy — the owner ratifies the wording."""
+    if not stale and not low:
+        return None
+    parts = []
+    if stale:
+        parts.append(f"{stale} {'price is' if stale == 1 else 'prices are'} stale")
+    if low:
+        parts.append(f"{low} {'holding is' if low == 1 else 'holdings are'} low-confidence")
+    return f"{' and '.join(parts)} — these figures may not reflect current values."
