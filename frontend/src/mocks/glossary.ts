@@ -167,6 +167,37 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "The summary dashboard. It owns nothing — every figure on it is a linked summary of the page that owns it (P-1/D-038).",
   },
+  // Insurance terms (page-insurance §9-11, PROPOSED — ratify at the walk). Added to
+  // docs/specs/GLOSSARY.md FIRST, then here — the two-store rule; test_glossary_parity.py
+  // polices the spellings. Canonical term is "Cover" (never "sum assured").
+  "term-cover": {
+    term: "Cover",
+    definition:
+      "The amount an insurance policy would pay out on a claim (its cover amount / sum insured). A protection figure — never added to your Net worth.",
+  },
+  "term-premium": {
+    term: "Premium",
+    definition:
+      "What you pay for a policy, at its premium frequency. Insurance sums premiums to an annual-equivalent total (a single-pay policy contributes nothing recurring).",
+  },
+  "term-premium-frequency": {
+    term: "Premium frequency",
+    definition:
+      "How often a premium is paid: monthly, quarterly, annual, or single (a paid-once policy).",
+  },
+  "term-nominee": {
+    term: "Nominee",
+    definition: "The person you have named to receive a policy's benefit. A name you record, not a fixed list.",
+  },
+  "term-insured-person": {
+    term: "Insured person",
+    definition: "The person a policy covers. A name you record, not a fixed list.",
+  },
+  "term-renewal": {
+    term: "Renewal",
+    definition:
+      "The date a policy is next due to renew. Insurance flags renewals due soon (or overdue) as neutral reminders — never advice.",
+  },
 };
 
 export function lookupTerm(id: string): GlossaryEntry | undefined {

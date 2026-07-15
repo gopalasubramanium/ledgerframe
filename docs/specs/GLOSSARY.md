@@ -232,6 +232,21 @@ These two "documents" ideas are distinct and must not be merged in copy:
 | **Estate documents** | Estate-wide: "is my estate documentation in order?" The document register on the Estate page (`estate_document`, `related_to` free text by design). |
 | **Insurance cash value** | Surrender/cash value of a policy. **Excluded from the headline Net worth total** in v2; shown on the Net worth page as a labelled **valued** line ("Insurance cash value (excluded): «amount» — see Insurance", D-039/D-081) and stated visibly on Insurance. Opt-in inclusion stays parked (R-9). |
 
+### Insurance policy terms (page-insurance §9-11)
+
+The canonical term for the payout amount is **"Cover"** — LedgerFrame does **not** use "sum assured". All
+PROPOSED 2026-07-16 (page-insurance §9-11) — ratify at the walk.
+
+| Term | Canonical definition |
+|------|----------------------|
+| **Cover** | The amount an insurance policy would pay out on a claim (its **cover amount** / sum insured). The canonical term is **Cover**, never "sum assured". A protection figure — **never added to your Net worth**. *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+| **Cover amount** | The base-currency **Cover** a single policy provides — shown per policy and summed by type on Insurance. *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* |
+| **Premium** | What you pay for a policy, at its **Premium frequency**. Insurance sums premiums to an annual-equivalent total (a single-pay policy contributes nothing recurring). *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+| **Premium frequency** | How often a premium is paid: monthly, quarterly, annual, or single (a paid-once policy). *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+| **Nominee** | The person you have named to receive a policy's benefit. A name you record, not a fixed list. *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+| **Insured person** | The person a policy covers. A name you record, not a fixed list. *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+| **Renewal** | The date a policy is next due to renew. Insurance flags renewals due soon (or overdue) as **neutral reminders — never advice**. *(PROPOSED 2026-07-16, page-insurance §9-11 — ratify at the walk.)* **[Help]** |
+
 ---
 
 ## System
