@@ -1,9 +1,8 @@
 # page-insurance — build plan
 
-**Status: 🟢 §9 CLOSED (owner one-pass, 2026-07-15; +amendments A–D) · Phase 0 done (backend-first, fail-first,
-contract regen) · Phase 0a specimen shipped · BUILD STOPS at the geometry gate. Phase 1 assembly is BLOCKED
-until the owner ratifies the §9-1 specimen at `/kitchen-sink`.** See §11 (Phase 0 record) and §12 (geometry
-gate — pending owner).
+**Status: 🟢 §9 CLOSED (2026-07-15) · Phase 0 done · Phase 0a specimen shipped · §12 geometry gate RATIFIED
+WITH CONDITIONS (owner, 2026-07-16; §12in-1..5) · Phases 1–3a done · AWAITING OWNER WALK (Phase 3b).** See §11
+(Phase 0), §12 (gate rulings), §13 (Phases 1–3a build record). Phase 3b is the gate — nothing self-certified.
 
 Drafted 2026-07-15 from `TEMPLATE-page-build.md`. The **verify-first pass (D-019) is done** — §10 records
 what the insurance engine **actually serves and actually guards**, with `file:line` cites. Every ambiguity is
@@ -570,23 +569,22 @@ the running dev server had a stale HMR cache). Screenshots: `frontend/e2e/smoke/
 
 ---
 
-## 12. GEOMETRY GATE — ⏸ AWAITING OWNER RATIFICATION
+## 12. GEOMETRY GATE — ✅ RATIFIED WITH CONDITIONS (owner, 2026-07-16)
 
-**The §9-1 specimen is PROPOSED, not ratified.** Phase 1 assembly is **BLOCKED** until the owner ratifies the
-geometry by looking.
+**The §9-1 specimen geometry is RATIFIED as shown** — the totals strip + the single policies table as the
+spine + the two flanking cards; the ⋯ row menu; the renewal-soon/overdue chip treatment; the protected-bar
+placement; the documents-checklist affordance. **Phase 1 proceeds** on the ratified geometry, subject to five
+owner conditions recorded verbatim below.
 
-**To review:** `/kitchen-sink` → *"Insurance — LAYOUT SPECIMEN (page-insurance §9-1)"* (three frames:
-populated · empty · documents checklist). *(If the running dev server does not show it, restart `vite` — its
-file-watch cache was stale this session; a fresh build renders it correctly.)*
+| # | Ruling (owner, 2026-07-16) |
+|---|---------------------------|
+| **§12in-1** | **Non-base-currency treatment (spec gap the specimen surfaced).** Per-policy money display strings **carry the currency code when the policy's currency ≠ base** (e.g. `USD 500,000.00`); base-currency rows stay bare. Decided **at the backend boundary** (D-105 — the frontend formats nothing). Totals remain base-currency with the current-FX caveat. The specimen/demo data gains **one non-SGD policy** so the case is exercised, not just staged. |
+| **§12in-2** | **The on-page exclusion statement is SERVED copy.** The served disclaimer is **extended** with both sentences shown in the specimen: *lapsed/expired excluded from totals and count*, and *cash value excluded from Net worth ("— see Net worth")*. One truth, one served string (D-005). |
+| **§12in-3** | **Renewal state is SERVED, never re-derived (A11-adjacent).** `renewal_reminders` serves a per-renewal **`state`** (`overdue` / `soon` / `upcoming`); the frontend renders it verbatim. **No client-side day-threshold constant may exist** — `_INSURANCE_SOON_DAYS` lives in **ONE store (backend)**. |
+| **§12in-4** | **Em-dash distinction RECORDED as a decision.** A register field the user left blank (premium, renewal date, cash value) renders a **bare em dash** — *"not recorded"* is self-evident for user-entered optional data. **Computed** figures keep the Guarantee-3 em-dash-**plus-reason** requirement. (A ruling, not a slide.) |
+| **§12in-5** | **RATIFIED AS SHOWN (ships as-is):** the EmptyState wording including *"— cover, premiums, renewals and documents"*, and the StatusChip tones (**Active = `positive`, Lapsed = `attention`** — factual states, the Pricing Health precedent). |
 
-**What is being ratified:** the totals strip + the single policies table as the spine + the two flanking
-cards; the row-action ⋯ menu; the renewal-soon / overdue chip treatment; the status chip tones (active →
-positive, lapsed → attention); the lapsed-excluded-from-totals honesty; the missing-figure em dash; the
-protected bar placement; the documents-checklist affordance.
+**Carried to the owner walk (still PROPOSED):** the §9-11 GLOSSARY terms; the §9-2 protected-bar wording + the
+standing adequacy-language guard (mechanised in Phase 2); the §9-8 default checklist labels.
 
-**Also pending ratification at the walk (carried):** the §9-11 GLOSSARY terms (PROPOSED); the §9-2 protected
-bar wording + the standing adequacy-language guard (mechanised in Phase 2); the §9-8 default checklist labels;
-the §9-9 empty-register copy.
-
-**STOP.** Phase 0 (8 deltas, all RED→GREEN, contract regenerated) and the Phase 0a specimen are complete.
-**Phase 1 assembly has not begun and is blocked on the owner's geometry ratification.**
+**Geometry gate PASSED. Phase 1 assembly proceeds under §12in-1..5.**
