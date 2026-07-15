@@ -967,19 +967,23 @@ at real viewports. All three folded into TEMPLATE §7 (extending existing rules,
 
 ## NEXT
 
-1. **Insurance — `docs/plans/page-insurance.md` — 🟢 §9 CLOSED (owner one-pass 2026-07-15), Phase 0 DONE,
-   Phase 0a specimen shipped → ⏸ AWAITING OWNER GEOMETRY RATIFICATION at `/kitchen-sink`.** All 13 §9 items
-   accepted (+amendments A–D). **Phase 0 (8 deltas, backend-first, every guard fail-first, contract regen):**
-   `/insurance/meta` deleted (§9-3); D-105 `*_display` + `count` active-only (§9-4/§9-10, Amendment A —
-   **Net worth's D-081 line migrated to `total_cash_value_display`, its pre-pass re-run GREEN**,
-   `page-net-worth.md §15`); `policy_status` vocab active/lapsed/expired (§9-10); `?entity_id` → 400 (§9-6);
-   ONE `renewal_reminders` helper, both windows named in the D-059 table (§9-7, Amendment C); `cover_by_type`
-   display-cased (§9-12); documents default labels as seed content (§9-8, Amendment D); 6 GLOSSARY terms
-   spec-first (§9-11, PROPOSED). **765 backend + parity + typecheck/lint/tokens/build green.** Phase 0a: the
-   §9-1 Worklist specimen at `/kitchen-sink` (populated · empty · documents-checklist frames), verified both
-   themes, 0 console errors. **Phase 1 assembly is BLOCKED until the owner ratifies the geometry.** ⚠ Recorded
-   pre-existing (not mine): a `CashFlow.tsx:330` unhandled error fails the frontend `npm run check` — reproduces
-   at `c0e9fb1`, out of scope, logged in `08-TECH-DEBT.md`.
+1. **Insurance — `docs/plans/page-insurance.md` — 🟢 Phases 0→3a DONE → AWAITING OWNER WALK (Phase 3b).**
+   §9 closed one-pass (2026-07-15, +amendments A–D); §12 geometry gate RATIFIED WITH CONDITIONS (2026-07-16,
+   §12in-1..5). **Phase 0** (8 deltas): meta removal, D-105 + count-active-only (Amendment A — Net worth
+   D-081 migrated to `total_cash_value_display`), `policy_status` vocab, `?entity_id`→400, one
+   `renewal_reminders` helper (named windows), `cover_by_type` display-cased, doc-default seed content, 6
+   GLOSSARY terms. **§12 deltas:** currency code on non-base display strings (§12in-1); served exclusion
+   disclaimer (§12in-2); served renewal `state` with one backend threshold store (§12in-3). **Phase 1:**
+   `/insurance` assembled on the ratified geometry — totals strip → policies DataTable spine → flanking
+   renewals + cover-by-type → served disclaimer; [S]-gated CRUD editor (MasterSelect, insurer typeahead via
+   a new `TextInput` `suggestions` datalist, documents checklist Switch+TextInput, `linked_goal_id` omitted);
+   nav `/insurance` → built. **Phase 2:** 8 render guards + the STANDING adequacy-language guard (proven
+   RED→GREEN) + overflow suite (12). **Phase 3a pre-pass GREEN** on the demo-seeded live instance (CRUD
+   round-trip, containment, both themes, 0 console errors) — and **caught a real bug** (the `policy_status`
+   mock-refdata gap, fixed). Net-worth D-081 pre-pass re-verified GREEN. Full record: **`page-insurance.md`
+   §11 (Phase 0) · §12 (gate) · §13 (Phases 1–3a).** **Phase 3b (owner walk) is the gate — not self-certified.**
+   ⚠ Pre-existing (not mine): the `CashFlow.tsx:330` unhandled error fails the frontend `npm run check` —
+   reproduces at `c0e9fb1`, out of scope, in `08-TECH-DEBT.md`.
 2. **Estate**, then the standing queue, unchanged: **Accounts** (D-065, `entity_id` scoping; **also owns the
    Institution master §9-5 defers to it**) · **Reports (+ Pack)** · **Settings** · **Help · Legal** · the
    **AI-surfaces milestone** · **Voice** (only after the owner defines it — ROADMAP **R-32**) · then release

@@ -588,3 +588,61 @@ owner conditions recorded verbatim below.
 standing adequacy-language guard (mechanised in Phase 2); the §9-8 default checklist labels.
 
 **Geometry gate PASSED. Phase 1 assembly proceeds under §12in-1..5.**
+
+---
+
+## 13. BUILD RECORD — Phases 1 → 3a (2026-07-16)
+
+**Geometry gate PASSED with conditions (§12in-1..5).** Phase 1 pre-assembly backend deltas (one commit
+each, fail-first proven RED on the real cause; no contract shape change — the route is an untyped dict):
+
+| Item | Change (file:line) | RED → GREEN |
+|------|--------------------|-------------|
+| **§12in-1** | Per-policy `*_display` carry the currency code when `currency != base` (`_money_display`, `insurance.py`); base rows bare. Demo seeds a realistic register incl. a USD + a lapsed policy (`seed/demo.py`). | `test_insurance_phase1`: bare `"500,000.00"` for a non-base policy → RED → GREEN (`EUR 500,000.00`). Existing absolute-count tests clear the register first. |
+| **§12in-2** | Served disclaimer extended with the two exclusion sentences (`insurance.py`). | disclaimer stopped after the FX caveat → RED → GREEN (both sentences + `see Net worth`). |
+| **§12in-3** | `renewal_reminders` serves per-item `state` (overdue/soon/upcoming); the soon threshold `_INSURANCE_SOON_DAYS` lives in ONE backend store (`insurance.py`), Review imports it (`review.py`, value unchanged). | no `state` key → RED → GREEN; the equality test still pins both call-sites to the one helper. |
+
+**Phase 1 — assembly.** Typed `api/insurance.ts`; `Insurance.tsx` on the ratified §9-1 geometry: totals
+TrendStat strip → policies `DataTable` spine (served display strings; served `policy_type_label` §9-12;
+served renewal-`state` chip §12in-3; `StatusChip` tones §12in-5; `RowMenu`) → flanking upcoming-renewals +
+cover-by-type cards → the served disclaimer at the table foot (linkifies only the trailing *"see Net
+worth"*). Progressive loading (Skeleton → data / EmptyState / honest error). **[S]-gated CRUD editor**
+(`Dialog`, ambient PIN session D-103): `MasterSelect` for type/frequency/status; **insurer = free
+`TextInput` + client-side distinct suggestions** over the served `policies[]` (§9-5 — a new opt-in
+`suggestions` datalist on `TextInput`, a convenience not a vocabulary); documents checklist composed
+`Switch` + `TextInput`, a new policy seeded from `document_defaults` (§9-8); **`linked_goal_id` omitted**
+(§9-9). Dates via `DateInput`. GLOSSARY `[Help]` popovers on the marked terms. Route wired; nav `/insurance`
+→ `built: true`. Backend adds served `policy_type_label` (§9-12, no client enum map).
+
+**Phase 2 — tests.** `Insurance.test.tsx` (8): totals served strings + active count; lapsed row visible but
+excluded; served-state chips (Overdue / Renews soon) with **mandatory labels**; non-base currency code;
+missing premium = bare em dash (§12in-4); disclaimer's two sentences + the `see Net worth` link; empty
+register CTA. **STANDING adequacy-language guard (§9-2, the D-058 precedent)** — proven **RED** by a
+temporary *"Coverage adequacy"* heading, then restored GREEN; permanent. `/insurance` added to the overflow
++ single-scroll cross-page suite (12 pass, both themes, 320–1366).
+
+**Phase 3a — scripted pre-pass GREEN on the demo-seeded live instance** (`e2e/smoke/insurance-smoke.spec.ts`):
+the seeded register renders live; §12in-1 `USD 500,000.00` on the non-base row; §9-10 lapsed shown, active
+count **7 < 8** rows; §12in-3 served overdue/soon chips; §12in-2 disclaimer sentences + the link; §9-2 no
+adequacy language; **CRUD round-trip add → edit → delete through the [S]-gated editor**; containment at
+320/375/420/500/900/1100/1366 (the clipped element's `scrollWidth`, never a container metric); single
+vertical scroll region, 0 horizontal overflow both themes; **0 console errors**.
+
+**⚠ The pre-pass earned its keep — it caught a bug no unit test could:** the live editor threw *"Unknown
+master: policy_status"* because the offline **mock refdata registry** (`mocks/refdata.ts`) lacked the new
+vocab (the live `/refdata` had it since Phase 0.3). Fixed. A green unit suite is not acceptance — the live
+render is (Holdings retrospective).
+
+**Cross-page (Net worth, ACCEPTED page):** the demo now seeds an insurance register with cash value, so Net
+worth's D-081 exclusion line renders live (previously the demo had 0 policies). `net-worth-smoke` PART 6
+updated from *"line omitted"* to *"line PRESENT, `total_cash_value_display` served verbatim + the see-Insurance
+link"* and **re-run GREEN**. Recorded in `page-net-worth.md §15`.
+
+**⚠ Pre-existing, NOT mine (out of scope):** the frontend `npm run check` still fails on one unhandled
+`CashFlow.tsx:330` error in an `AppShell` redirect test — verified pre-existing at `c0e9fb1`, logged in
+`08-TECH-DEBT.md`. Everything I added is green: **770 backend** (769 + 1 net after the phase1 additions),
+insurance unit (8) + NetWorth unit (7), overflow (12), both live pre-passes, typecheck / lint / tokens /
+build.
+
+**STOP.** Phases 1–3a are complete and the pre-pass is GREEN. **Phase 3b (the owner acceptance walk) is the
+gate — nothing here is self-certified. The walk has not begun.**

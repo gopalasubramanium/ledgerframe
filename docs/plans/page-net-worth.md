@@ -667,3 +667,9 @@ fixed_deposit (KPI scope on record, §3b); the Portfolio-summary redesign (2×2 
 renders; the zero-policy omission case unchanged) → **7 unit tests green**; the **live Net worth pre-pass
 re-run GREEN** (`net-worth-smoke`, demo has 0 policies → exclusion line omitted, 0 console errors, 0 overflow
 320/375/900/1366 × both themes). No layout change. Full Insurance record: `page-insurance.md` §11.
+
+**Addendum (2026-07-16, page-insurance Phase 3a):** the demo seed now ships an insurance register with
+cash value, so the D-081 exclusion line renders **live** on the demo (it previously had 0 policies). The
+Net worth pre-pass PART 6 was updated from *"line omitted"* to *"line present, `total_cash_value_display`
+served verbatim + the see-Insurance link"* and re-run GREEN. No page-code change — only the pre-pass
+assertion caught up to the richer demo data.
