@@ -561,7 +561,7 @@ canonical page. **Review reads the same records, so it must use the same word.**
 expenses"}`, applied at the display-casing boundary. **The internal `area` KEY is unchanged** (it drives the
 ND-3 count reconciliation and stays a stable machine token); only the **served DISPLAY label** is overridden.
 Propagates to **every** Review consumer (the page + the Home/Net-worth `ReviewCard`), because it is one reader.
-**String PROPOSED → owner ratifies at re-verify.** **Fail-first:** `test_review_groups_income_and_expenses_not_obligations` was **RED** on the old label
+**✅ STRING RATIFIED (owner, 2026-07-15) — CLOSED.** *"Income & expenses"* is the served attention-area label; the `_AREA_LABELS` boundary fix (internal key unchanged) and the ND-7 route correction (goals & income/expenses → Cash flow) stand. **Fail-first:** `test_review_groups_income_and_expenses_not_obligations` was **RED** on the old label
 (`assert 'Income & expenses' in {'Data', … 'Obligations'}`).
 
 **⚠ A second, adjacent defect found and fixed while here — reported, not buried.** The frontend `AREA_ROUTE`
