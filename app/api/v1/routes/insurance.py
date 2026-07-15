@@ -9,8 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_auth
 from app.services.insurance import (
-    FREQUENCIES,
-    POLICY_TYPES,
     create_policy,
     delete_policy,
     insurance_report,
@@ -43,11 +41,6 @@ class PolicyIn(BaseModel):
 @router.get("/insurance")
 async def list_insurance(session: AsyncSession = Depends(get_db)) -> dict:
     return await insurance_report(session)
-
-
-@router.get("/insurance/meta")
-async def insurance_meta() -> dict:
-    return {"policy_types": POLICY_TYPES, "frequencies": FREQUENCIES}
 
 
 @router.post("/insurance", dependencies=[Depends(require_auth)])
