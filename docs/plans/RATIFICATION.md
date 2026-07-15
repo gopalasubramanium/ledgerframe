@@ -146,3 +146,18 @@ Legend: `[x]` = approved. Amendments are recorded in §4.
 
 DESIGN-SYSTEM §2 PROPOSED markers are cleared; amended values carry "ratified
 (amended at kitchen-sink review) 2026-07-10".
+
+---
+
+## 6. Page closes — central acceptance log
+
+**Convention (from Insurance onward):** every **page close** (owner acceptance of a
+page-build milestone) is logged **centrally here** — one row per page — so the
+acceptance record has a single home instead of living only in each plan file. Each
+row cites the plan file whose §-retrospective carries the full record; this log is
+the index, not the record. Pages accepted before Insurance stay recorded in their
+own plan files (not back-filled).
+
+| Page | Accepted | Owner | Full record | Platform items ratified at the close |
+|------|----------|-------|-------------|--------------------------------------|
+| **Insurance** (`/insurance`) | 2026-07-16 | Owner (live walk, batches 1–2) | `page-insurance.md` §14–§15 | **Page inset** — one shell-owned standard (DESIGN-SYSTEM §3.1); **Instrument Detail full-width** as its detail-page consequence (a ruling, not a drift). **Base-currency affix** retrofitted platform-wide (DESIGN-SYSTEM §5.2, one form). **Review headline == Net worth to the cent** (removed the whole-dollar `round`, D-105). **Annual-premium single-derivation** (§14in-2). GLOSSARY: Cover · Cover amount · Premium · Premium frequency · Nominee · Insured person · Renewal. R-36 parked (premiums → Cash flow). |

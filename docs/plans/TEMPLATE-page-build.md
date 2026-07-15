@@ -484,6 +484,19 @@ the theme/density matrix. Written as checkable statements.*
 - [ ] **Context-scoped picker (D-097):** verified **live** that a class/entity
       picker never offers a wrong-context option; cross-context matches appear only
       as navigate links.
+- [ ] **A GUARD MEASURES THE GEOMETRY THE FINDING NAMES (page-insurance §14in-1/§15b).** A guard
+      asserts the **exact dimension the finding names, at the width where it appears** — not a
+      neighbouring property. §14in-1's gap-rhythm guard went **green on section gaps (16px rhythm)**
+      while the owner's finding was the **page inset**; the false green hid the bug until batch 2. A
+      green on an adjacent property is a false green — pin the named dimension (here, the page inset,
+      measured at 1728) or the guard is decoration.
+- [ ] **PHASE/BATCH REPORTS STATE THE FRONTEND-CHECK EXIT CODE FROM THE CORRECT DIRECTORY; NO
+      KNOWN-RED LEFT ON TRUNK (page-insurance §15b(a)).** Every phase/batch report states the
+      **`npm run check` EXIT CODE run from the frontend directory** (not a partial suite, not a stale
+      module) — the exit-0 hard gate is what flushes hidden reds. §14in's **7 red Insurance unit tests
+      hid behind the known-red `CashFlow.tsx:330` failure**; a known-red left standing is a screen the
+      next regression hides behind. **A known-red is fixed or explicitly quarantined the SAME day it is
+      found** (logged in `08-TECH-DEBT.md` with the reproducing ref), never left standing on trunk.
 
 ---
 

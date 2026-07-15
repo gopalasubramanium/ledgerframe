@@ -386,6 +386,8 @@ sticky header while rows scroll beneath it. ⚠ **The previous fix — a `box-sh
 **clips** it. *Computed styles said the shadow was there; the rendered pixels said otherwise — which is why the
 guard asserts **pixels** (`e2e/table-header-fill.spec.ts`), not styles.* **Pixel guards sample clear of the rounded corner (antialiasing bleeds otherwise) and require five consecutive clean runs before trust; and — being a COMPONENT guard — this one runs against the backend-free `/kitchen-sink` specimen, not a product page (page-cash-flow §13b/§13c).**
 
+**Exception — a MEDIA-QUERY-RESPONSIVE component cannot be guarded on the static specimen (RATIFIED 2026-07-15, page-scenarios §12sc1-1 / §15).** Narrowing a fixed-width `/kitchen-sink` frame does **not** change the **viewport** the `@media` rule responds to, so a specimen frame can never reproduce a breakpoint-driven reflow (a 2×2 → 4-across tile strip). Such a component's **containment guard runs in the `§13c` scripted pre-pass at REAL viewports, with the shell present** (so the fixed chrome subtracts real width) — never on the specimen. This is the one component guard that lives in the pre-pass, not the kitchen-sink suite; **`TEMPLATE-page-build.md` §7 carries the full rule** — label it there so the next reader does not "fix" it back onto the specimen.
+
 **CARD FOOTNOTE (RATIFIED 2026-07-15, page-cash-flow §12cf1-4).** A legend/disclaimer line under a card's
 content uses **`.lf-card__footnote`** — a **token** inset at the component level, never a per-page nudge.
 Without it the line sat **flush against the table's border** (zero gap) and read as part of the table's frame
