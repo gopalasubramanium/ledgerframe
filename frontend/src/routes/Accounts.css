@@ -1,0 +1,103 @@
+/* Accounts — GEOMETRY (page-accounts §9 / Phase 0a, PROPOSED; ratify at the gate). Worklist: the
+   Accounts DataTable is the page SPINE (with a footer Σ totals row) → the Entities card (D-065) → the
+   Institution master card (D-008). Tokens only; composed ratified ui/. Money is written AS SERVED
+   (display strings, D-105); the base-currency affix rides the footer Σ once (§14in-7), never per row.
+   NOTE (TEMPLATE §7 media-query exception): any responsive reflow is a §13c pre-pass check at REAL
+   viewports (the fixed sidebar eats width), NOT a static-specimen claim — nothing is guarded here. */
+
+.acct__section { min-width: 0; }
+
+/* Card header: title left, primary Add action right, one row (the Estate/Insurance card rhythm). */
+.acct__cardhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.acct__cardhead .lf-card__title { margin: 0; font-size: var(--font-size-16); line-height: var(--line-16); }
+.acct__add { margin-left: auto; }
+
+/* Identity cells — medium-weight name, truncating; a blank optional cell is a muted bare em dash. */
+.acct__name { font-weight: var(--weight-medium); }
+.acct__missing { color: var(--text-tertiary); }
+
+/* Footer Σ total — the base-currency affix is a muted sibling (the .lf-stat__unit rhythm, §14in-7), so
+   the value's own text node stays exactly the number for a tile-integrity read. */
+.acct__total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+.acct__affix {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  font-weight: var(--weight-regular);
+}
+
+/* §9-3 add-inline control frame + the staged dialog-body frames — bordered panels (the Estate
+   roles-editor precedent). A static frame ratifies the COPY + affordance by looking; the live modal
+   portals in Phase 1. */
+.acct__editorframe,
+.acct__dialogframe {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  max-width: 34rem;
+  background: var(--surface-raised);
+}
+.acct__editorh { margin: 0 0 var(--space-3); font-size: var(--font-size-14); line-height: var(--line-14); }
+.acct__editorhint {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  font-weight: var(--weight-regular);
+  font-size: var(--font-size-12);
+  line-height: var(--line-16);
+}
+
+.acct__field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.acct__fieldlabel {
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-secondary);
+}
+
+/* Staged dialog body — title, served message, footer actions (the ConfirmDialog/Dialog anatomy). */
+.acct__dialogtitle { margin: 0 0 var(--space-2); font-size: var(--font-size-16); line-height: var(--line-16); }
+.acct__dialogmsg {
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-16);
+}
+.acct__dialogfoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Merge dialog — survivor + duplicate side by side (one column below the sheet breakpoint), then the
+   plain-language re-point consequence before the actions. */
+.acct__mergegrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.acct__mergeconsequence {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-16);
+}
+@media (max-width: 40rem) {
+  .acct__mergegrid { grid-template-columns: 1fr; }
+}

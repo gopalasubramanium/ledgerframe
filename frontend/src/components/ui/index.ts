@@ -23,7 +23,7 @@ export type { RowMenuProps, RowMenuItem } from "./RowMenu";
 
 // §5.2 Data display
 export { DataTable } from "./DataTable";
-export type { DataTableProps, Column, ColumnFormat, SortState } from "./DataTable";
+export type { DataTableProps, Column, ColumnFormat, SortState, FooterRow } from "./DataTable";
 export { TrendStat } from "./TrendStat";
 export type { TrendStatProps } from "./TrendStat";
 export { MetaStrip } from "./MetaStrip";

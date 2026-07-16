@@ -11,6 +11,14 @@ import { ScenariosMockup } from "./ScenariosMockup";
 import { InsuranceMockup, InsuranceDocumentsChecklistSpecimen } from "./InsuranceMockup";
 import { EstateMockup, EstateRolesSpecimen } from "./EstateMockup";
 import {
+  AccountsMockup,
+  AccountsEmptyMockup,
+  AccountsInstitutionSelectSpecimen,
+  AccountsEntityDeleteBlockedSpecimen,
+  AccountsInstitutionDeleteBlockedSpecimen,
+  AccountsMergeSpecimen,
+} from "./AccountsMockup";
+import {
   AllocationDonut,
   Clock,
   Combobox,
@@ -760,6 +768,42 @@ export function KitchenSink() {
           </Specimen>
           <Specimen label="Estate · contact ROLES multi-select — composed Switch rows inside the editor (§9-6, no new component)">
             <EstateRolesSpecimen />
+          </Specimen>
+        </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      <Section
+        bleed
+        title="Accounts — LAYOUT SPECIMEN (page-accounts §9 / Phase 0a) — PROPOSED, AWAITING RATIFICATION"
+        note="THE GEOMETRY GATE. Static, unwired — ratified BY LOOKING before assembly (Phase 1 is BLOCKED until then). The proposed §-geometry (worklist): the Accounts DataTable is the page SPINE (institution · kind · currency · cost basis · entity · value · ⋯ RowMenu, with a footer Σ totals row) → the Entities card (D-065) → the Institution master card (D-008). TWO masters land here. Real content region (1440×724 = viewport − chrome − shell padding), real-shaped data: 8 accounts across 5 institutions, mixed kinds/currencies (a non-base account carries its code in the Currency column, §12in-1) + cost-basis methods (labels SERVED verbatim — 'FIFO' via the §9-13 override, §12es-3). Money is written AS SERVED (display strings, D-105); the base-currency affix rides the footer Σ once (§14in-7). Tile-integrity (the Estate precedent): the footer Σ equals the sum of the value rows, and the master's referenced-by counts match the accounts + policies staged. Honesty is staged: ONE entity-less account (bare em dash — nullable is real); the default 'Household' entity as an ORDINARY row (no crown — D-029 / §9-7); a long hyphenated institution name that TRUNCATES; an entity whose delete is FK-blocked; the institution delete FK-blocked 400 with merge offered in plain language; and the MERGE dialog staged mid-flow ('DBS' ← 'DBS Bank', the re-point consequence stated plainly). Four more frames: the ALL-EMPTY registers (usable from zero — reason + CTA per region; only the migration's Household entity); the §9-3 add-inline institution control (MasterSelect wired to a DB-backed master — mock-backed here); and the two FK-block + merge dialog bodies staged static."
+      >
+        <div className="ks__stack">
+          <Specimen label="Accounts · populated (spine → Entities → Institution master; footer Σ + SGD affix; entity-less row; Household ordinary; long institution truncates)">
+            <div className="ks__viewportscroll">
+              <div className="ks__viewport ks__viewport--scroll">
+                <AccountsMockup />
+              </div>
+            </div>
+          </Specimen>
+          <Specimen label="Accounts · ALL-EMPTY registers — usable from zero (reason + CTA per region; only the migration's Household entity, ordinary row)">
+            <div className="ks__viewportscroll">
+              <div className="ks__viewport ks__viewport--scroll">
+                <AccountsEmptyMockup />
+              </div>
+            </div>
+          </Specimen>
+          <Specimen label="§9-3 · add-inline institution control — MasterSelect wired to the DB-backed master (mock-backed here); OPEN it for the list + the ＋ Create new… add-inline row">
+            <AccountsInstitutionSelectSpecimen />
+          </Specimen>
+          <Specimen label="Honesty · entity delete FK-blocked (§9-6) — accounts still reference it; Delete disabled, honest reason (staged dialog body)">
+            <AccountsEntityDeleteBlockedSpecimen />
+          </Specimen>
+          <Specimen label="Honesty · institution delete FK-blocked → merge offered in plain language (§9-1/§9-2; staged dialog body)">
+            <AccountsInstitutionDeleteBlockedSpecimen />
+          </Specimen>
+          <Specimen label="Honesty · MERGE dialog mid-flow — survivor + duplicate chosen ('DBS' ← 'DBS Bank'); re-point consequence stated plainly (§9-2; staged dialog body)">
+            <AccountsMergeSpecimen />
           </Specimen>
         </div>
       </Section>

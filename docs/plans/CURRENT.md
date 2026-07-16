@@ -1093,7 +1093,7 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
-## ACCOUNTS — §9 CLOSED one-pass · PHASE 0 DONE (2026-07-16) · specimen next
+## ACCOUNTS — PHASE 0a DONE ⏸ AWAITING OWNER GEOMETRY RATIFICATION at /kitchen-sink (2026-07-16)
 
 **§9 RESOLVED (owner one-pass, 2026-07-16): ALL FOURTEEN items ACCEPTED as proposed + Amendments F/G/H +
 one Recording Note.** Recorded verbatim in `page-accounts.md §9` (each row carries its → Ruling; nothing
@@ -1115,11 +1115,23 @@ ruff clean; frontend `npm run check` (from `frontend/`) **EXIT 0** (234 passed).
 10. **[9-13]** `_VOCAB_LABEL_OVERRIDES` FIFO fix ("Fifo"→"FIFO"); 4 GLOSSARY terms (Cost-basis method · Account kind · Rollup · Merge) spec-first + popover mirror (parity green).
 11. **[9-12]** CSV-import silent-first-account fallback → **08-TECH-DEBT entry** (`csv_import.py:428-438`, Holdings follow-up) — recorded, not fixed. + this CURRENT.md flip.
 
-**NEXT: Phase 0a — the geometry specimen** (worklist: accounts spine + Entity card + Institution surface;
-honesty frames incl. empty accounts, a delete-blocked entity, long institution names, a "DBS" vs "DBS
-Bank" merge pair) + the §9-3 MasterSelect-data-source ratification at `/kitchen-sink`. **No assembly until
-the owner ratifies the geometry.** Phase-1 carries the deferred halves: the Holdings-page account chip
-(Amendment G), the Insurance typeahead→MasterSelect swap (§9-3), and demo-seed entity creation (§10-5).
+**Phase 0a — geometry specimen + §9-3 ratification frame BUILT (the GEOMETRY GATE).**
+`frontend/src/routes/AccountsMockup.tsx` (+ `Accounts.css`) mounted at `/kitchen-sink` as **"Accounts —
+LAYOUT SPECIMEN (page-accounts §9 / Phase 0a) — PROPOSED, AWAITING RATIFICATION"**. Worklist geometry:
+the Accounts DataTable spine (institution · kind · currency · cost basis · entity · value · ⋯ RowMenu +
+**footer Σ totals row** with the SGD base-currency affix, §14in-7) → Entities card (D-065) → Institution
+master card (D-008). Six frames: populated (8 accounts / 5 institutions; mixed kinds/currencies/cost-basis;
+**FIFO** served label; entity-less em dash; **Household ordinary row** D-029/§9-7; long institution
+truncates; footer **Σ = 1,643,550.00 SGD** tile-integrity green) · ALL-EMPTY (usable from zero, only the
+migration's Household) · **§9-3 add-inline institution MasterSelect** (DB-backed master, mock-backed here)
+· entity delete FK-blocked · institution delete FK-blocked→merge-offered · **merge mid-flow** ("DBS" ←
+"DBS Bank", plain-language consequence). Composed ratified `ui/` only (`FooterRow` exported from the barrel
+— no component change). **Rendered-verified both themes; `npm run check` from `frontend/` EXIT 0** (234
+Playwright passed). Full gate record + the 3 flagged geometry decisions in **`page-accounts.md §12`**.
+
+**⏸ STOP — AWAITING OWNER GEOMETRY RATIFICATION at `/kitchen-sink`. PHASE 1 IS BLOCKED until sign-off.**
+Phase 1 then carries the deferred halves: the Holdings-page account chip (Amendment G), the Insurance
+typeahead→MasterSelect swap (§9-3), demo-seed entity creation (§10-5), `NavItem.built` + route wiring.
 
 ---
 

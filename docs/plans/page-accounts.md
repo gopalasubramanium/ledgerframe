@@ -1,9 +1,10 @@
 # PAGE BUILD PLAN — Accounts (`/accounts`)
 
-> **STATUS: §9 RESOLVED one-pass (owner, 2026-07-16) — ALL FOURTEEN ACCEPTED as
-> proposed, with Amendments F/G/H and one Recording Note (§9 preamble). PHASE 0 IN
-> PROGRESS (backend-first, 11 commits; evidence per commit in §11). No specimen, no
-> assembly until Phase 0 lands.** Copied from `TEMPLATE-page-build.md`; every §1–§8
+> **STATUS: §9 RESOLVED one-pass (owner, 2026-07-16). PHASE 0 DONE (backend-first, 11
+> commits; evidence per commit in §11). PHASE 0a DONE — the geometry specimen + the §9-3
+> component ratification frame are mounted at `/kitchen-sink`; ⏸ AWAITING OWNER GEOMETRY
+> RATIFICATION (gate record in §12). PHASE 1 IS BLOCKED until the owner ratifies.** Copied
+> from `TEMPLATE-page-build.md`; every §1–§8
 > row cites the spec it derives from. This is the largest remaining page milestone —
 > **two masters land here** (Entity CRUD, D-065; Institution master, D-008) — so §9
 > was deliberately long.
@@ -501,3 +502,80 @@ it, with cites. Contract regen (`make api-contract-check`) and both suites' stat
 
 **STOP — Phase 0 complete. No specimen, no assembly this session; Phase 0a (geometry specimen + §9-3
 MasterSelect-data-source ratification) is the next session.**
+
+---
+
+## 12. PHASE 0a — GEOMETRY GATE ⏸ PROPOSED, AWAITING OWNER RATIFICATION (2026-07-16)
+
+*The static layout specimen + the §9-3 component ratification frame, authored so the owner can **ratify
+the geometry BY LOOKING** before assembly (TEMPLATE §7; the page-home §12ho1-3 rule — a widget list is
+not a layout). **Phase 1 is BLOCKED until the owner signs this off.** No wiring, no `NavItem.built`, no
+route — this session STOPPED at the gate per the task.*
+
+### 12-1. §-geometry (PROPOSED)
+
+A **Worklist** page (DESIGN-SYSTEM §3): three stacked cards, no overview/donut. **Two masters land
+here**, so the two management cards flank the spine:
+
+1. **Accounts DataTable — the page SPINE.** Columns: **institution · kind · currency · cost basis ·
+   entity · value · ⋯ RowMenu**, with a **footer Σ totals row** (`total_display` + the base-currency
+   affix once, §14in-7). Row actions (Edit / View holdings / Delete) live in the ⋯ `RowMenu` — never a
+   wide action column (D-094 posture: bounded, client-side).
+2. **Entities card (D-065)** — name · kind · account count + Add entity. `RowMenu` Edit / Delete (Delete
+   **disabled** while accounts reference the entity — §9-6, honest not silent).
+3. **Institution master card (D-008)** — name · referenced-by counts (accounts + policies) + Add
+   institution + `RowMenu` **Rename / Merge / Delete** (Delete **disabled** while referenced — §9-1/§9-2).
+
+Money is written **AS SERVED** (display strings, D-105); per-account value is the base-currency rollup
+(§9-10); a non-base account carries its native code in the **Currency** column (§12in-1). Labels are the
+**SERVED `/refdata` labels rendered verbatim** (§12es-3) — **"FIFO"** via the §9-13 override, the
+account-kind + entity-kind titles.
+
+### 12-2. Frames mounted at `/kitchen-sink` (bleed section, real 1440×724 content region)
+
+- **Populated register** — 8 accounts across 5 institutions; mixed kinds (Bank/Brokerage/Retirement/
+  Wallet), currencies (SGD base + USD/INR non-base), cost-basis methods (FIFO/Average). Footer
+  **Σ = `1,643,550.00 SGD`** — **tile-integrity green** (equals the sum of the 8 value rows shown, the
+  Estate precedent). Honesty: **one entity-less account** (bare em dash — nullable is real, §9-7); the
+  default **"Household" entity as an ORDINARY row** (no crown, no special styling — D-029/§9-7); a **long
+  hyphenated institution name that TRUNCATES** ("Standard Chartered Priority Banking–Singapore").
+- **ALL-EMPTY registers** — usable from zero: accounts + institution-master `EmptyState` (reason + CTA);
+  entities shows **only the migration's Household** row (ordinary).
+- **§9-3 add-inline institution control** — `MasterSelect` wired to the DB-backed **institution** master
+  (**mock-backed here** — kitchen-sink is static; the live POST proves in Phases 2/3a) + the
+  `＋ Create new…` add-inline row. Ratifies the affordance's look/behaviour contract (no new component).
+- **Entity delete FK-blocked** (§9-6) — staged dialog body: Delete disabled, honest served reason.
+- **Institution delete FK-blocked → merge offered** (§9-1/§9-2) — staged dialog body, plain-language 400.
+- **Merge dialog mid-flow** (§9-2) — survivor **"DBS"** ← duplicate **"DBS Bank"** (user-driven, no fuzzy
+  auto-detect); the re-point consequence stated plainly: *"3 accounts and 1 policy will move to DBS…"*
+  (the count matches the master table — tile-integrity).
+
+Composed **ratified `ui/` only** (`DataTable` · `RowMenu` · `MasterSelect` · `Button` · `EmptyState` ·
+`PageHeader` — all named in §4). `FooterRow` was exported from the `ui` barrel (it was already a
+`DataTable` type; no component change). The staged dialog frames are **static bordered panels** (the
+Estate roles-editor precedent) — a portal modal can't sit in a multi-frame gallery; the gate ratifies the
+copy + affordance by looking, the live modals wire in Phase 1.
+
+### 12-3. Geometry decisions made beyond §-geometry (flagged per the Estate §12es-1 precedent)
+
+- **Cost-basis label shown for EVERY account, not only lot-holding kinds.** The `cost_basis_method` column
+  carries the served label (FIFO/Average) on bank/wallet rows too, because the model always holds a value
+  (default `fifo`) and hiding it would be a fabricated blank. **Owner: decide at the gate** whether a
+  cash/bank account should instead show "—" for cost basis (would need a served nullability signal — not
+  proposed here).
+- **RowMenu "View holdings"** included on account rows as the P-1 linked-summary affordance (Amendment G).
+  The live target (Holdings page URL account filter) is **Phase-1** work — here it is an inert menu item.
+- **`StatusChip` not used** on this page (the plan left it optional; accounts have no status/severity
+  axis — kind/currency/cost-basis are attributes, not states). Flagged so its absence is deliberate.
+
+### 12-4. Gate evidence
+
+- **Frontend `npm run check` (from `frontend/`): EXIT 0** — 234 Playwright passed (kitchen-sink overflow
+  at 320/375/900/1366 × both themes green; tile-integrity green), lint/typecheck/tokens/unit green.
+- **Rendered verification** — screenshotted at `/#/kitchen-sink` in **both themes**: spine columns,
+  served labels ("FIFO"/"Average"), truncated long institution, entity-less em dash, footer
+  **Σ = 1,643,550.00 SGD**, the two masters' counts consistent, and all six frames present.
+
+**⏸ STOP — geometry PROPOSED, AWAITING OWNER RATIFICATION at `/kitchen-sink` ("Accounts — LAYOUT SPECIMEN
+(page-accounts §9 / Phase 0a) — PROPOSED, AWAITING RATIFICATION"). Phase 1 does not start until the owner
+signs this off.**
