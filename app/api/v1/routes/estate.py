@@ -9,10 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_auth
 from app.services.estate import (
-    CONTACT_ROLES,
-    DOC_CATEGORIES,
-    DOC_STATUSES,
-    WILL_STATUSES,
     create_contact,
     create_document,
     delete_contact,
@@ -57,12 +53,6 @@ class DocumentIn(BaseModel):
 @router.get("/estate")
 async def get_estate(session: AsyncSession = Depends(get_db)) -> dict:
     return await estate_report(session)
-
-
-@router.get("/estate/meta")
-async def estate_meta() -> dict:
-    return {"doc_categories": DOC_CATEGORIES, "contact_roles": CONTACT_ROLES,
-            "will_statuses": WILL_STATUSES, "doc_statuses": DOC_STATUSES}
 
 
 @router.put("/estate/profile", dependencies=[Depends(require_auth)])
