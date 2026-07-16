@@ -366,7 +366,10 @@ async def portfolio_attribution_csv(
     # "descriptive, not advice" caveat the on-screen table carries. Lead with it, then the table.
     w.writerow([sanitize_cell(attr.get("disclaimer") or "")])
     w.writerow([])
-    w.writerow(["holding", "symbol", "asset_class", "sector", "contribution_pct"])
+    # §14rp-2 (page-reports owner walk 2026-07-17): HUMAN column titles, not snake_case; the data cells
+    # below stay machine numerics (raw contribution_pct number). A CSV must remain computable (D-105 is
+    # a rendered-UI rule, not a data-artifact rule).
+    w.writerow(["Holding", "Symbol", "Asset class", "Sector", "Contribution %"])
     if attr.get("available"):
         for h in attr.get("holdings", []):
             w.writerow([

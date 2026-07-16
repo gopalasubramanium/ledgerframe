@@ -420,8 +420,12 @@ def realised_gains_csv(report: dict) -> str:
     w.writerow([f"Base realised total ({base}, trade-date FX)", report["base_realised_total_historical_fx"]])
     w.writerow(["Realised events excluded (trade-date FX unavailable)", report["realised_fx_events_excluded"]])
     w.writerow([])
-    w.writerow(["currency", "symbol", "name", "sell_date", "acquired_date", "quantity",
-                "proceeds", "cost", "gain", "holding_days", "long_term"])
+    # §14rp-2 (owner walk 2026-07-17): HUMAN column titles (from the GLOSSARY vocabulary where a term
+    # exists, plain English otherwise) — never internal snake_case in a user-facing artifact. The DATA
+    # CELLS below deliberately stay MACHINE NUMERICS (raw numbers, ISO dates, plain yes/no): display
+    # strings are a rendered-UI rule (D-105), not a data-artifact rule — a CSV must remain computable.
+    w.writerow(["Currency", "Symbol", "Name", "Sold date", "Acquired date", "Quantity",
+                "Proceeds", "Cost", "Gain (native)", "Holding days", "Long term"])
     for g in report["currency_groups"]:
         for e in g["events"]:
             w.writerow([g["currency"], sanitize_cell(e["symbol"] or ""), sanitize_cell(e["name"]),
@@ -447,8 +451,9 @@ def tax_lots_csv(report: dict) -> str:
     w.writerow([f"LedgerFrame open tax lots (long-term threshold {report['long_term_days']} days)"])
     w.writerow([sanitize_cell(report["disclaimer"])])
     w.writerow([])
-    w.writerow(["symbol", "name", "acquired_date", "quantity", "unit_cost", "cost", "currency",
-                "holding_days", "long_term"])
+    # §14rp-2: HUMAN column titles; data cells stay machine numerics (raw numbers, ISO dates, yes/no).
+    w.writerow(["Symbol", "Name", "Acquired date", "Quantity", "Unit cost", "Cost", "Currency",
+                "Holding days", "Long term"])
     for lot in report["lots"]:
         w.writerow([sanitize_cell(lot["symbol"] or ""), sanitize_cell(lot["name"]),
                     lot["acquired_date"], lot["quantity"], lot["unit_cost"], lot["cost"],

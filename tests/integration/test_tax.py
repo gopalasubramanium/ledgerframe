@@ -123,7 +123,8 @@ async def test_realised_gains_csv(app_client):
     assert r.headers["content-type"].startswith("text/csv")
     # §9-5: the per-event table header is present (no longer line 0 — a disclaimer/totals block
     # now leads the file so the served honesty payload travels with every export).
-    assert any(line.startswith("currency,symbol,name,sell_date") for line in r.text.splitlines())
+    # §14rp-2 (owner walk 2026-07-17): the column header carries HUMAN TITLES, not snake_case.
+    assert any(line.startswith("Currency,Symbol,Name,Sold date,Acquired date") for line in r.text.splitlines())
 
 
 def _sample_realised_report() -> dict:
@@ -156,7 +157,8 @@ async def test_tax_lots_csv_exists_and_carries_its_disclaimer(app_client):
     assert "attachment" in r.headers.get("content-disposition", "")
     lines = r.text.splitlines()
     assert any("not tax advice" in ln.lower() for ln in lines)   # the served disclaimer travels in
-    assert any(ln.startswith("symbol,name,acquired_date,quantity,unit_cost,cost") for ln in lines)
+    # §14rp-2 (owner walk 2026-07-17): HUMAN column titles, not snake_case.
+    assert any(ln.startswith("Symbol,Name,Acquired date,Quantity,Unit cost,Cost,Currency") for ln in lines)
 
 
 def test_realised_gains_csv_carries_served_disclaimer_and_both_totals():
@@ -178,3 +180,32 @@ def test_realised_gains_csv_carries_served_disclaimer_and_both_totals():
     assert any("current fx" in ln.lower() and "135.0" in ln for ln in lines), text
     # (c) the excluded-events count row — labelled + valued.
     assert any("excluded" in ln.lower() and ",2" in ln for ln in lines), text
+
+
+def test_report_csv_headers_are_human_but_data_cells_stay_machine():
+    """§14rp-2 (owner walk 2026-07-17): the deliberate split — column HEADERS are HUMAN TITLES
+    ("Sold date", "Holding days", "Long term"), but DATA CELLS stay MACHINE NUMERICS (raw numbers,
+    ISO dates). Display strings are a rendered-UI rule (D-105), NOT a data-artifact rule — a CSV must
+    remain computable. This pins BOTH halves so neither drifts (a formatted "1,234.50 USD" cell would
+    fail here)."""
+    from app.services.tax import realised_gains_csv, tax_lots_csv
+
+    rep = _sample_realised_report()
+    lines = realised_gains_csv(rep).splitlines()
+    assert any(ln == "Currency,Symbol,Name,Sold date,Acquired date,Quantity,Proceeds,Cost,"
+               "Gain (native),Holding days,Long term" for ln in lines), lines
+    ev = next(ln for ln in lines if ln.startswith("USD,AAPL")).split(",")
+    assert ev[3] == "2024-03-01"        # Sold date — ISO, machine (not "1 Mar 2024")
+    assert ev[8] == "100.0"             # Gain (native) — raw number, not "100.00 USD"
+    assert ev[10] == "yes"              # Long term — a plain boolean token, computable
+
+    lot_rep = {"long_term_days": 365,
+               "disclaimer": "Open lots by FIFO. Organisation only — not tax advice.",
+               "lots": [{"symbol": "AAPL", "name": "Apple Inc.", "acquired_date": "2022-01-01",
+                         "quantity": 10.0, "unit_cost": 10.0, "cost": 100.0, "currency": "USD",
+                         "holding_days": 900, "long_term": True}]}
+    lot_lines = tax_lots_csv(lot_rep).splitlines()
+    assert any(ln == "Symbol,Name,Acquired date,Quantity,Unit cost,Cost,Currency,"
+               "Holding days,Long term" for ln in lot_lines), lot_lines
+    lot = next(ln for ln in lot_lines if ln.startswith("AAPL")).split(",")
+    assert lot[2] == "2022-01-01" and lot[5] == "100.0"   # ISO date + raw number, machine

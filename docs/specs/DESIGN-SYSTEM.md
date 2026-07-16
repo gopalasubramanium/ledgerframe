@@ -427,6 +427,20 @@ content uses **`.lf-card__footnote`** — a **token** inset at the component lev
 Without it the line sat **flush against the table's border** (zero gap) and read as part of the table's frame
 rather than a note about it.
 
+**EXPORT ARTIFACTS (RATIFIED 2026-07-17, page-reports §14rp-2/§14rp-3).** Every server-side CSV export
+(D-050 / P-5) obeys four honesty rules, guarded at both the content and the byte level:
+- **Titles human, data machine.** Column HEADERS carry human titles (from the GLOSSARY vocabulary where a
+  term exists — "Realised P/L", "Tax lot" — plain English otherwise: "Sold date", "Holding days", "Long
+  term"), never internal snake_case. DATA CELLS stay **machine numerics** — raw numbers, ISO dates, plain
+  yes/no — so the file remains **computable**. The pre-formatted-display-string rule (D-105) is a
+  **rendered-UI** rule, NOT a data-artifact rule; a CSV is data, not UI.
+- **Disclaimers always.** An export carries the SAME served disclaimer(s) the on-screen section shows —
+  an export that sheds a disclaimer is a Guarantee-3 violation (the §9-5 hole). A now-snapshot figure in a
+  period artifact is labelled explicitly **as-of** so it can never read as a period figure (§14rp-1).
+- **utf-8-sig always.** Files ship UTF-8 **with a BOM** so spreadsheet apps (Excel) decode UTF-8 instead
+  of cp1252 — without it an em dash in a disclaimer garbles (`â€"`). The importer decodes `utf-8-sig`, so
+  the BOM round-trips losslessly. One server home: `_csv_response(body, filename)`.
+
 ### 5.2 Data display
 
 | Component | Props (surface) | Usage rules |

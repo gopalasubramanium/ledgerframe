@@ -61,7 +61,8 @@ async def test_attribution_csv_export(app_client):
     lines = r.text.strip().splitlines()
     # §9-5 (page-reports): the served disclaimer leads the file, so the per-holding header is no
     # longer line 0 — it appears after the disclaimer block.
-    assert any(line == "holding,symbol,asset_class,sector,contribution_pct" for line in lines)
+    # §14rp-2 (owner walk 2026-07-17): HUMAN column titles, not snake_case.
+    assert any(line == "Holding,Symbol,Asset class,Sector,Contribution %" for line in lines)
     assert any("Residual (income, realised, closed)" in line for line in lines)  # quoted (has commas)
     assert any(line.startswith("Headline return") for line in lines)
 

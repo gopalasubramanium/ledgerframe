@@ -531,6 +531,13 @@ Recorded, fixed, pre-pass re-run green, awaiting owner re-verify.
      longer line 0 (it follows the disclaimer block). Content-only change; no new column, no shape
      change, contract untouched. Pinned by `test_attribution_csv_carries_served_disclaimer`. The
      export **stays Portfolio-owned** (page-reports §9-13 — Reports does not re-home it).
+   - **Delta note addendum (2026-07-17, page-reports §14rp-2/§14rp-3, owner walk):** `attribution.csv`
+     changed **again** in the Reports export-honesty walk — (a) its column HEADERS became **human titles**
+     ("Holding · Symbol · Asset class · Sector · Contribution %"), replacing the internal snake_case, while
+     the data cells stay machine numerics (raw `contribution_pct`); (b) the file now ships **utf-8-sig**
+     (UTF-8 with BOM) so Excel decodes the em dash correctly. Content/encoding only — no new column, no
+     shape change, contract still untouched; export **stays Portfolio-owned**. Pin updated:
+     `test_attribution_csv_export` (human header). See DESIGN-SYSTEM §5.1 "Export artifacts".
 7. **Hover values.** PriceChart already had a crosshair + close tooltip; **added the benchmark value**
    to the tooltip in comparison mode. **AllocationDonut segment hover/focus** shows *label · value ·
    pct · note* (aria-live), **keyboard-reachable via the focusable legend**. Kitchen-sink specimens
