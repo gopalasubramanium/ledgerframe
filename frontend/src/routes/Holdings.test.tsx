@@ -517,3 +517,33 @@ test("row menu Edit opens the edit dialog and updates the transaction", async ()
     ),
   );
 });
+
+test("Amendment G: ?account= scopes the reader + shows a clearable chip; clearing resets it", async () => {
+  const user = userEvent.setup();
+  vi.mocked(api.getAccounts).mockResolvedValue({
+    ok: true,
+    data: { accounts: [{ id: 1, name: "Demo Brokerage" }] },
+  });
+  render(
+    <ThemeProvider>
+      <DisplayProvider>
+        <ToastProvider>
+          <RefdataProvider>
+            <MemoryRouter initialEntries={["/holdings?account=1"]}>
+              <Holdings />
+            </MemoryRouter>
+          </RefdataProvider>
+        </ToastProvider>
+      </DisplayProvider>
+    </ThemeProvider>,
+  );
+  // a clearable chip names the account.
+  const chip = await screen.findByRole("button", { name: /Clear account filter/ });
+  // the SCOPED reader was called with the account id (filter-not-recompute).
+  expect(vi.mocked(api.getHoldings)).toHaveBeenCalledWith(1);
+  expect(chip.textContent).toContain("Demo Brokerage");
+  // clearing drops the param → chip gone, reader re-called UNSCOPED.
+  await user.click(chip);
+  await waitFor(() => expect(screen.queryByRole("button", { name: /Clear account filter/ })).toBeNull());
+  expect(vi.mocked(api.getHoldings)).toHaveBeenCalledWith(null);
+});
