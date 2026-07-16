@@ -57,8 +57,21 @@ def _label(value: str) -> str:
     return value
 
 
-def _labeled(values: list[str]) -> list[dict[str, str]]:
-    return [{"value": v, "label": _label(v)} for v in values]
+# Per-vocab label overrides (MASTER-DATA §2) — a value whose SERVED display label
+# differs from the titleized default IN THE CONTEXT of one vocabulary. Kept per-vocab
+# (not global like `_LABEL_OVERRIDES`) so an override can never leak into a sibling
+# vocab that happens to share the value. `will_status:none` reads "Not recorded"
+# (the honesty framing), not the bare "None" — ratified at the Estate specimen
+# geometry walk (page-estate §12es-3, 2026-07-16); the UI renders this served label
+# verbatim and never re-maps it (D-005).
+_VOCAB_LABEL_OVERRIDES: dict[str, dict[str, str]] = {
+    "will_status": {"none": "Not recorded"},
+}
+
+
+def _labeled(values: list[str], overrides: dict[str, str] | None = None) -> list[dict[str, str]]:
+    ov = overrides or {}
+    return [{"value": v, "label": ov.get(v) or _label(v)} for v in values]
 
 
 # Authored / no-single-code-home vocabularies (MASTER-DATA §2/§4).
@@ -147,7 +160,7 @@ async def refdata() -> dict[str, list[dict[str, str]]]:
         "id_type": _ID_TYPE,
         "source_override": _source_override_values(),
     }
-    return {vocab: _labeled(values) for vocab, values in raw.items()}
+    return {vocab: _labeled(values, _VOCAB_LABEL_OVERRIDES.get(vocab)) for vocab, values in raw.items()}
 
 
 @router.get("/refdata/txn-applicability")

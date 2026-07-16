@@ -155,7 +155,7 @@ editor. Only ratified components (DESIGN-SYSTEM §5).*
 | Ratified component | Role on this page | Data source | Prop/state not exercised at kitchen-sink |
 |--------------------|-------------------|-------------|------------------------------------------|
 | **PageHeader** | H1 "Estate" + subtitle carrying the protected **"a readiness register, never legal advice"** bar (§9-10) | served `disclaimer` (**real**) | subtitle carrying protected copy |
-| **TrendStat / summary tiles** | The **readiness strip** — Will status · Documents present/attention · Nominees · Executors · Emergency contacts. **Counts, NOT money → no currency affix** (§9-3) | `.readiness` (**real**) | count-only tiles (no unit affix) |
+| **TrendStat / summary tiles** | The **readiness strip** — Documents present · Needs attention · Nominees & beneficiaries · Executors · Emergency contacts. **COUNTS-ONLY, NOT money → no currency affix** (§9-3). **Will status is NOT a strip tile — it LEADS the profile card** (§12es-1 ruling; the strip-placement below is superseded — see §12) | `.readiness` (**real**) | count-only tiles (no unit affix) |
 | **DataTable** | The **contacts table** — name · roles (chips) · phone · email. **Bounded (tens of rows), client-side** sort/filter (D-094) | `.contacts[]` (**real**) | — |
 | **DataTable** | The **documents register** — title · category (chip) · status (StatusChip) · location · review date. **Bounded, client-side** (D-094). *A first-class register, NOT a checklist (D-062).* | `.documents[]` (**real**) | — |
 | **StatusChip** | Document **status** (present / missing / outdated) and **will_status** (none/draft/executed/needs_update) — semantic tone only | served `status` / `will_status` | needs_update / outdated tones |
@@ -500,5 +500,81 @@ and `tests/integration/test_db_migrate.py` (the Amendment-E migration).*
 
 **Sign-off to start build:** §9's ten items resolved owner one-pass (2026-07-16, all ACCEPTED +
 Amendment E) · §3b deltas **delivered** (Phase 0 complete, evidence above) · no §4 affordance (the
-roles multi-select, §9-6 → Switch rows) requires an unresolved amendment. **Phase 1 is BLOCKED
-until the owner ratifies the Phase-0a specimen geometry at `/kitchen-sink`.**
+roles multi-select, §9-6 → Switch rows) requires an unresolved amendment. **Phase 1 was BLOCKED
+until the owner ratified the Phase-0a specimen geometry at `/kitchen-sink` — RATIFIED 2026-07-16, see §12.**
+
+---
+
+## 12. GATE — SPECIMEN GEOMETRY RATIFICATION — **RATIFIED (owner, 2026-07-16)**
+
+*The §12 geometry gate (the Phase-0a kitchen-sink Estate specimen,
+`frontend/src/routes/EstateMockup.tsx` + `Estate.css`, viewed at `/kitchen-sink` →
+"Estate — LAYOUT SPECIMEN") was walked by the owner on **2026-07-16**. Status flips
+**⏸ AWAITING RATIFICATION → RATIFIED**, with **two rulings** and **one Phase-1
+condition**. Phase 1 is UNBLOCKED. Each item below carries its → RULING; nothing is
+struck.*
+
+### §12es-1 — the specimen DEVIATION is ACCEPTED as the ratified geometry → **RULING: ACCEPTED (owner, 2026-07-16)**
+
+The specimen **deviates** from the §4 strip-placement: it puts **will status LEADING
+the profile card** (its canonical home) and makes the **readiness strip COUNTS-ONLY**
+(five count tiles: Documents present · Needs attention · Nominees & beneficiaries ·
+Executors · Emergency contacts). The §4 row originally listed *"Will status"* as the
+first strip tile.
+
+- **The deviation is the RATIFIED geometry.** Will status LEADS the profile card; the
+  readiness strip is **counts-only** with **no `will_status` tile**.
+- **Rationale recorded (owner):** a status **chip** in a **counts** strip **mixes
+  types** (the mixed-scope lesson — a strip of counts should not carry one non-count
+  chip); and `will_status` has **one canonical rendering** (the profile card), so a
+  strip tile would be a **second rendering of one fact**.
+- **`readiness.will_status` is SERVED but not RENDERED as a tile.** The `GET /estate`
+  reader still emits `readiness.will_status` (`estate.py:155`) — the page **does not
+  render it in the strip**; the profile-card chip is the one rendering. Served ≠
+  rendered here, by design.
+- **§4 is SUPERSEDED to match** (updated 2026-07-16): the §4 TrendStat row now reads
+  *"Documents present · Needs attention · Nominees & beneficiaries · Executors ·
+  Emergency contacts — COUNTS-ONLY; will status is NOT a strip tile, it leads the
+  profile card"*, noting this ruling.
+
+### §12es-2 — page subtitle + both EmptyState wordings → **RULING: RATIFIED AS SHOWN (owner, 2026-07-16)**
+
+Ratified **as-shipped** (render these verbatim in Phase 1; do not reword):
+
+- **Page subtitle:** *"A readiness register — will, contacts and key documents. A
+  record and reminders, never legal advice."*
+- **Contacts EmptyState** — message *"No contacts yet"*; reason *"Add the people who
+  matter to your estate — executors, beneficiaries, guardians and emergency contacts,
+  with their roles."*; action **"Add contact"**.
+- **Documents EmptyState** — message *"No documents yet"*; reason *"Record where your
+  key documents live — will, deeds, policies, identity and more — and whether each is
+  present, missing or outdated."*; action **"Add document"**.
+
+(The served **disclaimer** bar is already RATIFIED VERBATIM under §9-10 — unchanged.)
+
+### §12es-3 — Phase-1 CONDITION: LABEL TRUTH — the rendered label MUST be the SERVED `/refdata` label → **CONDITION (owner, 2026-07-16)**
+
+The specimen renders `will_status: none` as **"Not recorded"**. The rendered label
+**MUST be the label `/refdata` actually serves** — never frontend copy. **Verify what
+`/refdata` serves for `none`; if it differs, amend the LABEL spec-first** (MASTER-DATA
+vocab labels → then the refdata source) **so that "Not recorded" IS the served label.**
+
+- **VERIFIED (2026-07-16):** `/refdata` served `will_status: none` → label **"None"**
+  today (`_label("none")` titleizes the lowercase value, `refdata.py:48-57`) — this
+  **DIFFERS** from the specimen's "Not recorded". → **the condition FIRES: amend
+  spec-first.**
+- **Fail-first:** a test asserting the SERVED `{value:"none"}` label **equals "Not
+  recorded"** goes **RED** on the current backend (it serves "None"), then **GREEN**
+  after the label amendment (MASTER-DATA vocab label + the refdata source override).
+- **Same check across ALL FOUR estate vocabs** (`will_status`, `estate_doc_status`,
+  `estate_doc_category`, `contact_role`): the page renders **served labels verbatim,
+  everywhere** — no client-side casing/mapping. (Every other value already titleizes to
+  the specimen's label; only `will_status:none` needed the override.)
+
+### §12in-4 (carry-over, binds Phase 1) — bare em dashes for empty CELLS
+
+Blank OPTIONAL fields that are **user-data-absent** render as **bare em dashes** (no
+"reason" pill — a reason is for an empty *region*, not an empty *cell*). Empty
+*registers* (no contacts / no documents / will `none`) each still show an **EmptyState
+with reason + CTA** (§12es-2). Recorded under §11-carry; restated here as a Phase-1
+binding.

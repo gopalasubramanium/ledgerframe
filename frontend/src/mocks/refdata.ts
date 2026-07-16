@@ -24,8 +24,16 @@ export function humanize(value: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function fixed(values: string[]): RefOption[] {
-  return values.map((v) => ({ value: v, label: humanize(v) }));
+// Per-vocab value→label overrides — the OFFLINE-fallback mirror of the backend
+// `/refdata` `_VOCAB_LABEL_OVERRIDES` (refdata.py). Kept in sync so the fallback
+// renders the same served label the live endpoint does (D-005). `will_status:none`
+// reads "Not recorded", not the humanized "None" (page-estate §12es-3).
+const VALUE_LABEL_OVERRIDES: Record<string, Record<string, string>> = {
+  will_status: { none: "Not recorded" },
+};
+
+function fixed(values: string[], overrides?: Record<string, string>): RefOption[] {
+  return values.map((v) => ({ value: v, label: overrides?.[v] ?? humanize(v) }));
 }
 
 // --- Fixed vocabularies (served via /refdata; MASTER-DATA §2) ------------------
@@ -140,7 +148,7 @@ export const MASTERS: Record<string, Master> = {
   ...Object.fromEntries(
     Object.entries(FIXED).map(([id, values]) => [
       id,
-      { id, label: FIXED_LABELS[id] ?? humanize(id), extensible: false, options: fixed(values) },
+      { id, label: FIXED_LABELS[id] ?? humanize(id), extensible: false, options: fixed(values, VALUE_LABEL_OVERRIDES[id]) },
     ]),
   ),
   currency: { id: "currency", label: "Currency", extensible: false, options: CURRENCIES },

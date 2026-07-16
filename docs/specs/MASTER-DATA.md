@@ -114,6 +114,15 @@ D-010; `02` = from the schema audit.
   `relationship` field is dropped. Stored as a JSON list on `estate_contact.roles`.
 - `estate.py` also confirms `WILL_STATUSES` and `DOC_STATUSES` match the D-010
   values already in the table above (bonus confirmation from the same source).
+- **`EstateProfile.will_status` served display LABELS** — most values titleize
+  from the snake_case value (`draft` → "Draft", `executed` → "Executed",
+  `needs_update` → "Needs update"), but the empty state carries an **override**:
+  `none` → **"Not recorded"** (the honesty framing — "not recorded", not the bare
+  "None"). This is the **served** `/refdata` label (`will_status` vocab), so the UI
+  renders it verbatim and never re-maps it (D-005). Ratified at the Estate specimen
+  geometry walk (page-estate §12es-3, 2026-07-16). All other estate vocabs
+  (`estate_doc_status`, `estate_doc_category`, `contact_role`) titleize with **no
+  override**.
 
 ### `Instrument.asset_subclass` — authored fixed vocabulary (DEF-2 †)
 

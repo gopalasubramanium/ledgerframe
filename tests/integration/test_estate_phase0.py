@@ -212,3 +212,47 @@ async def test_no_advice_language_in_served_estate_copy(app_client):
             assert phrase not in low, f"advice phrasing {phrase!r} in served estate copy: {text!r}"
 
 
+# --------------------------------------------------------------------------- #
+# §12es-3 (gate CONDITION, owner 2026-07-16) — LABEL TRUTH. The page renders the
+# SERVED /refdata label VERBATIM for every estate categorical; the UI never re-maps.
+# The specimen showed `will_status:none` as "Not recorded", but /refdata served the
+# titleized "None" — so the label is amended SPEC-FIRST (MASTER-DATA vocab label →
+# refdata source override) until the served label IS "Not recorded". Fail-first: RED
+# on the pre-amendment backend (serves "None"), GREEN after.
+# --------------------------------------------------------------------------- #
+# The exact served {value: label} the page renders, per estate vocab. Only
+# `will_status:none` overrides the titleized default (→ "Not recorded"); every other
+# value titleizes. If a served label drifts from this table, the page's rendered text
+# drifts with it — so the table is the contract the render honours.
+_ESTATE_VOCAB_LABELS = {
+    "will_status": {"none": "Not recorded", "draft": "Draft",
+                    "executed": "Executed", "needs_update": "Needs update"},
+    "estate_doc_status": {"present": "Present", "missing": "Missing", "outdated": "Outdated"},
+    "estate_doc_category": {
+        "will": "Will", "insurance": "Insurance", "property": "Property", "loan": "Loan",
+        "identity": "Identity", "bank": "Bank", "tax": "Tax", "medical": "Medical", "other": "Other"},
+    "contact_role": {"nominee": "Nominee", "beneficiary": "Beneficiary", "executor": "Executor",
+                     "emergency": "Emergency", "guardian": "Guardian"},
+}
+
+
+async def test_will_status_none_served_label_is_not_recorded(app_client):
+    """The single condition the gate named: /refdata must SERVE 'Not recorded' for
+    `will_status:none` (never frontend copy). RED today — the backend titleizes it to 'None'."""
+    refdata = (await app_client.get("/api/v1/refdata")).json()
+    by_value = {o["value"]: o["label"] for o in refdata["will_status"]}
+    assert by_value["none"] == "Not recorded", (
+        "the SERVED /refdata will_status:none label must be 'Not recorded' (§12es-3), "
+        f"not {by_value['none']!r} — amend spec-first, never in frontend copy"
+    )
+
+
+async def test_all_four_estate_vocab_labels_are_served_verbatim(app_client):
+    """Every estate categorical's served {value,label} matches the table the page renders —
+    so the page can render served labels VERBATIM across all four vocabs, no client mapping."""
+    refdata = (await app_client.get("/api/v1/refdata")).json()
+    for vocab, expected in _ESTATE_VOCAB_LABELS.items():
+        served = {o["value"]: o["label"] for o in refdata[vocab]}
+        assert served == expected, f"served {vocab} labels drifted from the rendered contract: {served}"
+
+
