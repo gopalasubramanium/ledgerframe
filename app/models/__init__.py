@@ -561,7 +561,8 @@ class EstateContact(Base):
     __tablename__ = "estate_contact"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    relationship: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    # `relationship` was retired (page-estate §9-5, D-010/D-063): the fixed `roles` vocab is the
+    # canonical concept; the old free-text field was folded into `notes` by migration f2b7c1a9e304.
     roles: Mapped[str] = mapped_column(Text, default="[]")   # JSON list of role strings
     phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
     email: Mapped[str | None] = mapped_column(String(120), nullable=True)

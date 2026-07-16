@@ -337,18 +337,6 @@
             ],
             "title": "Phone"
           },
-          "relationship": {
-            "anyOf": [
-              {
-                "maxLength": 60,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Relationship"
-          },
           "roles": {
             "items": {
               "type": "string"

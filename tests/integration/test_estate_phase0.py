@@ -29,3 +29,29 @@ async def test_estate_meta_endpoint_removed_by_shape(app_client):
     for key in ("will_status", "estate_doc_status", "estate_doc_category", "contact_role"):
         assert refdata[key], f"/refdata must serve {key}"
         assert all({"value", "label"} <= set(o) for o in refdata[key])
+
+
+# --------------------------------------------------------------------------- #
+# 9-5 (+ Amendment E) — `relationship` is retired: the served contact no longer
+# carries it (the field is dropped from ContactIn + _contact_dict; the column is
+# dropped by migration with a fold-into-notes backfill — see the migration test).
+# --------------------------------------------------------------------------- #
+async def test_served_contact_has_no_relationship_field(app_client):
+    """The estate contact shape no longer serves `relationship` (D-010/D-063: dropped,
+    folded into roles/notes). RED today: `_contact_dict` still serves the free-text field."""
+    r = await app_client.post("/api/v1/estate/contacts",
+                              json={"name": "Spouse", "roles": ["nominee", "executor"]})
+    created = r.json()
+    assert created["ok"]
+    assert "relationship" not in created, "the write response must not carry `relationship`"
+    contacts = (await app_client.get("/api/v1/estate")).json()["contacts"]
+    assert contacts, "expected the created contact to be served"
+    assert all("relationship" not in c for c in contacts), (
+        "GET /estate contacts must not carry `relationship` — it is retired (§9-5)"
+    )
+    # A stray `relationship` in the request body is simply ignored (extra field), never persisted/served.
+    r2 = await app_client.post("/api/v1/estate/contacts",
+                               json={"name": "Sibling", "relationship": "sister", "roles": ["emergency"]})
+    assert r2.json()["ok"]
+    assert "relationship" not in r2.json()
+

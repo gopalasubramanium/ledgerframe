@@ -591,3 +591,65 @@ def test_upgrade_from_prior_head_adds_annual_cost_bps_null(db_url):
         assert row[1] is None            # existing instrument stays 'not set' (NULL, not 0)
     finally:
         eng.dispose()
+
+
+def test_estate_relationship_column_absent_after_migrations(db_url):
+    """page-estate §9-5 — the full chain DROPS estate_contact.relationship (D-010/D-063:
+    the field is retired, folded into notes/roles). The create_all equivalence is asserted
+    by test_migrated_head_matches_create_all; this pins the drop explicitly."""
+    from sqlalchemy import inspect
+
+    run_migrations(log=lambda *a: None)
+    eng = create_engine(db_url)
+    try:
+        cols = {c["name"] for c in inspect(eng).get_columns("estate_contact")}
+        assert "relationship" not in cols
+    finally:
+        eng.dispose()
+
+
+def test_upgrade_from_prior_head_folds_relationship_into_notes_then_drops(db_url):
+    """page-estate §9-5 / AMENDMENT E — the drop is DATA-PRESERVING: before the column goes,
+    every contact with a non-empty `relationship` gets it FOLDED into `notes`, prefixed
+    `Relationship: «value»` (newline-appended when notes already exist). Free text cannot map
+    into the fixed `roles` vocab — so it is folded, never destroyed.
+
+    Build the DB at the pre-drop head, seed a contact with relationship + existing notes and one
+    with relationship + NO notes, upgrade to head, and assert both were folded and the column is gone."""
+    from alembic import command
+    from sqlalchemy import inspect
+
+    from app.db.migrate import _alembic_config
+
+    cfg = _alembic_config()
+    command.upgrade(cfg, "f9e1a2b3c4d5")  # head BEFORE the relationship drop
+    eng = create_engine(db_url)
+    try:
+        cols = {c["name"] for c in inspect(eng).get_columns("estate_contact")}
+        assert "relationship" in cols          # the column exists before the drop
+        with eng.begin() as c:
+            # (a) relationship + existing notes → both must survive, newline-joined.
+            c.execute(text("INSERT INTO estate_contact (name, relationship, roles, notes, created_at) "
+                           "VALUES ('Asha','sister','[]','Lives in Pune','2026-01-01 00:00:00')"))
+            # (b) relationship + NO notes → notes becomes just the folded line.
+            c.execute(text("INSERT INTO estate_contact (name, relationship, roles, created_at) "
+                           "VALUES ('Ravi','brother','[]','2026-01-01 00:00:00')"))
+            # (c) no relationship → notes untouched (stays NULL).
+            c.execute(text("INSERT INTO estate_contact (name, roles, created_at) "
+                           "VALUES ('Meera','[]','2026-01-01 00:00:00')"))
+    finally:
+        eng.dispose()
+
+    command.upgrade(cfg, "head")
+    eng = create_engine(db_url)
+    try:
+        cols = {c["name"] for c in inspect(eng).get_columns("estate_contact")}
+        assert "relationship" not in cols                       # column gone
+        with eng.connect() as c:
+            assert c.execute(text("SELECT COUNT(*) FROM estate_contact")).scalar() == 3  # nothing lost
+            notes = dict(c.execute(text("SELECT name, notes FROM estate_contact")).all())
+        assert notes["Asha"] == "Lives in Pune\nRelationship: sister"   # appended after existing notes
+        assert notes["Ravi"] == "Relationship: brother"                 # became the folded line
+        assert notes["Meera"] is None                                   # no relationship → untouched
+    finally:
+        eng.dispose()

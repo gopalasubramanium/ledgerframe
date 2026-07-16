@@ -57,14 +57,14 @@ def _contact_dict(c: EstateContact) -> dict:
         roles = json.loads(c.roles) if c.roles else []
     except (ValueError, TypeError):
         roles = []
-    return {"id": c.id, "name": c.name, "relationship": c.relationship, "roles": roles,
+    return {"id": c.id, "name": c.name, "roles": roles,
             "phone": c.phone, "email": c.email, "notes": c.notes}
 
 
 def _apply_contact(c: EstateContact, data: dict) -> None:
     if "name" in data and (data["name"] or "").strip():
         c.name = data["name"].strip()[:120]
-    for k in ("relationship", "phone", "email", "notes"):
+    for k in ("phone", "email", "notes"):
         if k in data:
             v = (data[k] or "").strip() if isinstance(data[k], str) else data[k]
             setattr(c, k, v or None)

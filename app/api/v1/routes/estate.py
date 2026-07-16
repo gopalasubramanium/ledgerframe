@@ -33,7 +33,8 @@ class ProfileIn(BaseModel):
 
 class ContactIn(BaseModel):
     name: str = Field(max_length=120)
-    relationship: str | None = Field(default=None, max_length=60)
+    # `relationship` retired (page-estate §9-5): roles is the canonical vocabulary; a stray
+    # `relationship` in a request body is ignored (extra field), never persisted or served.
     roles: list[str] = Field(default_factory=list)
     phone: str | None = Field(default=None, max_length=40)
     email: str | None = Field(default=None, max_length=120)
