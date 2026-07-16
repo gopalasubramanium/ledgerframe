@@ -153,6 +153,26 @@ reproduction and a fix.
 reporter output / `test-results/`) — not just the pass/fail counts. A failure you cannot name is a failure
 you cannot chase.
 
+## vitest teardown flake — `window is not defined` from `InstrumentPicker` onBlur timer (named, 2026-07-16)
+
+**Surfaced during the Estate Phase-2 run:** one `npm run check` exited 1 with an **uncaught exception AFTER
+all 227 tests passed** — `ReferenceError: window is not defined` originating in `ui.test.tsx`
+(`InstrumentPicker`). Immediate re-runs were clean (`npx vitest run` → EXIT 0, **0 window-errors across 3
+consecutive runs**; the follow-up `npm run check` → EXIT 0). Not caused by the Estate change (it touches no
+InstrumentPicker/ui.test.tsx code — both unchanged in the diff).
+
+**Named trigger + reproduction (this flake HAS an identity, unlike the 2026-07-15 one):**
+`InstrumentPicker.tsx:111` schedules `window.setTimeout(() => setOpen(false), 150)` on **blur** and never
+clears it on unmount. When a test tears down the jsdom environment before that 150 ms timer fires, the
+callback runs `setOpen` → React touches `window` after it is gone → uncaught `ReferenceError`. It is a
+**latent race** per the standing rule, not "just a flake."
+
+**Fix (deferred — unrelated to Estate, kept out of this build's scope):** clear the blur timeout in a
+`useEffect` cleanup (store the id in a ref, `clearTimeout` on unmount), the standard React timer-hygiene
+fix. Cheap and safe, but it edits a shared component mid-page-build; done as its own small change. Until
+then a rare `npm run check` exit-1 with **all tests green + this exact stack** is this flake, not a
+regression — re-run to confirm.
+
 ## CI e2e runs WITHOUT a backend — page-level assertions execute only locally (page-cash-flow §13c, 2026-07-15)
 
 `npm run check`'s Playwright pass has **no server**: product pages render their honest empty/error states,

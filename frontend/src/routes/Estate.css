@@ -60,6 +60,46 @@
   line-height: var(--line-16);
 }
 
+/* Editor dialog — a two-column field grid; a row wrapper is `display:contents` so controls line up
+   across rows by construction (the Cash flow / Policy §12po2-3 lesson). [S]-gated by the served route. */
+.est__editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  align-content: start;
+}
+.est__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-self: start;
+  min-width: 0;
+}
+.est__field--wide { grid-column: 1 / -1; }
+.est__field > span,
+.est__roleset > legend {
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-secondary);
+}
+.est__roleset { border: 0; margin: 0; padding: 0; }
+.est__roleset > legend { padding: 0; margin-bottom: var(--space-2); }
+/* The SERVED validation message, in place, where the user is working. */
+.est__error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--loss);
+  border-radius: var(--radius-sm);
+  color: var(--loss);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+}
+/* Below the laptop breakpoint the dialog is a sheet: one column, so nothing is cramped. */
+@media (max-width: 56rem) {
+  .est__editor { grid-template-columns: 1fr; }
+}
+
 /* Roles multi-select affordance (§9-6) — composed Switch rows inside the editor; NOT a new component. */
 .est__editorframe {
   border: var(--border-width) solid var(--border);

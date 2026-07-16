@@ -11,6 +11,7 @@ import { Review } from "./routes/Review";
 import { Policy } from "./routes/Policy";
 import { CashFlow } from "./routes/CashFlow";
 import { Insurance } from "./routes/Insurance";
+import { Estate } from "./routes/Estate";
 import { Scenarios } from "./routes/Scenarios";
 import { PricingHealth } from "./routes/PricingHealth";
 import { InstrumentDetail } from "./routes/InstrumentDetail";
@@ -45,6 +46,7 @@ export function AppRoutes() {
               <Route path="/cash-flow" element={<CashFlow />} />
               <Route path="/scenarios" element={<Scenarios />} />
               <Route path="/insurance" element={<Insurance />} />
+              <Route path="/estate" element={<Estate />} />
               <Route path="/instrument/:symbol" element={<InstrumentDetail />} />
               <Route path="/pricing-health" element={<PricingHealth />} />
               {/* Route redirects (D-042/D-022/D-056). */}
