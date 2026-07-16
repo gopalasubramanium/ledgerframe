@@ -144,6 +144,10 @@ DESIGN-SYSTEM.md §3 (page templates). Every row cites its spec section.*
 > **Reports-group pages are worklist-shaped (page-pricing-health §13, ND-7):** a **summary header +
 > a diagnostics/records body** (e.g. Pricing Health = portfolio-confidence card + per-holding
 > diagnostics table). Use the Worklist template, not Overview.
+> **⚑ Clarification (page-reports §9-6, 2026-07-17 — Recording Note 2):** this note describes **Pricing
+> Health**, not the whole Reports *group*. The group's other member, **Reports itself, is an Overview
+> page** (`DESIGN-SYSTEM.md:227`) — a composed surface of owned sections, not a worklist. Do not
+> generalise "Reports-group ⇒ Worklist" to the Reports page; check the DESIGN-SYSTEM §3 mapping per page.
 >
 > **Fast-path (page-pricing-health §13):** a clean **verify-first (§3/§10)** that finds every reader
 > already in the frozen contract **empties §3b → Phase 0 is skipped**, and if the ratified inventory

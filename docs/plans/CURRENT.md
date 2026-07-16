@@ -1093,30 +1093,33 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
-## REPORTS — PLAN DRAFTED ⏸ AWAITING §9 ONE-PASS (2026-07-17)
+## REPORTS — §9 CLOSED ✅ · PHASE 0 DONE · Phase 0a specimen NEXT ⏸ (2026-07-17)
 
-**`docs/plans/page-reports.md` is drafted through §10 (verify-first) + §9 (NEEDS DECISION). Nothing is
-built for Reports.** Reports (`/reports`, IA §82) owns statements + the Realised P/L report + open tax
-lots + server-side exports, and **links** the Reports Pack (`/reports/pack`, D-041/D-061 — the ONE
-sanctioned duplication, an artifact not an IA page).
+**Owner passed §9 one-pass 2026-07-17 — all 13 items ACCEPTED as proposed + Amendments I/J/K + Recording
+Notes 1/2 (page-reports §9).** The **Phase 0 export-honesty spine is built** (backend-first, one delta per
+commit, each fail-first RED on the real cause → GREEN with a pinning test). **No page assembly yet** —
+Phase 1 is BLOCKED until the owner ratifies the Phase-0a geometry specimen.
 
-- **Verify-first found (§10):** the report readers (`statements_report`, `realised_gains_report`,
-  `tax_lots_report`) + their CSVs **already exist** — EXCEPT **no tax-lots CSV** (§9-4); and the CSVs
-  **already shed their served disclaimers** (realised-gains.csv drops the disclaimer + trade-date-FX
-  total + excluded-events count; attribution.csv drops its disclaimer; statements.csv partial) — a
-  **shipping Guarantee-3 / D-020/D-076 / D-077 hole** (§9-5). Every report reader honours `entity_id`
-  **server-side**; **none accepts `account_id`**; `?entity_id` stays UI-**dormant** (accounts §9-8).
-- **Declined-exports inventory: 7 pages** declined a per-page export pointing at Reports (Net worth,
-  Pricing Health, Review, Heatmap, Scenarios, Cash flow, Policy) — collected as a table (§10-2), each
-  dispositioned in §9-3 (Pack-delivered or re-declined; none silently dropped).
-- **§9 has 13 OPEN items** — ⚑ load-bearing: **9-1** Pack rendering mechanism (spec-SILENT: print
-  stylesheet / server HTML / PDF), **9-2** per-entity composition (server-composed sections, NOT a
-  switcher — first server-side consumer of dormant `entity_id`), **9-3** the 7 declined-export
-  dispositions, **9-5** export-disclaimer honesty fix. Others: 9-4 tax-lots CSV, 9-6 template
-  (Overview per §3 vs the worklist note), 9-7 `long_term_days` control, 9-8 table dataset-size, 9-9
-  GLOSSARY gaps ("Report"/"Statement" singular; "Realised gains" is deprecated), 9-10 AI helper
-  deferred, 9-11 Pack ship-this-milestone-or-phase, 9-12 Pack reader list, 9-13 attribution ownership.
-- **⏸ STOP — AWAITING OWNER §9 ONE-PASS.** No §3b delta (all contingent on §9); no build until passed.
+- **Phase 0 DONE (§11 evidence table):** (1) **realised-gains.csv** now leads with the served disclaimer +
+  a current-FX / trade-date-FX totals block + the excluded-events count; (2) **attribution.csv** carries
+  the served `_ATTRIB_DISCLAIMER` (dated delta note in page-portfolio §12-6b — export stays Portfolio's,
+  §9-13); (3) **statements.csv** carries the full D-077 line; (4) **`GET /portfolio/tax-lots.csv`** added,
+  **born with its disclaimer** — contract regenerated same commit, **130 → 131 paths**, drift green;
+  (5) **9-7 verdict** (§10-9): **no persisted setting backs `long_term_days`** → served-default-365
+  read-only + Settings seam recorded, **no store built**; (6) **GLOSSARY** gains **"Report"** spec-first +
+  popover mirror, parity green. The four CSV disclaimer pins are the headline (a shipping Guarantee-3 /
+  D-020/D-076/D-077 hole closed).
+- **⚑ Amendment-I PENDING LEDGER (declined-exports debt — CLOSES ONLY at the Pack milestone):** five pages
+  declined a per-page export **to be delivered by the Reports Pack**, PENDING until the Pack ships —
+  **Net worth** (trend section), **Review** (review section), **Scenarios** (D-061), **Cash flow**
+  (D-061), **Policy** (drift, D-061). Closing the Reports page does **not** close this debt. The two
+  re-declines closed now: **Pricing Health** diagnostics + **Heatmap** treemap (not report artifacts;
+  Heatmap redirects to the delivered `holdings.csv`). *(Full dispositions: page-reports §9-3 + §10-2.)*
+- **Pack = its own milestone** (§9-1/§9-2/§9-11): server-rendered print-optimised HTML at `/reports/pack`,
+  server-composed per-entity sections (dormant `entity_id`, no switcher), **no new PDF dependency without
+  an ADR**. **The Pack entry point does NOT ship on the Reports page this milestone** (Amendment K
+  corollary — D-041 preserved, recorded not rendered). No AI-helper placeholder (Amendment K, D-060 intact).
+- **⏸ STOP — AWAITING OWNER GEOMETRY RATIFICATION of the Phase-0a specimen** (page-reports §12). No Phase 1.
 - **Part 0 (P-5, batched here, SHIPPED `c888000`):** the brand mark now rides the **mobile** header too
   (one `BrandLockup`); DESIGN-SYSTEM §5.6 **PROPOSED → RATIFIED**. See page-reports Part 0 + page-chrome §14.
 
