@@ -361,6 +361,11 @@ async def portfolio_attribution_csv(
     attr = await attribution_reader(session, base, window, entity_id=entity_id)
     buf = io.StringIO()
     w = csv.writer(buf)
+    # §9-5 (page-reports, honesty): the served disclaimer travels INTO the file — it exists in the
+    # reader (`_ATTRIB_DISCLAIMER`) but was previously never written, so the export shed the very
+    # "descriptive, not advice" caveat the on-screen table carries. Lead with it, then the table.
+    w.writerow([sanitize_cell(attr.get("disclaimer") or "")])
+    w.writerow([])
     w.writerow(["holding", "symbol", "asset_class", "sector", "contribution_pct"])
     if attr.get("available"):
         for h in attr.get("holdings", []):

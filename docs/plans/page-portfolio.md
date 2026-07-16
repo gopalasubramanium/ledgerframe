@@ -524,6 +524,13 @@ Recorded, fixed, pre-pass re-run green, awaiting owner re-verify.
 6. **Return attribution → DataTable** (client sort + filter, like Holdings) + reconciling residual +
    headline summary below. **Export: `GET /portfolio/attribution.csv`** (server-side, D-050;
    contract regenerated same commit, +1 path; backend test) via the ratified **Export CSV** button.
+   - **Delta note (2026-07-17, page-reports §9-5 / Recording Note 1):** `attribution.csv` now **leads
+     with the served `_ATTRIB_DISCLAIMER`** (the "descriptive decomposition — not advice" caveat),
+     which the reader always carried but the CSV builder had never written — a shed-disclaimer
+     honesty hole closed as part of the Reports export-honesty sweep. The per-holding header is no
+     longer line 0 (it follows the disclaimer block). Content-only change; no new column, no shape
+     change, contract untouched. Pinned by `test_attribution_csv_carries_served_disclaimer`. The
+     export **stays Portfolio-owned** (page-reports §9-13 — Reports does not re-home it).
 7. **Hover values.** PriceChart already had a crosshair + close tooltip; **added the benchmark value**
    to the tooltip in comparison mode. **AllocationDonut segment hover/focus** shows *label · value ·
    pct · note* (aria-live), **keyboard-reachable via the focusable legend**. Kitchen-sink specimens

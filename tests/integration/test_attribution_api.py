@@ -59,6 +59,19 @@ async def test_attribution_csv_export(app_client):
     assert "text/csv" in r.headers["content-type"]
     assert "attachment" in r.headers.get("content-disposition", "")
     lines = r.text.strip().splitlines()
-    assert lines[0] == "holding,symbol,asset_class,sector,contribution_pct"
+    # §9-5 (page-reports): the served disclaimer leads the file, so the per-holding header is no
+    # longer line 0 — it appears after the disclaimer block.
+    assert any(line == "holding,symbol,asset_class,sector,contribution_pct" for line in lines)
     assert any("Residual (income, realised, closed)" in line for line in lines)  # quoted (has commas)
     assert any(line.startswith("Headline return") for line in lines)
+
+
+async def test_attribution_csv_carries_served_disclaimer(app_client):
+    """§9-5 (page-reports, honesty — fail-first, pinned): the attribution export must carry the
+    served ``_ATTRIB_DISCLAIMER`` verbatim (it existed in the reader but was never written to the
+    file — a shed-disclaimer hole). RED on the pre-§9-5 builder."""
+    from app.services.analytics import _ATTRIB_DISCLAIMER
+
+    r = await app_client.get("/api/v1/portfolio/attribution.csv")
+    assert r.status_code == 200
+    assert _ATTRIB_DISCLAIMER in r.text
