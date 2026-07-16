@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,15 @@ from app.services.estate import (
 )
 
 router = APIRouter()
+
+
+def reject_entity_id(entity_id: int | None = Query(default=None)) -> None:
+    """page-estate §9-2 — the estate register is household-scoped (no entity FK, D-063). A scope
+    param is REJECTED, not silently ignored: it could only produce a precise-looking, meaningless
+    answer. Applied to EVERY estate endpoint (reads + writes) so the contract is honest everywhere;
+    ordered before `require_auth` so the malformed request is rejected regardless of lock state."""
+    if entity_id is not None:
+        raise HTTPException(400, "the estate register is household-scoped: it cannot be filtered to one entity")
 
 
 class ProfileIn(BaseModel):
@@ -51,26 +60,26 @@ class DocumentIn(BaseModel):
     notes: str | None = Field(default=None, max_length=2000)
 
 
-@router.get("/estate")
+@router.get("/estate", dependencies=[Depends(reject_entity_id)])
 async def get_estate(session: AsyncSession = Depends(get_db)) -> dict:
     return await estate_report(session)
 
 
-@router.put("/estate/profile", dependencies=[Depends(require_auth)])
+@router.put("/estate/profile", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def put_profile(payload: ProfileIn, session: AsyncSession = Depends(get_db)) -> dict:
     res = await update_profile(session, payload.model_dump(exclude_none=False))
     await session.commit()
     return {"ok": True, **res}
 
 
-@router.post("/estate/contacts", dependencies=[Depends(require_auth)])
+@router.post("/estate/contacts", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def add_contact(payload: ContactIn, session: AsyncSession = Depends(get_db)) -> dict:
     res = await create_contact(session, payload.model_dump())
     await session.commit()
     return {"ok": True, **res}
 
 
-@router.patch("/estate/contacts/{cid}", dependencies=[Depends(require_auth)])
+@router.patch("/estate/contacts/{cid}", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def edit_contact(cid: int, payload: ContactIn, session: AsyncSession = Depends(get_db)) -> dict:
     try:
         res = await update_contact(session, cid, payload.model_dump())
@@ -80,21 +89,21 @@ async def edit_contact(cid: int, payload: ContactIn, session: AsyncSession = Dep
     return {"ok": True, **res}
 
 
-@router.delete("/estate/contacts/{cid}", dependencies=[Depends(require_auth)])
+@router.delete("/estate/contacts/{cid}", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def remove_contact(cid: int, session: AsyncSession = Depends(get_db)) -> dict:
     await delete_contact(session, cid)
     await session.commit()
     return {"ok": True}
 
 
-@router.post("/estate/documents", dependencies=[Depends(require_auth)])
+@router.post("/estate/documents", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def add_document(payload: DocumentIn, session: AsyncSession = Depends(get_db)) -> dict:
     res = await create_document(session, payload.model_dump())
     await session.commit()
     return {"ok": True, **res}
 
 
-@router.patch("/estate/documents/{did}", dependencies=[Depends(require_auth)])
+@router.patch("/estate/documents/{did}", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def edit_document(did: int, payload: DocumentIn, session: AsyncSession = Depends(get_db)) -> dict:
     try:
         res = await update_document(session, did, payload.model_dump())
@@ -104,7 +113,7 @@ async def edit_document(did: int, payload: DocumentIn, session: AsyncSession = D
     return {"ok": True, **res}
 
 
-@router.delete("/estate/documents/{did}", dependencies=[Depends(require_auth)])
+@router.delete("/estate/documents/{did}", dependencies=[Depends(reject_entity_id), Depends(require_auth)])
 async def remove_document(did: int, session: AsyncSession = Depends(get_db)) -> dict:
     await delete_document(session, did)
     await session.commit()

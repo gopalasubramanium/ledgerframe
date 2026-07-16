@@ -4133,6 +4133,22 @@
         "operationId": "get_estate_api_v1_estate_get",
         "parameters": [
           {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -4199,6 +4215,22 @@
       "post": {
         "operationId": "add_contact_api_v1_estate_contacts_post",
         "parameters": [
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",
@@ -4286,6 +4318,22 @@
             }
           },
           {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -4357,6 +4405,22 @@
             "schema": {
               "title": "Cid",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
             }
           },
           {
@@ -4436,6 +4500,22 @@
       "post": {
         "operationId": "add_document_api_v1_estate_documents_post",
         "parameters": [
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",
@@ -4523,6 +4603,22 @@
             }
           },
           {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
+          {
             "in": "header",
             "name": "authorization",
             "required": false,
@@ -4594,6 +4690,22 @@
             "schema": {
               "title": "Did",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
             }
           },
           {
@@ -4673,6 +4785,22 @@
       "put": {
         "operationId": "put_profile_api_v1_estate_profile_put",
         "parameters": [
+          {
+            "in": "query",
+            "name": "entity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Id"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",

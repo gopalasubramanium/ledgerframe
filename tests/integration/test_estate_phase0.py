@@ -55,3 +55,37 @@ async def test_served_contact_has_no_relationship_field(app_client):
     assert r2.json()["ok"]
     assert "relationship" not in r2.json()
 
+
+# --------------------------------------------------------------------------- #
+# 9-2 — the estate register is household-scoped; ?entity_id is REJECTED (honest 400)
+# on EVERY endpoint (reads AND writes), never silently ignored. No entity FK exists
+# (D-063), so a scope param could only produce a precise-looking, meaningless answer.
+# --------------------------------------------------------------------------- #
+async def test_entity_id_rejected_with_400_on_every_endpoint(app_client):
+    """Every estate endpoint rejects `?entity_id` with an honest, plain-language 400.
+    RED today: the unknown param is silently dropped and each request returns 200."""
+    calls = [
+        ("get", "/api/v1/estate", None),
+        ("put", "/api/v1/estate/profile", {}),
+        ("post", "/api/v1/estate/contacts", {"name": "X"}),
+        ("patch", "/api/v1/estate/contacts/1", {"name": "X"}),
+        ("delete", "/api/v1/estate/contacts/1", None),
+        ("post", "/api/v1/estate/documents", {"title": "X"}),
+        ("patch", "/api/v1/estate/documents/1", {"title": "X"}),
+        ("delete", "/api/v1/estate/documents/1", None),
+    ]
+    for method, path, body in calls:
+        kwargs = {"params": {"entity_id": 1}}
+        if body is not None:
+            kwargs["json"] = body
+        r = await getattr(app_client, method)(path, **kwargs)
+        assert r.status_code == 400, f"{method.upper()} {path} accepted ?entity_id (got {r.status_code})"
+        detail = r.json()["detail"].lower()
+        assert "household" in detail, f"{method.upper()} {path} 400 must say household-scoped: {detail!r}"
+        # plain language only — no decision IDs / impl notes in served copy (copy hygiene)
+        assert "d-063" not in detail and "entity_id" not in detail
+
+    # The unscoped read still works.
+    assert (await app_client.get("/api/v1/estate")).status_code == 200
+
+
