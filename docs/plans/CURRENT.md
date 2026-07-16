@@ -1460,11 +1460,33 @@ COUNTS strip (no currency affix) → contacts DataTable → documents DataTable 
 the specimen geometry by looking (`/kitchen-sink`). Out of scope until then: nav flip, `/estate` route,
 `overflow.spec.ts` route-array additions (all three), the no-money-string render guard (ships Phase 2).
 
+## REPORTS PACK — Phase 0 DONE · ⏸ AWAITING OWNER PRINT-GEOMETRY RATIFICATION (2026-07-17)
+
+**`GET /reports/pack` is BUILT** (D-038/D-061; `reports-pack.md`). §9 RESOLVED (owner one-pass
+2026-07-17, all 9 ACCEPTED as proposed + Pack-1/4/9 recording notes). **Phase 0 shipped** (one delta
+per commit): DESIGN-SYSTEM §5.1a print palette (spec-first, Pack-2/8) · GLOSSARY "Consolidated" +
+"Per-entity" (Pack-7) · the `/reports/pack` **HTMLResponse route** (f-string, no Jinja2 → no
+dependency; registered before the SPA catch-all; `require_read_auth` read posture; contract
+**131 → 132 paths**, drift GREEN; 7 content pins GREEN incl. Pack-3 empty reasons + Pack-4
+zero/single-entity) · SECURITY-BASELINE Pack read-posture line + gap-#7 read-auth revisit (→ R-1,
+**not R-30** — verify-first: R-30 is the Postgres item) · §0 ledger anchors.
+
+**Phase 0a print-geometry specimen BUILT + PROPOSED** (reports-pack §7a/§11): rendered on the reset
+3-entity demo seed (Household · Rajan Family Trust · Meera Iyer), captured on-screen at 1440 + a real
+paginated print PDF (`docs/plans/assets/pack-specimen-*`). The thin entity (Meera, 0 accounts) proves
+Pack-3 honesty; the print running-header overlap was found by looking and fixed (top band reserved).
+
+**⏸ STOP — Phase 1 (the Reports-page entry point + the owner acceptance walk) is BLOCKED until the
+owner ratifies the print geometry by looking.** The **Amendment-I declined-exports ledger stays
+PENDING**; it flips PENDING → DELIVERED only at this milestone's close (after the walk), against the
+§0 ledger-mapping table (now citing live `reports_pack.py` anchors).
+
 ## NEXT
-*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. The live NEXT is under the Reports
-DONE block.)*
-1. **The Reports Pack milestone** (D-038/D-061 — its own plan file, **PLAN ONLY, verify-first**; the
-   **Amendment-I declined-exports ledger closes there**).
+*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. Reports Pack is Phase-0 done,
+⏸ awaiting owner print-geometry ratification — see the block just above.)*
+1. **Reports Pack — owner print-geometry ratification** (reports-pack §7a), then **Phase 1** (the
+   Reports-page entry point + assembly + the owner walk). The **Amendment-I declined-exports ledger
+   closes at this milestone's close.**
 2. Then the standing queue, unchanged: **Settings** · **Help · Legal** · the **AI-surfaces milestone** ·
    **Voice** (definition still owed — only after the owner defines it, ROADMAP **R-32**) · then release
    **Gates C→F** and tag `v2.0.0`.

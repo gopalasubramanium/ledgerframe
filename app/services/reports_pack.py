@@ -455,11 +455,14 @@ th { color: #475569; font-weight: 600; font-size: 12px; }
   body { background: #ffffff; }
   .pack { max-width: none; padding: 0 12mm; }
   .pack-running-header { display: block; position: fixed; top: 0; left: 0; right: 0;
-    font-size: 10px; color: #475569; border-bottom: 1px solid #cbd5e1;
-    padding: 4px 0; background: #ffffff; }
-  .pack-section { break-before: page; }
+    height: 7mm; line-height: 7mm; font-size: 10px; color: #475569;
+    border-bottom: 1px solid #cbd5e1; background: #ffffff; z-index: 10; }
+  /* Every top-level section starts a fresh page (break-before). The running header is
+     position:fixed at the page top, so each page reserves a top band for it (padding-top)
+     — otherwise the fixed header prints ON TOP of the section heading. */
+  .pack-section { break-before: page; padding-top: 10mm; }
+  .pack-header { padding-top: 10mm; break-after: avoid; }
   .pack-group-label { break-before: auto; }
-  .pack-header { break-after: avoid; }
   .pack-section h2, .pack-card h3 { break-after: avoid; }
   .pack-card { break-inside: avoid; }
 }

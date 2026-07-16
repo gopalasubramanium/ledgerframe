@@ -280,6 +280,46 @@ by the owner looking at BOTH the on-screen rendering AND the print-emulation cap
 page-home lesson: a correct section list can still be a wrong artifact — print geometry is a
 requirement a list cannot express). The specimen note records this adaptation explicitly.
 
+### GATE STATUS — ⏸ PROPOSED, AWAITING OWNER RATIFICATION (2026-07-17)
+
+**The Phase-0a specimen is BUILT and PROPOSED** (evidence in §11). It was rendered on the reset demo
+seed (entities **Household · Rajan Family Trust · Meera Iyer** — the seed exercises a populated
+entity AND a thin one) and captured both on-screen at 1440 and as a **real paginated print PDF** (via
+Chromium `page.pdf()`, which honours `@media print`). **Capture inventory** (all under
+`docs/plans/assets/`):
+
+| Capture | File | What it proves |
+|---------|------|----------------|
+| Screen — top (1440) | `pack-specimen-screen-top-1440.png` | Header block (title · generated · base currency SGD · FX caveat · not-advice); CONSOLIDATED label; Net worth trend with the signed change (+159,234.00, grayscale-safe). |
+| Screen — a consolidated section (1440) | `pack-specimen-consolidated-cashflow-1440.png` | Cash flow honest empty note ("nothing to project") + served disclaimer (Pack-3 for a consolidated section). |
+| Screen — a per-entity boundary, POPULATED (1440) | `pack-specimen-per-entity-household-1440.png` | Household: net worth (Unrealised +82,503.20 · Today +73.02, signed green), real risk metrics, attribution +12.57% with signed per-class rows. |
+| Screen — an empty-section note, THIN entity (1440) | `pack-specimen-empty-entity-meera-1440.png` | Meera Iyer (0 accounts): every section renders its **served reason**, never a blank/0 — "No holdings", "No policy targets…", "No realised events…", "Risk metrics unavailable…", "insufficient cost basis…". |
+| Print — page 1 (PDF) | `pack-specimen-print-page1.png` | Light palette; the title header + disclaimer on a clean cover page; running header present. |
+| Print — page 2 (PDF) | `pack-specimen-print-page2.png` | **Running header repeats on page 2+**; a **section break lands cleanly**; the header band is reserved (no overlap after the print-spacing fix); signed figures legible in grayscale. |
+| Print — full artifact (PDF) | `pack-specimen-print.pdf` | The whole 10-page paginated print output the owner would actually print. |
+
+**Tile-integrity (one derivation, P-1):** every figure is a canonical-reader output — Household's net
+worth (739,108.20) is `value_portfolio(entity_id=Household).total_value`, the SAME value the Net
+worth / Holdings readers serve; the Pack formats it with the shared `format_money_display`, never a
+recompute. There is one derivation, cited in `reports_pack.py`.
+
+**Known open items surfaced by the specimen (for the owner's ruling at the gate — NOT fixed this
+session, to respect the STOP condition):**
+1. **Asset-class keys render as reader keys** (e.g. `fixed_deposit` with an underscore) in the
+   attribution "by asset class" rows — the reader serves the raw `key`, not the `/refdata` display
+   label. A copy refinement (map keys → display labels) is a candidate for Phase 1; flagged, not
+   improvised.
+2. **Page-1 header ↔ running-header redundancy** — page 1 shows both the full header and the running
+   header band (same text). Harmless; the owner may prefer suppressing the running header on page 1.
+3. **Consolidated single-card sections repeat the section `<h2>` as the card `<h3>`** (e.g. "Net worth
+   trend" twice) — a minor duplicate-title (the DataTable caption lesson). Candidate copy tidy.
+4. **Demo-seed/migration wrinkle (NOT a Pack defect):** a fresh `dev.sh` boot runs migrations that
+   insert a default "Household" entity, so the app-boot path yields **two** "Household" entities
+   (migration default + demo seed) → two per-entity "Household" sections. The canonical
+   `reset-demo-data.sh` (create_all + seed, no migrations) yields the correct **three** entities, and
+   the specimen was captured against that state. The duplicate is a seed/migration interaction to
+   resolve in the seed layer, independent of the Pack.
+
 ---
 
 ## 8. BUILD PHASES (one commit per phase; §3b FIRST; NO phase starts until §9 passes)
@@ -518,3 +558,30 @@ Pack-1/4/9 recording notes). The §3b delta (`GET /reports/pack`) is approved an
 (§11); Pack-2's print palette is authored spec-first (§11). **Phase 1 (the Reports-page entry point +
 the owner acceptance walk) remains BLOCKED until the owner ratifies the Phase-0a print-geometry
 specimen by looking (§7a).**
+
+---
+
+## 11. PHASE 0 — BUILD EVIDENCE (one delta per commit)
+
+*Phase 0 built the print palette (spec-first), the GLOSSARY terms, the `/reports/pack` route (with
+its contract regen), the Pack-9 doc line, and the §0 ledger anchors — one delta per commit, in the
+task's order. The route's content pins were proven fail-first (the route disabled → the path 404s,
+demonstrated at build time). `make api-contract-check` GREEN (132 paths).*
+
+| # | Delta [Pack-#] | RED / evidence | GREEN (pin) | Commit |
+|---|----------------|----------------|-------------|--------|
+| 1 | reports-pack §9 flipped OPEN → RESOLVED; page-reports §9-12 dated amendment (Consolidated = trend · review · cash flow · scenarios) [Pack-1] | n/a (recording) | Rulings + Pack-1/4/9 recording notes verbatim; one ratified map | `docs plan` |
+| 2 | **DESIGN-SYSTEM §5.1a** print artifact amendment — minimal print palette (light bg/dark text, light-theme donor; gain/loss AS enhancement, the +/− sign carries meaning) + `@media print` (break-before per section, break-inside:avoid per card) + running header; Pack-8 scope split (disclaimers/as-of bind print HTML; BOM CSV-only) [Pack-2/8] | n/a (spec-first) | DESIGN-SYSTEM §5.1a + §3 cross-ref | `docs spec` |
+| 3 | **GLOSSARY** "Consolidated" + "Per-entity" authored spec-first [Pack-7] | n/a (spec + parity guard) | `test_glossary_parity` GREEN (52 passed); no popover mirror (JS-free artifact) | `docs spec` |
+| 4 | **add `GET /reports/pack`** → `HTMLResponse`, f-string (no Jinja2 → no dependency), registered before the SPA catch-all, `require_read_auth` (Pack-9); composes all readers server-side, served display strings (D-105) [the route] | `test_..._route_serves_html...` RED with the route disabled (path 404s) | 7 content pins GREEN (header · 4 consolidated · per-entity per entity · disclaimer verbatim · empty-entity served reasons · zero-entity omission · single-entity renders). **Contract regenerated same commit — 131 → 132 paths; `make api-contract-check` GREEN.** | `app+tests` |
+| 5 | **SECURITY-BASELINE** §1 Pack-route read-posture line + gap #7 read-auth revisit (→ R-1, NOT R-30) [Pack-9] | n/a (doc) | §1 named line + §2 gap #7 extended | `docs spec` |
+| 6 | **§0 ledger** — five dispositions cite their LIVE `reports_pack.py` anchors (evidence staged; flip stays at close) | n/a (doc) | §0 table + verdict note | `docs plan` |
+| 7 | **Phase 0a print-geometry specimen** — rendered on the reset 3-entity seed; screen (1440) + real paginated print PDF; print running-header overlap fixed (top-band reserved per page) | Specimen looked at (§7a): running-header overlap FOUND on page 2+ → RED | Reserved a print top band (`.pack-section`/`.pack-header` padding-top) → running header repeats cleanly, section breaks land; captures in `docs/plans/assets/` | `this commit` |
+
+**Phase-0 gate:** `make api-contract-check` GREEN (132 paths) · backend unit suites GREEN
+(`test_reports_pack.py` 7 · `test_glossary_parity.py` 52 · `test_copy_hygiene.py`) · ruff clean.
+**Frontend `npm run check` NOT run** — no `frontend/src` change this milestone (the artifact is
+backend-served; the only frontend file is the DEV-ONLY capture harness, never wired into CI).
+
+**STOP — the Phase-0a specimen is ⏸ PROPOSED (§7a). Phase 1 (the Reports-page entry point + the
+owner walk) does NOT start until the owner ratifies the print geometry by looking.**
