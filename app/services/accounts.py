@@ -20,10 +20,16 @@ from app.core.config import get_settings
 from app.models import Account, Entity, Transaction
 from app.services.confidence import score_holding
 from app.services.institutions import get_or_create_institution
-from app.services.portfolio import entity_account_filter, value_portfolio
+from app.services.portfolio import (
+    entity_account_filter,
+    rebuild_holdings_from_transactions,
+    value_portfolio,
+)
 
 ZERO = Decimal("0")
 ACCOUNT_KINDS = ["brokerage", "bank", "retirement", "wallet", "property", "manual", "other"]
+# Cost-basis method vocab (D-018; MASTER-DATA §2) — the single source refdata imports.
+COST_BASIS_METHODS = ["fifo", "average"]
 
 
 def _f(x: Decimal, p: int = 0) -> float:
@@ -78,6 +84,7 @@ async def accounts_report(session: AsyncSession, entity_id: int | None = None) -
             "institution": (a.institution.name if (a and a.institution) else None),
             "kind": a.kind if a else "brokerage",
             "currency": a.currency if a else base,
+            "cost_basis_method": a.cost_basis_method if a else "fifo",
             "value": _f(g["value"]),
             "holdings": g["count"],
             "asset_classes": [c for c, _v in classes[:4]],
@@ -97,7 +104,17 @@ async def accounts_report(session: AsyncSession, entity_id: int | None = None) -
 def _account_dict(a: Account) -> dict:
     return {"id": a.id, "name": a.name,
             "institution": (a.institution.name if a.institution else None),
-            "kind": a.kind, "currency": a.currency, "entity_id": a.entity_id}
+            "kind": a.kind, "currency": a.currency, "entity_id": a.entity_id,
+            "cost_basis_method": a.cost_basis_method}
+
+
+def _validate_cost_basis_method(raw) -> str:
+    """D-018 vocab enforcement — default fifo; out-of-vocab → honest 400."""
+    if raw is None:
+        return "fifo"
+    if raw not in COST_BASIS_METHODS:
+        raise ValueError(f"cost_basis_method must be one of {', '.join(COST_BASIS_METHODS)}.")
+    return raw
 
 
 async def _resolve_entity_id(session: AsyncSession, entity_id) -> int | None:
@@ -141,6 +158,8 @@ async def create_account(session: AsyncSession, data: dict) -> dict:
     a.institution = await _resolve_institution(session, data.get("institution"))
     if "entity_id" in data:
         a.entity_id = await _resolve_entity_id(session, data.get("entity_id"))
+    if "cost_basis_method" in data:
+        a.cost_basis_method = _validate_cost_basis_method(data.get("cost_basis_method"))
     session.add(a)
     await session.flush()
     return _account_dict(a)
@@ -156,12 +175,29 @@ async def update_account(session: AsyncSession, aid: int, data: dict) -> dict:
         a.institution = await _resolve_institution(session, data.get("institution"))
     if "entity_id" in data:
         a.entity_id = await _resolve_entity_id(session, data.get("entity_id"))
+    restatement = None
+    if "cost_basis_method" in data:
+        new_method = _validate_cost_basis_method(data.get("cost_basis_method"))
+        if new_method != a.cost_basis_method:
+            a.cost_basis_method = new_method
+            # D-018: changing the method on an account WITH history restates realised/unrealised
+            # figures. Rebuild the derived holdings and surface the restatement warning. (Nothing
+            # wired this before — an account mutation never triggered a rebuild.)
+            n_txns = (await session.execute(select(func.count()).select_from(Transaction)
+                                            .where(Transaction.account_id == aid))).scalar_one()
+            if n_txns:
+                await rebuild_holdings_from_transactions(session)
+                restatement = ("Cost-basis method changed — your realised and unrealised figures "
+                               "for this account will change.")
     if data.get("kind") in ACCOUNT_KINDS:
         a.kind = data["kind"]
     if data.get("currency"):
         a.currency = data["currency"].upper()[:3]
     await session.flush()
-    return _account_dict(a)
+    out = _account_dict(a)
+    if restatement:
+        out["restatement"] = restatement
+    return out
 
 
 async def delete_account(session: AsyncSession, aid: int) -> None:

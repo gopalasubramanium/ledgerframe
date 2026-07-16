@@ -27,6 +27,7 @@ class AccountIn(BaseModel):
     kind: str = "brokerage"
     currency: str | None = Field(default=None, max_length=3)
     entity_id: int | None = Field(default=None)  # §9-4/D-064 — assign the account to an entity
+    cost_basis_method: str | None = Field(default=None)  # §9-5/D-018 — fifo | average
 
 
 @router.get("/accounts")

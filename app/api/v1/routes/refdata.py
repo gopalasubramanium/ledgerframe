@@ -15,7 +15,7 @@ from fastapi import APIRouter
 from app.core.config import SUPPORTED_CURRENCIES
 from app.models import AssetClass, TxnType
 from app.schemas.common import EntitlementStatus, ValuationMethod
-from app.services.accounts import ACCOUNT_KINDS
+from app.services.accounts import ACCOUNT_KINDS, COST_BASIS_METHODS
 from app.services.estate import (
     CONTACT_ROLES,
     DOC_CATEGORIES,
@@ -80,7 +80,7 @@ _LIQUIDITY_PROFILE = ["listed", "redeemable", "locked", "illiquid", "manual"]  #
 _ENTITY_KIND = ["self", "spouse", "trust", "company", "other"]  # §2
 _CONTRIBUTION_FREQUENCY = ["monthly", "quarterly", "annual", "once"]  # §2
 _CONTRIBUTION_KIND = ["invest", "withdraw", "prepay"]  # §2
-_COST_BASIS_METHOD = ["fifo", "average"]  # §2 (v2 lanes; `spec` is ROADMAP R-6)
+_COST_BASIS_METHOD = COST_BASIS_METHODS  # §2 (v2 lanes; `spec` is ROADMAP R-6) — single source
 _POLICY_DIMENSION = ["asset_class", "currency", "region"]  # §2
 _REGION = ["India", "Singapore", "US", "Europe", "APAC", "Other"]  # §4 (D-083)
 _ID_TYPE = ["isin", "cusip", "figi", "sedol", "amfi_code", "kite_token",

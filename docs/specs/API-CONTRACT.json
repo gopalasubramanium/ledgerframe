@@ -65,6 +65,17 @@
       },
       "AccountIn": {
         "properties": {
+          "cost_basis_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis Method"
+          },
           "currency": {
             "anyOf": [
               {
