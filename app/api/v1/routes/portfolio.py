@@ -57,7 +57,7 @@ router = APIRouter()
 # cp1252 and garbles an em dash in a disclaimer ("â€""); prefixing the BOM makes it decode UTF-8. The
 # importer decodes utf-8-sig, so the BOM round-trips losslessly (transactions.csv / the template
 # re-import cleanly). Guarded at the byte level by tests/integration/test_csv_encoding.py.
-_UTF8_BOM = "﻿"
+_UTF8_BOM = "\ufeff"
 
 
 def _csv_response(body: str, filename: str) -> PlainTextResponse:

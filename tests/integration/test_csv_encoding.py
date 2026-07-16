@@ -44,8 +44,8 @@ async def test_csv_exports_still_parse_correctly_with_the_bom(app_client):
     for url in _CSV_ENDPOINTS:
         r = await app_client.get(url)
         text = r.content.decode("utf-8-sig")            # the importer's decoder — strips the BOM
-        assert not text.startswith("﻿"), f"{url}: utf-8-sig decode left a BOM"
+        assert not text.startswith("\ufeff"), f"{url}: utf-8-sig decode left a BOM"
         rows = list(csv.reader(io.StringIO(text)))
         assert rows, f"{url}: no rows parsed"
         first_cell = rows[0][0] if rows[0] else ""
-        assert not first_cell.startswith("﻿"), f"{url}: BOM glued to the first cell"
+        assert not first_cell.startswith("\ufeff"), f"{url}: BOM glued to the first cell"

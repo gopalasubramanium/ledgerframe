@@ -397,6 +397,17 @@ the theme/density matrix. Written as checkable statements.*
       surface exports a *report* that is deliberately not re-importable (e.g. a
       snapshot vs a ledger), the importer must **say so with one honest message**,
       never fail every row.
+- [ ] **EXPORT ARTIFACTS ARE GUARDED AT THE BYTE LEVEL, NOT ONLY THE CONTENT LEVEL — encoding is part
+      of honesty (page-reports §14rp-3 / §15).** A CSV/export artifact obeys the DESIGN-SYSTEM §5.1
+      "Export artifacts" standard — **titles human, data machine, disclaimers always, utf-8-sig always** —
+      and each half is a **separate guard**: a **content** guard reads the decoded text (disclaimers travel,
+      headers are human titles, figures present); a **byte** guard reads the raw bytes (`test_csv_encoding.py`
+      asserts the UTF-8 BOM `EF BB BF` on each artifact AND that it still parses WITH the BOM). page-reports'
+      disclaimer journey guards were green while Excel garbled an em dash, because the defect (BOM-less UTF-8
+      decoded as cp1252) lived **below** the text — a content guard cannot see it. *A guard that proves the
+      right characters does not prove the right bytes; an export that egresses to a spreadsheet needs both.*
+      An export figure that mirrors an on-screen section carries the section's disclaimer, and a
+      **now-snapshot** in a period artifact is labelled explicitly **as-of** (never reads as a period figure).
 - [ ] **Request-body assertion (Holdings §9-35):** for any payload assembled from
       UI state (row selections, include/exclude, filters), a test asserts the
       **actual request body** equals the intended data — not merely that a handler

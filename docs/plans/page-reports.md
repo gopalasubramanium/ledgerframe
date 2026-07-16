@@ -1,9 +1,11 @@
 # page-reports — Reports (`/reports`) build plan
 
-**Status: §9 RESOLVED (owner one-pass 2026-07-17) + §12 GEOMETRY GATE RATIFIED WITH CONDITIONS (owner
-2026-07-17). Phase 0 (export-honesty spine) DONE · Phase 1 (assembly) + Phase 2 (tests) + Phase 3a
-(scripted pre-pass) DONE — GREEN, AWAITING THE OWNER WALK (Phase 3b). Phase 3b NOT started (no
-self-certification). See §9 (rulings), §11 (Phase-0 evidence), §12 (gate ruling), §13 (build record).**
+**Status: DONE ✅ — page ACCEPTED (owner walk, 2026-07-17).** §9 RESOLVED (one-pass) · §12 GEOMETRY GATE
+RATIFIED WITH CONDITIONS · Phases 0/0a/1/2/3a DONE · **§14 owner walk (batch 1, three findings)
+FIXED + ACCEPTED (contingent on the batch, 2026-07-17)** · **§15 retrospective** written; lessons
+mechanised. **Amendment-I declined-exports ledger stays PENDING** (it closes at the Pack milestone, not
+here). See §9 (rulings), §11 (Phase-0 evidence), §12 (gate ruling), §13 (build record), **§14 (walk),
+§15 (retrospective)**.
 
 This plan is a *derivation from the specs*, not a fresh design. Every section cites the
 spec it is copied from. Where the specs under-specify, the item is a **NEEDS DECISION**
@@ -712,4 +714,77 @@ table shows one currency. If the owner wants a richer walk artifact (both base t
 stored `fx_to_base` + keep one excluded) — seed changes unit-verified per the precedent. Recorded here as
 a judgment item; not built (no self-certification; the seed already exercises the excluded case).
 
-**STOP — Phase 3a GREEN, AWAITING OWNER WALK. Phase 3b is NOT this session.**
+**Phase 3a GREEN → the owner walk (Phase 3b / §14) is below.**
+
+---
+
+## 14 — PHASE 3b OWNER ACCEPTANCE WALK — CLOSED ✅ (batch 1, three findings; owner ACCEPTED 2026-07-17)
+
+**The owner walked `/reports` with the REAL exports opened in LibreOffice + Excel (2026-07-17).** Three
+findings, everything else accepted. All three are **backend-first, one delta per commit, fail-first** —
+each pin updated in the same commit as its reshape; the artifact journey guards re-run **4/4 GREEN live**
+against the fixed backend. Acceptance is **CONTINGENT on this batch** (owner, 2026-07-17); the batch shipped.
+
+| # | Finding (owner walk) | Fix + fail-first proof | Commit / evidence |
+|---|----------------------|------------------------|-------------------|
+| **§14rp-1** | **statements.csv omitted the Realised/Unrealised figures its card renders.** An export must mirror its section. | statements.csv gains a **stat block**: **Realised (selected year)** as a YEAR-SCOPED row, **Unrealised** as an explicit **AS-OF row** (label carries the export date — *"open positions, as of YYYY-MM-DD"* — so a now-snapshot never reads as a year figure inside a yearly artifact). `statements_report` serves `as_of` (ISO). Realised is the **same one-derivation figure** as realised-gains.csv (§12rp-3 — one truth, two files, not two derivations). **Fail-first:** `test_statements_csv_carries_the_realised_and_unrealised_stat_block` RED on the pre-walk builder (wrote neither) → GREEN; the artifact journey guard extends to assert both rows in the downloaded file. | `a3be92b` · live guard log: *"disclaimer+realised+unrealised=present"* · screenshot `assets/reports-csv-fixed-2026-07-17.png` (Realised 804.50 SGD · Unrealised as-of 2026-07-16 103053.0 SGD) |
+| **§14rp-2** | **All four CSVs shipped internal snake_case column headers.** | realised-gains / tax-lots / attribution headers → **HUMAN TITLES** ("Sold date", "Holding days", "Long term", "Gain (native)", "Asset class", "Contribution %", …) from the GLOSSARY vocabulary where a term exists, plain English otherwise; statements was already human. **Deliberate counterpart recorded:** DATA CELLS stay **MACHINE NUMERICS** (raw numbers, ISO dates, yes/no) — display strings are a rendered-UI rule (D-105), **not** a data-artifact rule; a CSV must remain computable. Pins updated same commit + `test_report_csv_headers_are_human_but_data_cells_stay_machine` (both halves). **DESIGN-SYSTEM §5.1 "Export artifacts"** note added (titles human · data machine · disclaimers always · utf-8-sig always). **attribution.csv changed again** → dated addendum in `page-portfolio.md §12-6b` (export stays Portfolio-owned, §9-13). | `691d794` · screenshot columns visible |
+| **§14rp-3** | **Excel showed the em dash garbled (`â€"`)** — the CSVs shipped UTF-8 **without a BOM** and Excel decoded cp1252. | **ALL CSV endpoints emit `utf-8-sig`** through one home, `_csv_response(body, filename)` (the seven: statements · realised-gains · tax-lots · attribution · holdings · transactions · import-template). The importer already decodes `utf-8-sig`, so the BOM **round-trips losslessly** (transactions/template re-import guards post the BOM'd bytes and still import clean). **Fail-first at the BYTE level:** `tests/integration/test_csv_encoding.py` asserts each artifact's raw bytes begin with `EF BB BF` (RED today) **and** that the files still parse WITH the BOM. Line-0 header pins in the round-trip + holdings tests updated to decode `utf-8-sig`. | `750d99e` · live: all four downloads BOM=True, em dash decodes to **—** (cp1252-on-BOMless would show `â€"`) |
+
+**§12rp-4's testable promise now has three more teeth** — the subtitle *"Every export carries the same
+disclaimers you see here"* is guarded not only by the disclaimer journey guards but by the **stat block**,
+the **human-title pins**, and the **byte-level BOM guard**. All three findings mechanised, not just fixed.
+
+**Re-run at close (all GREEN):** artifact journey guards **4/4 live** (incl. the fail-first stubbed proof);
+backend suite **849 passed**; `make api-contract-check` **GREEN** (header/encoding changes are content, not
+shape — **no path change**, 131 paths); frontend `npm run check` **EXIT 0** from `frontend/` (251 vitest +
+262 Playwright — no frontend source touched by the batch). Four CSVs re-downloaded from the live backend and
+open-verified (BOM present, human headers, disclaimers travel, stat block, em dash correct).
+
+**Acceptance (owner, 2026-07-17):** `/reports` **ACCEPTED** — §14 batch 1 (three findings) FIXED + accepted
+(contingent on the batch, now shipped); everything else on the walk accepted. **No ⏸ remains** on this page.
+
+---
+
+## 15 — §14 STRIKE-CHECK + RETROSPECTIVE (lessons MECHANISED)
+
+**Strike-check — every §9 / §12 / §14 item verified against the ACTUAL diff (`8a2f1fe..HEAD`), a claim is
+not a change (§13-2 rule):**
+
+- **§9-4** tax-lots.csv route — present (`portfolio.py`, contract 131 paths). ✓
+- **§9-5** disclaimer reshapes (realised-gains / attribution / statements) — present + pinned; **now also
+  carry human headers (§14rp-2) + the BOM (§14rp-3)**. ✓
+- **§9-7 / Amdt J** served-default-365 read-only, no store built — unchanged. ✓
+- **§9-9** GLOSSARY "Report" — authored spec-first, **now flipped PROPOSED→RATIFIED** (this walk). ✓
+- **§12rp-1** all-years table + Year-scoped stat/export — shipped; the statements export now ALSO carries the
+  Realised/Unrealised stat block (§14rp-1) with the scoped year. **Control-group placement ratified as
+  shipped.** ✓
+- **§12rp-2** per-row Currency column on Realised P/L — shipped; the CSV's Currency header is human. ✓
+- **§12rp-3** one-truth (statements Realised == realised reader's current-FX total) — held; the stat block
+  writes the SAME derivation (804.50 both, live). ✓
+- **§12rp-4** protected copy + the testable subtitle promise — three new guards (§14). ✓
+- **§14rp-1/2/3** — the three walk findings, each FIXED + pinned (above). ✓
+- **Amendment-I (declined-exports ledger) is EXPLICITLY NOT CLOSED here** — it closes at the **Reports Pack
+  milestone** (the five Pack-delivered dispositions stay PENDING; `CURRENT.md` keeps the ledger line). ✓
+
+**Lessons MECHANISED (a lesson recorded but not mechanised recurs — the standing rule):**
+
+- **(a) Export artifacts are guarded at the BYTE level as well as the content level — encoding is part of
+  honesty (§14rp-3).** The disclaimer journey guards read the *decoded text* and were green while Excel
+  garbled the em dash, because the defect was **below** the text — the byte encoding. The **BOM test**
+  (`test_csv_encoding.py`, asserting `EF BB BF` on each artifact + a clean parse with the BOM) is the
+  mechanism. **Folded into `TEMPLATE-page-build.md §7`** as an artifact-guard line: *a content guard proves
+  the right characters; a byte guard proves the right bytes — an export needs both.*
+- **(b) An export mirrors its section — a figure rendered on a card belongs in that card's artifact, with
+  now-snapshots explicitly as-of (§14rp-1).** The earlier "keep realised in exactly one file" instinct
+  (§12rp-3) confused *one derivation* with *one file*; the owner wants the card's figures in the card's
+  export. The as-of label is what keeps a now-snapshot honest inside a period artifact. **Folded into the
+  DESIGN-SYSTEM §5.1 "Export artifacts" note** (disclaimers-always + as-of snapshots).
+- **(c) Titles human, data machine (§14rp-2)** — D-105's pre-formatted-display-string rule is a *rendered-UI*
+  rule, not a *data-artifact* rule. A CSV header is UI (name it in the user's words); a CSV cell is data
+  (keep it computable). **Folded into the DESIGN-SYSTEM §5.1 "Export artifacts" note** + pinned both halves.
+
+**One home for the honesty:** the three rules (titles human · data machine · disclaimers always ·
+utf-8-sig always) live in **DESIGN-SYSTEM §5.1 "Export artifacts"** and are enforced by `_csv_response`
+(BOM) + the same-batch code tests (headers/disclaimers/stat block). The next export page copies the note,
+not a per-endpoint habit.

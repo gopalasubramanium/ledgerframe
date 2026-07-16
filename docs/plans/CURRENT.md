@@ -1093,7 +1093,57 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
-## REPORTS — §9 CLOSED ✅ · §12 RATIFIED WITH CONDITIONS ✅ · Phase 1/2/3a GREEN ⏳ AWAITING OWNER WALK (2026-07-17)
+## REPORTS — DONE ✅ (page ACCEPTED, owner, 2026-07-17)
+
+**`/reports` is complete and owner-accepted.** The owner walked the page with the REAL exports opened in
+**LibreOffice + Excel** (2026-07-17); **§14 batch 1 — three findings — FIXED + accepted (contingent on the
+batch, now shipped)**, everything else accepted. Full record: **`page-reports.md` §14 (walk) + §15
+(retrospective)**; central close row in **`RATIFICATION.md §6`**.
+
+**The three walk findings (backend-first, one delta per commit, fail-first):**
+- **§14rp-1** (`a3be92b`) — statements.csv gains the **Realised (year-scoped) + Unrealised (explicit as-of)
+  stat block** its card renders; realised stays **one derivation** (§12rp-3), rendered in two files. Fail-first
+  RED → GREEN; the artifact journey guard asserts both rows.
+- **§14rp-2** (`691d794`) — the four CSVs' column headers → **human titles**; **data cells stay machine
+  numerics** (D-105 is a rendered-UI rule, not a data-artifact rule). DESIGN-SYSTEM §5.1 "Export artifacts"
+  note; attribution.csv addendum in page-portfolio §12-6b.
+- **§14rp-3** (`750d99e`) — **all seven CSV endpoints ship `utf-8-sig`** (BOM) so Excel stops garbling the em
+  dash; the importer decodes utf-8-sig so the BOM **round-trips losslessly**. Byte-level fail-first BOM guard
+  (`test_csv_encoding.py`).
+
+**Platform standard delivered:** **Export artifacts — one honesty standard** (DESIGN-SYSTEM §5.1, RATIFIED):
+*titles human · data machine · disclaimers always · utf-8-sig always*, enforced by `_csv_response` + same-batch
+code tests; the **byte-level export guard** folded into TEMPLATE §7. GLOSSARY: **Report** (RATIFIED).
+
+**Re-run at close (all GREEN):** artifact journey guards **4/4 live** (incl. the fail-first stubbed proof);
+backend **849 passed**; `api-contract-check` **GREEN** (content/encoding only — **no path change**, 131 paths);
+frontend `npm run check` **EXIT 0** from `frontend/`. Four CSVs re-downloaded + open-verified (BOM, human
+headers, disclaimers, stat block, em dash correct); evidence `docs/plans/assets/reports-csv-fixed-2026-07-17.png`.
+
+**⚑ Amendment-I PENDING LEDGER STAYS OPEN** — the five Pack-delivered declined exports (Net worth / Review /
+Scenarios / Cash flow / Policy) close **only at the Reports Pack milestone**; accepting the Reports page does
+**not** close that debt (see the ledger block below).
+
+**Close bookkeeping — changed-file table (`git diff --stat 8a2f1fe..HEAD`, the Accounts close as baseline, grouped):**
+
+| Area | Files | Highlights |
+|------|-------|------------|
+| **Backend** (3) | `app/services/statements.py` · `app/services/tax.py` · `app/api/v1/routes/portfolio.py` | §14rp-1 statements `as_of` + stat block; §14rp-2 human CSV headers; §14rp-3 `_csv_response` BOM helper (7 endpoints) + Phase-0 disclaimer reshapes + tax-lots.csv add |
+| **Tests** (6) | `tests/integration/` — `test_csv_encoding.py` (new, byte-level BOM), `test_statements.py`, `test_tax.py`, `test_attribution_api.py`, `test_csv_roundtrip.py`, `test_holdings_phase0b.py` | fail-first pins for every reshape (stat block · human headers/machine cells · BOM); round-trip/holdings line-0 pins decode utf-8-sig |
+| **Frontend** (20) | `routes/Reports.*` + `ReportsMockup` + `api/reports.ts`; `nav.ts`/`AppRoutes`/`KitchenSink`; `ui/BrandLockup` + brand chrome (P-5); e2e `overflow`/`mobile-brand`/`reports-smoke`/`reports-artifact-smoke`; `mocks/glossary.ts`; shell tests | the page (3 D-100 cards), the geometry specimen, the artifact + smoke guards; P-5 mobile brand batched here; `npm run check` EXIT 0 |
+| **Specs** (3) | `API-CONTRACT.json` + `openapi.json` (131 paths — tax-lots.csv); `DESIGN-SYSTEM.md` (§5.1 Export artifacts note); `GLOSSARY.md` (Report term) | contract regen same-commit (Phase 0); the export-honesty standard |
+| **Plans/audit** (5) | `page-reports.md` (§1–§15) · `CURRENT.md` · `RATIFICATION.md §6` · `TEMPLATE-page-build.md` (§7 byte-level export guard) · `page-portfolio.md` (attribution addendum) · assets | the close records + the mechanised lessons |
+
+**NEXT:**
+1. **The Reports Pack milestone** (D-038/D-061 — its own plan file, **PLAN ONLY, verify-first**; §9-1/9-2/9-12
+   rulings already made; server-rendered print-optimised HTML at `/reports/pack`, server-composed per-entity
+   sections, no new PDF dependency without an ADR; **the Amendment-I declined-exports ledger closes there**).
+2. Then **Settings**, **Help · Legal**, **AI-surfaces**, **Voice** (R-32, definition still owed).
+3. **Gates C→F**, then **tag v2.0.0**.
+
+*(Prior Reports statuses below, retained for the record — superseded by the DONE entry above.)*
+
+## REPORTS — §12 RATIFIED WITH CONDITIONS ✅ · Phase 1/2/3a GREEN (superseded by DONE ✅ above) (2026-07-17)
 
 **Geometry gate RATIFIED WITH CONDITIONS (owner 2026-07-17, page-reports §12): §12rp-1 (Statements table
 all-years; the Year control scopes the Realised stat + `statements.csv` export), §12rp-2 (per-row Currency
@@ -1372,10 +1422,13 @@ the specimen geometry by looking (`/kitchen-sink`). Out of scope until then: nav
 `overflow.spec.ts` route-array additions (all three), the no-money-string render guard (ships Phase 2).
 
 ## NEXT
-2. Then the standing queue, unchanged: **Accounts** (D-065, `entity_id` scoping; **also owns the Institution
-   master §9-5 defers to it**) · **Reports (+ Pack)** · **Settings** · **Help · Legal** · the **AI-surfaces
-   milestone** · **Voice** (definition still owed — only after the owner defines it, ROADMAP **R-32**) · then
-   release **Gates C→F** and tag `v2.0.0`.
+*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. The live NEXT is under the Reports
+DONE block.)*
+1. **The Reports Pack milestone** (D-038/D-061 — its own plan file, **PLAN ONLY, verify-first**; the
+   **Amendment-I declined-exports ledger closes there**).
+2. Then the standing queue, unchanged: **Settings** · **Help · Legal** · the **AI-surfaces milestone** ·
+   **Voice** (definition still owed — only after the owner defines it, ROADMAP **R-32**) · then release
+   **Gates C→F** and tag `v2.0.0`.
 
 **Release posture unchanged (RD-9 Amendment 3):** the release gate is **FULL COMPLETION**; Gates C–F stay
 dormant until the owner accepts the full set. **Standing, owner-only:** the **CLA counsel review** before the
