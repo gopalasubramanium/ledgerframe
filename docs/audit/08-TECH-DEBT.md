@@ -267,3 +267,25 @@ regression. **Not touched by the insurance build** (no insurance commit changes 
 one-line defensive guard (`obs?.obligations?.length` or an early `obligations ?? []`) **on an accepted page**,
 so it belongs in **its own hygiene commit**, not mid-insurance-build (the "make lint RED on trunk" precedent,
 page-heatmap close). Until then the frontend `npm run check` exits non-zero on this alone.
+
+---
+
+## CSV import silently attributes to the first account — `csv_import.py:428-438` (recorded 2026-07-16, page-accounts §9-12 Recording Note) — OPEN
+
+**RECORDED, NOT FIXED** — the owner ruled §9-12 to keep the import↔account-creation seam (account
+**creation** lives only on `/accounts`) and to flag this fallback as a Holdings-page follow-up, not to
+re-solve it during the Accounts backend.
+
+`/portfolio/import/{csv,commit}` take an optional `?account_id`; the frontend import UI passes **none**
+(`holdings.ts:186-192`; `Holdings.tsx` `ImportDialog`). `_ensure_account` (`csv_import.py:428-438`) then
+**silently falls back to the first account**, else **auto-creates an `"Imported"/brokerage` account**.
+
+**Risk:** mis-attribution — imported holdings land on whatever account happens to sort first (or a
+surprise auto-created one), with **no honest signal** to the user that the attribution was guessed. This
+is the same class of silent-fallback honesty gap the platform elsewhere converts to an explicit choice or
+an honest message (Guarantee 3).
+
+**Follow-up home:** the **Holdings page** (`page-holdings.md`) — the import UI should make the target
+account an **explicit choice** (an account picker, optionally linking to `/accounts` to create one first),
+so the attribution is chosen, never guessed. Not an Accounts-page capability (no new capability was added
+to Accounts by recording this).

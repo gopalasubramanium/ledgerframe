@@ -1093,7 +1093,37 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
-## ACCOUNTS — PLAN DRAFTED, awaiting §9 one-pass (2026-07-16)
+## ACCOUNTS — §9 CLOSED one-pass · PHASE 0 DONE (2026-07-16) · specimen next
+
+**§9 RESOLVED (owner one-pass, 2026-07-16): ALL FOURTEEN items ACCEPTED as proposed + Amendments F/G/H +
+one Recording Note.** Recorded verbatim in `page-accounts.md §9` (each row carries its → Ruling; nothing
+struck). **Phase 0 (backend-first) COMPLETE** — 11 commits (`837eaec`…`a13f360`), one delta per commit,
+each fail-first RED→GREEN, contract regen same-commit for shape changes; `make api-contract-check` green;
+ruff clean; frontend `npm run check` (from `frontend/`) **EXIT 0** (234 passed). Evidence table in
+`page-accounts.md §11`.
+
+**Phase 0 deltas delivered (§9 item → commit):**
+1. **[9-1]** `institutions` master table + typed CRUD (first user-extensible master; Amendment F uniqueness — trimmed/whitespace/case-insensitive `name_key`, first-seen casing). `a2f1c9d47b60`.
+2. **[9-2]** `POST /institutions/merge` — user-driven, no fuzzy; re-points both FK cols + deletes duplicate in one txn.
+3. **[9-1+F]** Three-step fold migration `b3e2f1a9c740`: seed master from BOTH `accounts.institution` + `insurance_policy.insurer` → `institution_id` FKs → DROP both String cols (native ALTER; child FKs safe). Readers serve name via join; writers resolve-or-create. **Insurance delta note `page-insurance.md §16`** + suites re-run.
+4. **[9-4]** `AccountIn.entity_id` — FK-validated, honest 400; served in `_account_dict`.
+5. **[9-5]** `AccountIn.cost_basis_method` (fifo/average, single-sourced to /refdata); method-change on an account w/ history → `rebuild_holdings_from_transactions` + `restatement` warning (proven: AAPL FIFO 600 → avg 450).
+6. **[9-6+H]** `ENTITY_KINDS` graduated to the single-source /refdata pattern (MASTER-DATA §2 note); Entity CRUD (`POST/PATCH/DELETE /entities`, kind vocab→400, DELETE FK-blocked); **§9-7 no "Household" special-casing**.
+7. **[9-9]** Kind + currency write-enforcement — out-of-vocab → honest 400 (no silent coerce).
+8. **[9-10]** `accounts_report` served `value_display`/`total_display` (platform display path; `_f` whole-unit dropped); `base_currency` already served.
+9. **[9-11+G]** `GET /portfolio/holdings?account_id=` reader (filter-not-recompute, `?symbol` precedent). **Holdings-page chip is Phase 1.**
+10. **[9-13]** `_VOCAB_LABEL_OVERRIDES` FIFO fix ("Fifo"→"FIFO"); 4 GLOSSARY terms (Cost-basis method · Account kind · Rollup · Merge) spec-first + popover mirror (parity green).
+11. **[9-12]** CSV-import silent-first-account fallback → **08-TECH-DEBT entry** (`csv_import.py:428-438`, Holdings follow-up) — recorded, not fixed. + this CURRENT.md flip.
+
+**NEXT: Phase 0a — the geometry specimen** (worklist: accounts spine + Entity card + Institution surface;
+honesty frames incl. empty accounts, a delete-blocked entity, long institution names, a "DBS" vs "DBS
+Bank" merge pair) + the §9-3 MasterSelect-data-source ratification at `/kitchen-sink`. **No assembly until
+the owner ratifies the geometry.** Phase-1 carries the deferred halves: the Holdings-page account chip
+(Amendment G), the Insurance typeahead→MasterSelect swap (§9-3), and demo-seed entity creation (§10-5).
+
+---
+
+### ACCOUNTS — PLAN DRAFTED, awaited §9 one-pass (2026-07-16, SUPERSEDED by the block above)
 
 **`docs/plans/page-accounts.md` written through §10 (verify-first) + §9 (NEEDS DECISION). No code.**
 The largest remaining page milestone — **two masters land here** (Entity CRUD D-065; Institution

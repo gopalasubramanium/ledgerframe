@@ -481,8 +481,23 @@ it, with cites. Contract regen (`make api-contract-check`) and both suites' stat
 | 8 | `accounts_report` `*_display` + `base_currency` | 9-10 | `test_accounts_write.py` RED — report served raw floats only (no `value_display`/`total_display`) | per-account `value_display` + envelope `total_display` via `format_money_display` (base rollup, bare §12in-1; native codes ride `currencies` chips); whole-unit `_f` dropped (dead-code removed), `value`/`total` now 2dp; `base_currency` already served; 8/8 GREEN | n/a (untyped route, no shape change) |
 | 9 | `GET /portfolio/holdings?account_id=` | 9-11+G | `test_holdings_account_scope.py` RED — unknown param ignored → scoped == all portfolio | `account_id` query filters the canonical reader's output on `h.account_id` (the `?symbol` precedent, filter-not-recompute); strict non-empty subset; unknown id → []; 2/2 GREEN. Reader half only — Holdings-page chip is Phase 1 (Amendment G) | regen ✅ +account_id param |
 | 10 | GLOSSARY 4 terms + FIFO label override | 9-13 | `test_refdata_cost_basis_label.py` RED — served `fifo` label "Fifo" (titleizer) | `_VOCAB_LABEL_OVERRIDES["cost_basis_method"]["fifo"]="FIFO"` → GREEN; 4 terms (Cost-basis method · Account kind · Rollup · Merge) added to GLOSSARY.md **then** the popover mirror (parity 49/49 GREEN); Institution glossary row de-staled to the FK/master | n/a (refdata serves a free dict — value not shape) |
-| 11 | 08-TECH-DEBT entry + CURRENT.md flip | 9-12 | _pending_ | _pending_ | n/a |
+| 11 | 08-TECH-DEBT entry + CURRENT.md flip | 9-12 | n/a (recording, not a code delta) | 08-TECH-DEBT entry for the silent-first-account import fallback (`csv_import.py:428-438`, mis-attribution risk, Holdings follow-up); CURRENT.md flipped to §9 CLOSED / Phase 0 DONE / specimen next | n/a |
 
-**Suites / gates (filled at Phase 0 close):** backend `pytest` total · frontend `npm run check` EXIT
-CODE (from `frontend/`) · `make api-contract-check` state · Insurance unit + smoke re-run result (the
-accepted-page touch, Amendment F).
+**Suites / gates (Phase 0 close, 2026-07-16):**
+- **Backend `pytest`: 825 passed** (exit 0) — up from 803 at the start of Phase 0 (+22: institutions
+  CRUD/merge, the isolated migration fold, entities CRUD, account write path, holdings account-scope,
+  FIFO label). Ruff clean.
+- **Frontend `npm run check` (run from `frontend/`): EXIT 0** — 234 passed (touched only
+  `frontend/src/mocks/glossary.ts`; glossary-parity guard green).
+- **`make api-contract-check`: green** — regenerated same-commit for every shape change
+  (127 → **130 paths**: +`/institutions`, +`/institutions/merge`, +`/entities` write routes;
+  `AccountIn` +`entity_id`/`cost_basis_method`; `/portfolio/holdings` +`account_id`).
+- **Accepted-page touch (Amendment F):** Insurance `test_insurance_phase1` + `test_insurance_walk1` +
+  `test_statements` **re-run GREEN**; `/insurance` still serves `insurer` (name via the join). Delta note
+  in `page-insurance.md §16`. (The `*-smoke.spec.ts` live re-runs belong to the Phase-1 batch that swaps
+  the Insurance typeahead for the MasterSelect — §9-3.)
+- **DB migrations:** single alembic head (`b3e2f1a9c740`); `test_db_migrate` 24/24 (native ALTER fold,
+  child FKs intact).
+
+**STOP — Phase 0 complete. No specimen, no assembly this session; Phase 0a (geometry specimen + §9-3
+MasterSelect-data-source ratification) is the next session.**
