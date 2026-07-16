@@ -32,11 +32,15 @@ async def test_transactions_export_reimports_losslessly(app_client):
     assert exported.status_code == 200
     assert exported.headers["content-type"].startswith("text/csv")
     text = exported.text
-    # Header is exactly the import schema.
-    assert text.splitlines()[0] == "date,symbol,type,quantity,price,fees,taxes,currency,note,asset_class,country"
+    # §14rp-3: the file ships utf-8-sig (a BOM) so Excel decodes UTF-8; the importer strips it on
+    # re-import (proven below by posting the BOM'd bytes), so the round-trip stays LOSSLESS. Header
+    # is exactly the import schema once the BOM is decoded away.
+    assert exported.content.startswith(b"\xef\xbb\xbf")   # utf-8-sig BOM present
+    assert exported.content.decode("utf-8-sig").splitlines()[0] == \
+        "date,symbol,type,quantity,price,fees,taxes,currency,note,asset_class,country"
 
     preview = (await app_client.post(
-        "/api/v1/portfolio/import/preview", files=_file(text.encode())
+        "/api/v1/portfolio/import/preview", files=_file(text.encode())   # BOM'd bytes → importer strips
     )).json()
     # The whole point: the app's own export parses with zero errors and zero fixes.
     assert "format_error" not in preview
@@ -70,7 +74,9 @@ async def test_generated_template_is_comprehensive_and_importable(app_client):
     per asset_class × permitted type) and is itself importable (round-trips clean)."""
     r = await app_client.get("/api/v1/portfolio/import/template")
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
-    text = r.text
+    # §14rp-3: utf-8-sig (BOM) present; decode it away for parsing (the importer does the same).
+    assert r.content.startswith(b"\xef\xbb\xbf")
+    text = r.content.decode("utf-8-sig")
     assert text.splitlines()[0] == "date,symbol,type,quantity,price,fees,taxes,currency,note,asset_class,country"
 
     # Matches the matrix exactly (no drift): every offered combination has a row.

@@ -64,7 +64,9 @@ async def test_holdings_csv_is_server_side(app_client):
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/csv")
     assert "attachment" in r.headers.get("content-disposition", "")
-    text = r.text
+    # §14rp-3: utf-8-sig (BOM) so Excel decodes UTF-8; decode it away for the header assertion.
+    assert r.content.startswith(b"\xef\xbb\xbf")
+    text = r.content.decode("utf-8-sig")
     assert text.splitlines()[0].startswith("symbol,name,asset_class,currency,quantity,price")
     assert "Gold bar" in text
 

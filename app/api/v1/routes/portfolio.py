@@ -53,6 +53,20 @@ from app.services.portfolio import (
 
 router = APIRouter()
 
+# §14rp-3 (page-reports owner walk 2026-07-17): the UTF-8 BOM. Excel decodes a BOM-less UTF-8 CSV as
+# cp1252 and garbles an em dash in a disclaimer ("â€""); prefixing the BOM makes it decode UTF-8. The
+# importer decodes utf-8-sig, so the BOM round-trips losslessly (transactions.csv / the template
+# re-import cleanly). Guarded at the byte level by tests/integration/test_csv_encoding.py.
+_UTF8_BOM = "﻿"
+
+
+def _csv_response(body: str, filename: str) -> PlainTextResponse:
+    """The ONE server home for every CSV export (D-050 / P-5): UTF-8 WITH a BOM (utf-8-sig) + the
+    attachment disposition. Titles-human/data-machine + disclaimers-always are the builders' job;
+    utf-8-sig-always is enforced here so no endpoint can forget it (DESIGN-SYSTEM §5.1)."""
+    return PlainTextResponse(_UTF8_BOM + body, media_type="text/csv", headers={
+        "Content-Disposition": f'attachment; filename="{filename}"'})
+
 
 def _hv(h) -> dict:
     method = getattr(h, "valuation_method", ValuationMethod.MARKET_QUOTE.value)
@@ -189,8 +203,7 @@ async def portfolio_holdings_csv(session: AsyncSession = Depends(get_db)) -> Pla
     the file; cells are formula-injection sanitised in `holdings_csv`."""
     base = get_settings().base_currency
     val = await value_portfolio(session, base)
-    return PlainTextResponse(holdings_csv(val), media_type="text/csv", headers={
-        "Content-Disposition": 'attachment; filename="ledgerframe-holdings.csv"'})
+    return _csv_response(holdings_csv(val), "ledgerframe-holdings.csv")
 
 
 @router.get("/portfolio/transactions.csv", response_class=PlainTextResponse)
@@ -198,8 +211,7 @@ async def portfolio_transactions_csv(session: AsyncSession = Depends(get_db)) ->
     """Server-side transactions export (D-050 / P-5). Columns are exactly the import
     schema so this file re-imports losslessly (round-trip contract). FULL dataset —
     ignores the ledger's UI window; the client never generates the file."""
-    return PlainTextResponse(await export_transactions_csv(session), media_type="text/csv", headers={
-        "Content-Disposition": 'attachment; filename="ledgerframe-transactions.csv"'})
+    return _csv_response(await export_transactions_csv(session), "ledgerframe-transactions.csv")
 
 
 @router.get("/portfolio/pricing-health")
@@ -379,8 +391,7 @@ async def portfolio_attribution_csv(
             ])
         w.writerow(["Residual (income, realised, closed)", "", "", "", attr.get("residual_pct")])
         w.writerow(["Headline return", "", "", "", attr.get("headline_return_pct")])
-    return PlainTextResponse(buf.getvalue(), media_type="text/csv", headers={
-        "Content-Disposition": 'attachment; filename="attribution.csv"'})
+    return _csv_response(buf.getvalue(), "attribution.csv")
 
 
 class TransactionIn(BaseModel):
@@ -827,8 +838,7 @@ async def csv_template() -> PlainTextResponse:
     matrix at request time (one example row per asset_class × permitted txn_type,
     valid vocabulary values, the exact import schema); can never drift from the
     contract, and is itself importable."""
-    return PlainTextResponse(build_import_template(), media_type="text/csv", headers={
-        "Content-Disposition": 'attachment; filename="ledgerframe-import-template.csv"'})
+    return _csv_response(build_import_template(), "ledgerframe-import-template.csv")
 
 
 @router.post("/portfolio/import/csv", dependencies=[Depends(require_auth)])
@@ -1008,8 +1018,7 @@ async def tax_lots_export(long_term_days: int = Query(default=365, ge=0, le=3660
     from app.services.tax import tax_lots_csv, tax_lots_report
 
     report = await tax_lots_report(session, long_term_days=long_term_days, entity_id=entity_id)
-    return PlainTextResponse(tax_lots_csv(report), media_type="text/csv", headers={
-        "Content-Disposition": 'attachment; filename="tax-lots.csv"'})
+    return _csv_response(tax_lots_csv(report), "tax-lots.csv")
 
 
 @router.get("/portfolio/realised-gains.csv", response_class=PlainTextResponse)
@@ -1021,8 +1030,7 @@ async def realised_gains_export(year: int | None = Query(default=None),
 
     report = await realised_gains_report(session, year=year, long_term_days=long_term_days, entity_id=entity_id)
     csv_text = realised_gains_csv(report)
-    return PlainTextResponse(csv_text, media_type="text/csv", headers={
-        "Content-Disposition": f'attachment; filename="realised-gains-{report["year"]}.csv"'})
+    return _csv_response(csv_text, f'realised-gains-{report["year"]}.csv')
 
 
 @router.get("/portfolio/scenarios")
@@ -1086,8 +1094,7 @@ async def statements_export(year: int | None = Query(default=None),
     # §12rp-1 (page-reports): the selected year rides the filename too (parity with realised-gains),
     # so the Year control's scope is visible on the downloaded artifact, not only inside it.
     fname = f'ledgerframe-statements-{rep["year"]}.csv'
-    return PlainTextResponse(statements_csv(rep), media_type="text/csv", headers={
-        "Content-Disposition": f'attachment; filename="{fname}"'})
+    return _csv_response(statements_csv(rep), fname)
 
 
 @router.get("/portfolio/cost-of-ownership")
