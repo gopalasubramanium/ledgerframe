@@ -10,11 +10,14 @@ never auto-collapsed here.
 from __future__ import annotations
 
 
-async def test_institution_master_starts_empty(app_client):
-    # D-008: the master starts empty; no accounts/policies are seeded into it yet (commit 3).
+async def test_institution_master_lists_seeded_insurers(app_client):
+    # Post-commit-3 the master is FK'd from insurance too, so the demo insurers seed it
+    # (Amendment F fold). A brand-new name is absent until created.
     r = await app_client.get("/api/v1/institutions")
     assert r.status_code == 200
-    assert r.json()["institutions"] == []
+    names = {i["name"] for i in r.json()["institutions"]}
+    assert "AIA Singapore" in names
+    assert "Nonexistent Bank XYZ" not in names
 
 
 async def test_institution_crud_and_first_seen_casing_collapse(app_client):
@@ -29,18 +32,19 @@ async def test_institution_crud_and_first_seen_casing_collapse(app_client):
     assert c2.status_code == 200
     assert c2.json()["id"] == iid and c2.json()["name"] == "DBS"
 
-    # ...and it is still one row.
+    # ...and it is exactly one row for DBS (the master may already hold demo-seeded insurers).
     lst = (await app_client.get("/api/v1/institutions")).json()["institutions"]
-    assert [i["name"] for i in lst] == ["DBS"]
+    assert [i["name"] for i in lst].count("DBS") == 1
 
     # Rename to a genuinely different (fuzzy) name — user-driven, allowed.
     p = await app_client.patch(f"/api/v1/institutions/{iid}", json={"name": "DBS Bank"})
     assert p.status_code == 200 and p.json()["name"] == "DBS Bank"
 
-    # Delete — no FK references exist yet (commit 1); the FK-block is proven after commit 3.
+    # Delete — this row has no FK references (no account/policy points at it), so it deletes.
     d = await app_client.delete(f"/api/v1/institutions/{iid}")
     assert d.status_code == 200
-    assert (await app_client.get("/api/v1/institutions")).json()["institutions"] == []
+    remaining = {i["name"] for i in (await app_client.get("/api/v1/institutions")).json()["institutions"]}
+    assert "DBS Bank" not in remaining
 
 
 async def test_institution_rename_blocks_name_clash(app_client):
@@ -70,7 +74,7 @@ async def test_institution_merge_folds_duplicate_into_survivor(app_client):
 
     # The duplicate row is gone; the survivor remains — one transaction.
     names = [i["name"] for i in (await app_client.get("/api/v1/institutions")).json()["institutions"]]
-    assert names == ["DBS"]
+    assert "DBS" in names and "DBS Bank" not in names
     # (Re-pointing of referencing accounts/policies is proven in commit 3, once the
     #  institution_id FK columns exist — see test_institution_migration.py.)
 

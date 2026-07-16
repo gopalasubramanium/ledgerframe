@@ -979,3 +979,26 @@ platform ripple this milestone is why the changed-file set is wide. Verified aga
 
 **No open Insurance blockers remain.** The next milestone is **Estate** (`page-estate.md`, PLAN ONLY,
 verify-first — same shape as Insurance).
+
+---
+
+### 16. DELTA NOTE — Institution master supersedes the free-text insurer (2026-07-16, page-accounts §9-1 / Amendment F)
+
+**What changed and why.** Accounts' Phase-0 commit 3 folded `insurance_policy.insurer` (a free
+`String(120)`) into the shared **Institution master** (D-008): the column was **seeded into the master
+from its distinct values** (trimmed, whitespace-collapsed, case-insensitive; first-seen casing wins —
+Amendment F), re-pointed to a nullable **`institution_id` FK**, and then **DROPPED**. This is the
+accepted Insurance page's data changing shape, recorded here per the fold-then-drop discipline.
+
+**Served shape is UNCHANGED (read-compat asserted).** `/insurance` still serves `insurer` as the
+**name** — now via the `InsurancePolicy.institution` join (eager-loaded). The write path (`PolicyIn.
+insurer`) still accepts a **name**; it now **resolves-or-creates** the master row (upsert per Amendment
+F) instead of writing a raw string — so the current editor keeps working until the Phase-1 MasterSelect
+swap supersedes the client-side typeahead (`Insurance.tsx:131-133`). The demo seed resolves its 8
+insurers into the master.
+
+**Guards re-run (accepted-page touch).** `test_insurance_phase1.py`, `test_insurance_walk1.py`,
+`test_statements.py` GREEN after the change (the insurer/name shape held); the new
+`test_institution_migration.py` asserts `/insurance` still serves the insurer name via the join.
+**Frontend `Insurance.tsx` is unchanged this commit** (still posts/reads `insurer` as a name); the
+typeahead→MasterSelect swap + its smoke re-run is **Phase-1 work** (§9-3), noted for that batch.

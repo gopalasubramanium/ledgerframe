@@ -145,7 +145,12 @@ class Account(Base):
     name: Mapped[str] = mapped_column(String(120))
     kind: Mapped[str] = mapped_column(String(40), default="brokerage")
     currency: Mapped[str] = mapped_column(String(3), default="SGD")
-    institution: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # D-008 (page-accounts §9-1): the free-text ``institution`` String column was FOLDED into the
+    # Institution master and DROPPED (Phase-0 commit 3). The name is now reached through this FK;
+    # readers serve ``institution.name`` and writers resolve-or-create the master row from a name.
+    institution_id: Mapped[int | None] = mapped_column(
+        ForeignKey("institutions.id"), nullable=True, index=True)
+    institution: Mapped[Institution | None] = relationship()
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
     # Phase 4.1: ownership entity (nullable FK). Schema only in Unit A — nothing reads it
     # yet; a default entity owns every account post-migration, so figures are unchanged.
@@ -540,7 +545,12 @@ class InsurancePolicy(Base):
     __tablename__ = "insurance_policy"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    insurer: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # D-008 (page-accounts §9-1): the free-text ``insurer`` String column was FOLDED into the
+    # shared Institution master and DROPPED (Phase-0 commit 3). ``/insurance`` still serves the
+    # ``insurer`` NAME — now via this join; the editor resolves-or-creates the master row.
+    institution_id: Mapped[int | None] = mapped_column(
+        ForeignKey("institutions.id"), nullable=True, index=True)
+    institution: Mapped[Institution | None] = relationship()
     policy_type: Mapped[str] = mapped_column(String(30), default="other")
     policy_number: Mapped[str | None] = mapped_column(String(80), nullable=True)
     insured_person: Mapped[str | None] = mapped_column(String(120), nullable=True)

@@ -14,10 +14,12 @@ from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
 from app.models import Account, Entity, Transaction
 from app.services.confidence import score_holding
+from app.services.institutions import get_or_create_institution
 from app.services.portfolio import entity_account_filter, value_portfolio
 
 ZERO = Decimal("0")
@@ -31,7 +33,7 @@ def _f(x: Decimal, p: int = 0) -> float:
 async def accounts_report(session: AsyncSession, entity_id: int | None = None) -> dict:
     base = get_settings().base_currency
     val = await value_portfolio(session, base, entity_id=entity_id)
-    acc_q = select(Account)
+    acc_q = select(Account).options(selectinload(Account.institution))  # name served via the join
     if entity_id is not None:  # §4.1: only this entity's accounts appear (incl. empty ones)
         acc_q = acc_q.where(Account.entity_id == entity_id)
     accounts = {a.id: a for a in (await session.execute(acc_q)).scalars()}
@@ -73,7 +75,7 @@ async def accounts_report(session: AsyncSession, entity_id: int | None = None) -
         out.append({
             "id": aid,
             "name": a.name if a else f"Account #{aid}",
-            "institution": a.institution if a else None,
+            "institution": (a.institution.name if (a and a.institution) else None),
             "kind": a.kind if a else "brokerage",
             "currency": a.currency if a else base,
             "value": _f(g["value"]),
@@ -93,11 +95,14 @@ async def accounts_report(session: AsyncSession, entity_id: int | None = None) -
 
 # --- account management --------------------------------------------------- #
 def _account_dict(a: Account) -> dict:
-    return {"id": a.id, "name": a.name, "institution": a.institution, "kind": a.kind, "currency": a.currency}
+    return {"id": a.id, "name": a.name,
+            "institution": (a.institution.name if a.institution else None),
+            "kind": a.kind, "currency": a.currency}
 
 
 async def list_accounts(session: AsyncSession) -> list[dict]:
-    rows = (await session.execute(select(Account).order_by(Account.name))).scalars().all()
+    rows = (await session.execute(
+        select(Account).options(selectinload(Account.institution)).order_by(Account.name))).scalars().all()
     return [_account_dict(a) for a in rows]
 
 
@@ -108,13 +113,22 @@ async def list_entities(session: AsyncSession) -> list[dict]:
     return [{"id": e.id, "name": e.name, "kind": e.kind} for e in rows]
 
 
+async def _resolve_institution(session: AsyncSession, raw_name):
+    """Resolve a free-text institution NAME to a master row (resolve-or-create, Amendment F),
+    or None when blank. Keeps the account/insurance editors working on a name until the
+    Phase-1 MasterSelect swap (§9-1 write path)."""
+    if not (raw_name and str(raw_name).strip()):
+        return None
+    return await get_or_create_institution(session, raw_name)
+
+
 async def create_account(session: AsyncSession, data: dict) -> dict:
     a = Account(
         name=(data.get("name") or "Account").strip()[:120],
         kind=(data.get("kind") if data.get("kind") in ACCOUNT_KINDS else "brokerage"),
         currency=(data.get("currency") or get_settings().base_currency).upper()[:3],
-        institution=((data.get("institution") or "").strip()[:120] or None),
     )
+    a.institution = await _resolve_institution(session, data.get("institution"))
     session.add(a)
     await session.flush()
     return _account_dict(a)
@@ -127,7 +141,7 @@ async def update_account(session: AsyncSession, aid: int, data: dict) -> dict:
     if data.get("name") and data["name"].strip():
         a.name = data["name"].strip()[:120]
     if "institution" in data:
-        a.institution = (data["institution"] or "").strip()[:120] or None
+        a.institution = await _resolve_institution(session, data.get("institution"))
     if data.get("kind") in ACCOUNT_KINDS:
         a.kind = data["kind"]
     if data.get("currency"):

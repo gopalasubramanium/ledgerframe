@@ -15,11 +15,13 @@ from decimal import Decimal, InvalidOperation
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import get_settings
 from app.core.money import format_money_display
 from app.models import InsurancePolicy
 from app.services import fx
+from app.services.institutions import get_or_create_institution
 
 POLICY_TYPES = ["term_life", "whole_life", "health", "critical_illness", "disability",
                 "personal_accident", "property", "motor", "travel", "other"]
@@ -111,7 +113,10 @@ def _serialize(r: InsurancePolicy, base: str) -> dict:
             docs = []
     ann = _annual_premium(r.premium, r.premium_frequency)  # ONE derivation (§14in-2)
     return {
-        "id": r.id, "name": r.name, "insurer": r.insurer, "policy_type": r.policy_type,
+        "id": r.id, "name": r.name,
+        # D-008 (§9-1): insurer NAME now via the shared Institution master join (String col dropped).
+        "insurer": (r.institution.name if r.institution else None),
+        "policy_type": r.policy_type,
         # Display-cased at the boundary (§9-12) so the table renders a served label, never mapping the
         # enum on the client — including for a lapsed-only type that cover_by_type does not carry.
         "policy_type_label": _type_label(r.policy_type),
@@ -139,7 +144,9 @@ def _serialize(r: InsurancePolicy, base: str) -> dict:
     }
 
 
-_FIELDS = {"name", "insurer", "policy_type", "policy_number", "insured_person", "currency",
+# `insurer` is NOT here — it is a NAME resolved to the Institution master (D-008 §9-1), handled
+# in create_policy/update_policy (async, needs the session), not the sync _apply.
+_FIELDS = {"name", "policy_type", "policy_number", "insured_person", "currency",
            "premium_frequency", "start_date", "renewal_date", "nominee", "linked_goal_id",
            "notes", "status"}
 _DEC_FIELDS = {"cover_amount", "cash_value", "premium"}
@@ -167,20 +174,32 @@ def _apply(p: InsurancePolicy, data: dict) -> None:
         p.status = "active"
 
 
+async def _apply_insurer(session: AsyncSession, p: InsurancePolicy, data: dict) -> None:
+    """Resolve the free-text ``insurer`` NAME to the shared Institution master (D-008 §9-1,
+    resolve-or-create per Amendment F), or clear it when blank."""
+    if "insurer" not in data:
+        return
+    raw = data.get("insurer")
+    p.institution = await get_or_create_institution(session, raw) if (raw and str(raw).strip()) else None
+
+
 async def create_policy(session: AsyncSession, data: dict) -> dict:
     p = InsurancePolicy(name=(data.get("name") or "Policy").strip()[:120], cover_amount=Decimal("0"),
                         currency=get_settings().base_currency)
     _apply(p, data)
+    await _apply_insurer(session, p, data)
     session.add(p)
     await session.flush()
     return _serialize(p, get_settings().base_currency)
 
 
 async def update_policy(session: AsyncSession, pid: int, data: dict) -> dict:
-    p = await session.get(InsurancePolicy, pid)
+    p = await session.get(InsurancePolicy, pid,
+                          options=[selectinload(InsurancePolicy.institution)])  # loaded for _serialize
     if p is None:
         raise ValueError("policy not found")
     _apply(p, data)
+    await _apply_insurer(session, p, data)
     await session.flush()
     return _serialize(p, get_settings().base_currency)
 
@@ -194,8 +213,9 @@ async def delete_policy(session: AsyncSession, pid: int) -> None:
 async def insurance_report(session: AsyncSession) -> dict:
     base = get_settings().base_currency
     rows = (await session.execute(
-        select(InsurancePolicy).order_by(InsurancePolicy.renewal_date.is_(None),
-                                         InsurancePolicy.renewal_date))).scalars().all()
+        select(InsurancePolicy).options(selectinload(InsurancePolicy.institution))  # name via join
+        .order_by(InsurancePolicy.renewal_date.is_(None),
+                  InsurancePolicy.renewal_date))).scalars().all()
     by_type: dict[str, float] = {}
     total_cover = total_cash = total_prem = Decimal("0")
     active_count = 0

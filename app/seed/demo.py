@@ -264,9 +264,12 @@ async def seed_demo_data(session: AsyncSession) -> bool:
         ("Home Contents", "Chubb Insurance Singapore", "property", "SGD", "150000", None, "150", "quarterly", 300, "active", False),       # 600/yr
         ("Endowment (matured)", "AXA Insurance", "whole_life", "SGD", "50000", "51000", "3000", "single", None, "lapsed", False),          # single-pay → em dash (no annual equiv)
     ]
+    # D-008 (§9-1): insurers seed the shared Institution master (String col dropped) — resolve-or-create.
+    from app.services.institutions import get_or_create_institution
     for name, insurer, ptype, ccy, cover, cash, prem, freq, rd, status, docs in _seed_policies:
+        inst = await get_or_create_institution(session, insurer) if insurer else None
         session.add(InsurancePolicy(
-            name=name, insurer=insurer, policy_type=ptype, currency=ccy,
+            name=name, institution=inst, policy_type=ptype, currency=ccy,
             cover_amount=D(cover), cash_value=(D(cash) if cash else None),
             premium=(D(prem) if prem else None), premium_frequency=freq,
             renewal_date=(_iso(rd) if rd is not None else None), status=status,
