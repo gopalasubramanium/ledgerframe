@@ -1018,7 +1018,43 @@ history.
    §11 (Phase 0) · §12 (gate) · §13 (Phases 1–3a).** **Phase 3b (owner walk) is the gate — not self-certified.**
    ⚠ Pre-existing (not mine): the `CashFlow.tsx:330` unhandled error fails the frontend `npm run check` —
    reproduces at `c0e9fb1`, out of scope, in `08-TECH-DEBT.md`.
-## ESTATE — §9 CLOSED one-pass · Phase 0 DONE · AWAITING OWNER GEOMETRY RATIFICATION (2026-07-16)
+## ESTATE — §12 geometry RATIFIED · Phase 1/2/3a DONE · Phase 3a GREEN, AWAITING OWNER WALK (2026-07-16)
+
+**§12 SPECIMEN GEOMETRY RATIFIED (owner, 2026-07-16)** — two rulings + one Phase-1 condition, recorded
+verbatim in `page-estate.md §12`:
+- **§12es-1** — the specimen DEVIATION is the ratified geometry: **will status LEADS the profile card**,
+  the readiness strip is **COUNTS-ONLY** (no `will_status` tile; §4 strip-placement superseded to match).
+- **§12es-2** — page subtitle + both EmptyState wordings **RATIFIED AS SHOWN**.
+- **§12es-3 (condition, DELIVERED)** — the rendered label MUST be the SERVED `/refdata` label. `/refdata`
+  served `will_status:none` → **"None"** (RED); amended **spec-first** so **"Not recorded"** is the served
+  label (MASTER-DATA §2 note + per-vocab `_VOCAB_LABEL_OVERRIDES` in `refdata.py`; offline mirror in
+  `mocks/refdata.ts`). Fail-first tests RED→GREEN; all four estate vocabs render served labels verbatim.
+
+**Phase 1 (assembly) + Phase 2 (tests) + Phase 3a (pre-pass) DONE (commits `aa092c6`/`8acffb4`/`185f2a1`).**
+`/estate` is wired (`api/estate.ts` + `Estate.tsx`/`.css`; nav `built:true`; route in `AppRoutes`): profile
+card (will-status chip leads) → readiness COUNTS strip (no money/affix, §9-3) → contacts + documents
+DataTables (served-label chips) → served disclaimer once. Editors: one `Dialog` (profile/contact/document),
+`ui/` only; roles as composed `Switch` rows (§9-6); `ConfirmDialog` delete; `[S]`-gated (ambient PIN, D-103).
+Demo seed extended with a realistic estate register (executed will; review +20d; 7 contacts incl. one 3-role
++ blanks; 10 docs incl. 1 missing + 1 outdated) and unit-verified. `/estate` added to ALL THREE
+`overflow.spec.ts` route arrays + page-inset guard.
+
+**Phase-3a pre-pass GREEN** (`e2e/smoke/estate-smoke.spec.ts`, live app + real backend, 11/11 parts, 0 console
+errors): will-chip leads (served label), counts-only strip, attention chips, verbatim disclaimer, em-dash
+cells, the `_REVIEW_SOON_DAYS=30` signal ("Estate review due in 20 days", §9-8), full CRUD through the `[S]`
+gate (profile edit; contact add→edit→delete w/ multi-role Switch; document add→delete), containment +
+single-vertical-scroll at 320/375/900/1366 × both themes. `review-smoke` re-run GREEN (estate signals; the
+shared `estate_signals()` seam holds). `npm run check` **EXIT 0** (227 vitest + 228 Playwright); backend suite
+**795 passed**; ruff/tsc/eslint/token-drift clean.
+
+**AWAITING OWNER WALK (Phase 3b) — NOT self-certified.** URL: `http://127.0.0.1:5173/#/estate` on the
+demo-seeded instance. Judgment items for the walk: §9-9 GLOSSARY terms (PROPOSED → ratify), copy/geometry feel
+vs the specimen. Evidence table + §12es-3 before/after verdict in `page-estate.md §13`. Do NOT start 3b until
+the owner drives it.
+
+---
+
+## ESTATE — §9 CLOSED one-pass · Phase 0 DONE (2026-07-16)
 
 **§9 RESOLVED (owner one-pass, 2026-07-16): all ten items ACCEPTED as proposed + AMENDMENT E on 9-5.**
 Recorded verbatim in `page-estate.md §9` (each row carries its → RULING; nothing struck) with Amendment E

@@ -578,3 +578,98 @@ Blank OPTIONAL fields that are **user-data-absent** render as **bare em dashes**
 *registers* (no contacts / no documents / will `none`) each still show an **EmptyState
 with reason + CTA** (§12es-2). Recorded under §11-carry; restated here as a Phase-1
 binding.
+
+---
+
+## 13. BUILD RECORD — Phase 1 / 2 / 3a (delivered 2026-07-16)
+
+*Phase 1 (assembly) → Phase 2 (tests) → Phase 3a (scripted pre-pass, GREEN) built on
+the RATIFIED §12 geometry. Commits `aa092c6` (§12 rulings + §12es-3 label),
+`8acffb4` (Phase 1+2), `185f2a1` (Phase 3a). **Phase 3b (owner walk) is NOT this
+session — the page is AWAITING THE OWNER WALK, not self-certified.***
+
+### 13-1. §12es-3 LABEL VERDICT — before / after (the gate condition)
+
+| | Served `/refdata` `will_status:none` label | Source |
+|--|--|--|
+| **BEFORE** | **"None"** (RED) | `_label("none")` titleizes the lowercase value (`refdata.py`) |
+| **AFTER** | **"Not recorded"** (GREEN) | per-vocab `_VOCAB_LABEL_OVERRIDES` (`refdata.py`) + MASTER-DATA §2 spec note; offline-fallback mirror in `frontend/src/mocks/refdata.ts` |
+
+Amended **spec-first** (MASTER-DATA vocab label → refdata source), never frontend copy.
+The wired page renders the SERVED label via `useLabelFor` — so `will_status:none` renders
+"Not recorded" from the endpoint. The live pre-pass confirmed the SERVED label reaches the
+DOM (PART 2: `'executed' → 'Executed'` leads the profile card; the render path is the same
+for `none → Not recorded`). All four estate vocabs render served labels verbatim.
+
+### 13-2. Evidence table (guard → RED→GREEN)
+
+| Guard | File | RED→GREEN |
+|-------|------|-----------|
+| §12es-3 — served `will_status:none` label == "Not recorded" | `tests/integration/test_estate_phase0.py::test_will_status_none_served_label_is_not_recorded` | RED (served "None") → GREEN (override) |
+| §12es-3 — all four estate vocabs served verbatim | `test_estate_phase0.py::test_all_four_estate_vocab_labels_are_served_verbatim` | RED (`none`→"None") → GREEN |
+| Profile chip LEADS (served label + factual tone) | `frontend/src/routes/Estate.test.tsx` | GREEN |
+| §12es-3 render — `none` → "Not recorded" in the DOM, never "None" | `Estate.test.tsx` (RefdataContext supplies served labels) | GREEN |
+| Readiness = 5 count tiles, no will_status tile (§9-3/§12es-1) | `Estate.test.tsx` | GREEN |
+| Served-label role chips; missing/outdated attention chips | `Estate.test.tsx` | GREEN |
+| Served disclaimer verbatim, once (§9-10) | `Estate.test.tsx` | GREEN |
+| Both EmptyStates (§12es-2); em-dash optional cell (§12in-4) | `Estate.test.tsx` | GREEN |
+| §9-3 — no money-formatted string / no base-currency affix | `Estate.test.tsx` | **RED-proven** (polluted fixture `1,200.00` trips it) → GREEN |
+| Page-level advice-language guard | `Estate.test.tsx` | **RED-proven** (polluted fixture `you should` trips it) → GREEN |
+| STANDING served-copy advice guard (backend, Phase 0) | `test_estate_phase0.py::test_no_advice_language_in_served_estate_copy` | GREEN (mutation-proven in Phase 0) |
+| Demo-seed ships a realistic estate register | `test_estate.py::test_demo_seed_ships_a_realistic_estate_register` | GREEN (seed unit-verified) |
+| `/estate` in ALL THREE overflow route arrays + page-inset guard | `frontend/e2e/overflow.spec.ts` | GREEN (320/375/900/1366 × both themes; inset @1728; shared shell) |
+
+### 13-3. Phase-1 assembly (file:line)
+
+- `frontend/src/api/estate.ts` — `fetchEstate` (GET) + 7 `[S]`-gated writes (profile PUT;
+  contacts & documents CRUD). No `*_display`/money fields (§9-3).
+- `frontend/src/routes/Estate.tsx` + `Estate.css` — profile card (`data-card="profile"`,
+  will-status chip leads via `useLabelFor("will_status", …)`) → readiness COUNTS strip
+  (`data-card="readiness"`, 5 `TrendStat` tiles, no affix) → contacts `DataTable`
+  (`data-card="contacts"`) → documents `DataTable` (`data-card="documents"`) → served
+  `.est__disclaimer` once. One `Dialog` editor (profile/contact/document); roles as composed
+  `Switch` rows (§9-6); `ConfirmDialog` delete (contacts/documents). Ambient PIN session
+  (D-103), no second prompt.
+- `frontend/src/AppRoutes.tsx` — `/estate` route wired; `frontend/src/components/ui/nav.ts`
+  — `built: true`. GLOSSARY `[Help]` on **Will status** (`term-will-status`). *(The other
+  estate terms are authored in `GLOSSARY.md` + `glossary.ts` (Phase 0, parity-guarded); the
+  ratified `TrendStat`/`DataTable`/`MetaStrip`/`Switch` label APIs are string-only, so
+  in-cell popovers are declined — consistent with the Cash flow / Insurance precedent of
+  anchoring popovers only on custom-rendered labels, never inside table cells.)*
+- `frontend/e2e/overflow.spec.ts` — `#/estate` added to the per-breakpoint `ROUTES`, the
+  page-inset `ROUTES`, and `SHELL_ROUTES` (all three).
+
+### 13-4. Phase-3a pre-pass results (`e2e/smoke/estate-smoke.spec.ts`, LIVE, GREEN)
+
+Ran against the live app (`5173`) + real backend (`8321`) on a demo-seeded estate register
+(executed will, next_review +20d, 7 contacts incl. one 3-role, 10 documents incl. 1 missing
++ 1 outdated). **11/11 parts GREEN, 0 console errors:**
+
+- **will-status chip leads** with the SERVED "Executed" label (§12es-1).
+- **readiness = 5 count tiles; no money-formatted string, no `.lf-stat__unit` affix** (§9-3).
+- **missing/outdated documents render attention chips**; served disclaimer verbatim once (§9-10).
+- **blank phone → bare em dash** (§12in-4).
+- **review-soon signal fires:** `"Estate review due in 20 days"` on the seeded next_review (§9-8).
+- **full CRUD round-trip** through the `[S]`-gated editors: profile edit; contact add→edit→delete
+  with **multi-role Switch selection** (Executor + Guardian); document add→delete.
+- **containment** (count values + status/role chips) at 320/375/420/500/900/1100/1366; long
+  Name/Email cells ellipsize by design (truncate columns) with the table scrolling inside its card.
+- **geometry:** both themes × 320/375/900/1366 — 0 horizontal overflow (document + content),
+  **single vertical scroll region** (`window.scrollY` stays 0).
+- **`review-smoke` re-run GREEN** (11 attention rows incl. the estate signals — the shared
+  `estate_signals()` seam holds).
+- **`npm run check` EXIT 0** (227 vitest + 228 Playwright, incl. `/estate` overflow + page-inset
+  + shared-shell). Full backend suite **795 passed**. `ruff`/token-drift/`tsc`/`eslint` clean.
+
+### 13-5. STATUS — Phase 3a GREEN, AWAITING OWNER WALK (Phase 3b)
+
+The pre-pass is the **entry ticket**, not acceptance. Judgment items reserved for the owner walk
+(Phase 3b): the §9-9 GLOSSARY terms marked **PROPOSED** (ratify at the walk); the copy feel of the
+ratified subtitle/EmptyStates (§12es-2, already ratified-as-shown but re-confirmed live); the
+overall geometry/feel of the wired page vs the specimen. **Not self-certified.**
+
+**URL + dataset for the walk:** `http://127.0.0.1:5173/#/estate` on the demo-seeded instance
+(executed will, review due in ~20 days, 7 contacts incl. one 3-role + blank phone/email, 10
+documents incl. one MISSING + one OUTDATED). *(Note: the pre-pass edited the seeded profile
+executor to "Priya R-V (edited)" during its CRUD leg; re-seed via `seed_estate` or
+`reset-demo-data.sh` for a pristine walk.)*
