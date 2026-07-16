@@ -643,3 +643,23 @@ ratification look before Phase 1 assembly.
   build green. `/holdings` stays in all three `e2e/overflow.spec.ts` arrays. The **`holdings-smoke`**
   live re-run (param → chip → clear round-trip, plus RowMenu navigation from `/accounts`) rides the
   page-accounts Phase-3a pre-pass on the reset demo-seeded instance. Served shape unchanged.
+
+### ADDENDUM — 2026-07-16 (page-accounts WALK BATCH 1, §14ac-2/§14ac-3)
+
+- **§14ac-2 — the JOURNEY was broken; fixed.** The drill-down navigated via a manual
+  `window.location.hash` write, so Holdings mounted with `accountFilter=null` on render 1 and fired an
+  **unfiltered** `getHoldings()` that raced the scoped one (owner saw unfiltered). Now both entry points
+  navigate through **react-router via the shared builder** `nav/holdingsLink.ts` `holdingsForAccount(id)`
+  → Holdings mounts scoped on render 1 (only scoped fetches, no race). **A second entry point** landed:
+  the account **Name cell is a link** to the same URL (§14ac-5). Guarded by JOURNEY tests
+  (`e2e/smoke/accounts-journey-smoke.spec.ts`): clicking the real RowMenu item AND the Name link both
+  assert scoped arrival; **RED pre-fix** (`holdings reqs = ALL,ALL,SCOPED,SCOPED` — the unfiltered fetch)
+  → **GREEN** (`SCOPED,SCOPED`).
+- **§14ac-3 — the chip now scopes the transactions table too.** `getTransactions` gains `accountId`
+  (→ `GET /portfolio/transactions?account_id=`, backend delta, contract regen); `reloadTxns` passes
+  `accountFilter`, and changing the scope resets the ledger to page 1. The ONE chip scopes **both**
+  tables; clearing unscopes both (journey guard asserts `txns` requests go `SCOPED` on arrival, `ALL` on
+  clear). Backend fail-first: the ignored param today → scoped total == full total → RED → GREEN.
+- **Re-verify:** `Holdings.test.tsx` (24) + `Accounts.test.tsx` (10) green; the journey smoke green; the
+  `portfolio-smoke` (shared reader) re-run green. Served holdings/transactions shapes unchanged (a new
+  optional query param only).

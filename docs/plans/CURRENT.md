@@ -1093,6 +1093,33 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
+## ACCOUNTS — WALK BATCH 1 DONE ⏸ AWAITING OWNER RE-WALK (2026-07-16)
+
+**Owner walk (Phase 3b) batch 1 — §14ac-1..5 fixed + re-verified; the owner re-walks.** Findings +
+RED→GREEN in `page-accounts.md §14`.
+
+- **§14ac-1 + §14ac-5 — Name column.** The spine had **no account Name** (an institution-less row was
+  unidentifiable). Added a **leading Name column**, rendered as a **link** to the scoped Holdings URL via
+  a **shared builder** (`nav/holdingsLink.ts` `holdingsForAccount(id)`); the RowMenu is re-keyed by name.
+- **§14ac-2 — the JOURNEY was broken (a green guard lied).** "View holdings" navigated via a manual
+  `window.location.hash` write → Holdings mounted with `accountFilter=null` on render 1 → an **unfiltered**
+  fetch raced the scoped one. Fixed with **react-router navigation via the shared builder** (mounts scoped
+  on render 1). New **journey guards** click the real controls: **RED pre-fix** (`holdings =
+  ALL,ALL,SCOPED,SCOPED`) → **GREEN** (`SCOPED,SCOPED`). Lesson mechanised in **TEMPLATE §7**.
+- **§14ac-3 — the chip scopes transactions too.** Backend delta `GET /portfolio/transactions?account_id=`
+  (same WHERE chokepoint; contract regen; fail-first); the ONE chip scopes **both** tables, clear
+  unscopes both.
+- **§14ac-4 — entity/institution filtered views → R-35 scope sketch** (ROADMAP.md), NOT batched (§9-8).
+
+- **Re-verify:** `npm run check` (from `frontend/`) **EXIT 0**; backend `pytest` **831 passed**;
+  `api-contract-check` green; `accounts-smoke` 13/13 + `accounts-journey-smoke` 2/2 + `portfolio-smoke`
+  GREEN, 0 console errors. Holdings delta-note addendum recorded.
+
+**⏸ STOP — AWAITING OWNER RE-WALK** at `http://127.0.0.1:5173/#/accounts` (reset, demo-seeded). Not
+self-certified.
+
+*(Prior status, retained for the record:)*
+
 ## ACCOUNTS — PHASE 1+2+3a GREEN ⏸ AWAITING OWNER WALK (Phase 3b) (2026-07-16)
 
 **Geometry gate ✅ RATIFIED WITH CONDITION (owner, 2026-07-16)** — one condition (§12ac-1: the

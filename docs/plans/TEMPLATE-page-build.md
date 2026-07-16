@@ -484,6 +484,15 @@ the theme/density matrix. Written as checkable statements.*
 - [ ] **Context-scoped picker (D-097):** verified **live** that a class/entity
       picker never offers a wrong-context option; cross-context matches appear only
       as navigate links.
+- [ ] **A CROSS-PAGE AFFORDANCE IS GUARDED AS A JOURNEY (page-accounts §14ac-2).** A link/button that
+      navigates to another page is guarded by **clicking the REAL control and asserting the destination
+      STATE** (the arrived page is scoped/filtered as intended) — not merely that the destination renders
+      correctly when handed the right params. A **destination-only** guard can be green while the link is
+      broken: Accounts' "View holdings" tested Holdings-given-`?account=` (green) but never the click,
+      which navigated via a manual `window.location.hash` write and arrived **unfiltered** (the
+      destination mounted before the router's `location.search` reflected the query → an unfiltered fetch
+      raced the scoped one). Click-the-control journey tests caught it; the fix was react-router
+      navigation through a **shared URL builder** both entry points consume.
 - [ ] **A GUARD MEASURES THE GEOMETRY THE FINDING NAMES (page-insurance §14in-1/§15b).** A guard
       asserts the **exact dimension the finding names, at the width where it appears** — not a
       neighbouring property. §14in-1's gap-rhythm guard went **green on section gaps (16px rhythm)**

@@ -748,3 +748,101 @@ Citibank Singapore / Citibank + 8 seeded insurers; the Citibank/Citibank-Singapo
 **Judgment items for the owner:** the §9-5 restatement wording (PROPOSED); the reworded subtitle
 (copy-hygiene, §13-2); whether Merge/Rollup want on-page [Help] popovers. **Do NOT self-certify; do not
 start 3b.**
+
+---
+
+## 14. OWNER WALK — BATCH 1 (owner, 2026-07-16)
+
+*Findings from the Phase-3b walk of `/#/accounts` on the reset, demo-seeded instance. Everything else on
+the page is accepted **contingent on this batch**. Fixed + re-verified below; the owner **re-walks** —
+not self-certified. RED→GREEN per fix; the **journey-guard RED** is the headline.*
+
+### §14ac-1 — BUG (+ a gate miss): the accounts table has NO Name column
+
+The spine renders institution · kind · currency · cost basis · entity · value — but **never the
+account's own name** (the row's identity). An institution-less account is unidentifiable ("—" ·
+Brokerage · INR). The ratified geometry (§12-1) led with **institution**, and the gate (§12) never
+caught that a worklist row must show *what it is*. **Fix:** a leading **Name** column (§14ac-5 makes it a
+link). Lesson: a management table's first duty is to identify its row.
+
+### §14ac-2 — BUG (a green guard lied): "View holdings" — the JOURNEY was never tested
+
+RowMenu **"View holdings"** was observed arriving at Holdings **unfiltered**. Phase-2's guard tested the
+**destination** (Holdings *given* `?account=` → chip + scoped) but **never the journey** (the real
+click). **Root cause (proven by repro, not the suspected hash-parse failure):** the click navigated via a
+**manual `window.location.hash` write** (`frontend/src/routes/Accounts.tsx:361`). The hash IS placed
+correctly (`#/holdings?account=3`) and `useSearchParams` does read it — but bypassing react-router's
+navigation makes Holdings **mount with `accountFilter=null` on the first render** (`Holdings.tsx:103`), so
+`reloadCore` (`Holdings.tsx:187`, keyed on `accountFilter`, `:202`) fires an **UNFILTERED**
+`getHoldings()` that races the corrected scoped fetch. Repro request order was deterministically
+`ALL, ALL, SCOPED, SCOPED` — the unfiltered fetch always fires, and its response can win, rendering all
+holdings under a "filtered" chip. **Fix:** navigate through react-router (`useNavigate`) via the shared
+URL builder (§14ac-5) so Holdings mounts with `?account=` present on render 1 → **only scoped fetches, no
+race**. **Lesson (mechanised in TEMPLATE §7):** *a cross-page affordance is guarded as a JOURNEY — the
+test clicks the real control and asserts the destination state; a destination-only guard can be green
+while the link is broken.*
+
+### §14ac-3 — OWNER DIRECTIVE: the account filter scopes transactions too
+
+The Holdings account chip must scope **both** the holdings table **and** the transactions table.
+`GET /portfolio/transactions` takes only paging/sort/filter today (no `account_id`) — a **backend delta**
+(`?account_id=`, same chokepoint as holdings), then the ONE chip scopes both; clearing unscopes both.
+
+### §14ac-4 — SCOPE RECORD: entity/institution filtered views → R-35
+
+Entity- and institution-level filtered views are an **owner realization (2026-07-16)**, NOT batched here.
+Per the §9-8 ruling (entity is an account attribute, not a page filter; `?entity_id` stays dormant), a
+pull-forward is **R-35 activation with its own plan file**. Recorded into **R-35's scope sketch** in
+`ROADMAP.md` (§14ac-4), not built this batch.
+
+### §14ac-5 — OWNER ADDITION: the Name cell is a hyperlink to the same filtered Holdings destination
+
+The account **Name** cell links to the **same** filtered Holdings URL as "View holdings" (the
+Holdings-symbol → Instrument-Detail precedent). Both affordances consume **ONE shared URL builder**
+(`holdingsForAccount(id)`) — a single source for the destination href — so the two entry points can never
+silently diverge (two hand-built hrefs to one destination is how one rots).
+
+### §14 — FIX RECORD (RED → GREEN) + STOP
+
+**Backend delta (§14ac-3, backend-first).** `GET /portfolio/transactions?account_id=` — scoped at the
+**same WHERE `conds` chokepoint** the count + window both use (`app/api/v1/routes/portfolio.py:462`), so
+`total` / "Showing X–Y of Z" stay honest under the filter. Fail-first
+(`test_transactions_scoped_by_account_id`): the ignored param today → scoped total == full total → RED →
+GREEN. Contract regen same-commit (drift green).
+
+**Frontend.**
+- **Shared URL builder** `frontend/src/nav/holdingsLink.ts` → `holdingsForAccount(id)` = `/holdings?
+  account=<id>` — the ONE source both entry points consume (§14ac-5).
+- **§14ac-1 + §14ac-5 Name column, leading** (`Accounts.tsx`): Name · Institution · Kind · Currency ·
+  Cost basis · Entity · Value(base). Name renders as a **`<Link>`** to `holdingsForAccount(r.id)` (the
+  Holdings-symbol link precedent, `.acct__namelink`), truncating with a `title`. The account RowMenu is
+  re-keyed by **name** (the row's identity). Editor already captured name (`AccountDraft.name`,
+  `Accounts.tsx` openAdd/openEdit).
+- **§14ac-2 journey fix:** "View holdings" now calls `navigate(holdingsForAccount(r.id))` (react-router)
+  — Holdings mounts with `?account=` on render 1, so **only scoped fetches fire, no unfiltered race**.
+- **§14ac-3:** the Holdings chip scopes **both** tables (`getTransactions({accountId})`), scope-change
+  resets the ledger to page 1, clear unscopes both.
+
+**Journey guards — the headline (`e2e/smoke/accounts-journey-smoke.spec.ts`).** Click the REAL controls,
+assert scoped arrival (chip + both tables). Proven **RED on the pre-fix build** (a throwaway probe on the
+restored pre-fix files):
+
+| Control | Pre-fix (RED) | Post-fix (GREEN) |
+|---|---|---|
+| RowMenu "View holdings" | `holdings = ALL,ALL,SCOPED,SCOPED` (unfiltered fetch fires), `txns = ALL,ALL` | `holdings = SCOPED,SCOPED`, `txns = SCOPED,SCOPED`; scopedH 1/14, scopedT 1/10 |
+| Account **Name** link | (no Name column existed — §14ac-1) | same scoped arrival via the shared builder |
+| Clear chip | (transactions never scoped) | both tables refetch **unscoped** |
+
+**Root cause named (mechanism actually shipped).** Not a hash-parse failure — the hash `#/holdings?
+account=3` is correct and `useSearchParams` reads it. The manual `window.location.hash` write made
+Holdings mount with `accountFilter=null` on render 1, firing an unfiltered fetch that raced the scoped
+one. React-router navigation via the shared builder mounts scoped on render 1 → the unfiltered fetch is
+gone. Lesson mechanised in **TEMPLATE §7** (journey guards).
+
+**Re-verify (this batch):** `npm run check` (from `frontend/`) **EXIT 0**; backend `pytest` **831
+passed** (+2 transactions scope); `make api-contract-check` green (transactions gains `account_id`);
+`accounts-smoke` 13/13 + `accounts-journey-smoke` 2/2 + `portfolio-smoke` GREEN, **0 console errors**;
+Holdings delta-note addendum + ROADMAP R-35 scope sketch recorded.
+
+**⏸ STOP — AWAITING OWNER RE-WALK.** Everything on the page was accepted contingent on this batch; the
+owner re-walks `/#/accounts` on the reset, demo-seeded instance. **Not self-certified.**
