@@ -1,9 +1,10 @@
 # PAGE BUILD PLAN — Accounts (`/accounts`)
 
 > **STATUS: §9 RESOLVED one-pass (owner, 2026-07-16). PHASE 0 DONE (backend-first, 11
-> commits; evidence per commit in §11). PHASE 0a DONE — the geometry specimen + the §9-3
-> component ratification frame are mounted at `/kitchen-sink`; ⏸ AWAITING OWNER GEOMETRY
-> RATIFICATION (gate record in §12). PHASE 1 IS BLOCKED until the owner ratifies.** Copied
+> commits; evidence per commit in §11). PHASE 0a ✅ RATIFIED WITH CONDITION (owner,
+> 2026-07-16 — one condition §12ac-1, four acceptances §12ac-2..5; gate record in §12ac).
+> PHASE 1 (assembly) + PHASE 2 (tests) + PHASE 3a (scripted pre-pass) IN PROGRESS — build
+> record in §13. PHASE 3b (owner walk) is the next session, NOT this one.** Copied
 > from `TEMPLATE-page-build.md`; every §1–§8
 > row cites the spec it derives from. This is the largest remaining page milestone —
 > **two masters land here** (Entity CRUD, D-065; Institution master, D-008) — so §9
@@ -505,12 +506,60 @@ MasterSelect-data-source ratification) is the next session.**
 
 ---
 
-## 12. PHASE 0a — GEOMETRY GATE ⏸ PROPOSED, AWAITING OWNER RATIFICATION (2026-07-16)
+## 12. PHASE 0a — GEOMETRY GATE ✅ RATIFIED WITH CONDITION (owner, 2026-07-16)
 
-*The static layout specimen + the §9-3 component ratification frame, authored so the owner can **ratify
+*The static layout specimen + the §9-3 component ratification frame, authored so the owner could **ratify
 the geometry BY LOOKING** before assembly (TEMPLATE §7; the page-home §12ho1-3 rule — a widget list is
-not a layout). **Phase 1 is BLOCKED until the owner signs this off.** No wiring, no `NavItem.built`, no
-route — this session STOPPED at the gate per the task.*
+not a layout). The owner walked the specimen at `/kitchen-sink` and **RATIFIED the geometry (2026-07-16)
+with one condition (§12ac-1) and four acceptances (§12ac-2..5)** — recorded in §12ac below. **Phase 1 is
+now UNBLOCKED.** The record of what was PROPOSED at the gate (§12-1..§12-4) is retained verbatim below the
+ruling.*
+
+### 12ac. GATE RULING — RATIFIED WITH CONDITION (owner, 2026-07-16)
+
+The owner ratified the specimen geometry. The ⏸ PROPOSED status of §12 flips to **✅ RATIFIED WITH
+CONDITION**. Five recorded rulings:
+
+- **§12ac-1 (CONDITION — binds Phase 1 + guarded in Phase 2).** The accounts-table **Value column header
+  carries the SERVED base currency** — it reads **`Value ({base_currency})`** (e.g. `Value (SGD)`) built
+  from the reader's served `base_currency`, **NEVER hardcoded**. Rationale: a base-converted number under a
+  per-row **Currency** column is ambiguous without the header naming the rollup currency; the Holdings
+  header carries the served base already (that precedent). **Phase-1:** the header string is composed from
+  `report.base_currency`. **Phase-2 guard:** a render test with a **non-SGD** base fixture asserts the
+  header follows the served value (RED if hardcoded `SGD`) — the §9-10 served-value discipline extended to
+  a header.
+
+- **§12ac-2 (ACCEPTED as shipped — §12-3 flagged decision).** The **cost-basis label is rendered for
+  every account** (bank/wallet rows included), because the model always carries a `cost_basis_method`
+  value (default `fifo`); **fabricating a blank would be the dishonest option** (Guarantee 3). The
+  owner-decision offered in §12-3 (show "—" for cash/bank, needing a served nullability signal) is
+  **DECLINED** — the served value is shown verbatim ("FIFO"/"Average") on every row.
+
+- **§12ac-3 (ACCEPTED as shipped — §12-3 flagged decision).** **RowMenu "View holdings"** is the
+  Amendment-G P-1 linked-summary affordance on account rows. Ratified as the drill-down entry point; its
+  live target (the Holdings-page URL account filter → clearable chip) is the Phase-1 deferred half.
+
+- **§12ac-4 (ACCEPTED as shipped — §12-3 flagged decision).** **`StatusChip` is deliberately unused** on
+  this page — accounts carry no status/severity axis (kind/currency/cost-basis are attributes, not
+  states). Its absence is ratified as intentional, not an omission.
+
+- **§12ac-5 (RATIFIED AS SHOWN — copy).** The following user-facing copy is ratified exactly as staged in
+  the specimen and is now **protected copy** (changing any of it requires a new §-entry):
+  1. the **page subtitle** ("…never a second figure.");
+  2. **all three EmptyState wordings** (no accounts; no entities / only-Household; empty institution
+     master);
+  3. the **three dialog bodies** — the entity FK-block reason, the institution FK-block reason (with merge
+     offered), and the **merge consequence line** (*"N accounts and M policies will move to {survivor}…"*).
+  The merge consequence copy in particular is now protected copy: it is served-count-driven
+  (tile-integrity), and any change to its wording needs a §-entry.
+
+**Effect on Phase 1:** compose to the ratified geometry (§12-1..§12-4) with §12ac-1's served-header
+condition wired, §12ac-5's copy rendered verbatim from the specimen, and §12ac-2/3/4 shipped as the
+specimen showed. The Phase-2 suite carries the §12ac-1 served-header guard.
+
+---
+
+*The record below (§12-1..§12-4) is the PROPOSED specimen as staged at the gate, retained verbatim.*
 
 ### 12-1. §-geometry (PROPOSED)
 
@@ -576,6 +625,6 @@ copy + affordance by looking, the live modals wire in Phase 1.
   served labels ("FIFO"/"Average"), truncated long institution, entity-less em dash, footer
   **Σ = 1,643,550.00 SGD**, the two masters' counts consistent, and all six frames present.
 
-**⏸ STOP — geometry PROPOSED, AWAITING OWNER RATIFICATION at `/kitchen-sink` ("Accounts — LAYOUT SPECIMEN
-(page-accounts §9 / Phase 0a) — PROPOSED, AWAITING RATIFICATION"). Phase 1 does not start until the owner
-signs this off.**
+**✅ RATIFIED WITH CONDITION (owner, 2026-07-16) — see §12ac above.** The geometry PROPOSED here was
+walked at `/kitchen-sink` and signed off with one condition (§12ac-1, served Value header) and four
+acceptances (§12ac-2..5). **Phase 1 is UNBLOCKED** — build record follows in §13.
