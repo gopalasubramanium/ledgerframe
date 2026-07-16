@@ -64,6 +64,32 @@
 .rpt__thresholdvalue { color: var(--text-primary); font-weight: var(--weight-medium); }
 .rpt__thresholdnote { color: var(--text-tertiary); }
 
+/* §12rp-1 SCOPED GROUP (Statements card): the Year control governs the Realised stat + the export
+   ONLY — the table above stays all-years. A bordered, tinted panel with an explicit label makes the
+   scope unmistakable ("a control must clearly indicate what it governs" — the owner's ruling), so the
+   Year control never reads as a filter on the all-years table beside it. */
+.rpt__scoped {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.rpt__scopedhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.rpt__scopedlabel {
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  font-weight: var(--weight-medium);
+}
+.rpt__scoped .rpt__totals { border-top: none; padding-top: var(--space-3); }
+.rpt__scopedhead + .rpt__totals { margin-top: var(--space-2); }
+
 /* Realised-totals block — BOTH base totals visible (current FX AND trade-date FX), and the
    excluded-events count rendered when non-zero (D-020/D-076 — the honest divergence is shown, not
    hidden). The value text nodes stay exactly the number so a tile-integrity read is possible. */

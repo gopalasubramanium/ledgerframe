@@ -16,6 +16,25 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "A composed, read-only view of your recorded data for organisation and review — the Reports page brings together Statements, the Realised P/L report, and open tax lots, with server-side exports whose disclaimers travel into the file. For your accountant — not tax or financial advice.",
   },
+  // page-reports §9-9 / §13 (Phase 1). These three spellings exist in docs/specs/GLOSSARY.md
+  // (the [Help]-marked rows: **Statements**, **Realised P/L**, **Tax lot / Open lot**); the parity
+  // guard (tests/unit/test_glossary_parity.py) enforces the identical spelling. NEVER "Realised gains"
+  // (deprecated, D-026) — the report heading is "Realised P/L report".
+  "term-statements": {
+    term: "Statements",
+    definition:
+      "Income, fees, cash flow and realised-vs-unrealised, drawn from your recorded transactions — for review / your accountant. The table is all-years; the Year control scopes the Realised figure and the export.",
+  },
+  "term-realised-pl": {
+    term: "Realised P/L",
+    definition:
+      "Sale proceeds minus the FIFO-matched cost of the parcels sold. Exact in each instrument's native currency; the base total is shown at today's FX (indicative) AND at trade-date FX with an excluded-events count. Not tax advice.",
+  },
+  "term-tax-lot": {
+    term: "Tax lot / Open lot",
+    definition:
+      "An unsold parcel with its acquisition date, quantity, cost and holding period. Open lots are matched by FIFO. Organisation only — not tax advice.",
+  },
   // Accounts (page-accounts §9-13). Added to docs/specs/GLOSSARY.md FIRST, then here — the
   // two-store rule; tests/unit/test_glossary_parity.py polices the spellings.
   "term-account-kind": {

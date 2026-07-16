@@ -37,12 +37,14 @@ test("Sidebar shows only built pages as entries; showAll reveals the full skelet
       <Sidebar />
     </MemoryRouter>,
   );
-  // Net worth + Holdings + Portfolio + Accounts are built; Reports is not yet — unbuilt pages hidden by default.
+  // Net worth + Holdings + Portfolio + Accounts + Reports are built; Settings is not yet — unbuilt
+  // pages are hidden by default (progressive reveal of the fixed D-043 skeleton).
   expect(screen.getByRole("link", { name: "Net worth" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Holdings" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Portfolio" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Accounts" })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: "Reports" })).toBeNull();
+  expect(screen.getByRole("link", { name: "Reports" })).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "Settings" })).toBeNull();
 
   rerender(
     <MemoryRouter initialEntries={["/holdings"]}>
