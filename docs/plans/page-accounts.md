@@ -1,15 +1,18 @@
 # PAGE BUILD PLAN — Accounts (`/accounts`)
 
-> **STATUS: §9 RESOLVED one-pass (owner, 2026-07-16). PHASE 0 DONE (backend-first, 11
-> commits; evidence per commit in §11). PHASE 0a ✅ RATIFIED WITH CONDITION (owner,
-> 2026-07-16 — one condition §12ac-1, four acceptances §12ac-2..5; gate record in §12ac).
-> PHASE 1 (assembly) + PHASE 2 (tests) + PHASE 3a (scripted pre-pass) ✅ DONE / GREEN —
-> build record in §13; `npm run check` EXIT 0, backend 829 passed, accounts-smoke 13/13
-> parts + 0 console errors. ⏸ AWAITING OWNER WALK (Phase 3b) — the next session, NOT this
-> one.** Copied from `TEMPLATE-page-build.md`; every §1–§8
-> row cites the spec it derives from. This is the largest remaining page milestone —
-> **two masters land here** (Entity CRUD, D-065; Institution master, D-008) — so §9
-> was deliberately long.
+> **STATUS: ✅ PAGE ACCEPTED (owner, live re-walk, 2026-07-16). MILESTONE CLOSED.**
+> §9 RESOLVED one-pass (owner, 2026-07-16). PHASE 0 DONE (backend-first, 11 commits;
+> evidence per commit in §11). PHASE 0a ✅ RATIFIED WITH CONDITION (§12ac). PHASE 1
+> (assembly) + PHASE 2 (tests) + PHASE 3a (scripted pre-pass) ✅ DONE / GREEN — build
+> record in §13. PHASE 3b OWNER WALK — batch 1 in §14 (five findings §14ac-1..5 FIXED +
+> re-verified; the journey-guard RED proof stands as the §14ac-2 record). The owner
+> **re-walked both journeys live and ACCEPTED (2026-07-16)** → §14 CLOSED; the two carried
+> judgment items (the §9-5 restatement wording · the reworded subtitle) are **RATIFIED AS
+> SHIPPED** by that acceptance (§14ac-6). No ⏸ remains. §15 retrospective closes the
+> milestone; central acceptance log in `RATIFICATION.md §6`. Copied from
+> `TEMPLATE-page-build.md`; every §1–§8 row cites the spec it derives from. This is the
+> largest remaining page milestone — **two masters land here** (Entity CRUD, D-065;
+> Institution master, D-008) — so §9 was deliberately long.
 >
 > *Prior status (superseded 2026-07-16, retained for the record): PLAN DRAFTED
 > through §10 (verify-first) + §9 (NEEDS DECISION), §9 UNRESOLVED — no code written.*
@@ -844,5 +847,79 @@ passed** (+2 transactions scope); `make api-contract-check` green (transactions 
 `accounts-smoke` 13/13 + `accounts-journey-smoke` 2/2 + `portfolio-smoke` GREEN, **0 console errors**;
 Holdings delta-note addendum + ROADMAP R-35 scope sketch recorded.
 
-**⏸ STOP — AWAITING OWNER RE-WALK.** Everything on the page was accepted contingent on this batch; the
-owner re-walks `/#/accounts` on the reset, demo-seeded instance. **Not self-certified.**
+### §14ac-6 — ✅ ACCEPTED (owner, live re-walk, 2026-07-16)
+
+The owner **re-walked both journeys live** on the reset, demo-seeded instance and **ACCEPTED the page**.
+Everything that was accepted contingent on batch 1 (§14ac-1..5, FIXED + re-verified) is now unconditional.
+**§14 CLOSED; the milestone is closed.** No ⏸ remains anywhere on the page.
+
+**The two carried judgment items are RATIFIED AS SHIPPED by this acceptance:**
+- **§9-5 cost-basis restatement wording** (PROPOSED in §13-2) — the ConfirmDialog interposed before a
+  method-change PATCH on an account with history reads *"…realised and unrealised figures will change…"*
+  → **RATIFIED AS SHIPPED**. This is now protected copy (§12ac-5 discipline): a change needs a new
+  §-entry.
+- **The reworded subtitle** (copy-hygiene rewrite in §13-2 — *"…a linked summary of your holdings — never
+  a second figure."*, replacing the "reader" wording that tripped `test_copy_hygiene`) → **RATIFIED AS
+  SHIPPED**, extending the §12ac-5 protected-copy tail. The specimen `AccountsMockup.tsx` carries the
+  identical wording (parity).
+- On-page [Help] popovers for Merge / Rollup were **not** requested at the walk — they stay glossary-defined
+  action-label/dialog-title strings (as shipped, §13-2). No change.
+
+**The batch-1 journey-guard RED proof (§14ac-2) stands as the permanent record** — a cross-page affordance
+guarded as a journey (`accounts-journey-smoke.spec.ts`), mechanised in TEMPLATE §7. The four
+PROPOSED→RATIFIED items and the central acceptance-log entry are recorded in §15 + `RATIFICATION.md §6`.
+
+**Milestone closed — owner-accepted, not self-certified.**
+
+---
+
+## 15. RETROSPECTIVE — strike-check first, then MECHANISE (2026-07-16)
+
+*The close ritual: strike-check every §9 / §12 / §14 item against the shipped diff FIRST (a claim is not a
+change — page-policy §13-2), so nothing was recorded-but-not-landed; THEN fold each lesson into a mechanism,
+from the evidence, not memory.*
+
+### 15-1. Strike-check — every §9 / §12 / §14 item landed (verified against the diff, not the plan prose)
+
+- **§9 (14 items) — all shipped, backend-first, evidence per commit in §11.** §9-1/2/F institution master +
+  merge + fold-then-drop across **both** FK columns (`c9a4c08`/`e2778a2`/`22c9c52`); §9-4 `AccountIn.entity_id`
+  (`79e93f9`); §9-5 `cost_basis_method` + rebuild-on-change (`1a34a02`); §9-6/H entity_kind→/refdata + Entity
+  CRUD (`0f7ffaa`); §9-9 kind/currency 400-enforcement (`e674b11`); §9-10 served `*_display` + affix
+  (`37c55ff`); §9-11/G `?account_id=` reader (`c211e93`); §9-13 4 terms + FIFO override (`a13f360`); §9-12
+  08-TECH-DEBT recording (`f918f61`). §9-3/8/14 were resolution/confirm items (no code) — §9-3 landed as the
+  live MasterSelect data-source extension in Phase 1.
+- **§12 gate (RATIFIED WITH CONDITION) — all landed.** §12ac-1 served Value header wired + guarded with a
+  non-SGD fixture (§13-3); §12ac-2/3/4 shipped as the specimen showed; §12ac-5 protected copy rendered
+  verbatim.
+- **§14 walk — all five findings FIXED + re-verified, then ACCEPTED (§14ac-6).** §14ac-1 Name column;
+  §14ac-2 journey fix (RED proof stands); §14ac-3 transactions `?account_id=`; §14ac-4 R-35 scope sketch
+  (recorded, not built); §14ac-5 shared URL builder.
+- **No silent no-ops.** Every ratified backend VALUE carries a same-batch code test (the FIFO label override,
+  the rebuild-on-change, the 400-enforcement) — the page-review §13 rule held.
+
+### 15-2. Lessons MECHANISED (each lands as a mechanism, from the evidence)
+
+1. **The Name-column gate miss (§14ac-1) → a TEMPLATE §7 specimen rule.** The ratified geometry led with
+   **institution** and neither the §12 gate nor the pre-pass caught that the spine **never rendered the
+   account's own name** — an institution-less account was unidentifiable ("—" · Brokerage · INR). The gate
+   artefact modelled the box but not the row's **identity**. **Mechanism (TEMPLATE §7):** *a table specimen
+   must render the row's IDENTITY column, and its honesty cases must include a row identifiable ONLY by that
+   column* (the institution-less account is exactly that row — it would have failed the gate by looking).
+2. **The journey-guard lesson is ALREADY mechanised — referenced, not re-landed.** §14ac-2 (a cross-page
+   affordance is guarded as a JOURNEY: click the real control, assert the destination STATE — a
+   destination-only guard can be green while the link is broken) was folded into TEMPLATE §7 in batch 1.
+   Cited here; not duplicated.
+3. **Enforcing a vocab surfaces latent invalid seed data (evidence, not a new rule).** §9-9's kind-enforcement
+   turned the demo seed's out-of-vocab `cash` kind from a silent coercion into a 400 — caught in Phase 1 and
+   fixed to `bank` (§13-2). The honesty enforcement did its job on the platform's own fixtures; recorded as a
+   worked example of the §9-9 precedent, no new mechanism needed.
+4. **One destination, one URL builder (§14ac-5) — a worked instance of the centralization rule.** Two
+   hand-built hrefs to the same filtered-Holdings destination is how one rots; `holdingsForAccount(id)` is the
+   single source both the Name link and "View holdings" consume. Instance of the existing rule, recorded.
+5. **Make the push STRUCTURAL → a TEMPLATE close-ritual step.** The whole v2 rebuild sat **unpushed** on the
+   local trunk (255 commits ahead of `origin/main` at this close). Durability is part of closing, not an
+   afterthought. **Mechanism (TEMPLATE §8 close ritual):** *close-out commits are pushed to the remote before
+   the owner re-uploads* — and this session ends with `git push`.
+
+*The retrospective's own discipline — strike-check the diff before writing the lesson — is why §15-1 lists
+commit hashes, not adjectives.*

@@ -1,0 +1,23 @@
+/* Brand mark — "the double rule" (DESIGN-SYSTEM §Brand, P-4). Token-only: the mark
+   itself carries no px; strokes resolve to currentColor + the accent token so both
+   themes work with zero per-call overrides. */
+.lf-brandmark {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Sidebar brand lockup: [mark] LedgerFrame. The mark is sized to the wordmark's cap
+   height and the row centres on the text baseline, so the lockup reads as one unit and
+   the row height stays TEXT-driven — the nav-density math (§5.5) is untouched. */
+.lf-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.lf-sidebar__brandmark {
+  /* ~cap height of the 16px semibold wordmark; ≤ the text line box, so the pinned brand
+     row does not grow (the sidebar-density guard stays green). */
+  width: 1.15em;
+  height: 1.15em;
+}

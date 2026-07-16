@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import indexHtml from "../../index.html?raw";
 import type { ReactNode } from "react";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -98,6 +99,29 @@ test("shell composes chrome ONCE around the page content (D-066)", () => {
   const main = container.querySelector(".lf-shell__content");
   expect(main).not.toBeNull();
   expect(within(main as HTMLElement).getByTestId("page").textContent).toBe("PAGE BODY");
+});
+
+test("sidebar brand is the BrandMark lockup: aria-hidden svg beside the wordmark, accessible name stays 'LedgerFrame' (P-4)", () => {
+  const { container } = renderShell(<div>page</div>);
+  const brand = container.querySelector(".lf-sidebar__brand") as HTMLElement;
+  expect(brand).not.toBeNull();
+  // The mark is present, is an <svg>, and is decorative (aria-hidden) — the wordmark is
+  // the accessible name, so the lockup reads as one "LedgerFrame", never "graphic LedgerFrame".
+  const mark = brand.querySelector("svg.lf-brandmark");
+  expect(mark).not.toBeNull();
+  expect(mark?.getAttribute("aria-hidden")).toBe("true");
+  // The visible/accessible text is exactly the wordmark (the svg contributes nothing).
+  expect(brand.textContent?.trim()).toBe("LedgerFrame");
+  // The double rule is drawn in the accent token (both themes), not a hardcoded hex.
+  expect(mark?.innerHTML).toContain("var(--accent)");
+});
+
+test("index.html carries the brand-mark favicon links (SVG primary + PNG fallbacks) (P-4)", () => {
+  expect(indexHtml).toContain('rel="icon" type="image/svg+xml" href="/favicon.svg"');
+  expect(indexHtml).toContain('href="/favicon-32.png"');
+  expect(indexHtml).toContain('rel="apple-touch-icon"');
+  // Title unchanged.
+  expect(indexHtml).toContain("<title>LedgerFrame</title>");
 });
 
 test("one page from each of the four templates renders inside the shell", () => {

@@ -331,6 +331,18 @@ props are backend-computed `Decimal` strings (never client-computed).
 | **FileInput** *(amended)* | `onChange` (FileList), `accept?`, `multiple?`, `disabled?`, `aria-label`, `label?` | The sanctioned file control (CSV import); wraps the native input internally (§6 — no raw `<input type="file">`). Click-to-browse + drag-and-drop; shows the chosen filename. **Amended 2026-07-10 (Holdings page-build §9-3).** |
 | **Select** | `value`, `onChange`, `options`, `disabled?`, `onCommit?`, `aria-label` | Generic select for **non-master view-scope / user-record** choices (e.g. QuoteCardRow source, the account picker over `/accounts`). Categorical **data** fields use MasterSelect instead. **`onCommit`** = the same commit-on-pick mode as MasterSelect (first-run F3). *(Ratified 2026-07-10; `onCommit` added 2026-07-11.)* |
 
+**MasterSelect data source — DB-BACKED EXTENSIBLE MASTERS (§5.1 CLARIFICATION — RATIFIED 2026-07-16,
+page-accounts §9-3 gate).** `MasterSelect` is **the** control for a user-extensible master, not only a
+fixed `/refdata` vocab — this was always the intent ("extensible masters from their endpoints") but had
+**never shipped** until the Institution master. The clarification, **no new component:** an **`options`**
+prop supplies the master's **SERVED** list (id/label), which **replaces** the `/refdata`+registry source
+when present; **`allowCreate`** POSTs a new value through the caller's `onChange` (which calls the master
+endpoint and re-selects the canonical row). The Institution select on Accounts + Insurance reads its live
+list this way. The **wired-to-real-master state was ratified at `/kitchen-sink`** (page-accounts Phase 0a
+§12; the live POST round-trip proven in Phase 2/3a). `Combobox` remains **NOT for MASTER-DATA
+categoricals** (§5.5) — a searchable creatable control for hundreds of institutions would be a separate
+`Combobox`-scope amendment, not raised.
+
 **INPUT FOCUS IS ONE TREATMENT (§5.1 AMENDMENT — RATIFIED 2026-07-15, page-policy §12po1-10; platform-wide).**
 Every field wrapper (`.lf-field` — MoneyInput, PercentInput, QuantityInput, TextInput, DateInput, Select,
 MasterSelect, and any input inside a Dialog) carries **ONE `focus-visible` ring on the WRAPPER**; the inner
@@ -599,6 +611,23 @@ via a `ToastProvider` + `useToast()` `show(spec)`. Auto-dismisses after
 visible countdown bar; ARIA live-region (`role="status"`, `aria-live="polite"`);
 countdown + entrance animation disabled under reduced motion (the dismiss timer
 still fires). It carries **no figure and no provenance** — status only.
+
+### 5.6 Brand — the platform mark, "the double rule" (PROPOSED 2026-07-17, page-accounts P-4; ratify from the close-out screenshots)
+
+The **LedgerFrame brand mark** is a rounded square frame containing **one entry line** and a
+right-aligned **double rule**. The double rule is the bookkeeping mark ruled under a **verified final
+balance** — the whole product's promise (an honest, closed ledger) drawn in one glyph.
+
+| Component | Props (surface) | Usage rules |
+|-----------|-----------------|-------------|
+| **BrandMark** | `size?` (default `1.25em`), `className?` | The inline SVG mark. **Geometry is fixed** (`viewBox 0 0 24 24`, `stroke-linecap: round`, stroke-width 2): frame `rect x=3 y=3 w=18 h=18 rx=5`; entry `M7.5 9 h9`; double rule `M10.5 13.75 h6` + `M10.5 16.25 h6`. **Colour:** frame + entry are **`currentColor`** (inherit the surrounding text colour → both themes with zero overrides); the **double rule is the `--accent` token** (themed). **Decorative (`aria-hidden`)** — the wordmark beside it is the accessible name. |
+
+**Usage.** Two surfaces only: the **sidebar brand lockup** (`[mark] LedgerFrame`, mark sized to the
+wordmark cap height so the row height stays text-driven — the nav-density math §5.5 is untouched) and the
+**favicon** (`favicon.svg`, theme-adaptive via `prefers-color-scheme` — frame/entry near-black on a light
+tab, near-white on a dark tab, the double rule in the accent; 32/180 PNG fallbacks + `index.html` link
+tags). **Never distorted** (always square, geometry fixed) and **never recoloured** beyond
+`currentColor` + the accent. Specimen at `/kitchen-sink` (§5.5 chrome section), both themes.
 
 ---
 

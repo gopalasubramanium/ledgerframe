@@ -70,6 +70,8 @@ export type { GlossaryTermProps } from "./GlossaryTerm";
 
 // §5.5 Global chrome (D-066) — PROPOSED 2026-07-11 (page-chrome Phase 0a).
 // Ratify at the kitchen-sink look before shell assembly (C-1).
+export { BrandMark } from "./BrandMark";
+export type { BrandMarkProps } from "./BrandMark";
 export { Sidebar } from "./Sidebar";
 export type { SidebarProps } from "./Sidebar";
 export { NAV_GROUPS } from "./nav";

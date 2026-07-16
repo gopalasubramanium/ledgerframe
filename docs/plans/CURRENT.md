@@ -1093,7 +1093,46 @@ batch (delta notes on touched accepted surfaces). No page-local one-offs. `npm r
 
 ---
 
-## ACCOUNTS — WALK BATCH 1 DONE ⏸ AWAITING OWNER RE-WALK (2026-07-16)
+## ACCOUNTS — DONE ✅ (page ACCEPTED, owner, 2026-07-16)
+
+**`/accounts` is complete and owner-accepted.** The owner **re-walked both journeys live** on the reset,
+demo-seeded instance and accepted; walk batch 1 (§14ac-1..5) fixed + re-verified, the two carried judgment
+items (the §9-5 restatement wording · the reworded subtitle) **ratified as shipped** (§14ac-6). Full record:
+**`page-accounts.md` §14–§15**; central close row in **`RATIFICATION.md §6`**.
+
+**Platform delivered beyond the page** (this milestone built foundations, not just a page):
+- the **first DB-backed extensible master + merge** (Institution, D-008) — `String`→FK **fold-then-drop**
+  across **both** `accounts.institution` and `insurance_policy.insurer` (Amendment F), user-driven merge;
+- **entity CRUD** + `entity_kind` graduated to `/refdata` (Amendment H); **cost-basis method writable +
+  restatement** wiring (D-018, §9-5); **kind/currency write-enforcement** (400, no silent coerce, §9-9);
+- **account-scoped Holdings + Transactions** (`?account_id=`) with **journey guards** and one shared URL
+  builder (Amendment G, §14ac-2/5); served money display strings + base affix (§9-10);
+- **MasterSelect data source → DB-backed master** (§9-3, DESIGN-SYSTEM §5.1 clarification, no new component);
+- **the brand mark "the double rule"** (P-4) — `BrandMark` + sidebar lockup + theme-adaptive favicon
+  (DESIGN-SYSTEM §5.6, PROPOSED — owner ratifies from the close-out screenshots).
+
+**Close bookkeeping — changed-file table (`git diff --stat 1e371c9..HEAD`, grouped):**
+
+| Area | Files | Highlights |
+|------|-------|------------|
+| **Backend** (22) | `app/` routes/services/models/seed + 2 migrations; `tests/integration/` | institutions master+merge (`institutions.py`, `a2f1c9d47b60`); `b3e2f1a9c740` FK fold-then-drop; entities CRUD; accounts write path (entity_id/cost_basis_method/enforcement); `?account_id=` on holdings+transactions; 831 pytest |
+| **Frontend** (29) | `routes/Accounts.*` + `AccountsMockup`; `api/accounts.ts`; `nav/holdingsLink.ts`; `ui/BrandMark.tsx` + `brand.css` + `MasterSelect` options; `public/favicon.*`; `index.html`; e2e smoke + journey | the page, the two masters' editors, the shared URL builder, the P-4 brand mark; `npm run check` EXIT 0 |
+| **Specs** (6) | `API-CONTRACT.json` + `openapi.json` (130 paths); `DESIGN-SYSTEM` (§5.1 MasterSelect clarification + §5.6 Brand); `GLOSSARY` (4 terms); `MASTER-DATA`; `API-CONTRACT.md` | contract regen same-commit; §Brand PROPOSED |
+| **Plans/audit** (8) | `page-accounts.md` (§1–§15); `CURRENT.md`; `RATIFICATION.md §6`; `TEMPLATE-page-build.md` (§7 identity-column + §8 close-ritual push); `page-holdings`/`page-insurance` delta notes; `08-TECH-DEBT`; `ROADMAP` (R-35 sketch) | the close records + two mechanised lessons |
+
+**NEXT:**
+1. **Reports** (+Pack, D-061 export home — several DECLINED exports point here; `page-reports.md`, **PLAN
+   ONLY, verify-first**), then
+2. **Settings**, then **Help · Legal**, **AI-surfaces**, **Voice** (definition still owed, R-32),
+3. **Gates C→F**, then **tag v2.0.0**.
+
+*Nothing is built for Reports in this session.*
+
+---
+
+*(Prior Accounts walk statuses below, retained for the record — superseded by the DONE entry above.)*
+
+## ACCOUNTS — WALK BATCH 1 DONE (superseded by DONE ✅ above) (2026-07-16)
 
 **Owner walk (Phase 3b) batch 1 — §14ac-1..5 fixed + re-verified; the owner re-walks.** Findings +
 RED→GREEN in `page-accounts.md §14`.

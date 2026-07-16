@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import "./chrome.css";
+import { BrandMark } from "./BrandMark";
 import { NAV_GROUPS } from "./nav";
 import type { NavGroup } from "./nav";
 
@@ -65,7 +66,10 @@ export function Sidebar({
         className={`lf-sidebar${open ? " is-open" : ""}`}
         aria-label="Primary"
       >
-        <div className="lf-sidebar__brand">LedgerFrame</div>
+        <div className="lf-sidebar__brand">
+          <BrandMark className="lf-sidebar__brandmark" />
+          <span className="lf-sidebar__brandword">LedgerFrame</span>
+        </div>
         <div className="lf-sidebar__nav">
           {groups.map((group) => {
             // Every group header always renders (fixed D-043 skeleton); only built

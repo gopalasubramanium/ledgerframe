@@ -493,6 +493,14 @@ the theme/density matrix. Written as checkable statements.*
       destination mounted before the router's `location.search` reflected the query → an unfiltered fetch
       raced the scoped one). Click-the-control journey tests caught it; the fix was react-router
       navigation through a **shared URL builder** both entry points consume.
+- [ ] **A TABLE SPECIMEN MUST RENDER THE ROW'S IDENTITY COLUMN (page-accounts §14ac-1).** A management/
+      worklist table's first duty is to identify its row — so its geometry specimen **renders the row's
+      IDENTITY column** (the name/symbol the user reads to know *what it is*), and its honesty cases include
+      **a row identifiable ONLY by that column** (e.g. an account with no institution → "—" · Brokerage ·
+      INR is unidentifiable without its Name). Accounts' ratified geometry led with *institution*; neither
+      the §12 gate nor the pre-pass caught the missing **Name** column because no specimen row forced it.
+      The identity-only row is what makes the gate fail *by looking* — a specimen only proves what it
+      exercises.
 - [ ] **A GUARD MEASURES THE GEOMETRY THE FINDING NAMES (page-insurance §14in-1/§15b).** A guard
       asserts the **exact dimension the finding names, at the width where it appears** — not a
       neighbouring property. §14in-1's gap-rhythm guard went **green on section gaps (16px rhythm)**
@@ -550,6 +558,13 @@ tests. Never assemble the page against an endpoint that does not exist.*
   the owner. A page is **done only after this walk**, not at green suites. Layout/popover/picker
   items MUST be verified by rendering (screenshots / DOM measurement), not tests. **The owner
   closes the phase — never self-certify it.**
+- **Close ritual — the milestone is written down, then PUSHED (page-accounts §15-2).** On acceptance:
+  (a) record the close (plan §-retrospective + the central acceptance log, `RATIFICATION.md §6`); (b)
+  strike-check every §9/§12/§walk item against the actual diff before writing the retrospective (a claim
+  is not a change — §13-2); (c) **push the close-out commits to the remote before the owner re-uploads.**
+  Durability is part of closing, not an afterthought — the entire v2 rebuild once sat unpushed on the
+  local trunk (255 commits ahead of `origin/main`). **The session that closes a milestone ends with
+  `git push`.**
 
 ---
 

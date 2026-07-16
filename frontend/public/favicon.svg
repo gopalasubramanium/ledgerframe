@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-width="2">
+  <!-- LedgerFrame brand mark, "the double rule" (DESIGN-SYSTEM §Brand, P-4).
+       Default (light tab): frame + entry near-black, double rule the light accent.
+       Dark tab: the media query flips frame + entry near-white and the double rule to
+       the dark accent. Strokes are presentation ATTRIBUTES (they always paint via
+       <img>/rel=icon); the media query only overrides for dark. Explicit width/height
+       give the SVG intrinsic size so it rasterises reliably. A favicon SVG cannot read
+       CSS vars, so the accent token pair (#24476f / #6f9fd4) is inlined. -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .lf-ink  { stroke: #f1f5f9; }
+      .lf-rule { stroke: #6f9fd4; }
+    }
+  </style>
+  <rect class="lf-ink" x="3" y="3" width="18" height="18" rx="5" stroke="#0f172a" />
+  <path class="lf-ink" d="M7.5 9 h9" stroke="#0f172a" />
+  <path class="lf-rule" d="M10.5 13.75 h6" stroke="#24476f" />
+  <path class="lf-rule" d="M10.5 16.25 h6" stroke="#24476f" />
+</svg>
