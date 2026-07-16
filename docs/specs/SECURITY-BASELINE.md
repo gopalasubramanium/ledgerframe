@@ -26,6 +26,14 @@ v2 core is a **single-user, local-first appliance**. The model it defends:
   (TLS + secure cookies, CSRF, shared/durable rate limiting, per-user isolation,
   secret-manager integration) belongs to that layer.
 
+- **The Reports Pack route** (`GET /reports/pack`, D-038/D-061 — reports-pack Pack-9) is a
+  backend-served, **consolidated, human-readable HTML artifact**. It is served under the **same read
+  posture as every other read** (`require_read_auth`, the router-wide read gate): **no PIN → open on
+  the loopback default; a PIN gates it once set; LAN exposure requires a PIN**. It is **fully
+  self-contained** (inline CSS, no app JS, no external fetch), so it egresses nothing and executes
+  nothing. It carries **no bespoke one-route guard** — deliberately, so it is neither more nor less
+  reachable than the pages it summarises (gap #7; revisit is bound to read-auth — R-1, see §2 #7).
+
 The PIN is an **access lock, not data-at-rest protection** (§3); confidentiality
 of the stored ledger relies on **OS disk encryption**.
 
@@ -44,7 +52,7 @@ or **accepted with rationale** (recorded in an ADR). No gap is left unclassified
 | 4 | Rate limiter is in-process | **Fix in v2** | **Durable rate-limiter state that survives restart** (D-004). |
 | 5 | App writes its own `.env` + runs sudo helper | **Accept (ADR)** | Guardrailed per D-003 (§4): fixed allow-list, write-only keys, `.env` 0600, install-time opt-in. |
 | 6 | PIN entropy (numeric) | **Accept (ADR)** | Mitigated per D-002 (§3): min 6 digits, Argon2 + exponential lockout; access-lock posture; passphrase mode is ROADMAP R-1. |
-| 7 | No auth on read when no PIN set | **Accept (ADR)** | Deliberate no-PIN-open-local convenience (D-004); LAN exposure requires a PIN; first-PIN-from-loopback guard. |
+| 7 | No auth on read when no PIN set | **Accept (ADR)** | Deliberate no-PIN-open-local convenience (D-004); LAN exposure requires a PIN; first-PIN-from-loopback guard. **This is the platform "read posture", and it governs the backend-served Reports Pack artifact identically (§1, `GET /reports/pack` — reports-pack Pack-9): no bespoke one-route guard.** A stronger **read-auth** posture (authenticating reads even with no PIN set) is the natural revisit home for both this gap and the Pack route — it is bound to **ROADMAP R-1** (optional passphrase mode) and any future read-auth work, **not** a Pack-specific change. *(Recorded 2026-07-17, reports-pack Pack-9. NB: the task-named "R-30" is the Postgres-backend item, not a read-auth item — the read-auth revisit lives here + R-1.)* |
 | 8 | Secrets reachable by the process (no OS keyring) | **Accept (ADR)** | Env-only secrets at `.env` 0600, write-only key API; OS keyring/secret-manager is deferred to the exposure layer (D-004). |
 | 9 | AI validator is heuristic | **Accept (ADR)** | Defence-in-depth; posture set by D-070/D-071 — the fallback is a **correct deterministic template**, and the contract may not weaken (§5). |
 | 10 | `/system/version-check` egress | **Fix in v2** | Gated by the **no-egress toggle** — zero outbound calls including the version check (D-004/§7). |
