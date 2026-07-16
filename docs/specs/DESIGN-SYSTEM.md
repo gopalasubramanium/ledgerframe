@@ -233,7 +233,8 @@ Notes:
 - **Home** (Overview) has **ONE layout** — the ratified grid (D-046 AMENDMENT, page-home
   §12ho1-5/§12ho1-6). *(It branched on Simple/Full until the Simple layout was removed.)*
 - **Reports Pack** (`/reports/pack`) uses a dedicated **print layout**, not one of
-  the four — it is the sanctioned artifact (D-038/D-061).
+  the four — it is the sanctioned artifact (D-038/D-061). The print palette + `@media
+  print` page rules + running header are specified in **§5.1a** (reports-pack Pack-2).
 - Every template opens with **PageHeader** (§5) and routes empty regions through
   **EmptyState** (§5).
 - **Worklist row actions (standard affordance, added 2026-07-10).** Every
@@ -440,6 +441,51 @@ rather than a note about it.
 - **utf-8-sig always.** Files ship UTF-8 **with a BOM** so spreadsheet apps (Excel) decode UTF-8 instead
   of cp1252 — without it an em dash in a disclaimer garbles (`â€"`). The importer decodes `utf-8-sig`, so
   the BOM round-trips losslessly. One server home: `_csv_response(body, filename)`.
+
+**SCOPE — CSV vs the print artifact (RATIFIED 2026-07-17, reports-pack Pack-8).** The four rules above
+are scoped to **server-side CSV export**. For the **Reports Pack** print/HTML artifact (`/reports/pack`,
+D-038), the split is:
+- **Binds the print HTML (content-level):** **disclaimers always** (every reader's served `disclaimer`
+  renders verbatim in its section; the header carries the global not-advice block for the disclaimer-less
+  readers) and **now-snapshot "as-of" labelling** (a current-value figure is labelled as-of its generated
+  date, never as a period figure). These are honesty rules, not encoding rules — they apply to any egress.
+- **Does NOT apply:** **titles-human/data-machine** (the Pack is **rendered UI**, so D-105 applies in
+  full — every figure is a **served display string**, the opposite of the CSV's machine-numeric cells)
+  and **utf-8-sig/BOM** (the Pack emits **no CSV**; its export path is browser print-to-PDF, so there is
+  no spreadsheet-decoding byte concern — the BOM rule is CSV-only).
+
+### 5.1a Print artifact — the Reports Pack print layout (RATIFIED 2026-07-17, reports-pack Pack-2)
+
+*The Reports Pack (`/reports/pack`, D-038/D-061) is the **one** print artifact and uses a **dedicated
+print layout, not one of the four templates** (§3). It is a **backend-rendered, self-contained HTML
+document** (inline CSS, no app JS, no external fetch — reports-pack Pack-9), so its palette and page
+rules live **in the artifact's own inline `<style>`**, NOT in `frontend/src/theme/tokens.css` (the app
+token layer never loads at print time). This section is the spec that inline CSS derives from.*
+
+- **Print palette — light background, dark text (the light theme is the donor).** The platform ships
+  dark-theme-first + a light theme (`tokens.css:22-64`) + high-contrast; there is **no `@media print`
+  rule and no print palette in `frontend/src`**. Dark surfaces do not print. The Pack therefore renders
+  on a **light background (`#ffffff` page / `#f8fafc` app-chrome analog) with dark text (`#0f172a`)** —
+  the **light-theme tokens are the donor** (do not invent new colours). Borders/rules use the light
+  theme's hairline (`--border` analog); the artifact never paints a dark fill that would waste toner or
+  render illegibly.
+- **Semantic gain/loss is retained AS AN ENHANCEMENT, never the sole carrier.** `--gain`/`--loss` may
+  tint a figure, **but the sign carries the information** — every gain/loss figure prints its explicit
+  **`+` / `−` (U+2212)** sign (the app's signed-figure convention, `format_signed_pct_display`), so the
+  meaning survives **grayscale printing** (accountants print black-and-white). Colour is decoration on
+  top of the sign, never a substitute for it (semantic-colour honesty principle, §1).
+- **Page-break rules (`@media print`).** **`break-before: page`** on every **top-level section** (each
+  consolidated subsection and each per-entity section starts a fresh page); **`break-inside: avoid`** on
+  every **card** (a card/table does not split mid-content where avoidable); **`break-after: avoid`** on
+  section headings (a heading never orphans at a page foot).
+- **Repeating artifact header.** The artifact header (title "Reports Pack" · generated date · base
+  currency · current-FX caveat · not-advice line — reports-pack Pack-5) is authored so it **repeats on
+  each printed page** where the print context supports it (a running header), and is **always present on
+  the first page**. On screen it renders once at the top.
+- **Screen vs print.** On screen the artifact is a normal scrolling light-background document; the
+  `@media print` block adds the page-break geometry and the running header. Both are ratified at the
+  **Phase-0a print-geometry gate** (reports-pack §7a) — the owner looks at BOTH the on-screen rendering
+  AND the Playwright `media: print` emulation before Phase 1.
 
 ### 5.2 Data display
 
