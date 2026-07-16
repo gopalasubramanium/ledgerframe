@@ -7,6 +7,8 @@ Each test is written to be RED on the pre-delta code and GREEN after the delta i
 
 from __future__ import annotations
 
+import app.models  # noqa: F401 — register models on Base.metadata for the `session` fixture's create_all
+
 
 # --------------------------------------------------------------------------- #
 # 9-1 — GET /estate/meta is DELETED; /refdata is the single D-005 vocab source.
@@ -87,5 +89,37 @@ async def test_entity_id_rejected_with_400_on_every_endpoint(app_client):
 
     # The unscoped read still works.
     assert (await app_client.get("/api/v1/estate")).status_code == 200
+
+
+# --------------------------------------------------------------------------- #
+# 9-7 (A11, test-only) — doc-attention is computed twice, independently:
+# estate_report().readiness.docs_attention (estate.py:154) and the count inside
+# estate_signals() (estate.py:175), on the same predicate `status in (missing, outdated)`.
+# The ruling was consistent-by-construction + an EQUALITY TEST (no refactor). The test IS
+# the mechanism: if the two predicates ever diverge, it goes RED.
+# --------------------------------------------------------------------------- #
+async def test_doc_attention_count_is_one_derivation(session):
+    """readiness.docs_attention == the count estate_signals() reports, on a fixture holding
+    `missing` + `outdated` + `present` documents. Pins the two derivations to one answer."""
+    import re
+
+    from app.services.estate import create_document, estate_report, estate_signals
+
+    await create_document(session, {"title": "Property deed", "status": "missing"})
+    await create_document(session, {"title": "Will copy", "status": "outdated"})
+    await create_document(session, {"title": "Passport", "status": "present"})
+    await session.commit()
+
+    docs_attention = (await estate_report(session))["readiness"]["docs_attention"]
+    assert docs_attention == 2  # missing + outdated; present excluded
+
+    signals = await estate_signals(session)
+    sig = next((s for s in signals if "missing or outdated" in s), None)
+    assert sig is not None, "estate_signals must emit a missing/outdated attention line"
+    n = int(re.match(r"(\d+)", sig).group(1))
+    assert n == docs_attention, (
+        "the two doc-attention derivations disagree — readiness.docs_attention and "
+        "estate_signals() must stay one answer (§9-7)"
+    )
 
 
