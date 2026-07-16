@@ -508,3 +508,16 @@ I/J/K + Notes 1/2). §3b deltas that this milestone builds (§9-4 tax-lots CSV, 
 **DONE in Phase 0** (§11). The Pack rows (9-1/9-2/9-3-Pack-portion/9-11/9-12) are **its own milestone** — the
 declined-exports ledger stays **PENDING** in `CURRENT.md` until the Pack closes (Amendment I). **Phase 1
 (page assembly) is BLOCKED until the owner ratifies the Phase-0a specimen (§12).**
+
+---
+
+## 11. PHASE 0 — CONTRACT-DELTA EVIDENCE (backend-first; RED→GREEN per commit)
+
+*One delta per commit, in the task's order. Each honesty delta was proven **fail-first RED on the
+real cause** (the pre-fix builder shedding the served payload), then GREEN with a pinning test
+(TEMPLATE §3b value-test discipline). `npm run check` EXIT CODE and `make api-contract-check` are
+recorded where they apply.*
+
+| # | Delta [§9] | Fail-first RED (real cause) | GREEN (pin) | Commit |
+|---|-----------|-----------------------------|-------------|--------|
+| 1 | **realised-gains.csv** carries the served disclaimer + `base_realised_total_historical_fx` total row + `realised_fx_events_excluded` count row [9-5] | `test_realised_gains_csv_carries_served_disclaimer_and_both_totals` RED — the builder emitted only the bare `currency,symbol,…` event table (no disclaimer, no totals) | Builder leads with a title + served disclaimer + a current-FX / trade-date-FX / excluded-count totals block, then the event table; pin GREEN, existing `test_realised_gains_csv` updated for the new lead block | _(this commit)_ |

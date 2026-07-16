@@ -121,4 +121,46 @@ async def test_realised_gains_csv(app_client):
     r = await app_client.get("/api/v1/portfolio/realised-gains.csv")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/csv")
-    assert r.text.splitlines()[0].startswith("currency,symbol,name,sell_date")
+    # §9-5: the per-event table header is present (no longer line 0 — a disclaimer/totals block
+    # now leads the file so the served honesty payload travels with every export).
+    assert any(line.startswith("currency,symbol,name,sell_date") for line in r.text.splitlines())
+
+
+def _sample_realised_report() -> dict:
+    """A minimal realised-gains report dict shaped exactly like realised_gains_report's output
+    (tax.py:352-370) — used to PIN the CSV builder's rows without a DB (§3b value-test discipline)."""
+    return {
+        "year": 2024, "years": [2024], "long_term_days": 365, "base_currency": "SGD",
+        "currency_groups": [{
+            "currency": "USD", "realised_total": 100.0, "short_term": 40.0,
+            "long_term": 60.0, "income": 0.0,
+            "events": [{"symbol": "AAPL", "name": "Apple Inc.", "sell_date": "2024-03-01",
+                        "acquired_date": "2022-01-01", "quantity": 10.0, "proceeds": 200.0,
+                        "cost": 100.0, "gain": 100.0, "holding_days": 790, "long_term": True}],
+        }],
+        "base_realised_total_current_fx": 135.0,
+        "base_realised_total_historical_fx": 128.5,
+        "realised_fx_events_excluded": 2,
+        "disclaimer": "Organisation & reporting only — NOT tax advice. VERIFY WITH YOUR BROKER.",
+    }
+
+
+def test_realised_gains_csv_carries_served_disclaimer_and_both_totals():
+    """§9-5 (honesty — fail-first, pinned): the export must carry (a) the SERVED disclaimer
+    verbatim, (b) the trade-date-FX (historical) base total row, and (c) the excluded-events
+    count row. An export that sheds any of these is a Guarantee-3 / D-020/D-076/D-077 violation.
+    RED on the pre-§9-5 builder, which emitted only the bare per-event table."""
+    from app.services.tax import realised_gains_csv
+
+    rep = _sample_realised_report()
+    text = realised_gains_csv(rep)
+    lines = text.splitlines()
+
+    # (a) the served disclaimer travels into the file, verbatim.
+    assert rep["disclaimer"] in text
+    # (b) the trade-date-FX (historical) base total row — labelled + valued.
+    assert any("trade-date fx" in ln.lower() and "128.5" in ln for ln in lines), text
+    # the current-FX total is retained too (the comparison figure).
+    assert any("current fx" in ln.lower() and "135.0" in ln for ln in lines), text
+    # (c) the excluded-events count row — labelled + valued.
+    assert any("excluded" in ln.lower() and ",2" in ln for ln in lines), text

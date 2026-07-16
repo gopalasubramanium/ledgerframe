@@ -398,7 +398,13 @@ async def tax_lots_report(session: AsyncSession, long_term_days: int = 365,
 
 
 def realised_gains_csv(report: dict) -> str:
-    """Flatten a realised-gains report into CSV text (safe: no formula-injection prefixes)."""
+    """Flatten a realised-gains report into CSV text (safe: no formula-injection prefixes).
+
+    §9-5 (page-reports, honesty): the file LEADS with the served disclaimer and the base-currency
+    totals block — BOTH the current-FX total and the trade-date-FX (historical) total, plus the
+    count of realised events excluded from the historical total for want of a stored rate (R7 /
+    D-020/D-076). An export that shed these would strip the very caveats the on-screen report
+    carries — a Guarantee-3 violation — so they travel INTO the file, then the per-event table."""
     import csv
     import io
 
@@ -406,6 +412,14 @@ def realised_gains_csv(report: dict) -> str:
 
     buf = io.StringIO()
     w = csv.writer(buf)
+    base = report["base_currency"]
+    w.writerow([f"LedgerFrame Realised P/L report — {report['year']} (base {base})"])
+    w.writerow([sanitize_cell(report["disclaimer"])])
+    w.writerow([])
+    w.writerow([f"Base realised total ({base}, current FX)", report["base_realised_total_current_fx"]])
+    w.writerow([f"Base realised total ({base}, trade-date FX)", report["base_realised_total_historical_fx"]])
+    w.writerow(["Realised events excluded (trade-date FX unavailable)", report["realised_fx_events_excluded"]])
+    w.writerow([])
     w.writerow(["currency", "symbol", "name", "sell_date", "acquired_date", "quantity",
                 "proceeds", "cost", "gain", "holding_days", "long_term"])
     for g in report["currency_groups"]:
