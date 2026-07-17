@@ -36,6 +36,8 @@ export {
   Printer,
   Plus,
   CircleCheck,
+  // Destructive action (danger Button variant — reset/purge class, DESIGN-SYSTEM §5.4)
+  Trash2,
   // Status
   TriangleAlert,
 } from "lucide-react";

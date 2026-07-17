@@ -37,6 +37,7 @@
    * HSL(142,72→59%,29%) to remove neon bleed on light backgrounds; AA 5.65:1. */
   --gain: #1e763e;
   --loss: #b91c1c;
+  --loss-contrast: #ffffff; /* on-`--loss` foreground for the danger Button fill (§5.4 amendment). AA 5.9:1 */
   --attention: #b45309;
   --focus-ring: #24476f;
   /* Treemap neutral mix endpoint (magnitude scale, amended 2026-07-10). */
@@ -78,6 +79,7 @@
   --accent-contrast: #0f172a;
   --gain: #4ade80;
   --loss: #f87171;
+  --loss-contrast: #0f172a; /* on-`--loss` foreground for the danger Button fill (§5.4 amendment). AA ~8:1 */
   --attention: #fbbf24;
   --focus-ring: #6f9fd4;
   /* Treemap neutral mix endpoint (magnitude scale, amended 2026-07-10). */

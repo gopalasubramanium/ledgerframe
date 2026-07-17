@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import "./structure.css";
 
-export type ButtonVariant = "default" | "primary";
+export type ButtonVariant = "default" | "primary" | "danger";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** The visible text label. MANDATORY — an icon is never a label on its own (WCAG). */
@@ -36,6 +36,9 @@ export function Button({ children, icon: Icon, variant = "default", className, .
   const cls = [
     "lf-btn",
     variant === "primary" ? "lf-btn--primary" : "",
+    // `danger` — destructive, irreversible-or-drastic actions ONLY (DESIGN-SYSTEM §5.4 danger-variant
+    // amendment). It SIGNALS; protection is ConfirmDialog (+ the D-103 fresh purge-PIN where it applies).
+    variant === "danger" ? "lf-btn--danger" : "",
     Icon ? "lf-btn--icon" : "",
     className ?? "",
   ]

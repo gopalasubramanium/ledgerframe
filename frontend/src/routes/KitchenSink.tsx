@@ -94,7 +94,7 @@ import {
 } from "../format/number";
 import {
   Sun, Moon, Monitor, Rows2, Rows4, Contrast, Circle, Disc, Waves, Minus, Wind,
-  RotateCw, Ban, Menu, MoreHorizontal, Pencil, Upload, Download, Plus,
+  RotateCw, Ban, Menu, MoreHorizontal, Pencil, Upload, Download, Plus, Trash2,
 } from "../icons";
 
 // First-run checklist demo options (Phase 0a specimens).
@@ -957,6 +957,15 @@ export function KitchenSink() {
           </Specimen>
           <Specimen label="Button · disabled">
             <Button icon={Plus} disabled>Add goal</Button>
+          </Specimen>
+          {/* danger variant — DESIGN-SYSTEM §5.4 amendment (PROPOSED 2026-07-18, page-settings gate (b)).
+              Destructive/irreversible actions ONLY; it SIGNALS (protection is ConfirmDialog + the D-103
+              fresh purge-PIN). Filled from the --loss / --loss-contrast token family, both themes. */}
+          <Specimen label="Button · danger (destructive)">
+            <Button variant="danger" icon={Trash2}>Reset data…</Button>
+          </Specimen>
+          <Specimen label="Button · danger disabled">
+            <Button variant="danger" icon={Trash2} disabled>Reset data…</Button>
           </Specimen>
         </div>
       </Section>

@@ -862,3 +862,48 @@ governs the **base-currency SUMMARY** figure, which was otherwise bare.
   page reader's **served `base_currency`** (never hardcoded); a page whose reader lacked it gained it
   backend-first. Money **rows** that already carry per-quote codes (Markets, Heatmap, Pricing Health) are
   out of scope. Each touched accepted page carries a dated delta note + a re-run pre-pass.
+
+## §5.4 AMENDMENT — a `danger` ButtonVariant (PROPOSED 2026-07-18, page-settings Phase-0a gate ruling (b); ratify at the Settings walk)
+
+**Raised by the owner at the Settings Phase-0a specimen gate (page-settings §12 ruling (b)).** The
+ratified `Button` inventory has **two** variants — `default | primary` (`Button.tsx:6`) — and **no
+danger variant**. The Settings specimen therefore rendered its destructive "Reset data" action with a
+**one-off local CSS tint** (`.set__dangerbtn` — text+border in `--loss`); the owner ruled that tint
+**must NOT ship** and that destructive actions get a **ratified variant** instead. This amendment adds it.
+
+**The variant.** `ButtonVariant` gains a third member: `danger`. **Same anatomy as every `Button`** — a
+lucide icon + a **mandatory** text label, the §5.4 icon+label treatment and the §2.1/`1em` icon sizing
+unchanged (a danger button is a `Button`, not a new component). It is a **filled** treatment mirroring
+`--primary`'s anatomy, drawn from the **semantic loss/danger token family** in **both themes**:
+
+| Slot | Token | Light | Dark |
+|------|-------|-------|------|
+| Surface fill | `--loss` | `#b91c1c` | `#f87171` |
+| Label + icon | `--loss-contrast` *(NEW)* | `#ffffff` | `#0f172a` |
+| Border | `--loss` | `#b91c1c` | `#f87171` |
+
+`--loss-contrast` is a **new token in the token layer** (`tokens.css`, both themes) — the on-`--loss`
+foreground, exactly as `--accent-contrast` is the on-`--accent` foreground. It is added because a **filled**
+danger surface needs a legible foreground and **no colour literal may live outside the token layer** (the
+`check:tokens` drift guard). WCAG AA holds in both themes (white on `#b91c1c` ≈ 5.9:1; `#0f172a` on
+`#f87171` ≈ 8:1, §7).
+
+**This EXTENDS the §2.1 `--loss` usage rule.** §2.1 reads *"`--gain`/`--loss` appear only on gain/loss
+figures and their glyphs."* Amended: **`--loss` may also fill the `danger` Button variant's surface** — a
+destructive-action affordance — in addition to gain/loss figures and their glyphs. No other new surface
+use of `--loss` is authorised by this amendment; a red **fill** appears **only** on the danger Button.
+
+**Usage rule (recorded, binding on ratification).** The `danger` variant is for **destructive,
+irreversible-or-drastic actions ONLY** — the **reset-data / purge** class and the **merge-losing-side**
+class of action. It is **not** a general "important" or "warning" button (that is `primary`), and it is
+**never** decorative. Crucially: **the variant SIGNALS, it does not PROTECT.** Protection still comes from
+**`ConfirmDialog`** and, where **D-103** applies (the destructive purge), the **fresh purge-PIN**
+(`requirePin`) — a red button with no confirm is still a defect. A danger `Button` outside a confirm flow
+is a misuse.
+
+**Slice (frontend, same commit):** `ButtonVariant` union extended; `Button.tsx` maps `danger →
+lf-btn--danger`; `structure.css` adds `.lf-btn--danger` (token-only, mirroring `.lf-btn--primary`);
+`--loss-contrast` added to `tokens.css` (both themes). A both-themes **specimen** is added to the
+`/kitchen-sink` Button gallery so this amendment is **ratified by looking** (the prior-amendment standard).
+The specimen's local `.set__dangerbtn` is **retired** when the real Settings page adopts `variant="danger"`
+(Phase 1). **No colour literal outside the token layer** — the drift check stays green.

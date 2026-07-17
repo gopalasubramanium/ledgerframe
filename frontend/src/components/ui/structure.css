@@ -202,6 +202,16 @@
   color: var(--accent-contrast);
   border-color: var(--accent);
 }
+/* danger — destructive, irreversible-or-drastic actions ONLY (DESIGN-SYSTEM §5.4 danger-variant
+   amendment). Filled, mirroring --primary's anatomy, drawn from the semantic loss token family; the
+   foreground is the --loss-contrast token (no colour literal leaves the token layer). Its own hover
+   override keeps the loss border (the base .lf-btn:hover would otherwise turn it --accent). */
+.lf-btn--danger {
+  background: var(--loss);
+  color: var(--loss-contrast);
+  border-color: var(--loss);
+}
+.lf-btn--danger:hover { border-color: var(--loss); }
 
 /* Icon-only control button (chrome top-bar cluster: display axes + rotation +
    detail). Square, borderless-until-hover, slim; the visible glyph is decorative
