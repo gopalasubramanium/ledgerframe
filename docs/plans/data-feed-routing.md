@@ -188,6 +188,14 @@ Each row built backend-first; regenerate `API-CONTRACT.json` + `docs/openapi.jso
 No egress is added (routing config is local). Resolve-time re-validation is a
 **behaviour** (invisible to a shape check) → pinned by a fail-first test (§9 item 3).
 
+> **[CORRECTION 2026-07-18, ratified §12 (Flag 1).]** The three added operations
+> above (`GET`, `PUT`, `DELETE`) land on **two** OpenAPI path-keys — `GET` and `PUT`
+> share `/system/routing-matrix`, and `DELETE` owns
+> `/system/routing-matrix/{asset_class}/{listing_country}`. So the binding contract
+> count is **132 → 134 path-keys**, not the "+3 / 135" this §4b prose originally
+> implied (which counted operations). The ruled endpoint SHAPES shipped verbatim;
+> 134 is the observed path-key count — resolved by evidence.
+
 ---
 
 ## 5. NEW DATA MODEL (the missing scope — mapping table)
@@ -300,7 +308,7 @@ the owner ratifies each. Ruled strictly against the coverage table + the verifie
 | **8 ⚑** | **Tier-dependent capabilities** (owner-raised 2026-07-18) | A provider's effective coverage varies by key tier (`av_tier`: `index` premium-only; ETF proxies when free). How does validation treat tier-unknown, resolve-time use the learned tier, and Pricing Health label a tier-degraded cell? | **Grounded strictly in `external.py:96-157`.** (a) **Scope note:** `av_tier` varies **`index` only** (`_AV_INDEX_SYMBOLS`); `index` is **not a holdings quote-lane** (`DEFAULT_PRIORITY` has no index lane), so within R-38's quotes-lane scope the tier variance is **narrow** — it bites the Markets/Global surface, not holding routing. (b) **Edit-time:** validate against **declared** CAPABILITIES (`alphavantage` declares `index`, `:67`); `av_tier` is **learned at runtime, not persisted** (`:99`), so edit-time **accepts with caveat** (block would be dishonest — the tier is genuinely unknown until the first probe). (c) **Resolve-time:** honours the **learned** `av_tier` via the **existing** ETF-proxy fallback (`:104-105`, `:149-157`) — **no new tier semantics invented**. (d) **Pricing Health:** a tier-degraded cell shows a **served honest string** (e.g. *"index via ETF proxy — key not premium"*), never a fabricated real-index label. |
 | **9** | **The editor UI** | Ratified components only; an editable-cell grid may be a new pattern. | **Compose `DataTable` + `MasterSelect` (cell renderer) + `StatusChip`** — all ratified. If the editable-cell-grid composes cleanly, **no amendment**; if it needs a new affordance, it is a **§5 amendment raised at Phase 0a** (the route-chain precedent). Anything beyond the inventory is surfaced there, never improvised mid-build. |
 | **10** | **Provenance on Pricing Health** | Served per-instrument "which provider priced this, via which rule". | **`route()` gains a served `route_rule` field** (`override`/`matrix`/`lane`/`active`) — **one derivation** from the resolver, surfaced in the existing Pricing Health diagnostics (`route_source`/`route_lane`/`priority_chain` already served, `page-pricing-health.md:130-131`). **Read-only** (D-072); the editor stays in Settings. Reshape of `/portfolio/pricing-health` (§4b). |
-| **11** | **Contract deltas** | The CRUD + reshape surface. | **`GET`/`PUT` `/system/routing-matrix`, `DELETE /system/routing-matrix/{class}/{country}`, and `route_rule` on `/portfolio/pricing-health`** — backend-first, contract regen same commit, `require_auth` on writes, served display strings (D-105). Baseline 132 → +3 add. Removal/rename tests discriminate by **shape** (§4b). |
+| **11** | **Contract deltas** | The CRUD + reshape surface. | **`GET`/`PUT` `/system/routing-matrix`, `DELETE /system/routing-matrix/{class}/{country}`, and `route_rule` on `/portfolio/pricing-health`** — backend-first, contract regen same commit, `require_auth` on writes, served display strings (D-105). ~~Baseline 132 → +3 add.~~ Removal/rename tests discriminate by **shape** (§4b). **[CORRECTION 2026-07-18, ratified §12:** the "+3 add / 135" counted operations, not path-keys; the three ruled operations land on **two** path-keys (GET+PUT share `/system/routing-matrix`), so the binding count is **132 → 134 path-keys**. The ruled SHAPES shipped verbatim — resolved by evidence.**]** |
 | **R ⚑** | **R-38 vs D-072 / R-13 reconciliation** | D-072 forbids "user-editable provider priority" and parks it as R-13; R-38 is user-editable routing. | **R-38 is a *different shape* and does NOT unpark R-13.** The matrix *selects one provider per cell*; it does **not reorder a lane's priority chain**. Pricing Health stays **read-only** (D-072 intact); the editor is a **new Settings surface**. The owner's R-38 activation (`ROADMAP.md:50`) is the ruling that this cell-selection editing is sanctioned where lane-priority editing (R-13) remains parked — **stated here for the owner to affirm**, so the two decisions don't silently conflict. |
 | **T** | **Terminology gap** | Any new user-facing R-38 term. | If a label like *"Routing matrix"* is shown, author it in **`GLOSSARY.md` first** (canonical), then `mocks/glossary.ts`, guarded by `test_glossary_parity.py` (page-heatmap §13-1). *"Data feeds"* stays a plain tab label (no entry, §9-4). Confirm at the one-pass which R-38 strings are glossary terms vs plain labels. |
 
@@ -456,3 +464,40 @@ judgment calls surfaced honestly rather than silently decided):**
 **STATUS: STOPPED at Phase 0a for owner ratification-by-looking.** NEXT (owner-gated):
 Phase 1 assembly (the real Settings → Data feeds editor + Pricing Health provenance
 column) — BLOCKED until the owner ratifies the specimen and the two flagged items.
+
+---
+
+## §12 — PHASE 0a RATIFICATION RECORD (owner, 2026-07-18)
+
+The Phase 0a specimen (`bb420de`) was **RATIFIED BY THE OWNER on 2026-07-18** by
+looking. Both flagged items were ruled. Phase 0a is closed; Phase 1 assembly is
+unblocked and proceeds from these rulings.
+
+- **SPECIMEN RATIFIED.** The editor grid composes from ratified components
+  (`DataTable` + a `MasterSelect` cell renderer + `StatusChip` + a `Clear`
+  `Button`) — **NO §5 DESIGN-SYSTEM amendment** is raised. All five honesty frames
+  (healthy mapped cell §9-1; unkeyed degraded caveat §9-7; tier-degraded served
+  string §9-8; capability-mismatch honest 400 §9-3; empty matrix = today §9-2)
+  are **accepted as staged**, plus the Pricing Health provenance column (all four
+  `route_rule` values, read-only §9-10).
+
+- **FLAG 1 — RATIFIED. Contract count = 134 path-keys.** `GET` + `PUT` share the
+  `/system/routing-matrix` path-key; the three ruled OPERATIONS land on **two**
+  OpenAPI path-keys (`/system/routing-matrix` and
+  `/system/routing-matrix/{asset_class}/{listing_country}`). The ruled endpoint
+  **SHAPES** shipped verbatim; **134** is the observed binding path-key count. The
+  "+3 / 135" in the §4b/§11 planning prose was a counting slip (operations, not
+  path-keys) — see the dated correction notes in-place there. *Resolved by
+  evidence, 2026-07-18.*
+
+- **FLAG 2 — AFFIRMED. The resolve-time matrix gate is CAPABILITY (live-capable +
+  keyed), NOT chain-membership.** A cell may name a capable, keyed provider that
+  is **outside** the lane's fallback chain and it will price the instrument. The
+  edit-time 400 already blocks incapable cells; Amendment A's fall-through reasons
+  (rate-limit / unkeyed / tier-degraded / error) are **exhaustive** and
+  chain-membership is **deliberately not among them** — the matrix is the
+  authority that *selects* the provider (recorded verbatim against §9-1 / §9-3).
+
+**Build from here (owner-gated, this session):** Phase 1 assembly · Phase 2 tests ·
+Phase 3a scripted pre-pass → STOP. Phase 3b is the owner walk (separate session,
+no self-certification).
