@@ -614,11 +614,46 @@ async def _name_from_cache(session: AsyncSession, instr: Instrument, ac: str) ->
         coin = await session.get(CoingeckoCoin, ids["coingecko_id"])
         if coin and coin.name:
             return coin.name
-    if ac == "mutual_fund" and "amfi_code" in ids:
-        sch = await session.get(AmfiScheme, ids["amfi_code"])
-        if sch and sch.name:
-            return sch.name
+    if ac == "mutual_fund":
+        # §14dr-16 — resolve by the mapped amfi_code identifier, OR (the owner's "103504"
+        # case) directly by SYMBOL when it IS a bare AMFI scheme code. Codes are unique, so
+        # a symbol-as-code match is safe; crypto symbols are ambiguous, so crypto stays
+        # identifier-only above.
+        code = ids.get("amfi_code") or (instr.symbol if instr.symbol.isdigit() else None)
+        if code:
+            sch = await session.get(AmfiScheme, code)
+            if sch and sch.name:
+                return sch.name
     return None
+
+
+async def backfill_master_names(session: AsyncSession) -> list[dict]:
+    """§14dr-16 — a served, idempotent repair: heal instruments identified only by their
+    code by resolving the display name from the synced master (AMFI scheme / CoinGecko coin).
+    Runs on a master refresh. Never overwrites a real name; returns the list of repairs
+    (each also logged) so the served result is honest about what it changed."""
+    from app.models import AuditEvent
+
+    instruments = (await session.execute(select(Instrument))).scalars().all()
+    healed: list[dict] = []
+    for instr in instruments:
+        if _has_real_name(instr):
+            continue
+        ac = instr.asset_class.value if hasattr(instr.asset_class, "value") else str(instr.asset_class or "")
+        name = await _name_from_cache(session, instr, ac)
+        # Only apply a GENUINE name — not the bare code, not a placeholder cache name
+        # ((DEMO)/(CSV)). This keeps the repair idempotent (a real name satisfies
+        # _has_real_name → skipped next run) and avoids re-writing placeholder names.
+        candidate = (name or "").strip()[:160]
+        if candidate and candidate.upper() != instr.symbol.upper() \
+                and "(DEMO)" not in candidate and "(CSV)" not in candidate:
+            instr.name = candidate
+            session.add(AuditEvent(category="mutation", action="backfill_instrument_name",
+                                   detail=f"{instr.symbol} -> {instr.name}"))
+            healed.append({"symbol": instr.symbol, "name": instr.name})
+    if healed:
+        await session.flush()
+    return healed
 
 
 async def _get_or_create_instrument(

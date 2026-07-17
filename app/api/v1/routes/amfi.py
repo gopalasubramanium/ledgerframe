@@ -45,8 +45,13 @@ async def amfi_refresh(
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(502, f"could not fetch AMFI NAVs: {str(exc)[:160]}") from exc
     result = await amfi_svc.refresh_schemes(session, text)
+    # §14dr-16 — heal instruments identified only by their code (the owner's "103504")
+    # now that the master is synced. Served + logged + idempotent.
+    from app.services.market import backfill_master_names
+    result["names_backfilled"] = len(await backfill_master_names(session))
     session.add(AuditEvent(category="mutation", action="amfi_refresh",
-                           detail=f"schemes={result['schemes']} priced={result['priced']}"))
+                           detail=f"schemes={result['schemes']} priced={result['priced']} "
+                                  f"names_backfilled={result['names_backfilled']}"))
     return result
 
 

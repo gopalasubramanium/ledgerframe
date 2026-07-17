@@ -56,6 +56,32 @@ async def test_refresh_is_idempotent(app_client):
     assert st["schemes"] == 5
 
 
+async def test_refresh_backfills_codenamed_mutual_fund_name(app_client):
+    """§14dr-16 — a name-less mutual fund whose SYMBOL is a bare AMFI code (added from the
+    master without a mapping — the owner's "103504" case) gets its display name resolved
+    from the master on the next refresh. Served in the result (names_backfilled), logged,
+    idempotent, never overwrites a real name."""
+    # A code-named, name-less mutual fund (the dr-16 create drop: no name persisted).
+    await app_client.post("/api/v1/portfolio/transactions", json={
+        "symbol": "119551", "type": "buy", "ts": "2024-01-01T10:00:00",
+        "quantity": 1, "price": 10, "currency": "INR", "asset_class": "mutual_fund"})
+    h = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    mf = next(x for x in h if x["symbol"] == "119551")
+    assert (mf["name"] or "119551") == "119551"  # identified only by the code
+
+    # A master refresh HEALS it — a served count + the resolved scheme name.
+    r = await app_client.post("/api/v1/amfi/refresh", files=_file())
+    assert r.json()["names_backfilled"] >= 1
+
+    h2 = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    mf2 = next(x for x in h2 if x["symbol"] == "119551")
+    assert mf2["name"] == "Aditya Birla Sun Life Frontline Equity Fund - Direct Plan - Growth"
+
+    # Idempotent: a second refresh backfills nothing new (the name is already real).
+    r2 = await app_client.post("/api/v1/amfi/refresh", files=_file())
+    assert r2.json()["names_backfilled"] == 0
+
+
 async def test_status_synced_at_never_then_after_refresh(session):
     """§14dr-13 — status serves an honest last-*synced* timestamp: None until the master
     is synced (the never-synced empty the Masters card + picker read), an ISO string after.

@@ -61,10 +61,16 @@ async def coingecko_refresh(
                 published = await cg.publish_prices(session, await fetch_prices(ids))
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(502, f"could not reach CoinGecko: {str(exc)[:160]}") from exc
+    # §14dr-16 — heal instruments identified only by their code now the master is synced
+    # (crypto resolves via its coingecko_id mapping). Served + logged + idempotent.
+    from app.services.market import backfill_master_names
+    names_backfilled = len(await backfill_master_names(session))
     session.add(AuditEvent(category="mutation", action="coingecko_refresh",
-                           detail=f"coins={coins} published={published}"))
+                           detail=f"coins={coins} published={published} "
+                                  f"names_backfilled={names_backfilled}"))
     result = await cg.status(session)
     result["published"] = published
+    result["names_backfilled"] = names_backfilled
     return result
 
 
