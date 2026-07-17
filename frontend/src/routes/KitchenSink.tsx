@@ -240,7 +240,7 @@ export function KitchenSink() {
   const toast = useToast();
 
   // §5.5 global chrome demos (PROPOSED 2026-07-11 — page-chrome Phase 0a)
-  const [rotationOn, setRotationOn] = useState(false);
+  // (the rotation toggle demo was removed 2026-07-18 — the toggle is HIDDEN until R-37, page-settings §12 (d))
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
@@ -1205,8 +1205,6 @@ export function KitchenSink() {
                 controls={<DisplayControls />}
                 clock={<Clock timezone="Asia/Singapore" />}
                 demoBadge={<DemoBadge />}
-                rotationOn={rotationOn}
-                onToggleRotation={() => setRotationOn((v) => !v)}
               />
               <StaleBanner count={3} />
               {!updateDismissed && (

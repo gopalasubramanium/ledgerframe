@@ -551,7 +551,8 @@ fetch timing. Applies to any future chrome↔page count (stale, review-attention
 
 ### 5.5 Global chrome (D-066) — composed, not per-page
 
-DemoBadge, Clock (timezone), theme cycle, rotation toggle, **StaleBanner**,
+DemoBadge, Clock (timezone), theme cycle, ~~rotation toggle~~ *(**HIDDEN 2026-07-18**,
+page-settings §12 (d) — restored by R-37)*, **StaleBanner**,
 **UpdateBanner** (respects no-egress: zero outbound calls when enabled, version
 check + banner included), and the **Ask panel** (P-6: SSE streaming, fact-pack
 before answer, validated-before-display, ephemeral, privacy-mode label always
@@ -567,7 +568,7 @@ The pieces above are now built as named components in `src/components/ui/`
 | Component | Props (surface) | Usage rules |
 |-----------|-----------------|-------------|
 | **Sidebar** | `open?`, `onClose?`, `groups?` (default `NAV_GROUPS`), `activePath?`, `showAll?` | The ONE nav: six fixed groups in fixed order (D-043), NOT reorderable; active route from the router (NavLink), bolder accent rail (`--nav-rail-width`). **Progressive reveal:** every group header always renders; only **built pages** (`item.built`) appear as entries — a group with none built shows its header only; entries appear as pages ship. `showAll` previews the full skeleton (specimens). **Responsive (D-102):** fixed at laptop+, off-canvas below (opened by the TopBar toggle). Brand wordmark shows here at laptop+. `activePath` forces the highlight for previews only. **Amendment PROPOSED 2026-07-11 (page-portfolio §12 batch-3):** page entries are **indented** under their group header (extra left padding) for visual hierarchy — the active rail stays at the left edge; D-043 groups/order are untouched. |
-| **TopBar** *(amendment PROPOSED 2026-07-13, page-home §9-15 — ratify at the walk)* | `onToggleNav?`, `controls?`, `clock?`, `demoBadge?`, `rotationOn?`+`onToggleRotation?`, `askSlot?` | Composed once above every page (D-066). **Slim (~48px), calm register.** Layout container; the shell supplies the slots. Right-aligned cluster is **icon-only** (tooltip + aria-label carry the state): the relocated display axes (`controls`), then the **one toggle this bar owns — rotation (D-044)** — then Clock + DemoBadge. **Amendment PROPOSED 2026-07-13 (page-home §9-15):** the **Detail toggle is REMOVED from the top bar** — `detailLevel?`/`onToggleDetail?` are **deleted** from the props. This closes a spec-vs-code divergence: **D-040** ("the global top-bar toggle is **removed**") and **IA §Global chrome** ("the Detail toggle **leaves** the top bar" — its list otherwise reads "StaleBanner *kept*", "rotation toggle *stays*") always said it goes; this row said it stays, and the code shipped it **with state that persisted nowhere**. The control is **Settings'** ("**Home layout: Simple / Full**", the §9-1 ratified label), backed by the **server-persisted `home_layout`** setting — so **rotating to Home uses the configured layout, one setting, no special case** (D-040). IA/D-040 stand as written; this row is corrected to match them. **No banners inside** (they are strips below — amendment 2). Brand "LedgerFrame" sits top-left **only at narrow widths** (the sidebar carries it at laptop+ → exactly one brand visible, never two). Shows the nav toggle at narrow widths (D-102). **`askSlot` is the reserved Ask-panel slot (D-067) — DEFERRED (C-2), left empty for now.** |
+| **TopBar** *(amendment PROPOSED 2026-07-13, page-home §9-15 — ratify at the walk)* | `onToggleNav?`, `controls?`, `clock?`, `demoBadge?`, ~~`rotationOn?`+`onToggleRotation?`~~ *(removed 2026-07-18 with the hidden toggle — restored by R-37)*, `askSlot?` | Composed once above every page (D-066). **Slim (~48px), calm register.** Layout container; the shell supplies the slots. Right-aligned cluster is **icon-only** (tooltip + aria-label carry the state): the relocated display axes (`controls`) ~~, then the **one toggle this bar owns — rotation (D-044)** —~~ *(**rotation toggle HIDDEN 2026-07-18** — owner-ruled at the Settings Phase-0a gate, page-settings §12 (d); dead-affordance principle. The bar now owns **no** toggle; **R-37** restores rotation with its engine.)* then Clock + DemoBadge. **Amendment PROPOSED 2026-07-13 (page-home §9-15):** the **Detail toggle is REMOVED from the top bar** — `detailLevel?`/`onToggleDetail?` are **deleted** from the props. This closes a spec-vs-code divergence: **D-040** ("the global top-bar toggle is **removed**") and **IA §Global chrome** ("the Detail toggle **leaves** the top bar" — its list otherwise reads "StaleBanner *kept*", "rotation toggle *stays*") always said it goes; this row said it stays, and the code shipped it **with state that persisted nowhere**. The control is **Settings'** ("**Home layout: Simple / Full**", the §9-1 ratified label), backed by the **server-persisted `home_layout`** setting — so **rotating to Home uses the configured layout, one setting, no special case** (D-040). IA/D-040 stand as written; this row is corrected to match them. **No banners inside** (they are strips below — amendment 2). Brand "LedgerFrame" sits top-left **only at narrow widths** (the sidebar carries it at laptop+ → exactly one brand visible, never two). Shows the nav toggle at narrow widths (D-102). **`askSlot` is the reserved Ask-panel slot (D-067) — DEFERRED (C-2), left empty for now.** |
 | **StaleBanner** | `count`, `href?` (→ Pricing Health) | Status summary, NOT a canonical figure (P-1) — reads the summary reader, links to the canonical page, recomputes nothing. **Renders as a full-width slim status strip BELOW the top bar, in normal flow (pushes content, never overlays), only when active** (amendment 2). Amber attention only (§2.1). **Hidden at `count ≤ 0`** (no "0 stale" noise). |
 | **UpdateBanner** | `version` (`string \| null`), `href?` (→ Settings/About), `onDismiss?` | Full-width status strip below the bar (as StaleBanner). **Presentational only — makes no network call.** The version comes from a no-egress-guarded reader; under no-egress that reader does ZERO outbound calls and passes `null`, so the strip never renders (D-075/D-060). Zero-outbound is verified at the data layer (C-3), not in the component. |
 | **DemoBadge** | `active?` | Signals demo/seed data (no figure is real). Renders nothing when not demo (honest). |
@@ -576,9 +577,11 @@ The pieces above are now built as named components in `src/components/ui/`
 
 `NAV_GROUPS` (`ui/nav.ts`) is the canonical sidebar model, verbatim from
 INFORMATION-ARCHITECTURE §3 (D-043); each `NavItem` carries a `built` flag (only
-built pages appear as entries). Display axes, rotation, and Detail are rendered as
-**icon-only** `.lf-iconbtn` buttons (tooltip + aria-label carry state); rotation and
-Detail are plain buttons owned by TopBar, not separate components.
+built pages appear as entries). Display axes ~~, rotation, and Detail~~ are rendered as
+**icon-only** `.lf-iconbtn` buttons (tooltip + aria-label carry state). *(The **rotation**
+toggle is **HIDDEN 2026-07-18** — page-settings §12 (d), restored by R-37; **Detail** was
+removed earlier, page-home §9-15. The bar now owns **no** rotation/Detail toggle — only the
+display axes ride here.)*
 
 **Stateful-icon rule (re-ratify 2026-07-11; icons = lucide, ADR-0003 §11-15).** A
 **stateful** toggle MUST render a **state-distinct icon per state** — the icon *shows*
@@ -594,7 +597,7 @@ assignments:
 | Density | comfortable `Rows2` · compact `Rows4` |
 | Contrast | system `Contrast` · normal `Circle` · high `Disc` |
 | Motion | full `Waves` · reduced `Minus` · system `Wind` |
-| Rotation | on `RotateCw` · off `Ban` |
+| ~~Rotation~~ *(HIDDEN 2026-07-18, page-settings §12 (d) — restored by R-37)* | ~~on `RotateCw` · off `Ban`~~ |
 | Detail | simple `LineChart` · full `CandlestickChart` |
 | Menu / overflow | `Menu` (reserved) · `MoreHorizontal` (overflow popover, RowMenu) |
 | Page actions | Edit `Pencil` · Import `Upload` · Export `Download` · Add `Plus` |

@@ -92,28 +92,21 @@ test("Sidebar activePath overrides router location for previews", () => {
   expect(screen.getByRole("link", { name: "Holdings" }).className).toContain("is-active");
 });
 
-// --- TopBar stateful icons (state-distinct icon rule; lucide, ADR-0003) ------
-function svgClass(el: HTMLElement): string | null {
-  return el.querySelector("svg")?.getAttribute("class") ?? null;
-}
-
-test("TopBar rotation toggle renders a distinct lucide icon per state", () => {
-  const { rerender } = render(<TopBar rotationOn={false} onToggleRotation={() => {}} />);
-  const rotOff = svgClass(screen.getByRole("button", { name: /Rotation: Off/ }));
-  expect(rotOff).toContain("lucide-ban");
-
-  rerender(<TopBar rotationOn onToggleRotation={() => {}} />);
-  const rotOn = svgClass(screen.getByRole("button", { name: /Rotation: On/ }));
-  expect(rotOn).toContain("lucide-rotate-cw");
-  // State-distinct (the rule).
-  expect(rotOn).not.toBe(rotOff);
+// --- TopBar toggles (dead-affordance removals) ------------------------------
+// The rotation toggle is HIDDEN until R-37 — owner-ruled at the Settings Phase-0a gate (page-settings
+// §12 ruling (d), dead-affordance principle: it wrote local state consumed by nothing once the three
+// rotation keys were removed in Phase 0). The bar owns NO rotation toggle until R-37 restores it with
+// its engine. This test asserts the ABSENCE (it was flipped from asserting the on/off icon states).
+test("TopBar has NO rotation toggle (hidden until R-37, page-settings §12 (d))", () => {
+  render(<TopBar />);
+  expect(screen.queryByRole("button", { name: /Rotation:/ })).toBeNull();
 });
 
 // page-home §9-15 — the Detail toggle is GONE from the top bar: it held state that persisted nowhere.
 // And nothing replaced it — §12ho1-6 removed the Simple layout, so there is no Home layout to toggle
 // anywhere (the `home_layout` setting is retired from the contract too).
 test("TopBar has NO Detail toggle (page-home §9-15)", () => {
-  render(<TopBar rotationOn={false} onToggleRotation={() => {}} />);
+  render(<TopBar />);
   expect(screen.queryByRole("button", { name: /Detail/i })).toBeNull();
 });
 

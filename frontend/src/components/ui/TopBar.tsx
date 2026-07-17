@@ -2,15 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import "./chrome.css";
 import "./structure.css";
-import { RotateCw, Ban, Menu, MoreHorizontal } from "../../icons";
+import { Menu, MoreHorizontal } from "../../icons";
 import { BrandLockup } from "./BrandLockup";
 
 // Stateful-icon rule (DESIGN-SYSTEM §5.5, lucide ADR-0003): each toggle shows a
 // state-distinct icon; the tooltip names the state ("Function: state") and the
-// aria-label matches. Rotation = RotateCw(on)/Ban(off) — the ONE toggle this bar owns.
-// The Detail toggle was REMOVED (page-home §9-15, DESIGN-SYSTEM §5.5 amendment) — it held state that
-// persisted nowhere. Nothing replaced it: §12ho1-6 removed the Simple layout, so Home has ONE layout
-// and there is no layout to toggle, in this bar or in Settings. Menu is the nav toggle.
+// aria-label matches.
+// The rotation toggle (RotateCw(on)/Ban(off)) was HIDDEN 2026-07-18 — owner-ruled at the Settings
+// Phase-0a gate (page-settings §12 ruling (d), dead-affordance principle): with the three rotation
+// keys removed in Phase 0 it was a control wired to nothing (local useState, zero consumers). It is
+// RESTORED by R-37 (the Rotation engine) with its wiring — the ROADMAP entry names this bar as the
+// control the engine drives. Until then the bar owns NO toggle.
+// The Detail toggle was REMOVED earlier (page-home §9-15, DESIGN-SYSTEM §5.5 amendment) — it held
+// state that persisted nowhere. §12ho1-6 removed the Simple layout, so Home has ONE layout and there
+// is no layout to toggle, in this bar or in Settings. Menu is the nav toggle.
 
 // Global chrome (DESIGN-SYSTEM §5.5, D-066). The ONE slim top bar. At laptop+ the
 // display axes + rotation render inline, right-aligned. Below the laptop
@@ -27,9 +32,8 @@ export interface TopBarProps {
   clock?: ReactNode;
   /** DemoBadge (narrow widths only; at laptop+ it renders in the sidebar footer). */
   demoBadge?: ReactNode;
-  /** Rotation toggle state + handler (D-044); rendered only when a handler is given. */
-  rotationOn?: boolean;
-  onToggleRotation?: () => void;
+  // Rotation toggle (D-044) HIDDEN until R-37 — see the header note. The `rotationOn`/`onToggleRotation`
+  // props are removed with it; R-37 restores them alongside the engine that consumes them.
   /** Reserved slot for the Ask panel (D-067) — DEFERRED (C-2). */
   askSlot?: ReactNode;
 }
@@ -39,8 +43,6 @@ export function TopBar({
   controls,
   clock,
   demoBadge,
-  rotationOn,
-  onToggleRotation,
   askSlot,
 }: TopBarProps) {
   const [overflowOpen, setOverflowOpen] = useState(false);
@@ -63,26 +65,10 @@ export function TopBar({
     };
   }, [overflowOpen]);
 
-  // The display axes + rotation + Detail — rendered inline (laptop+) AND inside the
-  // overflow popover (narrow). DisplayControls is context-driven, so two instances
-  // stay in sync.
-  const axes = (
-    <>
-      {controls}
-      {onToggleRotation && (
-        <button
-          type="button"
-          className="lf-iconbtn"
-          aria-pressed={rotationOn}
-          aria-label={`Rotation: ${rotationOn ? "On" : "Off"}`}
-          title={`Rotation: ${rotationOn ? "On" : "Off"}`}
-          onClick={onToggleRotation}
-        >
-          {rotationOn ? <RotateCw aria-hidden="true" /> : <Ban aria-hidden="true" />}
-        </button>
-      )}
-    </>
-  );
+  // The display axes — rendered inline (laptop+) AND inside the overflow popover (narrow).
+  // DisplayControls is context-driven, so two instances stay in sync. The rotation toggle that once
+  // rode alongside them here is HIDDEN until R-37 (owner-ruled at the Settings 0a gate — see header).
+  const axes = <>{controls}</>;
 
   return (
     <header className="lf-topbar">

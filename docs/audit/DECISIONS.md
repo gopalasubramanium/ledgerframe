@@ -317,8 +317,12 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
   applies; "Stewardship" rejected as a group name. Nav-customization control
   removed.
 - **D-044 — Rotation kept, fully configurable.** Page set (any nav page
-  eligible) + interval set in Settings, server-persisted (D-017); top-bar
-  toggle stays. **Rotation skips pages that error or are empty.**
+  eligible) + interval set in Settings, server-persisted (D-017); ~~top-bar
+  toggle stays~~ *(**rotation toggle HIDDEN 2026-07-18** — owner-ruled at the
+  Settings Phase-0a gate, page-settings §12 (d); dead-affordance principle: with
+  the three rotation keys removed in Phase 0 the toggle wrote local state consumed
+  by nothing. **Restored by R-37** with its engine, which wires this bar's toggle.)*.
+  **Rotation skips pages that error or are empty.**
 - **D-045 — PersonaOnboarding killed.** Replaced by a minimal first-run
   checklist against real settings: base currency, timezone, PIN, data
   provider, **and the no-egress toggle** (privacy posture is an explicit
@@ -349,7 +353,7 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
 | D-063 | Estate page | KEEP (reshaped) | Roles/category/statuses from `/refdata`; relationship folded into roles; `related_to` free text; **no-FK isolation invariant** (§0). |
 | D-064 | Accounts page | KEEP (reshaped) | Institution from master; kind from `/refdata`; **cost-basis method selector here** (D-018); **entity assignment on the account form**; rollups are P-1 summaries, linked. |
 | D-065 | Entity CRUD | KEEP (UI added) | Minimal CRUD (name, kind from vocab) as a card on Accounts; delete blocked while accounts reference the entity. Passes P-7. |
-| D-066 | Global chrome | KEEP (reshaped) | Detail toggle leaves top bar; rotation toggle stays; sidebar per D-043; StaleBanner kept; **UpdateBanner respects no-egress: no-egress enabled = zero outbound calls, version check and banner included**; DemoBadge, theme cycle, clock kept. |
+| D-066 | Global chrome | KEEP (reshaped) | Detail toggle leaves top bar; ~~rotation toggle stays~~ *(**rotation toggle HIDDEN 2026-07-18** — owner-ruled at the Settings Phase-0a gate, page-settings §12 (d); dead-affordance principle. **Restored by R-37** with its engine.)*; sidebar per D-043; StaleBanner kept; **UpdateBanner respects no-egress: no-egress enabled = zero outbound calls, version check and banner included**; DemoBadge, theme cycle, clock kept. |
 | D-067 | Ask panel | KEEP | SSE streaming; fact-pack shown before answer (trust UX); validated-before-display; ephemeral (D-016); privacy-mode label always visible; P-6. |
 | D-068 | Briefing + instrument explainers | KEEP | Deterministic template + optional validated narration (model may add no numbers); stored + worker-refreshed; canonical on News. Instrument explainer rides P-6. |
 | D-069 | Settings | KEEP (reshaped) | 4 tabs. Adds: **Privacy section** (no-egress toggle, "AI never persists" statement, privacy-mode indicator, **current egress state shown as a plain statement — "This device makes no network calls" when enabled — state shown, not merely offered**); **API-token management card** (create/name/revoke, token shown once, [S]-gated; passes P-7). Appearance gains density, loses persona. Nav-customization dies (D-043). System tab degrades gracefully sans sudo helper (D-003). |

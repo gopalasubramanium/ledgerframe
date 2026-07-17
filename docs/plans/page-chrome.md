@@ -71,7 +71,7 @@ is a **DESIGN-SYSTEM amendment** (new components forbidden without one — §9).
 | Component | Role | In inventory? |
 |-----------|------|---------------|
 | **Sidebar** | 6 fixed groups (D-043), active-route highlight, not reorderable | **NO — amend** |
-| **TopBar** | hosts display controls + rotation toggle + Clock + DemoBadge + Detail toggle | **NO — amend** |
+| **TopBar** | hosts display controls ~~+ rotation toggle~~ *(HIDDEN 2026-07-18, §15 — restored by R-37)* + Clock + DemoBadge ~~+ Detail toggle~~ *(removed, page-home §9-15)* | **NO — amend** |
 | **DisplayControls** | theme/density/contrast/motion — **move INTO the TopBar** | exists (relocate) |
 | **StaleBanner** | "N stale" → Pricing Health | **NO — amend** |
 | **UpdateBanner** | version available; **zero calls under no-egress** | **NO — amend** |
@@ -89,8 +89,8 @@ panels. The **four page templates** render inside the shell's main region.
 | Decision | What it requires here |
 |----------|-----------------------|
 | **D-043** | 6 fixed sidebar groups, guessable names (P-4), NOT reorderable; nav-customization removed. |
-| **D-066** | Chrome composed once; theme/density/contrast/motion in the top bar; StaleBanner/UpdateBanner/DemoBadge/Clock/rotation live here. |
-| **D-044** | Rotation toggle in the top bar; config server-persisted; skips errored/empty pages. |
+| **D-066** | Chrome composed once; theme/density/contrast/motion in the top bar; StaleBanner/UpdateBanner/DemoBadge/Clock ~~/rotation~~ live here. *(rotation toggle HIDDEN 2026-07-18, §15 — restored by R-37)* |
+| **D-044** | ~~Rotation toggle in the top bar~~ *(HIDDEN 2026-07-18, §15 — restored by R-37 with its engine)*; config server-persisted; skips errored/empty pages. |
 | **D-040** | The Detail toggle leaves the top bar but **only Home branches on it**. |
 | **D-075/D-060** | **No-egress**: with the toggle on, the UpdateBanner/version-check makes **zero** outbound calls. |
 | **D-002** | LockScreen is an access lock (PIN), not encryption; per SECURITY-BASELINE. |
@@ -104,7 +104,7 @@ panels. The **four page templates** render inside the shell's main region.
 ## 7. ACCEPTANCE CRITERIA
 
 - [ ] **Sidebar**: 6 groups in fixed order (D-043), active route highlighted, guessable names; no reorder control.
-- [ ] **Top bar** hosts theme/density/contrast/motion (moved from the page), rotation toggle, Clock, DemoBadge, Detail toggle.
+- [ ] **Top bar** hosts theme/density/contrast/motion (moved from the page) ~~, rotation toggle~~ *(HIDDEN 2026-07-18, §15 — restored by R-37)*, Clock, DemoBadge ~~, Detail toggle~~ *(removed, page-home §9-15)*.
 - [ ] **StaleBanner** shows only when `has_stale`, links to Pricing Health; hidden otherwise (honest).
 - [ ] **UpdateBanner** respects no-egress: **network trace shows zero outbound calls** when the toggle is on (D-075).
 - [ ] **LockScreen** gates the app on a PIN install; a no-PIN install is unaffected (D-002).
@@ -562,3 +562,34 @@ and only the sidebar one got the mark when P-4 landed.
 - **DESIGN-SYSTEM §5.6** gains the **`BrandLockup` row + the one-lockup rule** and flips **PROPOSED →
   RATIFIED** (the owner approved the mark at P-4; the mobile fix completes it). Mobile-header screenshot in
   the P-5 report / `docs/plans/page-reports.md` Part 0 record.
+
+---
+
+## §15 — rotation toggle HIDDEN until R-37 (Settings Phase-0a gate, 2026-07-18)
+
+**The shell is CLOSED/signed-off; this is a dated delta note on the foundational accepted surface,
+recorded — not a silent edit — per the accepted-page-touch discipline.**
+
+**Hidden 2026-07-18 — owner-ruled at the Settings Phase-0a gate (page-settings §12 ruling (d)).** The
+TopBar rotation toggle (`RotateCw`(on)/`Ban`(off)) is **hidden**. It was **local `useState` only**
+(`AppShell.tsx`) writing state **consumed by nothing** — the three rotation allow-list keys
+(`rotation_seconds`, `rotation_pages`, `focus_page`) were **removed in the Settings Phase 0** (D-078
+forbids a write-only key), so the toggle became a control that does nothing. The owner applied the
+**dead-affordance principle**: a control wired to nothing is hidden until its engine lands, not shipped
+inert.
+
+- **Restored by R-37** (the parked **Rotation engine**) **with its engine** — R-37's ROADMAP entry names
+  this bar's toggle as the chrome control the engine wires (server-persisted config per D-017), and gains
+  the served-defaults sweep (`rotation_seconds` in `GET /settings.defaults`) at the same time.
+- **Code:** the rotation button was removed from `TopBar.tsx` (`axes`), its `rotationOn?` /
+  `onToggleRotation?` props deleted, and the `AppShell.tsx` local `rotationOn` state + prop-wiring
+  removed — each with a dated in-code note pointing to R-37. `RotateCw`/`Ban` stay in the icon vocabulary
+  (still used by KitchenSink/News/PricingHealth).
+- **Test flipped (fail-first):** `chrome.test.tsx` "TopBar rotation toggle renders a distinct lucide icon
+  per state" → **"TopBar has NO rotation toggle (hidden until R-37, page-settings §12 (d))"** — RED against
+  the current chrome (which rendered the toggle), GREEN after removal.
+- **Dated strike-annotations (originals preserved):** DECISIONS **D-044** ("top-bar toggle stays") and
+  **D-066** ("rotation toggle stays"); DESIGN-SYSTEM **§5.5** composed-list, TopBar props row (`rotationOn?`
+  + `onToggleRotation?`), the axes description, and the **↻/⊘ glyph row** (`Rotation | on RotateCw · off
+  Ban`); and the page-chrome D-044/D-066/component-table rotation-toggle lines below.
+- **CHROME pre-pass re-run:** stated in the COMMIT 3 report (frontend `npm run check` exit code).

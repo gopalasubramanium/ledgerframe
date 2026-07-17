@@ -47,7 +47,10 @@ function timezoneOptions() {
 export function AppShell({ children }: { children: ReactNode }) {
   // UI state owned by the chrome.
   const [navOpen, setNavOpen] = useState(false);
-  const [rotationOn, setRotationOn] = useState(false);
+  // The rotation toggle's local state was REMOVED 2026-07-18 — owner-ruled at the Settings Phase-0a
+  // gate (page-settings §12 ruling (d)): the toggle wrote local state consumed by nothing (the three
+  // rotation keys were removed in Phase 0). R-37 (the Rotation engine) restores the toggle + the state
+  // that drives it, server-persisted per D-017.
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
   // Consumed status summaries + settings-derived state.
@@ -147,8 +150,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           controls={<DisplayControls />}
           clock={<Clock timezone={timezone} />}
           demoBadge={demoBadge}
-          rotationOn={rotationOn}
-          onToggleRotation={() => setRotationOn((v) => !v)}
         />
         <StaleBanner count={staleCount} />
         {!updateDismissed && (
