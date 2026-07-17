@@ -14,6 +14,7 @@ vi.mock("../api/instruments", () => ({
   getInstrumentPosition: vi.fn(async () => ({ ok: true, data: { base_currency: "SGD", holdings: [] } })),
   patchInstrument: vi.fn(async () => ({ ok: true, data: {} })),
   setOngoingCost: vi.fn(async () => ({ ok: true, data: { ok: true, annual_cost_bps: 20 } })),
+  mapAmfi: vi.fn(async () => ({ ok: true, data: { ok: true, symbol: "PPFAS", code: "122639", published: 1 } })),
 }));
 vi.mock("../api/client", async (orig) => ({
   ...(await orig<typeof import("../api/client")>()),
@@ -92,6 +93,33 @@ test("Edit submits a PATCH with exactly the edited fields (request-body assertio
   expect(vi.mocked(api.patchInstrument)).toHaveBeenCalledWith(
     "AAPL",
     expect.objectContaining({ name: "Apple", asset_class: "equity", source_override: "auto" }),
+  );
+});
+
+test("§14dr-6: choosing amfi_nav reveals the AMFI code field and Save maps it before the PATCH", async () => {
+  // The 400 dead-end fix: the edit dialog must let the user supply the AMFI scheme
+  // mapping in its one home (instrument_identifiers via the canonical map-amfi writer),
+  // then set the source_override. Fail-first RED: today there is no code field and no
+  // map-amfi call. A mutual fund with no amfi_code mapped yet.
+  vi.mocked(api.getInstrument).mockResolvedValue({
+    ok: true,
+    data: { ...DETAIL, instrument: { ...DETAIL.instrument, symbol: "PPFAS", name: "PPFAS Flexi Cap", asset_class: "mutual_fund", identifiers: [] } },
+  });
+  const user = userEvent.setup();
+  renderAt("PPFAS");
+  await waitFor(() => expect(screen.getByRole("heading", { name: "PPFAS", level: 1 })).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  const dialog = screen.getByRole("dialog");
+  await user.selectOptions(within(dialog).getByLabelText("Source override"), "amfi_nav");
+  // The AMFI code field appears only when amfi_nav is chosen.
+  const code = within(dialog).getByLabelText("AMFI scheme code");
+  await user.type(code, "122639");
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  // Canonical writer first (one home), then the override PATCH.
+  expect(vi.mocked(api.mapAmfi)).toHaveBeenCalledWith("PPFAS", "122639");
+  expect(vi.mocked(api.patchInstrument)).toHaveBeenCalledWith(
+    "PPFAS",
+    expect.objectContaining({ source_override: "amfi_nav", asset_class: "mutual_fund" }),
   );
 });
 

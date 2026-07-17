@@ -67,6 +67,14 @@ export const setOngoingCost = (symbol: string, annual_cost_bps: number | null) =
   apiSend<{ ok: boolean; annual_cost_bps: number | null }>(
     `/instruments/${encodeURIComponent(symbol)}/ongoing-cost`, "PUT", { annual_cost_bps },
   );
+// §14dr-6 — the canonical writer for the AMFI scheme mapping. The code's ONE home is
+// instrument_identifiers (id_type amfi_code); this is the only way NAV mapping happens
+// (never inferred). The edit dialog composes it when amfi_nav is chosen so the
+// source override can validate (a mapping must exist first).
+export const mapAmfi = (symbol: string, code: string) =>
+  apiSend<{ ok: boolean; symbol: string; code: string; published: number }>(
+    `/instruments/${encodeURIComponent(symbol)}/map-amfi`, "POST", { code },
+  );
 
 // D-097 — class-aware instrument search for the Add-flow picker. Three honest
 // buckets so an autocomplete can never misclassify (see backend /instruments/search).

@@ -358,3 +358,22 @@ Both are **PROPOSED pending the owner's visual ratify** at the next look.
   control exists there). Coverage: a unit test (wheel narrows the window, Reset
   restores; Simple view ignores the wheel) + an e2e interaction test (zoom + Reset +
   no horizontal overflow). Nothing beyond this scope.
+
+## DELTA NOTE — 2026-07-18 (R-38 data-feed-routing Phase 3b re-walk batch 3, §14dr-6)
+
+- **Source-override edit is no longer a dead-end for `amfi_nav`.** Choosing **Source
+  override = amfi_nav** on the Edit dialog now reveals an **AMFI scheme code** field and
+  pins the class to **mutual fund** (amfi_nav is definitionally an official-NAV mutual
+  fund). On Save the dialog **composes the canonical writer** `POST
+  /instruments/{symbol}/map-amfi` **first** — so the code lands in its **one home**,
+  `instrument_identifiers` (`id_type amfi_code`, IA P-1; never a new column) — then
+  issues the `source_override` PATCH, which now validates because the mapping exists.
+  The honest 400 ("amfi_nav needs an AMFI scheme mapping on a mutual fund") becomes
+  reachable-**then-resolvable**. An empty code is refused client-side with an honest
+  reason; a pre-existing mapping is left untouched. **No new field, no contract change**
+  (the writer already existed). Fail-first component test: choosing amfi_nav reveals the
+  field and Save issues `map-amfi` then the PATCH (RED before — no field, no call).
+- **Toast dedupe (shared standard, DESIGN-SYSTEM §5.5).** A retried save no longer
+  stacks identical toasts — same message + tone while visible collapses to one. Fixed at
+  the `ToastProvider`, so every page inherits it. Instrument Detail pre-pass re-run
+  stated in the report.

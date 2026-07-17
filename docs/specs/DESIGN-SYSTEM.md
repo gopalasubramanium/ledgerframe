@@ -682,6 +682,11 @@ via a `ToastProvider` + `useToast()` `show(spec)`. Auto-dismisses after
 visible countdown bar; ARIA live-region (`role="status"`, `aria-live="polite"`);
 countdown + entrance animation disabled under reduced motion (the dismiss timer
 still fires). It carries **no figure and no provenance** — status only.
+*Amended 2026-07-18 (data-feed-routing §14dr-6):* **dedupe while visible** — a
+`show()` whose **message + tone** already matches a **currently-visible** toast does
+**not** stack a second; it refreshes the existing toast's dismiss timer and returns
+its id. This holds even for a burst of identical calls in one tick (a retried save).
+Distinct messages, or the same text under a different tone, remain separate toasts.
 
 ### 5.6 Brand — the platform mark, "the double rule" (RATIFIED 2026-07-17, page-accounts P-4 + page-reports P-5)
 

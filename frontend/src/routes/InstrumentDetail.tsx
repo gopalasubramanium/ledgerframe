@@ -23,6 +23,7 @@ import {
   getInstrumentPosition,
   patchInstrument,
   setOngoingCost,
+  mapAmfi,
 } from "../api/instruments";
 import type { Candle, InstrumentDetail as Detail, NewsItem } from "../api/instruments";
 import type { HoldingRow } from "../api/holdings";
@@ -326,14 +327,34 @@ function Fact({ label, value, chip, signed, num }: { label: string; value?: stri
 function EditDialog({
   meta, onClose, onDone, onError,
 }: {
-  meta: { symbol: string; name?: string | null; asset_class?: string | null; source_override?: string | null };
+  meta: { symbol: string; name?: string | null; asset_class?: string | null; source_override?: string | null; identifiers?: { id_type: string; value: string }[] | null };
   onClose: () => void; onDone: () => void; onError: (m: string) => void;
 }) {
+  const existingAmfi = (meta.identifiers ?? []).find((i) => i.id_type === "amfi_code")?.value ?? "";
   const [name, setName] = useState(meta.name ?? "");
   const [assetClass, setAssetClass] = useState(meta.asset_class ?? "equity");
   const [source, setSource] = useState(meta.source_override ?? "auto");
+  const [amfiCode, setAmfiCode] = useState(existingAmfi);
+
+  // §14dr-6 — amfi_nav is definitionally an official-NAV mutual-fund source and it needs
+  // an AMFI scheme mapping in its one home (instrument_identifiers) before the override
+  // can validate. Choosing it reveals the code field and pins the class to mutual fund.
+  function onSourceChange(v: string) {
+    setSource(v);
+    if (v === "amfi_nav") setAssetClass("mutual_fund");
+  }
 
   async function save() {
+    if (source === "amfi_nav") {
+      const code = amfiCode.trim();
+      if (!code) return onError("An AMFI scheme code is required to price by amfi_nav.");
+      // Compose the canonical writer FIRST so the mapping exists (one home, IA P-1);
+      // then the source_override PATCH validates against it.
+      if (code !== existingAmfi) {
+        const m = await mapAmfi(meta.symbol, code);
+        if (!m.ok) return onError(`Couldn't map the AMFI scheme: ${m.error}`);
+      }
+    }
     const res = await patchInstrument(meta.symbol, {
       name: name.trim() || null,
       asset_class: assetClass,
@@ -368,8 +389,15 @@ function EditDialog({
         </div>
         <div className="idp__field">
           <span className="idp__label">Source override</span>
-          <MasterSelect master="source_override" value={source} onChange={setSource} />
+          <MasterSelect master="source_override" value={source} onChange={onSourceChange} />
         </div>
+        {source === "amfi_nav" && (
+          <div className="idp__field idp__field--full">
+            <span className="idp__label">AMFI scheme code</span>
+            <TextInput value={amfiCode} onChange={setAmfiCode} aria-label="AMFI scheme code" placeholder="e.g. 122639" />
+            <span className="idp__sub">amfi_nav prices from the official AMFI NAV — supply the scheme’s AMFI code so the mapping exists.</span>
+          </div>
+        )}
       </div>
     </Dialog>
   );
