@@ -653,3 +653,47 @@ def test_upgrade_from_prior_head_folds_relationship_into_notes_then_drops(db_url
         assert notes["Meera"] is None                                   # no relationship → untouched
     finally:
         eng.dispose()
+
+
+def test_price_history_date_key_dedups_demo_residue(db_url):
+    """§14dr-25 — the date-key migration collapses combed (demo+real) daily candles to
+    one-per-trading-date (REAL@midnight supersedes DEMO@non-midnight) and normalises the
+    kept ts to midnight UTC. Additive `source` column; data preserved for real rows."""
+    from datetime import datetime, timedelta
+
+    from alembic import command
+
+    from app.db.migrate import _alembic_config
+
+    cfg = _alembic_config()
+    command.upgrade(cfg, "c1d4e7a90f38")  # the head BEFORE date-keying
+    eng = create_engine(db_url)
+    try:
+        with eng.begin() as c:
+            c.execute(text("INSERT INTO instruments (symbol, name, asset_class, currency, is_manual_price) "
+                           "VALUES ('AAPL','Apple Inc.','equity','USD',0)"))
+            iid = c.execute(text("SELECT id FROM instruments WHERE symbol='AAPL'")).scalar()
+            base = datetime(2026, 7, 1)
+            for i in range(4):
+                d = base + timedelta(days=i)
+                for hh, mm, ss, close in ((0, 0, 0, "190"), (14, 32, 7, "250")):
+                    ts = d.replace(hour=hh, minute=mm, second=ss)
+                    c.execute(text("INSERT INTO price_history "
+                                   "(instrument_id, interval, ts, open, high, low, close) "
+                                   "VALUES (:i,'1d',:ts,:c,:c,:c,:c)"),
+                              {"i": iid, "ts": ts.strftime("%Y-%m-%d %H:%M:%S.%f"), "c": close})
+            assert c.execute(text("SELECT COUNT(*) FROM price_history")).scalar() == 8
+    finally:
+        eng.dispose()
+
+    command.upgrade(cfg, "head")  # runs the date-key + dedup migration
+
+    eng = create_engine(db_url)
+    try:
+        with eng.connect() as c:
+            rows = c.execute(text("SELECT ts, close FROM price_history ORDER BY ts")).fetchall()
+        assert len(rows) == 4, f"one row per date, got {len(rows)}"
+        assert {str(r[1]) for r in rows} == {"190"}, "real (190) supersedes demo (250)"
+        assert all(str(r[0])[11:19] == "00:00:00" for r in rows), "kept ts at midnight UTC"
+    finally:
+        eng.dispose()

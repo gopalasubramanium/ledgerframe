@@ -349,6 +349,97 @@ async def display_quote(session: AsyncSession, symbol: str, exchange: str | None
     return cached
 
 
+# --------------------------------------------------------------------------- #
+# §14dr-25 — history-cache integrity. One candle per (instrument, trading DATE,
+# interval): daily candles are date-normalised (ts → 00:00:00 UTC, tz-safe) so
+# the (instrument, interval, ts) unique key is one-row-per-date for daily; and
+# REAL provider candles supersede demo/mock residue for the same date.
+# --------------------------------------------------------------------------- #
+_DAILY_INTERVALS = frozenset({"1d", "1w", "1mo"})
+_DEMO_SOURCES = frozenset({"mock", "demo"})
+
+
+def _hist_is_midnight(ts: datetime) -> bool:
+    return ts.hour == 0 and ts.minute == 0 and ts.second == 0 and ts.microsecond == 0
+
+
+def _norm_hist_ts(ts: datetime, interval: str) -> datetime:
+    """Date-normalise a DAILY candle's timestamp to 00:00:00 UTC (tz-safe). Intraday
+    intervals (R-42) keep their real per-bar ts — the normalisation is daily-only."""
+    if interval not in _DAILY_INTERVALS:
+        return ts
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=UTC)
+    return ts.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def _hist_row_is_demo(row, interval: str) -> bool:
+    """True when a cached PriceHistory row is demo/mock residue, not real provider
+    data. New rows carry a `source`; legacy rows (source NULL) are told apart by the
+    demo generator's tell — a daily candle NOT at midnight UTC (mock ts carries now's
+    time-of-day; alphavantage/eodhd stamp midnight)."""
+    src = (getattr(row, "source", None) or "").lower()
+    if src in _DEMO_SOURCES:
+        return True
+    if src:  # any real provider name (alphavantage/eodhd/yahoo/kite/csv…)
+        return False
+    return interval in _DAILY_INTERVALS and not _hist_is_midnight(row.ts)
+
+
+def _collapse_daily_rows(rows: list, interval: str) -> list:
+    """§14dr-25 read-time guarantee: collapse cached rows to one per trading date for
+    daily intervals — REAL supersedes demo — so the SERVED series has strictly unique
+    ascending dates even before the row-level purge runs. Non-daily rows pass through."""
+    if interval not in _DAILY_INTERVALS:
+        return rows
+    by_date: dict = {}
+    for r in rows:
+        d = r.ts.date()
+        cur = by_date.get(d)
+        if cur is None or (_hist_row_is_demo(cur, interval) and not _hist_row_is_demo(r, interval)):
+            by_date[d] = r
+    return [by_date[d] for d in sorted(by_date)]
+
+
+async def repair_history_demo_residue(session: AsyncSession) -> dict:
+    """§14dr-25 — a served, idempotent, logged repair (the dr-16 pattern): purge
+    demo/mock residue candles for any (instrument, interval, trading date) where a REAL
+    provider row also exists. Real supersedes demo. Reports counts; a second run finds
+    nothing. Only removes a demo row when a real row protects that date (conservative)."""
+    from collections import defaultdict
+
+    from app.models import AuditEvent, PriceHistory
+
+    rows = (
+        await session.execute(
+            select(PriceHistory).where(PriceHistory.interval.in_(tuple(_DAILY_INTERVALS)))
+        )
+    ).scalars().all()
+    groups: dict = defaultdict(list)
+    for r in rows:
+        groups[(r.instrument_id, r.interval, r.ts.date())].append(r)
+    purged = 0
+    instruments: set = set()
+    for (instr_id, interval, _d), grp in groups.items():
+        if len(grp) < 2:
+            continue
+        demos = [r for r in grp if _hist_row_is_demo(r, interval)]
+        reals = [r for r in grp if not _hist_row_is_demo(r, interval)]
+        if reals and demos:
+            for r in demos:
+                await session.delete(r)
+                purged += 1
+                instruments.add(instr_id)
+    if purged:
+        session.add(AuditEvent(
+            category="mutation", action="repair_history_demo_residue",
+            detail=f"purged {purged} demo candle(s) across {len(instruments)} instrument(s)"))
+        await session.flush()
+    log.info("§14dr-25 history demo-residue repair: purged %d demo candle(s) across %d instrument(s)",
+             purged, len(instruments))
+    return {"purged": purged, "instruments": len(instruments)}
+
+
 async def get_history_cached(
     session: AsyncSession,
     symbol: str,
@@ -367,12 +458,26 @@ async def get_history_cached(
     from app.models import PriceHistory, Setting
     from app.schemas.common import Candle
 
+    # §14dr-25: one-time served purge of demo residue (idempotent, guarded by a Setting
+    # marker so it scans once per instance, not per request). Belt to the migration's
+    # data-fix — a fresh create_all DB has no residue, so this is a cheap no-op there.
+    if (await session.execute(
+        select(Setting).where(Setting.key == "hist_demo_residue_repaired_v1")
+    )).scalars().first() is None:
+        await repair_history_demo_residue(session)
+        session.add(Setting(key="hist_demo_residue_repaired_v1", value=datetime.now(UTC).isoformat()))
+        await session.flush()
+
     instrument = await _get_or_create_instrument(session, symbol, None)
     # §14dr-24: the mock/demo provider is deterministic and free, so its PriceHistory cache
     # is redundant AND would FREEZE a generator change (the dr-18 per-symbol diversification)
     # in pre-existing rows — the upsert below never overwrites an existing timestamp. So for
     # demo we always regenerate from the live generator; real providers keep their (costly,
     # rate-limited) cache untouched.
+    # §14dr-25 (2026-07-18) — AMENDMENT to the upsert-never-overwrites policy: it protects a
+    # REAL provider row from being overwritten (avoids refetch churn); it does NOT protect
+    # DEMO/mock residue — a real candle now SUPERSEDES a demo candle for the same trading date
+    # (see the upsert precedence below). The dedup key is the trading DATE, not the exact ts.
     active_name = getattr(get_provider(), "name", "mock")
     is_demo = active_name == "mock"
     marker_key = f"hist_fetched:{instrument.id}:{interval}"
@@ -400,8 +505,12 @@ async def get_history_cached(
                 .order_by(PriceHistory.ts)
             )
         ).scalars().all()
+        # §14dr-25: serve one candle per trading date (real supersedes demo), ts
+        # date-normalised — strictly unique ascending dates, no comb.
+        rows = _collapse_daily_rows(rows, interval)
         return [
-            Candle(ts=r.ts, open=r.open, high=r.high, low=r.low, close=r.close, volume=r.volume)
+            Candle(ts=_norm_hist_ts(r.ts, interval), open=r.open, high=r.high,
+                   low=r.low, close=r.close, volume=r.volume)
             for r in rows
         ]
 
@@ -437,24 +546,41 @@ async def get_history_cached(
         # on every view would also risk duplicate PriceHistory rows. Return as-is.
         return candles if candles else await _from_db()
 
-    existing_ts = set(
-        (
-            await session.execute(
-                select(PriceHistory.ts).where(
-                    PriceHistory.instrument_id == instrument.id,
-                    PriceHistory.interval == interval,
-                )
+    # §14dr-25: key existing rows by trading date (daily) with a REAL row preferred as
+    # the representative, so precedence is decided per date, not per exact timestamp.
+    existing_rows = (
+        await session.execute(
+            select(PriceHistory).where(
+                PriceHistory.instrument_id == instrument.id,
+                PriceHistory.interval == interval,
             )
-        ).scalars().all()
-    )
+        )
+    ).scalars().all()
+    existing_by_key: dict = {}
+    for r in existing_rows:
+        key = _norm_hist_ts(r.ts, interval)
+        cur = existing_by_key.get(key)
+        if cur is None or (_hist_row_is_demo(cur, interval) and not _hist_row_is_demo(r, interval)):
+            existing_by_key[key] = r
     for c in candles:
-        cts = c.ts.replace(tzinfo=None) if c.ts.tzinfo else c.ts
-        if cts in existing_ts or c.ts in existing_ts:
-            continue
-        session.add(PriceHistory(
-            instrument_id=instrument.id, interval=interval, ts=c.ts,
-            open=c.open, high=c.high, low=c.low, close=c.close, volume=c.volume,
-        ))
+        key = _norm_hist_ts(c.ts, interval)
+        existing = existing_by_key.get(key)
+        if existing is None:
+            row = PriceHistory(
+                instrument_id=instrument.id, interval=interval, ts=key,
+                open=c.open, high=c.high, low=c.low, close=c.close, volume=c.volume,
+                source=active_name,
+            )
+            session.add(row)
+            existing_by_key[key] = row
+        elif _hist_row_is_demo(existing, interval):
+            # §14dr-25 precedence: a REAL provider candle SUPERSEDES demo/mock residue
+            # for this date. (The never-overwrite policy still protects a REAL row —
+            # the `else` below skips it — it just no longer shields demo rows.)
+            existing.ts = key
+            existing.open, existing.high, existing.low = c.open, c.high, c.low
+            existing.close, existing.volume, existing.source = c.close, c.volume, active_name
+        # else: an existing REAL row for this date — never overwrite (unchanged policy).
     # Only mark "freshly fetched" when we actually got data. An empty result
     # (provider error, rate limit, throttle) must NOT lock in an empty series for
     # max_age_hours — otherwise Performance/Net-worth charts stay blank until the
@@ -465,7 +591,9 @@ async def get_history_cached(
         else:
             session.add(Setting(key=marker_key, value=datetime.now(UTC).isoformat()))
     await session.flush()
-    return candles if candles else await _from_db()
+    # §14dr-25: serve from the (now merged + deduped) cache so the returned series is
+    # date-collapsed — strictly unique ascending dates — regardless of upsert path.
+    return await _from_db()
 
 
 def _has_real_name(instr: Instrument) -> bool:

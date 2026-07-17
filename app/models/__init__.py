@@ -329,7 +329,14 @@ class PriceHistory(Base):
     low: Mapped[Decimal] = mapped_column(DecimalText)
     close: Mapped[Decimal] = mapped_column(DecimalText)
     volume: Mapped[Decimal | None] = mapped_column(DecimalText, nullable=True)
+    # §14dr-25 — provider provenance. Real provider rows are labelled (alphavantage/
+    # eodhd/yahoo/kite/csv…); demo/mock residue is 'mock'; legacy rows are NULL (their
+    # provenance is inferred from the midnight-vs-time-of-day tell). Real supersedes demo.
+    source: Mapped[str | None] = mapped_column(String(20), nullable=True)
     __table_args__ = (
+        # §14dr-25: for DAILY intervals the write path normalises ts to 00:00:00 UTC, so
+        # this exact-timestamp unique key becomes one-row-per-trading-date for daily while
+        # still admitting distinct intraday bars (R-42) under the same date.
         Index("ix_hist_instr_interval_ts", "instrument_id", "interval", "ts", unique=True),
     )
 
