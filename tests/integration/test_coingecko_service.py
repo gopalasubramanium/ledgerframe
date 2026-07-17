@@ -69,6 +69,40 @@ async def test_zero_price_not_published(session):
     assert q is None  # never fabricated
 
 
+async def test_sync_now_refetches_full_master_not_kept_stale(app_client, monkeypatch):
+    """§14dr-15 — a network Sync-now (no uploaded file) always refetches the FULL coins/list
+    and re-upserts the master, mirroring amfi_refresh (which always refetches NAVAll.txt).
+    The old `if coins == 0` guard kept a seeded/stale cache forever (2 demo coins vs ~17k),
+    so XRP/Ripple was unfindable. RED before the fix: coins stays 2. GREEN: > 10,000 and the
+    picker's master resolves Ripple."""
+    # The demo seed leaves a stale 2-coin cache (bitcoin/ethereum) — the owner's exact state.
+    before = (await app_client.get("/api/v1/coingecko/status")).json()
+    assert before["coins"] == 2  # seeded/stale — NOT empty
+
+    # Stub the network: a full coins/list (order-of-magnitude of the real feed), incl. Ripple.
+    big_list = [{"id": f"coin-{i}", "symbol": f"c{i}", "name": f"Coin {i}"} for i in range(12000)]
+    big_list.append({"id": "ripple", "symbol": "xrp", "name": "XRP"})
+
+    async def _fake_list(timeout: float = 20.0):
+        return big_list
+
+    async def _fake_prices(ids, timeout: float = 20.0):
+        return {}  # no price call needed for the master-count assertion
+
+    import app.providers.market.coingecko as cg_provider
+    monkeypatch.setattr(cg_provider, "fetch_coins_list", _fake_list)
+    monkeypatch.setattr(cg_provider, "fetch_prices", _fake_prices)
+
+    r = await app_client.post("/api/v1/coingecko/refresh")  # no file → network Sync-now
+    assert r.status_code == 200
+    # Order-of-magnitude, not a brittle exact count — a real refresh, not a kept-stale cache.
+    assert r.json()["coins"] > 10_000
+
+    # The picker then finds Ripple from the synced master (the dr-12/dr-13 guard extended).
+    hits = (await app_client.get("/api/v1/coingecko/search", params={"q": "ripple"})).json()["results"]
+    assert any(c["id"] == "ripple" for c in hits)
+
+
 async def test_status_synced_at_never_then_after_refresh(session):
     """§14dr-13 — CoinGecko status serves an honest last-synced timestamp: None until the
     coin master is synced (the never-synced empty), an ISO string after. Uses the clean

@@ -50,8 +50,12 @@ async def coingecko_refresh(
     else:
         from app.providers.market.coingecko import fetch_coins_list, fetch_prices
         try:
-            if (await cg.status(session))["coins"] == 0:
-                coins = await cg.refresh_coins(session, await fetch_coins_list())
+            # §14dr-15 — a real Sync-now ALWAYS refetches the full coins/list and re-upserts
+            # the master, mirroring amfi_refresh (which always refetches NAVAll.txt) — one
+            # pattern, not two. The old `if coins == 0` guard kept a seeded/stale cache forever
+            # (2 demo coins vs the real ~17k), so XRP/Ripple was unfindable. coins/list is a
+            # single call (fetch_coins_list → one GET), so this stays within the rate budget.
+            coins = await cg.refresh_coins(session, await fetch_coins_list())
             ids = await cg.mapped_ids(session)
             if ids:
                 published = await cg.publish_prices(session, await fetch_prices(ids))
