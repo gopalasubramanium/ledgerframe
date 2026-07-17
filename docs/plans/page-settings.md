@@ -797,4 +797,61 @@ the live instance) but has **no rendered control**. §14st-1 fixes its canonical
 home as **Data feeds**; when a stale-after control is authored (spec-first) it
 lands there. No control was fabricated in this restructure (CLAUDE.md hard rule).
 
-*(STOP — the owner re-walks the restructured five-tab page.)*
+*(The owner re-walked the restructured five-tab page — ACCEPTED, two rulings
+filed: §14st-2 below, and §14st-3 recorded at the milestone close.)*
+
+---
+
+## §14st-2 — a SIXTH tab, "AI" (owner-decision, IA arrangement, 2026-07-18)
+
+**Ruling (owner, option B, 2026-07-18).** The AI configuration line **does not
+belong under System**. A **sixth tab, "AI"**, is added. The Settings tab set
+becomes **six**:
+**General · Appearance · Privacy · Data feeds · AI · System.**
+
+**Rationale (the owner's principle, recorded verbatim).** *Data feeds is what
+comes in; AI is what the machine does with it; egress remains Privacy's no-egress
+toggle.* The three natures are distinct surfaces: **Data feeds** = ingest
+(provider/keys/news feeds); **AI** = what the machine does with the data;
+**Privacy** = the egress control (the no-egress toggle stays put). System keeps
+only the access/appliance controls.
+
+**Named "AI", NOT "AI & Voice" — deliberately.** **R-32 (Voice) is undefined** —
+no spec, no decision, no plan, no behaviour (ROADMAP R-32). Naming an undefined
+surface would **invent behaviour** (CLAUDE.md hard rule; the "a tab may only
+exist if it has real contents today" principle — the rotation-toggle precedent).
+The tab is **"AI"**. It **gains "& Voice" only after the owner's R-32
+definition** — recorded as a dated annotation against R-32 in `ROADMAP.md`.
+
+- **MOVES to AI:** the **read-only served AI-config line** (§12st-4) — its ONE
+  home; **System loses it**. The AI tab also carries the **deferral note** as
+  static copy: *"Model management lands with the AI surfaces milestone."*
+- **STAYS in Privacy:** the **"AI never persists"** statement — its D-069 home
+  (`DECISIONS.md:359`). **No move, no duplicate** (P-1: one canonical home).
+- **"AI" is a plain tab label** — the §9-4 logic: **no GLOSSARY entry** for the
+  label itself.
+- **Tab state stays URL-addressable** (`?tab=ai`, Amendment C); **no new
+  component** (the `Segmented` strip gains a sixth segment). **Nothing is
+  invented beyond the moved line + the deferral note** — model MANAGEMENT stays
+  deferred to AI-surfaces (D-067/D-068).
+
+> **HONESTY NOTE (verify-first, 2026-07-18).** The AI tab surfaces exactly what
+> System surfaced before — a **served display line** off `GET /system/ai-config`
+> (`getAiConfig`, `systemConfig.ts`). No AI control is authored; no model
+> management, no provider edit, no voice affordance. The restructure **relocates
+> one built line and adds one static note** (CLAUDE.md hard rule — recorded, not
+> invented).
+
+### COMMIT 2 — the restructure (executed against §14st-2; fail-first where guards exist)
+
+- Add the sixth `Segmented` segment; tab state URL-addressable (`?tab=ai`).
+- Move the AI-config line to an **`AiPanel`**; **System loses its AI card**.
+- Update **every** guard that encoded five tabs or the AI line's home,
+  **RED-first on the real cause**: the tab-set assertions (**×6**), the overflow
+  suite (**×6 tabs**), and the live smoke matrix (**all six tabs × light/dark ×
+  four widths**). **Journey guards are unchanged** — §14st-2 moves no first-run
+  target (the provider journey stays on Data feeds, the PIN journey on System).
+- Screenshots: the **six-tab strip**, the **AI tab**, and **System without the
+  AI line**.
+
+*(Build & re-run evidence appended after the commit lands.)*

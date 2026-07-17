@@ -356,7 +356,7 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
 | D-066 | Global chrome | KEEP (reshaped) | Detail toggle leaves top bar; ~~rotation toggle stays~~ *(**rotation toggle HIDDEN 2026-07-18** — owner-ruled at the Settings Phase-0a gate, page-settings §12 (d); dead-affordance principle. **Restored by R-37** with its engine.)*; sidebar per D-043; StaleBanner kept; **UpdateBanner respects no-egress: no-egress enabled = zero outbound calls, version check and banner included**; DemoBadge, theme cycle, clock kept. |
 | D-067 | Ask panel | KEEP | SSE streaming; fact-pack shown before answer (trust UX); validated-before-display; ephemeral (D-016); privacy-mode label always visible; P-6. |
 | D-068 | Briefing + instrument explainers | KEEP | Deterministic template + optional validated narration (model may add no numbers); stored + worker-refreshed; canonical on News. Instrument explainer rides P-6. |
-| D-069 | Settings | KEEP (reshaped) | ~~4 tabs.~~ *(**FIVE tabs — General · Appearance · Privacy · Data feeds · System — owner-ruled 2026-07-18** at the Settings Phase-3b walk, page-settings §14st-1; a **Data feeds** tab holds feed/provider config — market data provider, provider API key (write-only), stale-after posture, ND-6 news feeds — because that config is its own nature. Auto-lock + Allow LAN are **access controls, not feeds**, and stay in System.)* Adds: **Privacy section** (no-egress toggle, "AI never persists" statement, privacy-mode indicator, **current egress state shown as a plain statement — "This device makes no network calls" when enabled — state shown, not merely offered**); **API-token management card** (create/name/revoke, token shown once, [S]-gated; passes P-7). Appearance gains density, loses persona. Nav-customization dies (D-043). System tab degrades gracefully sans sudo helper (D-003). |
+| D-069 | Settings | KEEP (reshaped) | ~~4 tabs.~~ ~~*(FIVE tabs — General · Appearance · Privacy · Data feeds · System — owner-ruled 2026-07-18 at the Settings Phase-3b walk, page-settings §14st-1)*~~ *(**SIX tabs — General · Appearance · Privacy · Data feeds · AI · System — owner-ruled 2026-07-18 (amendment #2, page-settings §14st-2)**; see the two D-069 AMENDMENTs below. A **Data feeds** tab holds feed/provider config — market data provider, provider API key (write-only), stale-after posture, ND-6 news feeds — because that config is its own nature; an **AI** tab holds the read-only served AI-config line (model management deferred to AI-surfaces, D-067/D-068). Auto-lock + Allow LAN are **access controls, not feeds**, and stay in System. **The "AI never persists" statement STAYS in Privacy** — its canonical home.)* Adds: **Privacy section** (no-egress toggle, "AI never persists" statement, privacy-mode indicator, **current egress state shown as a plain statement — "This device makes no network calls" when enabled — state shown, not merely offered**); **API-token management card** (create/name/revoke, token shown once, [S]-gated; passes P-7). Appearance gains density, loses persona. Nav-customization dies (D-043). System tab degrades gracefully sans sudo helper (D-003). |
 
 ## 8. AI, providers & routing
 
@@ -734,6 +734,34 @@ clarifying notes recorded in the guide.
   under lock** (D-002 — leaks nothing; **owner-verified live 2026-07-11**). Home Full no
   longer duplicates it. Recorded in IA §4, DESIGN-SYSTEM §5.2. Future: per-device speed
   setting (ROADMAP R-16); indices→Markets link when Markets ships (ROADMAP R-17).
+
+- **D-069 AMENDMENTS — the Settings tab set grows to SIX** (owner, 2026-07-18;
+  Settings Phase-3b walk + re-walk, page-settings §14st-1 / §14st-2). Both
+  amendments are **IA-arrangement rulings** — they move built controls between
+  tabs by their *nature*; the D-069 tab **contents** (Privacy section, API-token
+  card, Appearance-minus-persona, graceful System degradation) are unchanged.
+  - **AMENDMENT #1 (five tabs) — a "Data feeds" tab.** Supersedes D-069's
+    original *"4 tabs"*: feed/provider config is its own nature, so a **Data
+    feeds** tab holds the market-data provider, the write-only provider API key
+    (D-003), stale-after posture, and the ND-6 news-feeds editor. **Auto-lock +
+    Allow LAN are access controls, not feeds** — they stay in System. Tab set:
+    **General · Appearance · Privacy · Data feeds · System.** (page-settings
+    §14st-1.)
+  - **AMENDMENT #2 (six tabs) — an "AI" tab** *(owner option B)*. Supersedes
+    amendment #1's five-tab set: the **read-only served AI-config line** is its
+    own nature and moves out of System to a sixth **AI** tab (System loses it);
+    the tab carries a static deferral note — *"Model management lands with the AI
+    surfaces milestone"* (D-067/D-068). The owner's principle, verbatim: *Data
+    feeds is what comes in; AI is what the machine does with it; egress remains
+    Privacy's no-egress toggle.* The **"AI never persists" statement STAYS in
+    Privacy** (its canonical home — no move, no duplicate). Tab set: **General ·
+    Appearance · Privacy · Data feeds · AI · System.** The tab is named **"AI",
+    NOT "AI & Voice"** — R-32 (Voice) is **undefined**, and naming an undefined
+    surface would invent behaviour (the dead-affordance principle); it gains
+    "& Voice" only after the owner's R-32 definition (dated annotation on ROADMAP
+    R-32). **No new component** (the `Segmented` strip gains segments); tab state
+    stays URL-addressable (`?tab=data-feeds`, `?tab=ai`; Amendment C).
+    (page-settings §14st-2.)
 
 - **D-104 — Tag normalisation vs verbatim rendering** (owner, 2026-07-12;
   page-portfolio §12b4-2). Two layers, deliberately different:
