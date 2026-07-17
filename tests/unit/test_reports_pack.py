@@ -56,6 +56,18 @@ async def test_reports_pack_preserves_a_served_disclaimer_verbatim(app_client):
     assert "reporting only, not advice or a required action." in html
 
 
+async def test_attribution_rows_render_served_labels_not_reader_keys(app_client):
+    """§12pk-1 / §12es-3 (label truth on the server-side composer): the attribution 'by asset class'
+    rows render the SERVED /refdata display label — the same truth every JSON route serves through —
+    never the raw reader key. The seed's Household holds a fixed deposit, so attribution surfaces a
+    by-asset-class row for it; `fixed_deposit` is the load-bearing case (an underscore key that
+    titleizes to 'Fixed deposit')."""
+    html = (await app_client.get("/reports/pack")).text
+    assert "Fixed deposit" in html, "the served asset-class display label must render in the artifact"
+    # The raw reader key must not leak into the rendered artifact (copy-hygiene / label-truth).
+    assert "fixed_deposit" not in html, "the raw reader key must not render — it is not a display label"
+
+
 # ------------------------------------------------------------------- Pack-3 empty / Pack-4 degenerate
 
 

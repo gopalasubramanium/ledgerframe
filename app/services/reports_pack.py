@@ -320,8 +320,13 @@ async def _entity_risk_attribution(session: AsyncSession, base: str, entity_id: 
         attr_inner = _empty_note(attr.get("reason", "Attribution unavailable.")) \
             + _disclaimer(attr.get("disclaimer"))
     else:
+        # §12pk-1: render the SERVED /refdata display label for the asset-class key, never the raw
+        # reader key (the §12es-3 label-truth rule applied to this server-side composer).
+        from app.api.v1.routes.refdata import label_for
+
         by_class = "".join(
-            f'<tr><td>{_esc(c.get("key", ""))}</td><td>{_pct(c.get("contribution_pct"), signed=True)}</td></tr>'
+            f'<tr><td>{_esc(label_for("asset_class", c.get("key", "")))}</td>'
+            f'<td>{_pct(c.get("contribution_pct"), signed=True)}</td></tr>'
             for c in attr.get("by_asset_class", [])
         )
         attr_inner = (

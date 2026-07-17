@@ -78,6 +78,16 @@ def _labeled(values: list[str], overrides: dict[str, str] | None = None) -> list
     return [{"value": v, "label": ov.get(v) or _label(v)} for v in values]
 
 
+def label_for(vocab: str, value: str) -> str:
+    """The SERVED display label for one value of a fixed vocabulary — the SAME truth `/refdata`
+    serves through (the per-vocab overrides + the titleizer), exposed for backend consumers that
+    compose UI server-side. The Reports Pack composer resolves attribution asset-class keys through
+    this so a rendered label can never drift from the one the JSON routes serve (reports-pack §12pk-1
+    / the §12es-3 label-truth rule; the csv_import → `_TXN_APPLICABILITY` cross-import precedent)."""
+    ov = _VOCAB_LABEL_OVERRIDES.get(vocab, {})
+    return ov.get(value) or _label(value)
+
+
 # Authored / no-single-code-home vocabularies (MASTER-DATA §2/§4).
 _ASSET_SUBCLASS = ["crypto", "derivative", "equity", "etf", "mutual_fund", "reit"]  # DEF-2 §2 †
 _LIQUIDITY_PROFILE = ["listed", "redeemable", "locked", "illiquid", "manual"]  # §2
