@@ -282,6 +282,28 @@ class KiteInstrument(Base):
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
+class RoutingMatrix(Base):
+    """User-declared provider routing preference (R-38; data-feed-routing §5/§9).
+
+    One provider per asset-class × listing-country cell — *which provider prices this
+    kind of instrument in this market*. A **refinement layer** above the lane policy,
+    not a price: empty by default (an empty matrix changes nothing — routing falls
+    through to the lane chain / active provider exactly as before). Capability-validated
+    at edit-time (the endpoint) and re-validated at resolve-time (``route()``); an
+    incapable/stale cell is ignored, never fabricated. ``listing_country`` mirrors
+    ``CAPABILITIES.regions`` — ISO-3166 alpha-2 or ``"*"``."""
+
+    __tablename__ = "routing_matrix"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    asset_class: Mapped[str] = mapped_column(String(20))         # AssetClass vocab
+    listing_country: Mapped[str] = mapped_column(String(8))      # ISO-3166 alpha-2 or "*"
+    provider: Mapped[str] = mapped_column(String(40))            # a CAPABILITIES name
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, onupdate=utcnow)
+    __table_args__ = (
+        UniqueConstraint("asset_class", "listing_country", name="uq_routing_matrix_cell"),
+    )
+
+
 class Quote(Base):
     """Latest known quote per instrument, with provenance & entitlement."""
 
