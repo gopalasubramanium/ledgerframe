@@ -13789,7 +13789,7 @@
     },
     "/api/v1/system/reset-data": {
       "post": {
-        "description": "Delete all demo/portfolio/market data so you can start fresh with live data.\n\nRemoves transactions, holdings, instruments, quotes, price history, watchlists,\nsnapshots and news. Keeps your settings, PIN, and provider config. Sets a\nflag so demo data is NOT re-seeded afterwards.",
+        "description": "Delete all demo/portfolio/market data so you can start fresh with live data.\n\nD-103 \u2014 a destructive, irreversible action: gated by ``require_pin`` (the purge-deleted\nprecedent), which is strictly stronger than ``require_auth`` \u2014 it REFUSES on a no-PIN install\n(403) and rejects API tokens, so wiping the ledger is impossible on an unprotected box. The\nSettings control pairs it with the danger Button variant + a ConfirmDialog fresh-PIN gesture.\n\nRemoves transactions, holdings, instruments, quotes, price history, watchlists,\nsnapshots and news. Keeps your settings, PIN, and provider config. Sets a\nflag so demo data is NOT re-seeded afterwards.",
         "operationId": "reset_data_api_v1_system_reset_data_post",
         "parameters": [
           {
