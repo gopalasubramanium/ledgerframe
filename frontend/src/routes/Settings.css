@@ -1,10 +1,10 @@
-/* Settings — GEOMETRY (page-settings §9 / Phase 0a, PROPOSED; ratify at the gate). SETTINGS template
-   (DESIGN-SYSTEM.md:230 — sectioned/tabbed configuration): a `Segmented` tab strip (§9-5 Amendment C,
-   no new component) over four D-069 tabs — General · Appearance · Privacy · System — each panel a
-   stack of D-100 layered cards. Tokens only; composed ratified ui/. NO money math on this page
-   (P-1/D-031) — the egress statement is DERIVED from the toggle, never a metric. Values are static
-   display strings (D-105). NOTE (TEMPLATE §7 media-query exception): responsive reflow is a §13 live
-   pre-pass check at REAL viewports, NOT a static-specimen claim — nothing is guarded here. */
+/* Settings — page-settings (SETTINGS template, DESIGN-SYSTEM.md:230 — sectioned/tabbed
+   configuration): a `Segmented` tab strip (§9-5 Amendment C, no new component; tab state in the URL)
+   over four D-069 tabs — General · Appearance · Privacy · System — each panel a stack of D-100
+   layered cards. Tokens only; composed ratified ui/. NO money math on this page (P-1/D-031) — the
+   egress statement is DERIVED from the toggle, never a metric. Every shown value is a SERVED display
+   string (D-105). Shared by the RATIFIED Phase-0a specimen (`SettingsMockup.tsx`, still at
+   /kitchen-sink) and the REAL wired page (`Settings.tsx`, Phase 1). */
 
 .set__tabs {
   margin-bottom: var(--space-4);
@@ -178,9 +178,44 @@
   max-width: 44rem;
 }
 
-/* Destructive action — the inventory has no danger variant; a restrained tint on the ratified Button.
-   FLAGGED at the gate: a proper danger ButtonVariant is a §5 amendment question, not invented here. */
+/* Destructive action — SPECIMEN ONLY (SettingsMockup.tsx). The gate ruled a danger ButtonVariant
+   (DESIGN-SYSTEM §5.4 amendment); the REAL page (Settings.tsx) uses `<Button variant="danger">`, and
+   this one-off tint must NOT ship there (page-settings §12 ruling (b)). Kept only so the ratified
+   Phase-0a specimen still renders as-ratified at /kitchen-sink. */
 .set__dangerbtn {
   border-color: var(--loss, var(--border-strong));
   color: var(--loss, var(--text-primary));
+}
+
+/* Dialog lead line (create-token / PIN / feeds editors). */
+.set__dialoglead {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-secondary);
+}
+
+/* AI config — a read-only served line (§12st-4), plain text, never a control. */
+.set__aiconfig {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-14);
+  line-height: var(--line-14);
+  color: var(--text-primary);
+}
+
+/* Feeds editor (§12st-3) — one URL per row, each with an optional test-result chip + Remove. */
+.set__feedlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.set__feedrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.set__feedrow > .lf-textinput,
+.set__feedrow > input {
+  flex: 1 1 auto;
+  min-width: 0;
 }

@@ -60,7 +60,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "System",
     items: [
-      { label: "Settings", path: "/settings" },
+      { label: "Settings", path: "/settings", built: true },
       { label: "Help", path: "/help" },
       { label: "Legal", path: "/legal" },
     ],
