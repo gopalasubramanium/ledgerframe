@@ -406,3 +406,53 @@ table above (which stands as the reasoning of record). Build proceeds from these
 **Plan-only above §9-RESOLVED.** From §9-RESOLVED onward the owner has ruled; build
 proceeds backend-first, fail-first, one delta per commit, STOP at Phase 0a for
 ratification-by-looking.
+
+---
+
+## PHASE 0 + 0a — EXECUTION RECORD (2026-07-18)
+
+Environment healthy at start: pytest collects 891; contract 132 paths & drift-check
+green; single alembic head `b3e2f1a9c740`; frontend `npm run check` exit 0. Each delta
+fail-first (RED on the real cause) → GREEN, one per commit.
+
+- **DONE — §9-RESOLVED record** (`a3aa541`) — 13 rulings recorded verbatim-in-substance.
+- **DONE — cross-record edits** (`27dbb3c`) — D-072 dated annotation (STANDS); ROADMAP
+  R-40 lands; R-13 affirmed parked; GLOSSARY "Routing matrix" (spec-first) + popover;
+  parity guard green (59).
+- **DONE — Phase 0.1 migration** (`59258eb`) — `RoutingMatrix` model + additive
+  migration `c1d4e7a90f38` on head `b3e2f1a9c740`, full downgrade; up→down→up verified;
+  single head. 3 tests.
+- **DONE — Phase 0.2 CRUD** (`48f35cd`) — GET/PUT/DELETE `/system/routing-matrix`;
+  `validate_matrix_provider` (unknown 400 · class/region mismatch honest 400 · unkeyed
+  accept-with-caveat §9-7). Contract regen same commit → **134 path-keys** (see note).
+  12 tests.
+- **DONE — Phase 0.3 slot 3.5** (`fa9af88`) — the AMENDMENT-A PREPEND in `route()`;
+  `route_rule` on `RouteDiagnostic`. Pins (a)-(e) incl. the load-bearing (b) unkeyed
+  fall-through and (e) NAV/canonical guarantee. 7 pure-route tests.
+- **DONE — Phase 0.4 provenance** (`d31e08e`) — `route_rule` served on
+  `/portfolio/pricing-health`; `av_tier_note` honest string (§9-8, grounded in
+  `external.py`), served as `provider_tier_note`. 4 tests.
+- **DONE — Phase 0a specimen** (`bb420de`) — `/kitchen-sink` "Routing matrix — SPECIMEN".
+  **§9-9 finding: the editable-cell grid COMPOSES from `DataTable`+`MasterSelect`+
+  `StatusChip`+`Button` — NO §5 amendment.** All five honesty cases + the Pricing Health
+  provenance column (four `route_rule` values) staged.
+
+**Suite after Phase 0:** 915 backend tests pass (0 fail); `make api-contract-check`
+green; frontend `npm run check` **exit 0** (lint+typecheck+tokens+tests+overflow, 334).
+
+**TWO ITEMS FLAGGED FOR OWNER RATIFICATION AT 0a (built as ruled; these are the two
+judgment calls surfaced honestly rather than silently decided):**
+1. **Contract count.** The ruled shapes (GET/PUT share `/system/routing-matrix`; DELETE
+   on `/{class}/{country}`) = **132 → 134 path-keys** (+3 operations across 2 keys). The
+   plan prose's "+3 / 135" counted operations, not path-keys. The SHAPES are the binding
+   artifact; 134 is the observed count.
+2. **Resolve-time matrix gate = capability, not chain-membership.** `route()` prices a
+   cell when its provider is live-capable for THIS instrument (class+region per live
+   CAPABILITIES) AND keyed — NOT gated on lane-chain membership. Rationale: the matrix is
+   the authority that *selects* the provider, the edit-time 400 already blocks incapable
+   cells, and Amendment A enumerates the fall-through reasons (rate-limit/unkeyed/tier/
+   error) — chain-membership is not among them. Ratify or amend.
+
+**STATUS: STOPPED at Phase 0a for owner ratification-by-looking.** NEXT (owner-gated):
+Phase 1 assembly (the real Settings → Data feeds editor + Pricing Health provenance
+column) — BLOCKED until the owner ratifies the specimen and the two flagged items.
