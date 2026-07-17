@@ -151,3 +151,12 @@
   justify-content: flex-end;
   gap: var(--space-3);
 }
+
+/* §14dr-8 — perceptible pending on the framed Refresh-all icon (reuses the shared spin
+   keyframe from structure.css). Reduced motion stills it (the disabled state still reads). */
+.ph__spin {
+  animation: lf-btn-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph__spin { animation: none; }
+}

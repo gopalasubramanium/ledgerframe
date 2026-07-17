@@ -59,7 +59,7 @@ vi.mock("../state/staleCount", () => ({
 }));
 
 import { PricingHealth } from "./PricingHealth";
-import { getIdentifierDuplicates, getNoEgress, getPricingHealth } from "../api/pricing-health";
+import { correctSource, getIdentifierDuplicates, getNoEgress, getPricingHealth } from "../api/pricing-health";
 
 function renderPage() {
   return render(
@@ -126,6 +126,32 @@ test("§14dr-3 — the diagnostics table is genuinely sortable (a header click r
   await user.click(screen.getByRole("columnheader", { name: "Holding" }));
   const bodyRows = container.querySelectorAll('[data-card="diagnostics"] tbody tr');
   expect(within(bodyRows[0] as HTMLElement).getByText("AAPL")).toBeTruthy();
+});
+
+test("§14dr-8 — Save correction disables in-flight (re-click guarded) and surfaces completion", async () => {
+  const user = userEvent.setup();
+  // Deferred correctSource → we can observe the in-flight state before it resolves.
+  let resolve!: (v: { ok: true; data: { ok: true } }) => void;
+  vi.mocked(correctSource).mockImplementationOnce(
+    () => new Promise((r) => { resolve = r; }),
+  );
+  renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await waitFor(() => expect(screen.getByText("DBS")).toBeTruthy());
+  // Open the Correct-source dialog for DBS (a symbol'd row).
+  await user.click(screen.getByRole("button", { name: "Actions for DBS" }));
+  await user.click(screen.getByRole("menuitem", { name: "Correct source" }));
+  const dialog = screen.getByRole("dialog");
+  const save = within(dialog).getByRole("button", { name: "Save correction" });
+  await user.click(save);
+  // In-flight: disabled + aria-busy; a re-click must not fire a second correctSource.
+  expect(save).toBeDisabled();
+  expect(save).toHaveAttribute("aria-busy", "true");
+  await user.click(save);
+  expect(vi.mocked(correctSource)).toHaveBeenCalledTimes(1);
+  // Completion: resolve → the served-outcome toast appears and the dialog closes.
+  resolve({ ok: true, data: { ok: true } });
+  expect(await screen.findByText(/Source corrected for DBS\./)).toBeInTheDocument();
 });
 
 test("portfolio confidence card shows overall band + by-band table (ND-6, ratified components)", async () => {

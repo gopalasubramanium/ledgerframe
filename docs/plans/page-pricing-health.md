@@ -485,3 +485,24 @@ non-reproduction reported plainly, not dressed up) was owner-accepted as the rig
     The frontend guard asserts the marked rows are exactly the stale ones and are
     the top rows; the stale-banner → Pricing Health dev-smoke journey now asserts
     **identifiability at the destination**, not just arrival.
+
+## DELTA NOTE — 2026-07-18 (R-38 data-feed-routing Phase 3b re-walk batch 3, §14dr-8)
+
+- **Async refresh/save actions now give perceptible feedback + guard re-clicks
+  (fix-at-standard, DESIGN-SYSTEM §5.4).** **Verify-first:** the header "Refresh all"
+  already set `aria-busy` + a served toast, but with **no spinner** the pending flash was
+  imperceptible on a fast backend (the owner clicked 4×), and the **per-row Refresh** and
+  **Save correction** had **no in-flight guard at all** (re-clickable). Fix:
+  - The shared `Button` gains a **`loading`** prop (disabled + `aria-busy` + a perceptible
+    in-button spinner, stilled under reduced motion). The **"Refresh all"** icon now
+    **spins** while refreshing; **Save correction** is a `loading` `Button`; **per-row
+    Refresh** is guarded (a re-fire while in flight is ignored, and the menu item disables).
+  - Completion stays the **served-outcome toast** (`Refreshed N of M…`, `Source corrected
+    for …`) — never an invented client result. The honest disable rules (no-egress,
+    invalid input) are unchanged.
+  - **Sweep:** the standard was applied across the data-feeds surfaces — Settings feed
+    **save/test** and the routing-matrix **Add rule**.
+  - Fail-first: a `Button` unit test (loading → disabled + `aria-busy` + spinner, click
+    guarded) and a Pricing Health integration test (Save correction disables in-flight,
+    a re-click fires no second call, completion toast on resolve) — both RED before.
+    Pricing Health pre-pass re-run stated in the report.

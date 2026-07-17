@@ -915,3 +915,27 @@ lf-btn--danger`; `structure.css` adds `.lf-btn--danger` (token-only, mirroring `
 `/kitchen-sink` Button gallery so this amendment is **ratified by looking** (the prior-amendment standard).
 The specimen's local `.set__dangerbtn` is **retired** when the real Settings page adopts `variant="danger"`
 (Phase 1). **No colour literal outside the token layer** — the drift check stays green.
+
+## §5.4 AMENDMENT — the ASYNC-ACTION standard (`Button` `loading`) (RATIFIED 2026-07-18, data-feed-routing §14dr-8)
+
+**The defect.** A user clicked "Refresh" **4×** because the only pending signal was an
+imperceptible `disabled` flash on a fast/mock backend, and several async action buttons
+(per-row Refresh, Save correction, and a sweep across Markets/Settings) had **no in-flight
+state at all** — re-clickable mid-flight.
+
+**The standard.** An async action button that fires a mutation/refresh MUST, while in flight:
+1. **disable** itself (the re-click guard — a second click cannot fire a second call);
+2. set **`aria-busy`** (assistive-tech pending signal); and
+3. show a **PERCEPTIBLE** pending affordance — **never a no-op** and never *only* an
+   imperceptible dim. Completion is surfaced by the **served-outcome toast** (the count/
+   result string the backend returns), never invented client-side.
+
+**The primitive.** `Button` gains a **`loading?: boolean`** prop: it sets `disabled` +
+`aria-busy` and replaces the leading icon with an **in-button spinner** (stilled, but still
+shown, under reduced motion). The handler owns the boolean (`try/finally`), so the guard and
+the completion toast move together. A framed **icon-only** page action (e.g. Pricing Health's
+"Refresh all") spins its icon for the same perceptibility. **This does not weaken the honest
+disable rule** (a control with an honest reason — no-egress, invalid input — still disables
+with that reason). **No spinner substitutes for a served result** — the toast still tells the
+truth about what happened. Applied at the reported defect (Pricing Health) and swept across
+the data-feeds surfaces (Settings feed save/test, routing-matrix Add rule).

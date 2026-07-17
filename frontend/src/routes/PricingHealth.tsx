@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "./PricingHealth.css";
 import {
+  Button,
   DataTable,
   Dialog,
   EmptyState,
@@ -97,6 +98,9 @@ export function PricingHealth() {
   const [detail, setDetail] = useState<PricingRow | null>(null); // Details dialog
   const [correcting, setCorrecting] = useState<PricingRow | null>(null); // Correct-source dialog
   const [override, setOverride] = useState("");
+  // §14dr-8 — async-action in-flight guards: the correct-source save and per-row refresh.
+  const [savingSource, setSavingSource] = useState(false);
+  const [refreshingRow, setRefreshingRow] = useState<number | null>(null);
 
   const reload = useCallback(() => {
     setData(undefined);
@@ -138,32 +142,43 @@ export function PricingHealth() {
         toast.show({ message: "Refresh unavailable — no-egress is on.", tone: "warning" });
         return;
       }
-      const r = await refreshHolding(row.id);
-      if (r.ok && r.data.refreshed === false) {
-        toast.show({ message: r.data.reason ?? "Nothing to refresh." });
-      } else if (r.ok) {
-        toast.show({ message: `Refreshed ${row.label}.` });
-        reload();
-        invalidateStaleCount();
-      } else {
-        toast.show({ message: `Refresh failed: ${r.error}`, tone: "warning" });
+      if (refreshingRow != null) return; // re-click guard while a per-row refresh is in flight
+      setRefreshingRow(row.id);
+      try {
+        const r = await refreshHolding(row.id);
+        if (r.ok && r.data.refreshed === false) {
+          toast.show({ message: r.data.reason ?? "Nothing to refresh." });
+        } else if (r.ok) {
+          toast.show({ message: `Refreshed ${row.label}.` });
+          reload();
+          invalidateStaleCount();
+        } else {
+          toast.show({ message: `Refresh failed: ${r.error}`, tone: "warning" });
+        }
+      } finally {
+        setRefreshingRow(null);
       }
     },
-    [noEgress, toast, reload],
+    [noEgress, toast, reload, refreshingRow],
   );
 
   const onCommitSource = useCallback(async () => {
-    if (!correcting?.symbol) return;
-    const r = await correctSource(correcting.symbol, override);
-    if (r.ok) {
-      toast.show({ message: `Source corrected for ${correcting.label}.` });
-      setCorrecting(null);
-      reload();
-      invalidateStaleCount();
-    } else {
-      toast.show({ message: `Couldn't set source: ${r.error}`, tone: "warning" });
+    if (!correcting?.symbol || savingSource) return;
+    setSavingSource(true);
+    try {
+      const r = await correctSource(correcting.symbol, override);
+      if (r.ok) {
+        toast.show({ message: `Source corrected for ${correcting.label}.` });
+        setCorrecting(null);
+        reload();
+        invalidateStaleCount();
+      } else {
+        toast.show({ message: `Couldn't set source: ${r.error}`, tone: "warning" });
+      }
+    } finally {
+      setSavingSource(false);
     }
-  }, [correcting, override, toast, reload]);
+  }, [correcting, override, toast, reload, savingSource]);
 
   const columns: Column<PricingRow>[] = [
     {
@@ -211,7 +226,7 @@ export function PricingHealth() {
           aria-label={`Actions for ${r.label}`}
           items={[
             { label: "Details", onClick: () => setDetail(r) },
-            { label: "Refresh", onClick: () => onRefreshHolding(r), disabled: !r.symbol },
+            { label: "Refresh", onClick: () => onRefreshHolding(r), disabled: !r.symbol || refreshingRow != null },
             { label: "Correct source", onClick: () => { setCorrecting(r); setOverride(r.source_override ?? ""); }, disabled: !r.symbol },
           ]}
         />
@@ -228,7 +243,9 @@ export function PricingHealth() {
           <button type="button" className="lf-iconbtn lf-iconbtn--framed" onClick={onRefreshAll}
             disabled={refreshing || noEgress} aria-busy={refreshing} aria-label="Refresh all prices"
             title={noEgress ? "No-egress is on — refresh makes no network calls" : refreshing ? "Refreshing…" : "Refresh all prices"}>
-            <RotateCw aria-hidden="true" />
+            {/* §14dr-8 — perceptible pending: the icon SPINS while refreshing (the owner clicked
+                4× when the only signal was an imperceptible disabled flash). */}
+            <RotateCw aria-hidden="true" className={refreshing ? "ph__spin" : undefined} />
           </button>
         }
       />
@@ -377,7 +394,7 @@ export function PricingHealth() {
             <MasterSelect master="source_override" value={override} onChange={setOverride} aria-label="Corrected source" />
             <div className="ph__actions">
               <button type="button" className="lf-btn" onClick={() => setCorrecting(null)}>Cancel</button>
-              <button type="button" className="lf-btn lf-btn--primary" onClick={onCommitSource}>Save correction</button>
+              <Button variant="primary" loading={savingSource} onClick={onCommitSource}>Save correction</Button>
             </div>
           </div>
         )}

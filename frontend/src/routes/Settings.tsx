@@ -835,6 +835,7 @@ function FeedsCard() {
   const [feeds, setFeeds] = useState<string[]>([]);
   const [results, setResults] = useState<FeedTestResult[] | null>(null);
   const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false); // §14dr-8 async-action guard
 
   const load = async () => {
     const d = await getFeeds();
@@ -846,10 +847,16 @@ function FeedsCard() {
   const openEditor = async () => { await load(); setOpen(true); };
 
   const save = async () => {
-    const cleaned = feeds.map((f) => f.trim()).filter(Boolean);
-    const r = await putFeeds(cleaned);
-    setOpen(false);
-    toast.show(r.ok ? { message: "News feeds saved." } : { message: `Couldn't save feeds: ${r.error}` });
+    if (saving) return;
+    setSaving(true);
+    try {
+      const cleaned = feeds.map((f) => f.trim()).filter(Boolean);
+      const r = await putFeeds(cleaned);
+      setOpen(false);
+      toast.show(r.ok ? { message: "News feeds saved." } : { message: `Couldn't save feeds: ${r.error}` });
+    } finally {
+      setSaving(false);
+    }
   };
   const runTest = async () => {
     setTesting(true);
@@ -887,8 +894,8 @@ function FeedsCard() {
         footer={
           <>
             <Button onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={runTest} disabled={testing}>{testing ? "Testing…" : "Test feeds"}</Button>
-            <Button variant="primary" onClick={save}>Save feeds</Button>
+            <Button onClick={runTest} loading={testing}>Test feeds</Button>
+            <Button variant="primary" onClick={save} loading={saving}>Save feeds</Button>
           </>
         }
       >
@@ -938,6 +945,7 @@ function RoutingMatrixCard() {
   const [draftMarket, setDraftMarket] = useState("*");
   const [draftProvider, setDraftProvider] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false); // §14dr-8 async-action guard
 
   const reload = useCallback(() => {
     setCells(undefined);
@@ -963,17 +971,23 @@ function RoutingMatrixCard() {
   }, [providers]);
 
   const onAdd = useCallback(async () => {
+    if (adding) return; // §14dr-8 re-click guard
     setAddError(null);
-    const r = await putRoutingCell({ asset_class: draftClass, listing_country: draftMarket, provider: draftProvider });
-    if (!r.ok) { setAddError(r.error); return; } // honest edit-time 400, rendered verbatim (§9-3)
-    toast.show({
-      message: r.cell.degraded && r.cell.caveat
-        ? `Rule added — ${r.cell.caveat}.` // accept-with-caveat (§9-7): stored, shown degraded
-        : `Rule added — ${labelFor("asset_class", r.cell.asset_class)} · ${marketLabel(r.cell.listing_country)} → ${r.cell.provider}.`,
-    });
-    setDraftClass(""); setDraftProvider(""); setDraftMarket("*");
-    reload();
-  }, [draftClass, draftMarket, draftProvider, toast, labelFor, reload]);
+    setAdding(true);
+    try {
+      const r = await putRoutingCell({ asset_class: draftClass, listing_country: draftMarket, provider: draftProvider });
+      if (!r.ok) { setAddError(r.error); return; } // honest edit-time 400, rendered verbatim (§9-3)
+      toast.show({
+        message: r.cell.degraded && r.cell.caveat
+          ? `Rule added — ${r.cell.caveat}.` // accept-with-caveat (§9-7): stored, shown degraded
+          : `Rule added — ${labelFor("asset_class", r.cell.asset_class)} · ${marketLabel(r.cell.listing_country)} → ${r.cell.provider}.`,
+      });
+      setDraftClass(""); setDraftProvider(""); setDraftMarket("*");
+      reload();
+    } finally {
+      setAdding(false);
+    }
+  }, [adding, draftClass, draftMarket, draftProvider, toast, labelFor, reload]);
 
   const onChangeProvider = useCallback(async (cell: RoutingCell, provider: string) => {
     const r = await putRoutingCell({ asset_class: cell.asset_class, listing_country: cell.listing_country, provider });
@@ -1048,7 +1062,7 @@ function RoutingMatrixCard() {
           <Field label="Provider">
             <MasterSelect master="source_override" options={providerOptions} value={draftProvider} onChange={setDraftProvider} aria-label="New rule — provider" />
           </Field>
-          <Button icon={Plus} variant="primary" onClick={onAdd} disabled={!canAdd}>Add rule</Button>
+          <Button icon={Plus} variant="primary" onClick={onAdd} disabled={!canAdd} loading={adding}>Add rule</Button>
         </div>
         {addError && <p className="set__matrixerror" role="alert">{addError}</p>}
 

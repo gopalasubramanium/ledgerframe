@@ -434,6 +434,27 @@
   gap: var(--space-2);
 }
 
+/* §14dr-8 — async-action in-flight spinner. A PERCEPTIBLE pending affordance (the owner
+   clicked Refresh 4× when the only signal was an imperceptible disabled flash). The button
+   is also disabled while loading, so it is re-click guarded. */
+.lf-btn__spinner {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  border: calc(var(--border-width) * 2) solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: lf-btn-spin 0.7s linear infinite;
+}
+.lf-btn--loading { cursor: progress; }
+@keyframes lf-btn-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: still the spin (the disc stays visible as a static pending mark). */
+  .lf-btn__spinner { animation: none; }
+}
+
 /* §12cf1-4 — CARD FOOTNOTE. A legend/disclaimer line under a card's content (a served disclaimer, a
    legend) sat FLUSH against the table's border — zero gap — so it read as part of the table's frame
    rather than a note about it. The inset is a TOKEN at the component level, not a per-page nudge, so

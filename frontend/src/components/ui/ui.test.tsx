@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import userEvent from "@testing-library/user-event";
 import {
   AllocationDonut,
+  Button,
   DataTable,
   EmptyState,
   InstrumentPicker,
@@ -299,4 +300,23 @@ test("EmptyState always shows a reason (Product Guarantee 3)", () => {
 
 test("holdings fixture carries a negative unrealised P/L for loss-state coverage", () => {
   expect(HOLDINGS.some((h) => Number(h.unrealisedPl) < 0)).toBe(true);
+});
+
+// §14dr-8 — async-action standard on the shared Button: loading disables (re-click guarded),
+// sets aria-busy, and shows a PERCEPTIBLE spinner. Fail-first RED before the prop existed.
+test("§14dr-8: Button loading disables, sets aria-busy, and shows a spinner (async standard)", async () => {
+  const onClick = vi.fn();
+  const { rerender, container } = render(<Button loading onClick={onClick}>Save</Button>);
+  const btn = screen.getByRole("button", { name: "Save" });
+  expect(btn).toBeDisabled();
+  expect(btn).toHaveAttribute("aria-busy", "true");
+  expect(container.querySelector(".lf-btn__spinner")).not.toBeNull();
+  await userEvent.click(btn); // guarded — disabled swallows the click
+  expect(onClick).not.toHaveBeenCalled();
+  // Not loading → clickable, no spinner, no aria-busy.
+  rerender(<Button onClick={onClick}>Save</Button>);
+  expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
+  expect(container.querySelector(".lf-btn__spinner")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  expect(onClick).toHaveBeenCalledTimes(1);
 });

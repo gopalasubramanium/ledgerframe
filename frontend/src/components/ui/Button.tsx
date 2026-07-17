@@ -11,6 +11,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Optional leading icon (lucide). Sized by `--icon-size` and optically centred with the label. */
   icon?: LucideIcon;
   variant?: ButtonVariant;
+  /** §14dr-8 — async-action standard: in-flight state. Disables the button (re-click
+   *  guarded), sets `aria-busy`, and shows a PERCEPTIBLE spinner (replacing the leading
+   *  icon). The completion signal is the caller's served-outcome toast — never a
+   *  silent no-op. Reduced-motion stills the spinner (it stays visible). */
+  loading?: boolean;
 }
 
 /**
@@ -32,21 +37,26 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * The icon is sized by **`--icon-size`** — `.lf-btn svg` already does this globally, so a per-call
  * `size` prop is a lie about what controls it and is not offered here.
  */
-export function Button({ children, icon: Icon, variant = "default", className, ...rest }: ButtonProps) {
+export function Button({ children, icon: Icon, variant = "default", loading = false, disabled, className, ...rest }: ButtonProps) {
   const cls = [
     "lf-btn",
     variant === "primary" ? "lf-btn--primary" : "",
     // `danger` — destructive, irreversible-or-drastic actions ONLY (DESIGN-SYSTEM §5.4 danger-variant
     // amendment). It SIGNALS; protection is ConfirmDialog (+ the D-103 fresh purge-PIN where it applies).
     variant === "danger" ? "lf-btn--danger" : "",
-    Icon ? "lf-btn--icon" : "",
+    Icon || loading ? "lf-btn--icon" : "",
+    loading ? "lf-btn--loading" : "",
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
   return (
-    <button type="button" className={cls} {...rest}>
-      {Icon && <Icon aria-hidden="true" focusable="false" />}
+    <button type="button" className={cls} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading ? (
+        <span className="lf-btn__spinner" aria-hidden="true" />
+      ) : (
+        Icon && <Icon aria-hidden="true" focusable="false" />
+      )}
       {children}
     </button>
   );
