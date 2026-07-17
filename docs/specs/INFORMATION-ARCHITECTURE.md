@@ -160,9 +160,13 @@ canonical page does not show (enforcement corollary).
 | ReviewCard | Review centre reader (D-038) |
 | Briefing summary + top headlines | News reader (D-037) |
 | Compact quote cards (one row, source select) | Markets quotes reader (D-037/D-052) |
-| **Ticker strip** | Markets quotes reader — **Full layout only** (D-047) |
+| **Ticker strip** | Markets quotes reader — ~~**Full layout only** (D-047)~~ **global chrome footer, every page** *(struck 2026-07-18, ruling (f): superseded by the **D-047 AMENDMENT** — the ticker is the always-visible shell footer; see the amendment note below and page-chrome §11-17)* |
 
-**Simple layout** (D-046): headline + ReviewCard + briefing only.
+~~**Simple layout** (D-046): headline + ReviewCard + briefing only.~~
+*(**Struck 2026-07-18** (page-settings milestone close, ruling (f)): superseded by
+the **D-046 AMENDMENT** — the Simple layout was **RETIRED**; Home has **ONE**
+composition, the ratified grid, and no layout to switch between. Original
+preserved above. See page-home §12ho1-6 and the amendment note below.)*
 
 **Dropped from Home** (D-046): the top-holdings widget; the three separate market
 rows (world indices / your markets / watchlist+FX) — replaced by the single
@@ -420,8 +424,8 @@ from DECISIONS.md §7.
 
 | ID | Feature | Verdict |
 |----|---------|---------|
-| D-046 | Home | **SIMPLIFY** (fixed linked-summary set; Simple/Full layouts; drops top-holdings widget + 3 market rows) |
-| D-047 | Ticker strip | **KEEP (scoped)** — Home Full layout only |
+| D-046 | Home | **SIMPLIFY** (fixed linked-summary set; ~~Simple/Full layouts~~ **ONE layout — D-046 AMENDMENT, struck 2026-07-18 ruling (f), page-home §12ho1-6**; drops top-holdings widget + 3 market rows) |
+| D-047 | Ticker strip | **KEEP (scoped)** — ~~Home Full layout only~~ **global chrome footer — D-047 AMENDMENT, struck 2026-07-18 ruling (f), page-chrome §11-17** |
 | D-048 | Portfolio page | **KEEP** |
 | D-049 | Holdings + editor + add flow | **KEEP (reshaped)** — picker, merger, /refdata vocab, import review queue, one Add flow |
 | D-050 | Holdings CSV export | **MERGE** → server-side `/portfolio/holdings.csv` |

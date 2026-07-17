@@ -1538,7 +1538,26 @@ see the DONE block at the top of this section.)*
 
 </details>
 
-## SETTINGS — PLAN DRAFTED, awaiting §9 one-pass (2026-07-17)
+## SETTINGS — DONE ✅ (page ACCEPTED, owner, 2026-07-18)
+
+**`/settings` is complete and owner-accepted — SIX tabs: General · Appearance · Privacy · Data feeds · AI ·
+System.** Full record: `page-settings.md` §14 (CLOSED) + §15 (retrospective); RATIFICATION.md §6 close row.
+- **§9 one-pass** resolved 10 items + Amendments A–D (2026-07-18); **Phase 0** allow-list surgery
+  (add `long_term_days`; remove 7 write-only keys — D-078 reconciliation, pinned by served-value /
+  unknown-key-400 tests, invisible to contract regen); **Phase 0a** geometry specimen ratified with
+  conditions; **Phase 1/2/3a** the real wired page (four tabs) → **Phase 3b walk**.
+- **§14st-1 (Data feeds tab)** and **§14st-2 (AI tab)** — two in-flight IA-arrangement rulings restructured
+  the page to five then six tabs, absorbed cheaply because the page was not yet accepted (§15 lesson (a)).
+  **§14st-3 (sidebar refresh)** deferred to `chrome-sidebar-refresh` (R-39, final pre-release).
+- **Platform items ratified:** §5.4 danger `ButtonVariant`; GLOSSARY terms (Density · API token · Privacy
+  mode · Data provider · High contrast · Reduced motion). **§15 lessons mechanised:** arrange-before-accept,
+  no-dead-affordance ("AI not AI & Voice"), no-unrestorable-mutating-smoke (PIN refusal).
+- **No backend change after Phase 0/1** (git diff app/ empty across both walk batches). Baseline at close:
+  backend **891** · vitest **266** · overflow/tile e2e **334** · live settings-smoke **6/6** read-only.
+- **Kickoffs filed at the close:** ROADMAP **R-38** ACTIVATED (`data-feed-routing.md` plan-only) · **R-39**
+  chrome-sidebar-refresh · **RD-9 Amendment 4** (v2.0.0 set enumerated; Voice post-release).
+
+## SETTINGS — PLAN DRAFTED, awaiting §9 one-pass (2026-07-17, superseded by DONE ✅ above)
 
 **`docs/plans/page-settings.md` authored complete through §9 (PLAN ONLY, verify-first).**
 Nothing built — no route, no page, no contract change, no new allow-list key, no Phase 0.
@@ -1560,18 +1579,24 @@ Frontend check: **N/A — plan-only, no code touched.** The §9 one-pass happens
   9-10 System-tab graceful degradation (D-003 `admin_available`).
 
 ## NEXT
-*(Accounts ✅, Reports ✅, and Reports Pack ✅ are DONE — see their DONE entries above. The Amendment-I
-declined-exports ledger — the oldest open debt in the rebuild — is CLOSED.)*
-1. **Settings** (`page-settings.md`, **PLAN ONLY, verify-first** — nothing is built for Settings yet).
-   The accumulated candidates list in this file is the seed; the **`long_term_days` seam** (page-reports
-   Amendment J — a read-only 365 today, no persisted store) and the **rotation-keys re-add** live there.
-2. Then **Help · Legal** · the **AI-surfaces milestone** · **Voice** — **⚠ its definition is STILL owed;
-   nothing starts until the owner defines it** (ROADMAP **R-32**) · then release **Gates C→F** and tag
-   `v2.0.0`.
+*(**Settings ✅ DONE** — six tabs; owner-accepted 2026-07-18, see "SETTINGS — DONE ✅" below. Accounts ✅,
+Reports ✅, Reports Pack ✅ also DONE. The Amendment-I declined-exports ledger — the oldest open debt in the
+rebuild — is CLOSED.)*
+1. **data-feed-routing (R-38 activation)** — `docs/plans/data-feed-routing.md`, **PLAN ONLY, verify-first**
+   (plan-only kickoff already filed at the Settings close). Provider routing matrix: per asset-class ×
+   listing-country provider mapping; editor home **Settings → Data feeds**; per-cell provenance on Pricing
+   Health. **Pulled forward as the NEXT milestone** (owner ruling 2026-07-18; the R-35-activation precedent).
+2. Then **Help** ([Help]-popover retrofit, owner-picked targets) · **Legal** · the **AI-surfaces
+   milestone** (D-067/D-068) · **chrome-sidebar-refresh** (R-39, the **final pre-release** milestone,
+   §14st-3) · then release **Gates C→F** and tag `v2.0.0`.
+3. **Voice (R-32) is POST-RELEASE** (owner ruling 2026-07-18, RD-9 Amendment 4) — it **does NOT gate
+   v2.0.0**; its definition is **still owed** and gates whichever release ships it.
 
-**Release posture unchanged (RD-9 Amendment 3):** the release gate is **FULL COMPLETION**; Gates C–F stay
-dormant until the owner accepts the full set. **Standing, owner-only:** the **CLA counsel review** before the
-first external merge (Gate B2).
+**Release posture (RD-9 Amendment 3, REFINED by Amendment 4):** the release gate is **FULL COMPLETION** of
+the enumerated v2.0.0 set — **all pages + Settings + data-feed-routing (R-38) + Help + Legal + AI-surfaces +
+chrome-sidebar-refresh (R-39) + Gates C→F**; **Voice is post-release.** Gates C–F stay dormant until the
+owner accepts the full set. **Standing, owner-only:** the **CLA counsel review** before the first external
+merge (Gate B2).
 
 ## Scheduled cross-page retrofits (owner-picked targets; each re-runs its own pre-pass)
 

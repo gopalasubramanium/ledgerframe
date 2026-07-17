@@ -1,9 +1,35 @@
 # release-readiness.md — defining the finish line
 
 **Status: ⏸ GATES C–F STANDING/DORMANT. GATE A CLOSED (+ A9–A11 addendum) · GATE B CLOSED
-(owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, owner 2026-07-14).**
+(owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, as REFINED by Amendment 4,
+owner 2026-07-18 — Voice is POST-RELEASE; the v2.0.0 set is enumerated below).**
 
-> ## ⚠ RD-9 TIMING AMENDMENT 3 (owner, 2026-07-14) — **RELEASE = FULL COMPLETION. Gates C–F return to STANDING/DORMANT.**
+> ## ⚠ RD-9 SCOPE AMENDMENT 4 (owner, 2026-07-18) — **the v2.0.0 set is ENUMERATED; Voice (R-32) is POST-RELEASE.**
+>
+> **REFINES Amendment 3 (below, preserved): the FULL-COMPLETION gate STANDS, but its set is corrected.**
+> Amendment 3 listed **Voice** inside the release gate; Amendment 4 **moves Voice to post-release** and
+> pins the exact v2.0.0 set. Recorded at the **Settings milestone close** (page-settings §14 CLOSED).
+>
+> ### The v2.0.0 release set (owner-ruled 2026-07-18):
+>
+> > **v2.0.0 = all pages DONE + Settings + data-feed-routing (R-38) + Help + Legal + AI-surfaces
+> > (D-067/D-068) + chrome-sidebar-refresh (R-39) + Gates C→F clear (this file).**
+>
+> - **data-feed-routing (R-38)** is **pulled forward as the NEXT milestone** (its own plan file,
+>   `docs/plans/data-feed-routing.md`; plan-only kickoff filed at this close).
+> - **chrome-sidebar-refresh (R-39)** is the **FINAL pre-release milestone** (page-settings §14st-3;
+>   sequenced after Help · Legal · AI-surfaces).
+> - **Gates C→F still clear against the FINAL set** — a scan of something other than what ships is not a
+>   scan (Amendment 3's rule stands).
+>
+> ### ⚠ Voice (R-32) is POST-RELEASE — BY OWNER RULING (2026-07-18):
+>
+> **Voice does NOT gate v2.0.0.** Amendment 3 named it a release-scope gate; the owner now rules it
+> **post-release**. **Its definition remains OWED** (ROADMAP R-32 — DEFINITION PENDING) and it **gates
+> whichever release ships it**, not v2.0.0. No Voice behaviour is invented by moving it — it is still
+> undefined; it is simply no longer in the v2.0.0 gate. Mirrored in the R-32 ROADMAP annotation.
+
+> ## ⚠ RD-9 TIMING AMENDMENT 3 (owner, 2026-07-14) — **RELEASE = FULL COMPLETION. Gates C–F return to STANDING/DORMANT.** *(REFINED by Amendment 4 above — Voice moved to post-release; the set enumerated.)*
 >
 > **SUPERSEDES Amendment 2, which is preserved struck through below.** A superseded ruling is struck
 > through, never deleted.

@@ -854,4 +854,145 @@ definition** — recorded as a dated annotation against R-32 in `ROADMAP.md`.
 - Screenshots: the **six-tab strip**, the **AI tab**, and **System without the
   AI line**.
 
-*(Build & re-run evidence appended after the commit lands.)*
+### Build & re-run evidence (2026-07-18)
+
+- **COMMIT 1 `8a3372a`** (records) — §14st-2 above; DECISIONS D-069 dated
+  AMENDMENTS block (#1 five tabs, #2 six tabs) + the table-row strike five→SIX;
+  IA mirror (page map + Settings ownership: six tabs); ROADMAP R-32 annotation
+  (the tab gains "& Voice" only after the owner's Voice definition).
+- **COMMIT 2 `f635467`** (restructure) — the sixth `ai` Segmented segment + an
+  `AiPanel` (the served `getAiConfig` line + the static deferral note); the AI
+  card **removed from System** (SystemPanel drops its `ai` state). **Fail-first:**
+  the six-tab set / `?tab=system` "AI line is gone" / `?tab=ai` deep-link guards
+  went **RED on the real cause** (3 vitest assertions in `Settings.test.tsx`)
+  before the code moved, then GREEN.
+- **No backend change this milestone** — `git diff` over `app/` for both commits
+  is **empty** (the AI line is a served display off the existing
+  `GET /system/ai-config`; no allow-list, no endpoint change).
+- **Frontend `npm run check` (from `frontend/`) → exit 0** — lint · typecheck ·
+  check:tokens · **12 Settings vitest** (the 3 fail-first guards GREEN) · **334
+  overflow/tile e2e** incl. the new `settings · ai` route (×6 tabs × both themes).
+- **Live settings-smoke (dev servers up; demo-seeded, PIN-free, provider `mock`,
+  `admin_available=false`) — 6/6 read-only tests passed:** containment + **0
+  console errors across SIX tabs × both themes × 320/375/900/1366**; the six-tab
+  strip; the **AI** tab (served line *"AI is on — provider hailo, model
+  (default)."* + the deferral note); the **System** tab **without** the AI line.
+  Screenshots (15:30): `settings-{general,appearance,privacy,data-feeds,ai,system}-{light,dark}.png`,
+  `settings-ai.png`. Visually confirmed: the six-tab strip, the AI tab, the
+  reflowed System tab (no AI card).
+- **Deliberately NOT run against the live instance: the PIN-mutating System
+  test** (§15c rule — no API clears a PIN; running it would leave the owner's
+  demo instance locked). The System-without-AI-line screenshot is captured
+  read-only instead; the danger-Reset / D-103 behaviour stays covered by the
+  vitest guards.
+
+**Journey guards (§14ac-2): UNCHANGED.** §14st-2 moves no first-run target — the
+provider journey still lands on `?tab=data-feeds`, the PIN journey on
+`?tab=system`. Both GREEN.
+
+### §14st-3 — sidebar refresh (owner-decision, DEFERRED; the re-walk's second ruling)
+
+The owner's second re-walk ruling (2026-07-18): the **sidebar wants a visual /
+interaction refresh** — but it is **NOT this milestone's work**. **DEFERRED to its
+own milestone, `chrome-sidebar-refresh` (ROADMAP R-39)**, sequenced as the
+**FINAL pre-release milestone** (after data-feed-routing · Help · Legal ·
+AI-surfaces). **Translation constraints recorded now** so the milestone inherits
+them and invents nothing beyond them:
+
+- **(a) semantic-only colour** — the refresh honours DESIGN-SYSTEM's
+  semantic-only-colour rule; no decorative palette.
+- **(b) no avatar / account block** — a single-user appliance (D-001); the
+  sidebar gains **no** profile/avatar/account affordance.
+- **(c) collapse-to-icon rail rides the EXISTING D-078 sidebar-collapsed
+  setting** — the icon rail is the **collapsed state** of the already-built
+  per-device sidebar-collapsed toggle, **not** a new persistence axis.
+
+Recorded in ROADMAP R-39; nothing built here.
+
+---
+
+## §14 — CLOSED (owner-accepted 2026-07-18, contingent on the batch-2 screenshots)
+
+**The Settings milestone is COMPLETE.** The Phase-3b acceptance walk (§14) resolved
+across the batches below; the page ships **six tabs** — General · Appearance ·
+Privacy · Data feeds · AI · System.
+
+- **§14st-1 (Data feeds tab) — DELIVERED** (five-tab restructure; commits
+  `5feeab3`/`e155cc7`/`375b098`).
+- **§14st-2 (AI tab) — DELIVERED** (this batch; commits `8a3372a`/`f635467`).
+- **§14st-3 (sidebar refresh) — DEFERRED** to `chrome-sidebar-refresh` (R-39, the
+  final pre-release milestone), with the (a)/(b)/(c) translation constraints
+  recorded above.
+
+**Owner pre-acceptance:** the close was accepted **contingent on the batch-2
+screenshots** (the six-tab strip, the AI tab, System without the AI line) — all
+captured live (§14st-2 evidence, 15:30) and visually confirmed.
+
+---
+
+## §15 — MILESTONE RETROSPECTIVE (strike-check + lessons to mechanise)
+
+### Lessons MECHANISED (owner directive — these become rules, not judgment calls)
+
+- **(a) File arrangement findings BEFORE acceptance.** An **in-flight page absorbs
+  IA restructures cheaply** — the five-tab (§14st-1) and six-tab (§14st-2) catches
+  landed while `/settings` was still IN FLIGHT (no accepted-page delta machinery),
+  so each was a straight commit, not a spec-amendment cascade. **Rule:** raise
+  arrangement/IA findings during the walk, before the page is accepted — an
+  accepted page pays the full dated-delta cost for the same move.
+- **(b) A tab/section may only exist if it has real contents TODAY.** Placeholders
+  for undefined features are **pre-built dead affordances**. The **"AI, not
+  AI & Voice"** ruling (R-32 undefined → name only what exists) and the
+  **rotation-toggle** precedent (hidden until R-37 wires it) are the same
+  principle. **Rule:** no tab, control, or label for a feature whose behaviour is
+  not defined and built.
+- **(c) Mutating smokes NEVER run against the owner's live instance without a
+  restore path.** The **PIN-smoke refusal** (there is no API to clear a PIN;
+  running the PIN-mutating System test would leave the demo instance locked) is
+  now **a rule, not a judgment call** — a smoke that mutates state the harness
+  cannot restore is captured read-only or skipped, and the skip is recorded.
+
+### Strike-check — every §14 walk item against the diff
+
+| Item | Ruling | Landed in the diff? |
+|------|--------|---------------------|
+| §14st-1 Data feeds tab | five tabs; provider/key/feeds move | ✅ `Settings.tsx` `DataFeedsPanel`; guards ×5 |
+| §14st-2 AI tab | sixth tab; AI line moves System→AI; note | ✅ `Settings.tsx` `AiPanel`; System AI card removed; guards ×6 |
+| §14st-2 "AI never persists" stays in Privacy | no move, no duplicate | ✅ `PrivacyPanel` unchanged (`set__aicopy`) |
+| §14st-3 sidebar refresh | deferred to R-39 | ✅ ROADMAP R-39; nothing built (correct) |
+| Ruling (f) IA Simple/Full strikes | dated strike-annotations, originals preserved | ✅ IA lines struck + annotated (D-046/D-047 AMENDMENTs) |
+| R-38 activation | plan-only kickoff | ✅ `data-feed-routing.md` + ROADMAP R-38 |
+| RD-9 Amendment 4 | v2.0.0 set; Voice post-release | ✅ `release-readiness.md` + R-32 annotation |
+| D-069 amendment #2 | five→six tabs | ✅ DECISIONS table row + AMENDMENTS block |
+
+### Changed-file table (the ACTUAL diff — both walk batches, `b3907ea..HEAD` + close)
+
+| File | What changed |
+|------|--------------|
+| `frontend/src/routes/Settings.tsx` | `DataFeedsPanel` (st-1) + `AiPanel` (st-2); System reflow (lost provider/key/feeds, then the AI card); six-segment `Segmented` |
+| `frontend/src/routes/Settings.test.tsx` | six-tab set; provider-on-data-feeds + AI-on-ai deep-link journeys; System asserts provider **and** AI line gone |
+| `frontend/e2e/smoke/settings-smoke.spec.ts` | TABS ×6; Data feeds + AI read-only tests; System asserts AI line moved out |
+| `frontend/e2e/overflow.spec.ts` | `settings · data-feeds` + `settings · ai` routes |
+| `frontend/src/components/AppShell.tsx` / `.test.tsx` | st-1: `FIRST_RUN_LINKS.prices → ?tab=data-feeds`; provider-journey guard |
+| `docs/plans/page-settings.md` | §14st-1 / §14st-2 / §14st-3 / §14 CLOSED / §15 |
+| `docs/audit/DECISIONS.md` | D-069 table-row strike (five→SIX) + dated AMENDMENTS block (#1/#2) |
+| `docs/specs/INFORMATION-ARCHITECTURE.md` | Settings six-tab mirror; ruling-(f) Simple/Full strikes |
+| `docs/specs/DESIGN-SYSTEM.md` | §5.4 danger `ButtonVariant` PROPOSED→RATIFIED (st-1 walk) |
+| `ROADMAP.md` | R-32 annotation (AI tab naming + Voice post-release); R-38 ACTIVATED; R-39 chrome-sidebar-refresh |
+| `docs/plans/release-readiness.md` | RD-9 Amendment 4 (v2.0.0 set enumerated; Voice post-release) |
+| `docs/plans/data-feed-routing.md` | **new** — R-38 plan-only kickoff |
+
+### Baseline test count (at close)
+
+- **Backend `pytest` → 891 passed** — **unchanged**; `git diff app/` over both
+  walk batches is **empty** (the whole Settings milestone touched no backend code
+  after Phase 0/1; the AI line is a served display off the existing
+  `GET /system/ai-config`).
+- **Frontend `npm run check` → exit 0** — lint · typecheck · check:tokens ·
+  **266 vitest** · **334 overflow/tile e2e** (incl. `settings · data-feeds` +
+  `settings · ai`).
+- **Live settings-smoke — 6/6 read-only pass**, 0 console errors across six tabs
+  × both themes × four widths; the PIN-mutating System smoke deliberately not run
+  (§15c).
+
+**Settings — DONE ✅ (six tabs; owner-accepted 2026-07-18).**
