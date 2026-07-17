@@ -154,8 +154,11 @@ async def _consolidated_review(session: AsyncSession) -> str:
     report = await review_report(session)
     items = report.get("items", [])
     rows = "".join(
+        # §14pk-2: the reader serves each signal's text as `title` (review.py `_item`); rendering
+        # `body` (which the reader does not serve) left content-free rows — a category label without
+        # its item is a blank wearing a costume.
         f'<li><span class="pack-tag">{_esc(i.get("area", ""))}</span> '
-        f'<span class="pack-tag">{_esc(i.get("severity", ""))}</span> {_esc(i.get("body", ""))}</li>'
+        f'<span class="pack-tag">{_esc(i.get("severity", ""))}</span> {_esc(i.get("title", ""))}</li>'
         for i in items
     )
     inner = f'<p class="pack-caption">As of {_esc(report.get("as_of"))}</p><ul class="pack-list">{rows}</ul>'

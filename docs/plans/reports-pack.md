@@ -700,3 +700,27 @@ page 2 = 465 (present). Live **3/3 GREEN**.
 **STOP CONDITION HONOURED:** Phase 3a is GREEN and self-consistent; the **owner acceptance walk
 (Phase 3b) is a SEPARATE session** (no self-certification). The **Amendment-I declined-exports ledger
 stays PENDING** — it flips PENDING → DELIVERED only at the milestone close, after the owner's pass.
+
+---
+
+## 14 — PHASE 3b OWNER ACCEPTANCE WALK (owner walked the live artifact + the print PDF, 2026-07-17)
+
+**Three findings; everything else ACCEPTED.** The owner walked BOTH the on-screen artifact and the
+printed PDF. Acceptance is **contingent on this batch** (the §14es precedent). Each finding is a
+one-delta commit, fail-first.
+
+### §14pk-2 — Review rows rendered area/severity labels with NO item text → **FIXED**
+
+**Finding (PDF walk).** The consolidated Review section printed each row's **area + severity tags but
+no signal text** — content-free rows. *A category label without its item is a blank wearing a costume.*
+
+**Verify-first (cite).** The review reader's `_item(area, title, severity)` serves the signal text as
+**`title`** (`app/services/review.py:44`; e.g. `title="2 key documents marked missing or outdated"`) —
+there is **no `body` field**. The Pack composer rendered `i.get("body")` (`reports_pack.py`
+`_consolidated_review`), which is always empty. **Root cause: wrong served-field name**, not missing
+data.
+
+**Fix.** Render `i.get("title")` verbatim (D-105). **Fail-first pin:** `test_review_rows_render_the_
+served_item_text_not_just_labels` asserts a stable, date-independent seeded signal
+(*"… documents marked missing or outdated"* — the seed's one MISSING + one OUTDATED estate document)
+is INSIDE the artifact — **RED** on the pre-fix `body` (proven by revert), **GREEN** on `title`.
