@@ -585,3 +585,62 @@ Phase 1 is BLOCKED until then.*
 static dialog-body frame, re-verified green.)
 
 *(STOP. Owner ratifies the specimen by looking. Phase 1 is BLOCKED until then.)*
+
+---
+
+## 12. PHASE 0a RATIFICATION RECORD (owner, 2026-07-18)
+
+**SPECIMEN RATIFIED (owner, 2026-07-18)** — the Phase-0a geometry-gate specimen
+(`9f79352`; `SettingsMockup.tsx` + `Settings.css`, §11) is **ratified with
+conditions**. Phase 1 (assembly) is **UNBLOCKED** and proceeds under the gate
+rulings and ratification conditions recorded here (owner walk of the specimen,
+2026-07-18). This is the accepted record; Phase 1 executes against it.
+
+### Gate rulings (owner, 2026-07-18 — the §11 "flagged for the owner" questions, ruled)
+
+- **(a) `long_term_days` control — TextInput + "days" affix STANDS.** The specimen's
+  `TextInput` + affix is the ratified control (the numeric-input precedent). **No
+  §5 amendment** — a dedicated `NumberInput`/stepper is **not** authored. (Resolves
+  §11-flag (a).)
+- **(b) §5 DANGER `ButtonVariant` — AMENDMENT RAISED (owner-ruled).** Destructive
+  actions get a **ratified** danger variant (see COMMIT 2 / DESIGN-SYSTEM §5.4).
+  The specimen's **one-off CSS tint** (`set__dangerbtn`) must **NOT** ship — Reset
+  data adopts the ratified variant at assembly. (Resolves §11-flag (b).)
+- **(c) `Segmented` STANDS as the tab strip.** No `Tabs` §5 amendment is called for
+  at the gate — **Amendment C intact**: tab state is **URL-addressable at
+  assembly**; the first-run → Settings-tab links are **journey-guarded** (arrival
+  at the control, not the href). (Resolves §11-flag (c) / §9-5.)
+- **(d) TopBar rotation toggle — HIDDEN until R-37 (owner-ruled).** The dead
+  affordance (local `useState`, zero consumers) is **hidden** now, restored by the
+  Rotation engine (R-37) with its wiring — the dead-affordance principle. See
+  COMMIT 3. *(This SUPERSEDES the Amendment-B "toggle stays" finding for the
+  chrome surface: the finding proved no key is orphaned by the Phase-0 removals;
+  the owner separately rules the still-inert control hidden until its engine
+  lands.)*
+- **(e) `GET /settings.defaults` serving `rotation_seconds` — ACCEPTED as-is.** Left
+  in place (a served read-only default, not an allow-list write key). **ROADMAP
+  R-37 gains one line:** *"sweep the served defaults surface (`rotation_seconds`)
+  when the engine lands."*
+- **(f) IA:165 / IA:411 residual "Simple/Full" strike — ACCEPTED, batched.** The
+  retired-two-layout Home residue in `INFORMATION-ARCHITECTURE.md` is struck at the
+  **MILESTONE CLOSE batch**, not now. Ruling recorded; execution deferred to close.
+
+### Ratification CONDITIONS (owner walk findings — each a Phase 1 deliverable)
+
+Each is a **Phase 1 deliverable** carrying a **screenshot in the Phase 1/3a
+report**. These are the specimen gaps the owner found at the walk:
+
+- **§12st-1 — PIN set/change card (System).** `require_auth`; the ONE first-run
+  choice that had no Settings home (D-002 / D-045). The specimen omitted it.
+- **§12st-2 — Market-data provider WRITE-ONLY API-key input (System).** D-003; the
+  field **never echoes the stored value** — an honest "set, hidden" state (never a
+  read-back secret).
+- **§12st-3 — the ND-6 feeds editor (System).** Per the §9-3 ruling: a **Dialog +
+  `TextInput` multi-URL + Test**, **[S]-gated** — the ratified Accounts-dialog
+  pattern; **no new component**.
+- **§12st-4 — the read-only served AI-config display line (System).** Per the
+  ledger disposition; a served display line only — model **MANAGEMENT** stays
+  **deferred to AI-surfaces** (D-067/D-068).
+
+*(End of §12 ratification record. Phase 1 proceeds against these rulings +
+conditions; every §12st condition ships a screenshot in the phase report.)*
