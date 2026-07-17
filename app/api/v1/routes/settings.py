@@ -115,7 +115,7 @@ async def update_settings(patch: SettingsPatch, session: AsyncSession = Depends(
         try:
             _ltd = int(patch.values["long_term_days"])
         except (TypeError, ValueError):
-            raise HTTPException(400, "long_term_days must be a whole number of days between 0 and 3660.")
+            raise HTTPException(400, "long_term_days must be a whole number of days between 0 and 3660.") from None
         if not 0 <= _ltd <= 3660:
             raise HTTPException(400, "long_term_days must be between 0 and 3660 days.")
     # An unknown key is REFUSED, not skipped. It used to `continue` here — which is exactly why a PUT
