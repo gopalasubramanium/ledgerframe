@@ -71,6 +71,30 @@
   line-height: var(--line-16);
 }
 
+/* §14dr-13 — instrument masters: one row per master (info · Sync-now). Wraps at
+   narrow widths so the Data feeds tab never overflows horizontally (overflow suite). */
+.set__masters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.set__masterrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.set__masterinfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.set__masterlabel {
+  font-size: var(--font-size-14);
+  font-weight: var(--weight-medium);
+}
+
 /* One labelled field: label · control · help. */
 .set__field {
   display: flex;

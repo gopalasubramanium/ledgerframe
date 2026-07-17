@@ -65,3 +65,14 @@
   color: var(--text-tertiary);
   font-size: var(--font-size-13);
 }
+
+/* §14dr-13 — never-synced empty: the sync-card link reads as an accent action. */
+.lf-picker__synclink {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.lf-picker__synclink:hover {
+  text-decoration: underline;
+}

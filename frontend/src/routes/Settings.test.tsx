@@ -35,6 +35,11 @@ vi.mock("../api/feeds", () => ({
   testFeeds: vi.fn(async () => []),
 }));
 vi.mock("../api/system", () => ({ setPin: vi.fn(async () => ({ ok: true })) }));
+// §14dr-13 instrument-masters card (Settings → Data feeds) — served status + sync trigger, mocked.
+vi.mock("../api/masters", () => ({
+  getMasters: vi.fn(),
+  syncMaster: vi.fn(async () => ({ ok: true, count: 5 })),
+}));
 // R-38 routing-matrix editor (Phase 1) readers/writers — mocked so the Data feeds tab's third card
 // renders deterministically (served strings only; no network in tests).
 vi.mock("../api/routing-matrix", () => ({
@@ -48,6 +53,7 @@ import { getSettings } from "../api/settings";
 import { listTokens } from "../api/tokens";
 import { getDataSource, getPinSet } from "../api/systemConfig";
 import { getRoutingMatrix, getProviders, putRoutingCell, deleteRoutingCell } from "../api/routing-matrix";
+import { getMasters, syncMaster } from "../api/masters";
 import type { ProvidersResp } from "../api/routing-matrix";
 import { getFeeds } from "../api/feeds";
 
@@ -96,6 +102,11 @@ beforeEach(() => {
   vi.mocked(getPinSet).mockResolvedValue(false);
   vi.mocked(getRoutingMatrix).mockResolvedValue({ cells: [] });
   vi.mocked(getProviders).mockResolvedValue(PROVIDERS);
+  vi.mocked(getMasters).mockResolvedValue([
+    { key: "amfi", label: "Mutual funds (AMFI)", count: 0, synced_at: null },
+    { key: "coingecko", label: "Crypto (CoinGecko)", count: 5, synced_at: "2026-07-18T09:00:00+00:00" },
+  ]);
+  vi.mocked(syncMaster).mockResolvedValue({ ok: true, count: 5 });
   vi.mocked(putRoutingCell).mockResolvedValue({
     ok: true,
     cell: { asset_class: "equity", listing_country: "US", provider: "yahoo", degraded: false, caveat: null, updated_at: null },
@@ -363,4 +374,31 @@ test("news feeds card is honest when no feeds are configured", async () => {
   vi.mocked(getFeeds).mockResolvedValue({ feeds: [], defaults: [] });
   renderAt("/settings?tab=data-feeds");
   expect(await screen.findByText("No feeds configured.")).toBeTruthy();
+});
+
+// --- §14dr-13 instrument-masters card (Settings → Data feeds) ----------------
+// The card the picker's never-synced empty points at (§14ac-2 journey destination).
+test("masters card serves honest last-synced state per master (Never synced vs a served date)", async () => {
+  renderAt("/settings?tab=data-feeds");
+  expect(await screen.findByText("Instrument masters")).toBeTruthy();
+  // AMFI mock: never synced → the honest empty, not a fabricated date.
+  const amfi = (await screen.findByText("Mutual funds (AMFI)")).closest(".set__masterrow") as HTMLElement;
+  expect(within(amfi).getByText("Never synced")).toBeTruthy();
+  // CoinGecko mock: synced → the served date + count (a display slice, not computed).
+  const cg = (await screen.findByText("Crypto (CoinGecko)")).closest(".set__masterrow") as HTMLElement;
+  expect(within(cg).getByText("Last synced 2026-07-18 · 5 entries")).toBeTruthy();
+});
+
+test("Sync now triggers the master sync and reports the served result (no fabricated progress)", async () => {
+  renderAt("/settings?tab=data-feeds");
+  const amfi = (await screen.findByText("Mutual funds (AMFI)")).closest(".set__masterrow") as HTMLElement;
+  fireEvent.click(within(amfi).getByRole("button", { name: "Sync now" }));
+  await waitFor(() => expect(vi.mocked(syncMaster)).toHaveBeenCalledWith("amfi"));
+  expect(await screen.findByText("Sync complete — 5 entries.")).toBeTruthy();
+});
+
+test("masters card is honest when the status readers fail (retry, never a fake row)", async () => {
+  vi.mocked(getMasters).mockResolvedValue(null);
+  renderAt("/settings?tab=data-feeds");
+  expect(await screen.findByText("Couldn't load masters")).toBeTruthy();
 });

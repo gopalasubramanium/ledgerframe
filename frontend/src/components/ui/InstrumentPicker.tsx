@@ -33,7 +33,7 @@ export interface InstrumentPickerProps {
   disabled?: boolean;
 }
 
-const EMPTY = { existing: [], other_class: [], suggestions: [] };
+const EMPTY = { existing: [], other_class: [], suggestions: [], master: null };
 
 export function InstrumentPicker({
   value,
@@ -48,6 +48,7 @@ export function InstrumentPicker({
     existing: InstrumentSearchItem[];
     other_class: InstrumentSearchItem[];
     suggestions: { symbol: string; name: string }[];
+    master: { provider: "amfi" | "coingecko"; synced: boolean } | null;
   }>(EMPTY);
   // §14dr-12 — track whether a fetch is in flight so the honest empty state shows only AFTER a
   // search returns nothing (not during the debounce), never a premature "no match" flash.
@@ -68,7 +69,7 @@ export function InstrumentPicker({
     const t = setTimeout(async () => {
       const r = await searchInstruments(q, assetClass);
       if (live) {
-        setRes(r.ok ? r.data : EMPTY);
+        setRes(r.ok ? { ...r.data, master: r.data.master ?? null } : EMPTY);
         setLoading(false);
       }
     }, 250);
@@ -103,6 +104,11 @@ export function InstrumentPicker({
   // rather than showing a bare create option (which reads as "nothing happened", the XRP report).
   const classLabel = assetClass ? assetClass.replace(/_/g, " ") : "";
   const emptyState = !!q && !loading && !anyResults;
+  // §14dr-13 — the class's master was never synced (empty AMFI/CoinGecko cache), so the
+  // pool is empty for a reason the user can act on. Say so and point at the sync card,
+  // rather than "no match — create" (which would push a manual instrument the picker
+  // could have found once the master is synced).
+  const neverSynced = emptyState && !!res.master && !res.master.synced;
   const hasAny = anyResults || (allowCreate && !!q) || emptyState;
 
   return (
@@ -212,7 +218,19 @@ export function InstrumentPicker({
                 (scoped by class); if create is allowed the message IS the create path (the owner's
                 copy: "No crypto instruments match — create 'XRP'"), else it's an honest info line. */}
             {emptyState ? (
-              allowCreate ? (
+              neverSynced ? (
+                // §14dr-13 — never-synced empty, journey-guarded to the Masters card (§14ac-2).
+                <li className="lf-picker__empty lf-picker__neversynced" aria-live="polite">
+                  No {classLabel || "instrument"} master synced yet — sync it in{" "}
+                  <a
+                    className="lf-picker__synclink"
+                    href="#/settings?tab=data-feeds"
+                    onMouseDown={() => setOpen(false)}
+                  >
+                    Settings → Data feeds
+                  </a>
+                </li>
+              ) : allowCreate ? (
                 <li
                   role="option"
                   aria-selected={false}

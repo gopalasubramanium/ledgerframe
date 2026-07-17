@@ -89,6 +89,10 @@ export interface InstrumentSearchResult {
   existing: InstrumentSearchItem[]; // ledger instruments of the picked class
   other_class: InstrumentSearchItem[]; // ledger instruments under a DIFFERENT class
   suggestions: { symbol: string; name: string }[]; // provider search routed by class
+  // §14dr-13 — the class's instrument-master state, so the picker's honest empty can
+  // distinguish "never synced" (actionable: sync in Settings) from "no match". Null for
+  // classes with no dedicated master (equity/etf → live provider search, nothing to sync).
+  master?: { provider: "amfi" | "coingecko"; synced: boolean } | null;
 }
 
 export const searchInstruments = (q: string, assetClass?: string) => {

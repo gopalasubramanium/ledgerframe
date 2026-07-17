@@ -42,6 +42,8 @@ import {
 import type { DataSource, SystemConfig, AiConfig } from "../api/systemConfig";
 import { getFeeds, putFeeds, testFeeds } from "../api/feeds";
 import type { FeedTestResult } from "../api/feeds";
+import { getMasters, syncMaster } from "../api/masters";
+import type { MasterState } from "../api/masters";
 import {
   getRoutingMatrix,
   putRoutingCell,
@@ -568,6 +570,12 @@ function DataFeedsPanel() {
         </div>
       </section>
 
+      {/* Instrument masters (§14dr-13) — the reference lists the Add-flow picker searches.
+          v1 carried these sync affordances (01-FEATURE-INVENTORY:191); v2 dropped the UI
+          without a recorded deferral. The backend sync engines never left — this card wires
+          the existing require_auth /{master}/refresh triggers + served /status timestamps. */}
+      <MastersCard />
+
       {/* News feeds editor (§12st-3 / ND-6) — Dialog + multi-URL + Test, [S]-gated. */}
       <FeedsCard />
 
@@ -825,6 +833,77 @@ function ResetDataControl({ pinSet, onDone }: { pinSet: boolean; onDone: () => v
         onConfirm={doReset}
       />
     </>
+  );
+}
+
+// --- Instrument masters (§14dr-13) — restored sync affordance ----------------
+// Per master: served last-synced (honest "Never synced"), the entry count, and a
+// Sync-now Button on the dr-8 async-action standard (loading = pending/disabled +
+// result toast). No fabricated progress; served counts only. The picker's honest
+// empty ("No … master synced yet") points users here (§14ac-2 journey).
+function MastersCard() {
+  const toast = useToast();
+  const [masters, setMasters] = useState<MasterState[] | null | undefined>(undefined);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const reload = useCallback(() => {
+    setMasters(undefined);
+    getMasters().then(setMasters);
+  }, []);
+  useEffect(() => reload(), [reload]);
+
+  const sync = async (key: MasterState["key"]) => {
+    setSyncing(key);
+    const r = await syncMaster(key);
+    setSyncing(null);
+    toast.show(
+      r.ok
+        ? { message: `Sync complete — ${r.count} entries.` }
+        : { message: `Couldn't sync: ${r.error}`, tone: "warning" },
+    );
+    if (r.ok) reload();
+  };
+
+  return (
+    <section className="lf-card set__section">
+      <header className="set__cardhead"><h2 className="lf-card__title">Instrument masters</h2></header>
+      <div className="lf-card__body">
+        <p className="set__fieldhelp">
+          The reference lists the Add-flow picker searches — mutual funds from AMFI, cryptos from
+          CoinGecko. Sync pulls the latest master (opt-in network; nothing is fetched under no-egress).
+        </p>
+        {masters === undefined ? (
+          <Skeleton lines={2} />
+        ) : masters === null ? (
+          <EmptyState
+            message="Couldn't load masters"
+            reason="The master status didn't load. Try again."
+            action={<Button onClick={reload}>Retry</Button>}
+          />
+        ) : (
+          <div className="set__masters">
+            {masters.map((m) => (
+              <div key={m.key} className="set__masterrow">
+                <div className="set__masterinfo">
+                  <span className="set__masterlabel">{m.label}</span>
+                  <span className="set__fieldhelp">
+                    {m.synced_at
+                      ? `Last synced ${isoDate(m.synced_at)} · ${m.count} entries`
+                      : "Never synced"}
+                  </span>
+                </div>
+                <Button
+                  onClick={() => sync(m.key)}
+                  loading={syncing === m.key}
+                  disabled={syncing !== null}
+                >
+                  Sync now
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
