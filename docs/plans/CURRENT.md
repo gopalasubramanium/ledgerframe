@@ -1460,7 +1460,41 @@ COUNTS strip (no currency affix) → contacts DataTable → documents DataTable 
 the specimen geometry by looking (`/kitchen-sink`). Out of scope until then: nav flip, `/estate` route,
 `overflow.spec.ts` route-array additions (all three), the no-money-string render guard (ships Phase 2).
 
-## REPORTS PACK — Phase 0 DONE · ⏸ AWAITING OWNER PRINT-GEOMETRY RATIFICATION (2026-07-17)
+## REPORTS PACK — Phase 3a GREEN · AWAITING OWNER ACCEPTANCE WALK (2026-07-17)
+
+**Phase-0a print geometry RATIFIED WITH CONDITIONS (owner, 2026-07-17) → Phase 1/2/3a landed this
+session; Phase 3b (owner walk) NOT started (no self-certification).** The owner looked at both the
+on-screen rendering and the print-emulation captures (§7a) and ratified the geometry with four
+conditions (§12pk-1..4), all ACCEPTED as recommended. Phase 1 shipped them one delta per commit,
+fail-first, plus the Reports-page entry point:
+- **§12pk-1** — attribution rows render SERVED /refdata labels, never raw keys (`fixed_deposit` →
+  "Fixed deposit"; new `refdata.label_for`).
+- **§12pk-2** — the running header is suppressed on page 1 (masked by the opaque header block; inset to
+  the content column); convention in DESIGN-SYSTEM §5.1a. Verified in the re-captured PDF (page 1 = 0
+  dark px, page 2 = 465).
+- **§12pk-3** — single-card consolidated sections collapse to ONE heading (`_plain_card`).
+- **§12pk-4** — the seed get-or-creates "Household", so BOTH boot paths (create_all+seed AND the real
+  migrate+seed dev.sh boot) yield exactly the canonical three entities. Verified LIVE. Not a Pack
+  defect; nothing remained → no 08-TECH-DEBT line.
+- **The Reports Pack entry point (the Amendment-K corollary ends):** a §5.4 PageHeader action links
+  `/reports/pack` (new tab), Reachable from **Reports ONLY** (D-041 — verified no other surface links
+  it); vite now proxies `/reports/pack` for dev parity; page-reports.md §16 dated delta.
+
+**Phase 2** — a DEV-ONLY artifact JOURNEY guard (`reports-pack-journey-smoke`): clicks the real entry
+point → asserts INSIDE the artifact (header · 4 consolidated · per-entity per seeded entity · served
+labels not keys · disclaimer verbatim · empty-entity reason), fail-first via a stripped stub, plus a
+RENDERED-PIXELS print-emulation assertion (page-1 no running header / page 2+ has). **Phase 3a**
+scripted pre-pass GREEN: backend **859 passed** · `make api-contract-check` GREEN · frontend
+`npm run check` **EXIT 0** · Reports page **0 console errors** (light+dark × 4 widths) with the entry
+point · tile-integrity spot (household realised **804.02 SGD** == the Pack's Trust per-entity figure,
+one `realised_gains_report` derivation) · fresh print PDF committed. Full record: reports-pack.md
+§12–§13.
+
+**AWAITING THE OWNER ACCEPTANCE WALK (Phase 3b) — a SEPARATE session.** The **Amendment-I
+declined-exports ledger STAYS PENDING**; it flips PENDING → DELIVERED only at this milestone's close
+(after the walk), against the §0 ledger-mapping table.
+
+### Phase-0 record (retained)
 
 **`GET /reports/pack` is BUILT** (D-038/D-061; `reports-pack.md`). §9 RESOLVED (owner one-pass
 2026-07-17, all 9 ACCEPTED as proposed + Pack-1/4/9 recording notes). **Phase 0 shipped** (one delta
@@ -1476,17 +1510,17 @@ zero/single-entity) · SECURITY-BASELINE Pack read-posture line + gap-#7 read-au
 paginated print PDF (`docs/plans/assets/pack-specimen-*`). The thin entity (Meera, 0 accounts) proves
 Pack-3 honesty; the print running-header overlap was found by looking and fixed (top band reserved).
 
-**⏸ STOP — Phase 1 (the Reports-page entry point + the owner acceptance walk) is BLOCKED until the
-owner ratifies the print geometry by looking.** The **Amendment-I declined-exports ledger stays
+*(Superseded: the print geometry was ratified with conditions on 2026-07-17 and Phase 1/2/3a landed —
+see the Phase-3a block at the top of this section.)* The **Amendment-I declined-exports ledger stays
 PENDING**; it flips PENDING → DELIVERED only at this milestone's close (after the walk), against the
 §0 ledger-mapping table (now citing live `reports_pack.py` anchors).
 
 ## NEXT
-*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. Reports Pack is Phase-0 done,
-⏸ awaiting owner print-geometry ratification — see the block just above.)*
-1. **Reports Pack — owner print-geometry ratification** (reports-pack §7a), then **Phase 1** (the
-   Reports-page entry point + assembly + the owner walk). The **Amendment-I declined-exports ledger
-   closes at this milestone's close.**
+*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. Reports Pack is Phase-3a GREEN,
+awaiting the owner acceptance walk — see the block just above.)*
+1. **Reports Pack — owner acceptance walk (Phase 3b)** on the live artifact + print output, then the
+   **close ritual** (retrospective + `RATIFICATION.md §6`; **flip the Amendment-I declined-exports
+   ledger PENDING → DELIVERED** against the §0 table; strike-check §9/§12pk; push). No self-cert.
 2. Then the standing queue, unchanged: **Settings** · **Help · Legal** · the **AI-surfaces milestone** ·
    **Voice** (definition still owed — only after the owner defines it, ROADMAP **R-32**) · then release
    **Gates C→F** and tag `v2.0.0`.

@@ -634,3 +634,69 @@ backend-served; the only frontend file is the DEV-ONLY capture harness, never wi
 
 **STOP — the Phase-0a specimen is ⏸ PROPOSED (§7a). Phase 1 (the Reports-page entry point + the
 owner walk) does NOT start until the owner ratifies the print geometry by looking.**
+
+*(Superseded: the owner ratified the print geometry with four conditions on 2026-07-17 — see the §7a
+GATE STATUS. Phase 1/2/3a landed this session; §12–§13 below are the records + evidence.)*
+
+---
+
+## 12 — PHASE 1 RATIFICATION-CONDITION RECORDS (§12pk-1..4, owner 2026-07-17)
+
+*The four conditions the owner attached to the print-geometry ratification (§7a). Each is a Phase-1
+delta, one per commit, fail-first. All four ACCEPTED as recommended.*
+
+| # | Condition (owner) | Resolution shipped | Where |
+|---|-------------------|--------------------|-------|
+| **§12pk-1** | Attribution rows render SERVED display labels, never reader keys (the §12es-3 label-truth rule applied to the server-side composer; same /refdata truth). | The attribution `by_asset_class` key resolves through a new public **`refdata.label_for(vocab, value)`** — the per-vocab overrides + titleizer the `/refdata` endpoint serves through (`fixed_deposit` → "Fixed deposit", `etf` → "ETF"). The Pack (the composer standing in for the UI) renders the served label; the raw key never leaks. | `reports_pack.py:_entity_risk_attribution`; `refdata.py:label_for` |
+| **§12pk-2** | The running header is SUPPRESSED on page 1 (the header block owns page 1; the running header is for loose pages 2+). Convention → DESIGN-SYSTEM print note. | A fixed running header repeats on every printed page in Chromium, so page 1's copy is **masked**: the opaque header block paints over it (`z-index` 11 > 10), and the running header is inset to the content column so the mask covers it exactly. Recorded in **DESIGN-SYSTEM §5.1a**. | `reports_pack.py:_STYLE @media print`; `DESIGN-SYSTEM.md §5.1a` |
+| **§12pk-3** | Single-card consolidated sections collapse to ONE heading (no h2+h3 duplication on paper). | The four single-card consolidated subsections (net-worth trend · review · cash flow · scenarios) render via a new **`_plain_card`** (no card `<h3>`); the section `<h2>` is the only heading. Per-entity sections keep their card h3s (their h2 is the entity name — not duplicates). | `reports_pack.py:_plain_card` |
+| **§12pk-4** | Seed-layer fix so BOTH boot paths yield the canonical three entities (dev.sh migrate+seed had a duplicate "Household"). | The seed **get-or-creates** "Household" (the institution/estate resolve-or-create precedent), so the migration-default Household is reused, never duplicated. Verified LIVE on both paths (create_all+seed AND migrate+seed) → exactly three. Not a Pack defect; nothing remains → no `08-TECH-DEBT` line. | `app/seed/demo.py:seed_demo_data` |
+
+## 13 — PHASE 1/2/3a BUILD EVIDENCE (fail-first RED → GREEN, one delta per commit)
+
+### 13-1. Phase 1 — the four condition fixes + the entry point
+
+| Δ [§12pk] | Fail-first RED | GREEN (pin) | Commit |
+|-----------|----------------|-------------|--------|
+| §12pk-1 served labels | `test_attribution_rows_render_served_labels_not_reader_keys` RED — the artifact rendered the raw `fixed_deposit` key, not "Fixed deposit" | served label renders, raw key absent | `app+tests` |
+| §12pk-2/3 print CSS | `test_single_card_consolidated_sections_render_one_heading_not_h2_plus_h3` RED on the duplicate `<h3>`; page-1 running header FOUND in the specimen | one heading; page 1 masked (0 dark px) / page 2 running header (465) — verified in the re-captured PDF | `app+tests+docs` |
+| §12pk-4 seed | `test_dev_boot_path_yields_exactly_three_entities_no_duplicate_household` RED — the migrate+seed path yielded `['Household','Household','Meera Iyer','Rajan Family Trust']` | get-or-create → exactly the canonical three; verified LIVE on both boot paths | `app+tests` |
+| The entry point (Amendment-K corollary ends) | — | a §5.4 PageHeader action links `/reports/pack` (new tab), Reports-ONLY (D-041 verified — no other surface links it); `Reports.test.tsx` pins href/target/rel/label; vite proxies `/reports/pack` for dev parity; page-reports.md §16 dated delta | `frontend+docs` |
+
+### 13-2. Phase 2 — the artifact JOURNEY guard (DEV-ONLY, live)
+
+`e2e/smoke/reports-pack-journey-smoke.spec.ts` clicks the REAL entry point → follows the popup to the
+artifact → asserts INSIDE it: the Pack-5 header block, all four consolidated sections (single heading
+each), one per-entity section per SEEDED entity (exactly three), the §12pk-1 served labels (not raw
+keys), a served disclaimer verbatim, the Pack-3 empty-entity reason. **Fail-first:** a stub strips
+`/reports/pack` of that content — the link/DOM are identical, so only reading the artifact bytes catches
+it. **Print-emulation (RENDERED PIXELS):** page 1 top band = 0 dark px (running header suppressed),
+page 2 = 465 (present). Live **3/3 GREEN**.
+
+### 13-3. Phase 3a — scripted pre-pass (GREEN, on a reset demo-seeded instance)
+
+- **§12pk-4 LIVE on both boot paths** — create_all+seed AND a genuine fresh dev.sh boot (migrations
+  insert Household → seed reuses it) each yield exactly `['Household','Meera Iyer','Rajan Family Trust']`,
+  no duplicate; the artifact renders exactly three `pack-section--entity`.
+- **The entry-point journey** — `reports-pack-journey-smoke` 3/3 GREEN (above).
+- **The artifact at 1440 + print emulation** — captured (docs/plans/assets fixed set); the artifact is
+  **theme-independent** (self-contained inline print palette, not app tokens) and **JS-free** (Pack-9),
+  so it is print-palette and 0-console-error by construction in any app theme.
+- **Reports page pre-pass** — `reports-smoke` 8/8 (containment + **0 console errors**, light+dark ×
+  320/375/900/1366) with the new entry point present; `reports-artifact-smoke` 4/4 (export disclaimers,
+  regression-free).
+- **Tile-integrity spot (one derivation, cite)** — `realised_gains_report` (`app/services/tax.py:284`)
+  is consumed once by the Reports page (household, no `entity_id`) and once by the Pack (per-entity).
+  The household current-FX total (**804.02 SGD**, 2024) equals the Pack's **Rajan Family Trust**
+  per-entity realised (**+804.02**), which holds the only realised event; Household + Meera render the
+  honest "no realised events" note. One reader, two consumers, identical figure.
+- **Backend suite** `pytest -q` → **859 passed**; **`make api-contract-check` GREEN** (no path change —
+  the route already existed since Phase 0).
+- **Frontend `npm run check` from `frontend/` → EXIT 0** (vitest incl. the Reports entry-point pin +
+  262 Playwright overflow/tile-integrity).
+- **Fresh print PDF** committed to the capture set (`docs/plans/assets/pack-specimen-print-fixed.pdf`
+  + page1/page2 fixed PNGs + the Household served-labels screen).
+
+**STOP CONDITION HONOURED:** Phase 3a is GREEN and self-consistent; the **owner acceptance walk
+(Phase 3b) is a SEPARATE session** (no self-certification). The **Amendment-I declined-exports ledger
+stays PENDING** — it flips PENDING → DELIVERED only at the milestone close, after the owner's pass.
