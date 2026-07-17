@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 import "./overlay.css";
 import "./inputs.css";
 import { Dialog } from "./Dialog";
+import { GlossaryTerm } from "./GlossaryTerm";
 
 // Confirm overlay for destructive actions (DESIGN-SYSTEM §5.4, amended
 // 2026-07-10 — Holdings page-build §9-5). Reuses the Dialog primitive; when
@@ -16,6 +17,8 @@ export interface ConfirmDialogProps {
   destructive?: boolean;
   /** Require a PIN before confirming; onConfirm receives it. */
   requirePin?: boolean;
+  /** §14dr-23: a GLOSSARY term id — renders a [Help] popover inside the dialog. */
+  helpTerm?: string;
   onCancel: () => void;
   onConfirm: (pin?: string) => void;
 }
@@ -28,6 +31,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancel",
   destructive,
   requirePin,
+  helpTerm,
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
@@ -62,7 +66,17 @@ export function ConfirmDialog({
         </>
       }
     >
-      <p className="lf-confirm__msg">{message}</p>
+      <p className="lf-confirm__msg">
+        {message}
+        {helpTerm && (
+          <>
+            {" "}
+            <GlossaryTerm term={helpTerm}>
+              <span className="lf-confirm__help">[Help]</span>
+            </GlossaryTerm>
+          </>
+        )}
+      </p>
       {requirePin && (
         <div>
           <label className="lf-confirm__pin-label" htmlFor={pinId}>

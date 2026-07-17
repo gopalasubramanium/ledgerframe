@@ -96,6 +96,11 @@
   font-size: var(--font-size-14);
   line-height: var(--line-14);
 }
+/* §14dr-23 — the in-dialog [Help] affordance (GLOSSARY popover, not a hover tooltip). */
+.lf-confirm__help {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
 .lf-confirm__pin-label {
   display: block;
   margin-bottom: var(--space-2);

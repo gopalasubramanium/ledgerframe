@@ -2,15 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "./Holdings.css";
 import { InstrumentLabel } from "../components/InstrumentLabel";
-import { Upload, Download, Plus } from "../icons";
+import { Upload, Download, Plus, Trash2 } from "../icons";
 import {
+  Button,
   ConfirmDialog,
   DataTable,
   DateInput,
   Dialog,
   EmptyState,
   FileInput,
-  GlossaryTerm,
   InstrumentPicker,
   MasterSelect,
   MoneyInput,
@@ -441,19 +441,13 @@ export function Holdings() {
         <div className="hold__bar">
           <h2 className="hold__h2">Transactions</h2>
           {deletedCount > 0 && (
-            // §14dr-20 — self-explaining copy (the old "Purge N deleted" was cryptic). The word
-            // "Purge" carries a [Help] popover to its GLOSSARY definition (a sibling of the button,
-            // never nested inside it — no button-in-button). The ConfirmDialog states exactly what
-            // is destroyed and demands a fresh PIN (D-103).
-            <span className="hold__purge">
-              <button type="button" className="lf-btn" onClick={() => setPurgeOpen(true)}
-                title="Permanently delete the trashed holdings and transactions — cannot be undone">
-                Permanently delete {deletedCount} trashed…
-              </button>
-              <GlossaryTerm term="term-purge">
-                <span className="hold__purge-help" aria-label="What does purge mean?">Purge?</span>
-              </GlossaryTerm>
-            </span>
+            // §14dr-23 — ONE danger Button (§5.4 anatomy: lucide icon + label). The old "Purge?"
+            // text + hover tooltip are gone; the GLOSSARY "Purge" definition rides a [Help] popover
+            // INSIDE the ConfirmDialog (helpTerm), which also states exactly what is destroyed and
+            // demands a fresh PIN (D-103, verify_fresh_pin — unchanged).
+            <Button variant="danger" icon={Trash2} onClick={() => setPurgeOpen(true)}>
+              PIN to permanently delete
+            </Button>
           )}
         </div>
         {txnTotal === 0 && !txnQuery ? (
@@ -598,6 +592,7 @@ export function Holdings() {
         confirmLabel="Delete permanently"
         destructive
         requirePin
+        helpTerm="term-purge"
         onCancel={() => setPurgeOpen(false)}
         onConfirm={async (pin) => {
           // §14dr-20 / D-103: thread the freshly-entered PIN — the server rejects an
