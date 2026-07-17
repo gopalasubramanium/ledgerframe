@@ -133,6 +133,82 @@ async def validate_source_override(session: AsyncSession, instrument, value: str
     return v, None
 
 
+def validate_matrix_provider(
+    asset_class: str, listing_country: str, provider: str,
+) -> tuple[str | None, str | None, bool, str | None]:
+    """Validate a routing-matrix cell (R-38; data-feed-routing §9-3/§9-7).
+
+    A cell is a *class × country* preference, NOT an instrument — so only class and
+    region coverage are checked (no per-instrument id-mapping). Returns
+    ``(normalized_provider, error, degraded, caveat)``:
+
+    * ``error`` non-None → **reject** with an honest 400 (unknown source, or a
+      capability mismatch the owner can read).
+    * ``degraded`` True + ``caveat`` → **accept-with-caveat** (§9-7): the provider is
+      *capable* for this cell but ``needs_key`` and no credentials are set. The cell is
+      stored and shown degraded until the key lands; ``route()`` falls through via
+      ``_auth_gap`` in the meantime — never a silent dead cell.
+    """
+    from app.providers.market.router import CAPABILITIES, capabilities_for
+
+    prov = (provider or "").strip().lower()
+    ac = (asset_class or "").strip().lower()
+    country = (listing_country or "").strip().upper()
+    if prov not in CAPABILITIES:
+        return None, f"unknown source '{provider}'", False, None
+    caps = capabilities_for(prov)
+    if caps.asset_classes and ac not in caps.asset_classes and "*" not in caps.asset_classes:
+        return None, f"{prov} can't price a {ac}", False, None
+    if caps.regions:
+        if country == "*":
+            if "*" not in caps.regions:
+                covered = ", ".join(sorted(caps.regions))
+                return None, f"{prov} doesn't cover every market (*) — it covers {covered}", False, None
+        elif country and country not in caps.regions and "*" not in caps.regions:
+            return None, f"{prov} doesn't cover {country}", False, None
+    # Capable-but-unkeyed (§9-7): accept, but flag degraded until credentials land.
+    if caps.needs_key:
+        av = provider_availability().get(prov)
+        if not av or not av.has_credentials:
+            return prov, None, True, f"{prov} needs credentials — add them in Settings"
+    return prov, None, False, None
+
+
+def matrix_cell_state(
+    asset_class: str, listing_country: str, provider: str, updated_at=None,
+) -> dict:
+    """The served display state of one stored cell (D-005 served strings). A stored
+    cell whose provider is no longer capable is shown degraded with the honest reason
+    (the §9-3 stale-cell case), never removed silently."""
+    _norm, error, degraded, caveat = validate_matrix_provider(asset_class, listing_country, provider)
+    if error:  # a persisted cell that has since become incapable/unknown (stale)
+        degraded, caveat = True, error
+    return {
+        "asset_class": asset_class, "listing_country": listing_country, "provider": provider,
+        "degraded": degraded, "caveat": caveat,
+        "updated_at": updated_at.isoformat() if updated_at else None,
+    }
+
+
+async def matrix_provider_for(session: AsyncSession, asset_class: str, listing_country: str | None) -> str | None:
+    """The routing-matrix provider for an instrument's (class, country), or None if the
+    matrix has no cell. Exact country wins over the ``"*"`` wildcard (data-feed-routing
+    §9-5). Pure lookup — capability re-validation happens inside ``route()`` (§9-3)."""
+    from app.models import RoutingMatrix
+
+    ac = (asset_class or "").strip().lower()
+    country = (listing_country or "").strip().upper()
+    rows = {
+        r.listing_country: r.provider
+        for r in (await session.execute(
+            select(RoutingMatrix).where(RoutingMatrix.asset_class == ac)
+        )).scalars().all()
+    }
+    if country and country in rows:
+        return rows[country]
+    return rows.get("*")
+
+
 async def route_for_instrument(session: AsyncSession, instrument):
     """Per-instrument routing decision (which source owns this price). Pure policy in
     :func:`app.providers.market.router.route`; here we gather the live context."""

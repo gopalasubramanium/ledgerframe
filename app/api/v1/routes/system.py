@@ -182,6 +182,88 @@ async def set_data_source(payload: DataSourceIn) -> dict:
     return {"ok": True, "applied": True, "note": f"Applied — now using '{payload.provider}'."}
 
 
+# --- R-38: provider routing matrix (data-feed-routing §9-RESOLVED) --------------
+# A user-declared refinement layer: one provider per asset-class × listing-country.
+# Empty by default (an empty matrix changes nothing — routing falls through to the
+# lane chain / active provider). Capability-validated at edit-time here; re-validated
+# at resolve-time in route(). Writes are require_auth (the source_override precedent).
+
+
+@router.get("/system/routing-matrix")
+async def get_routing_matrix(session: AsyncSession = Depends(get_db)) -> dict:
+    """List all matrix cells with served display state (degraded/caveat flags) for the
+    Settings → Data feeds editor. Read-only; no secrets."""
+    from app.models import RoutingMatrix
+    from app.services.market import matrix_cell_state
+
+    rows = (await session.execute(
+        select(RoutingMatrix).order_by(RoutingMatrix.asset_class, RoutingMatrix.listing_country)
+    )).scalars().all()
+    return {"cells": [
+        matrix_cell_state(r.asset_class, r.listing_country, r.provider, updated_at=r.updated_at)
+        for r in rows
+    ]}
+
+
+class RoutingCellIn(BaseModel):
+    asset_class: str
+    listing_country: str  # ISO-3166 alpha-2 or "*"
+    provider: str
+
+
+@router.put("/system/routing-matrix", dependencies=[Depends(require_auth)])
+async def put_routing_cell(payload: RoutingCellIn, session: AsyncSession = Depends(get_db)) -> dict:
+    """Upsert one cell (class × country → provider). Edit-time validated (§9-3): an
+    honest 400 on an unknown source or a capability mismatch; a capable-but-unkeyed
+    provider is ACCEPTED with a degraded caveat (§9-7)."""
+    from app.models import AssetClass, RoutingMatrix
+    from app.services.market import matrix_cell_state, validate_matrix_provider
+
+    ac = payload.asset_class.strip().lower()
+    country = payload.listing_country.strip().upper()
+    if ac not in {c.value for c in AssetClass}:
+        raise HTTPException(400, f"unknown asset class '{payload.asset_class}'")
+    if country != "*" and not (len(country) == 2 and country.isalpha()):
+        raise HTTPException(
+            400, f"listing country must be an ISO-3166 alpha-2 code or '*' (got '{payload.listing_country}')")
+
+    norm, error, _degraded, _caveat = validate_matrix_provider(ac, country, payload.provider)
+    if error:
+        raise HTTPException(400, error)
+
+    row = (await session.execute(
+        select(RoutingMatrix).where(
+            RoutingMatrix.asset_class == ac, RoutingMatrix.listing_country == country)
+    )).scalars().first()
+    if row is None:
+        row = RoutingMatrix(asset_class=ac, listing_country=country, provider=norm)
+        session.add(row)
+    else:
+        row.provider = norm
+    await session.flush()
+    return {"ok": True, "cell": matrix_cell_state(ac, country, norm, updated_at=row.updated_at)}
+
+
+@router.delete("/system/routing-matrix/{asset_class}/{listing_country}",
+               dependencies=[Depends(require_auth)])
+async def delete_routing_cell(
+    asset_class: str, listing_country: str, session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Clear a cell → routing falls back to the lane chain / active provider (§9-2).
+    Idempotent: a missing cell is a clean no-op (``deleted: false``)."""
+    from sqlalchemy import delete as sa_delete
+
+    from app.models import RoutingMatrix
+
+    ac = asset_class.strip().lower()
+    country = listing_country.strip().upper()
+    res = await session.execute(
+        sa_delete(RoutingMatrix).where(
+            RoutingMatrix.asset_class == ac, RoutingMatrix.listing_country == country))
+    return {"ok": True, "deleted": (res.rowcount or 0) > 0,
+            "asset_class": ac, "listing_country": country}
+
+
 # Env-backed app config the Settings page may edit (key -> env var).
 _CONFIG_KEYS = {
     "timezone": "LEDGERFRAME_TIMEZONE",

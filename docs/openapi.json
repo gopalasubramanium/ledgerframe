@@ -1948,6 +1948,29 @@
         "title": "ReviewLogIn",
         "type": "object"
       },
+      "RoutingCellIn": {
+        "properties": {
+          "asset_class": {
+            "title": "Asset Class",
+            "type": "string"
+          },
+          "listing_country": {
+            "title": "Listing Country",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_class",
+          "listing_country",
+          "provider"
+        ],
+        "title": "RoutingCellIn",
+        "type": "object"
+      },
       "SettingsPatch": {
         "properties": {
           "values": {
@@ -13850,6 +13873,236 @@
           }
         },
         "summary": "Reset Data",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/routing-matrix": {
+      "get": {
+        "description": "List all matrix cells with served display state (degraded/caveat flags) for the\nSettings \u2192 Data feeds editor. Read-only; no secrets.",
+        "operationId": "get_routing_matrix_api_v1_system_routing_matrix_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Routing Matrix Api V1 System Routing Matrix Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Routing Matrix",
+        "tags": [
+          "system"
+        ]
+      },
+      "put": {
+        "description": "Upsert one cell (class \u00d7 country \u2192 provider). Edit-time validated (\u00a79-3): an\nhonest 400 on an unknown source or a capability mismatch; a capable-but-unkeyed\nprovider is ACCEPTED with a degraded caveat (\u00a79-7).",
+        "operationId": "put_routing_cell_api_v1_system_routing_matrix_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingCellIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Routing Cell Api V1 System Routing Matrix Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Routing Cell",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/v1/system/routing-matrix/{asset_class}/{listing_country}": {
+      "delete": {
+        "description": "Clear a cell \u2192 routing falls back to the lane chain / active provider (\u00a79-2).\nIdempotent: a missing cell is a clean no-op (``deleted: false``).",
+        "operationId": "delete_routing_cell_api_v1_system_routing_matrix__asset_class___listing_country__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_class",
+            "required": true,
+            "schema": {
+              "title": "Asset Class",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "listing_country",
+            "required": true,
+            "schema": {
+              "title": "Listing Country",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Routing Cell Api V1 System Routing Matrix  Asset Class   Listing Country  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Routing Cell",
         "tags": [
           "system"
         ]
