@@ -16,7 +16,7 @@ import {
   useToast,
   StatusChip,
 } from "../components/ui";
-import type { Column, StatusChipTone } from "../components/ui";
+import type { Column, SortState, StatusChipTone } from "../components/ui";
 import type { ConfidenceBand, Entitlement, HealthStatus, ValuationMethod } from "../mocks/types";
 import { useLabelFor } from "../refdata/refdata-context";
 import { invalidateStaleCount, useStaleCount } from "../state/staleCount";
@@ -51,6 +51,31 @@ function bandTone(band: string): StatusChipTone {
   return band === "high" ? "positive" : band === "low" ? "negative" : "attention";
 }
 
+// §14dr-3 — the diagnostics rows are sorted CLIENT-side (bounded set: per-holding, tens of rows).
+// DEFAULT order pins the STALE rows (the ones the banner counts) to the top so they're identifiable
+// on arrival, no interaction (§14ac-2 — a destination that can't answer "which" only half-answers);
+// an explicit user sort (a header click) overrides. `is_stale` is the SAME served flag the banner
+// count sums (one derivation), so marked rows == banner count by construction.
+function sortHoldings(rows: PricingRow[], sort: SortState | null): PricingRow[] {
+  const out = [...rows];
+  if (!sort) {
+    return out.sort(
+      (a, b) => Number(b.is_stale) - Number(a.is_stale) || (b.price_ts ?? "").localeCompare(a.price_ts ?? ""),
+    );
+  }
+  const mul = sort.dir === "asc" ? 1 : -1;
+  return out.sort((a, b) => {
+    const av = a[sort.key as keyof PricingRow];
+    const bv = b[sort.key as keyof PricingRow];
+    const an = typeof av === "string" ? Number(av) : av;
+    const bn = typeof bv === "string" ? Number(bv) : bv;
+    if (typeof an === "number" && typeof bn === "number" && !Number.isNaN(an) && !Number.isNaN(bn)) {
+      return (an - bn) * mul;
+    }
+    return String(av ?? "").localeCompare(String(bv ?? "")) * mul;
+  });
+}
+
 export function PricingHealth() {
   const labelFor = useLabelFor();
   const toast = useToast();
@@ -63,6 +88,12 @@ export function PricingHealth() {
   const { count: staleCount } = useStaleCount();
 
   const [refreshing, setRefreshing] = useState(false);
+  // §14dr-3 — null = the stale-first default order; a header click sets an explicit column sort.
+  const [sort, setSort] = useState<SortState | null>(null);
+  const onSort = useCallback(
+    (key: string) => setSort((s) => (s?.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" })),
+    [],
+  );
   const [detail, setDetail] = useState<PricingRow | null>(null); // Details dialog
   const [correcting, setCorrecting] = useState<PricingRow | null>(null); // Correct-source dialog
   const [override, setOverride] = useState("");
@@ -146,7 +177,15 @@ export function PricingHealth() {
       key: "status",
       label: "Status",
       sortable: true,
-      render: (r) => <StatusChip label={r.status} tone={statusTone(r.status)} />,
+      // §14dr-3 — the served per-holding `is_stale` flag, rendered: a Stale marker identifies WHICH
+      // holdings the banner is counting (the same flag; never a recompute). Attention tone + the
+      // "Stale" label (GLOSSARY term) — colour is never the sole signal.
+      render: (r) => (
+        <span className="ph__status">
+          <StatusChip label={r.status} tone={statusTone(r.status)} />
+          {r.is_stale && <StatusChip label="Stale" tone="attention" />}
+        </span>
+      ),
     },
     {
       key: "confidence",
@@ -263,7 +302,14 @@ export function PricingHealth() {
           <CardBody data={data} lines={6} onRetry={reload}>
             {(d) =>
               d.holdings.length > 0 ? (
-                <DataTable columns={columns} rows={d.holdings} caption="Per-holding pricing diagnostics" stickyHeader />
+                <DataTable
+                  columns={columns}
+                  rows={sortHoldings(d.holdings, sort)}
+                  sort={sort ?? undefined}
+                  onSort={onSort}
+                  caption="Per-holding pricing diagnostics"
+                  stickyHeader
+                />
               ) : (
                 <EmptyState message="No holdings" reason="Add holdings to see their pricing diagnostics." />
               )

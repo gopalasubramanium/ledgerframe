@@ -99,6 +99,35 @@ test("footnote renders the SHARED stale count, not its own (§12ph1-1)", async (
   expect(el.textContent).toBe("3");
 });
 
+test("§14dr-3 — stale rows are MARKED and PINNED to the top (identifiable at the destination)", async () => {
+  const { container } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await waitFor(() => expect(screen.getByText("DBS")).toBeTruthy());
+  // MARKED: exactly the two is_stale holdings (DBS, Reliance) carry a Stale marker — the SAME served
+  // flag the banner sums, so "marked rows == banner count" holds by construction (§14ac-2).
+  expect(screen.getAllByText("Stale").length).toBe(2);
+  // PINNED: the two stale rows are the top two rows of the diagnostics table — found with zero
+  // interaction, not buried below the fresh ones (arrival alone doesn't answer "which two").
+  const bodyRows = container.querySelectorAll('[data-card="diagnostics"] tbody tr');
+  expect(within(bodyRows[0] as HTMLElement).getByText("DBS")).toBeTruthy();
+  expect(within(bodyRows[1] as HTMLElement).getByText("Reliance")).toBeTruthy();
+  // A fresh row (AAPL) carries no Stale marker.
+  const aaplRow = Array.from(bodyRows).find((r) => within(r as HTMLElement).queryByText("AAPL"));
+  expect(within(aaplRow as HTMLElement).queryByText("Stale")).toBeNull();
+});
+
+test("§14dr-3 — the diagnostics table is genuinely sortable (a header click re-sorts)", async () => {
+  const user = userEvent.setup();
+  const { container } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await waitFor(() => expect(screen.getByText("DBS")).toBeTruthy());
+  // Sort by Holding ascending — the inert-sortable headers are now wired (§14dr-3), so the order
+  // changes from the stale-first default to alphabetical (AAPL first).
+  await user.click(screen.getByRole("columnheader", { name: "Holding" }));
+  const bodyRows = container.querySelectorAll('[data-card="diagnostics"] tbody tr');
+  expect(within(bodyRows[0] as HTMLElement).getByText("AAPL")).toBeTruthy();
+});
+
 test("portfolio confidence card shows overall band + by-band table (ND-6, ratified components)", async () => {
   const { container } = renderPage();
   await screen.findByText("Portfolio confidence");

@@ -23,3 +23,16 @@ async def test_pricing_health_reports_provenance(app_client):
     # No secrets leak.
     blob = r.text.lower()
     assert "api_key" not in blob and "secret" not in blob
+
+
+async def test_pricing_health_stale_flag_reconciles_with_summary_count(app_client):
+    """§14dr-3 — the per-holding `is_stale` flag (the marker Pricing Health renders to identify WHICH
+    holdings are stale) and the Stale-banner count come from ONE shared reader (value_portfolio). Pin
+    the reconciliation: the number of is_stale rows in the pricing-health payload equals
+    /portfolio/summary.stale_count — so "banner count == marked rows" holds by construction, never a
+    second independently-computed number."""
+    ph = (await app_client.get("/api/v1/portfolio/pricing-health")).json()
+    summary = (await app_client.get("/api/v1/portfolio/summary")).json()
+    assert "stale_count" in summary
+    marked = sum(1 for h in ph["holdings"] if h["is_stale"])
+    assert marked == summary["stale_count"]

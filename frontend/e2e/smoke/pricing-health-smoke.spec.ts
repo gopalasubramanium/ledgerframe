@@ -55,6 +55,22 @@ test.describe.serial("pricing health pre-pass (live)", () => {
     console.log("PART 2 — banner:", b0, "footnote:", f0, "summary.stale_count:", summary0.stale_count);
     expect(f0, "footnote == banner (one shared query)").toBe(b0);
     expect(f0, "footnote == summary.stale_count (shared reader)").toBe(summary0.stale_count);
+    // §14dr-3 — IDENTIFIABILITY at the destination (§14ac-2): the banner states a COUNT; the page
+    // must show WHICH. Assert the diagnostics table renders exactly `banner` Stale markers, and that
+    // they are PINNED to the top (found on arrival, no interaction) — arrival alone isn't an answer.
+    const staleMarkers = page.locator('[data-card="diagnostics"] tbody tr .lf-statuschip', { hasText: /^Stale$/ });
+    const markedCount = await staleMarkers.count();
+    console.log("PART 2 — stale markers on the page:", markedCount, "· banner:", b0);
+    expect(markedCount, "marked stale rows == banner count (identifiable, one flag)").toBe(b0);
+    if (b0 > 0) {
+      const firstRows = page.locator('[data-card="diagnostics"] tbody tr');
+      for (let i = 0; i < b0; i++) {
+        expect(
+          await firstRows.nth(i).locator(".lf-statuschip", { hasText: /^Stale$/ }).count(),
+          `stale row pinned to the top (row ${i})`,
+        ).toBe(1);
+      }
+    }
     // Skew: mutate staleness server-side via a bulk refresh, then confirm banner + page still agree.
     await page.getByRole("button", { name: "Refresh all prices" }).click();
     await page.waitForTimeout(2500); // bulk refresh (mock provider, fast) + shared-query invalidate

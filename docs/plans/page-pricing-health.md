@@ -460,3 +460,28 @@ a Reports-group page is **report/worklist-shaped — a summary header + a diagno
 divergence; refresh is a page affordance); ND-1 by-construction reconciliation via the shared query;
 ND-9 `/system/staleness` left orphaned (tech-debt). The §12ph1-1 **honest fail-first note** (a 0==0
 non-reproduction reported plainly, not dressed up) was owner-accepted as the right call.
+
+---
+
+## DELTA NOTE — 2026-07-18 (R-38 data-feed-routing Phase 3b re-walk, §14dr-3)
+
+- **Stale holdings are now identifiable on the per-holding diagnostics table.** The
+  banner + confidence card count "N stale" but the table could not show WHICH
+  (§14ac-2 — a destination that states a count but can't answer "which" only
+  half-answers). **Verify-first:** the per-holding `is_stale` flag is **already
+  served** (`portfolio.py:266`; `PricingRow.is_stale`) and is the exact summand
+  behind the banner count (`/portfolio/summary.stale_count`, one shared reader
+  `value_portfolio`) — presentation gap only, no backend change.
+  - **Rendered** (smallest ratified-component answer, no new component): a **Stale**
+    `StatusChip` marker in the Status cell (the served flag, attention tone,
+    "Stale" GLOSSARY term).
+  - **Findable:** the rows are **default-ordered stale-first** (pinned to the top,
+    identifiable on arrival with zero interaction) and the diagnostics `DataTable`'s
+    existing `sort`/`onSort` are now **wired** (the columns were flagged
+    `sortable` but inert — clicks did nothing; the headers now actually sort).
+  - **One source, pinned:** a backend reconciliation test asserts
+    `sum(is_stale)` in the pricing-health payload **==**
+    `/portfolio/summary.stale_count` (banner count == marked rows, by construction).
+    The frontend guard asserts the marked rows are exactly the stale ones and are
+    the top rows; the stale-banner → Pricing Health dev-smoke journey now asserts
+    **identifiability at the destination**, not just arrival.

@@ -59,6 +59,13 @@
 .ph__num {
   font-variant-numeric: tabular-nums;
 }
+/* §14dr-3 — the Status cell hosts the served status chip + a Stale marker when the row is stale. */
+.ph__status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
 
 /* Confidence card: overall tile + by-band table + status-count strip. Equal-geometry grid that
    FILLS the card width — no phantom auto-fit track leaving dead space on the right (§12ph1-2).
