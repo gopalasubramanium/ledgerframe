@@ -10,12 +10,17 @@ import { test, expect } from "@playwright/test";
 // It exercises the PIN set flow (§12st-1) to capture the enabled Reset + the D-103 fresh-PIN
 // ConfirmDialog, but NEVER confirms a reset (demo data untouched). The harness driver restores the
 // instance to PIN-free afterward (reset.py mechanism).
+//
+// §14st-1 (owner, Phase-3b walk 2026-07-18): FIVE tabs — General · Appearance · Privacy · Data feeds
+// · System. Feed/provider config (market data provider, write-only API key, ND-6 feeds) lives on the
+// Data feeds tab; System keeps the access controls (root helper, PIN, auto-lock, Allow LAN, AI line,
+// Reset data).
 
 const API = "http://127.0.0.1:8321/api/v1";
 const OUT = "e2e/smoke/artifacts";
 const WIDTHS = [320, 375, 900, 1366];
 const THEMES = ["light", "dark"] as const;
-const TABS = ["general", "appearance", "privacy", "system"] as const;
+const TABS = ["general", "appearance", "privacy", "data-feeds", "system"] as const;
 const TEST_PIN = "090909";
 const consoleErrors: string[] = [];
 
@@ -24,7 +29,7 @@ test.describe.serial("settings pre-pass (live)", () => {
     consoleErrors.length = 0;
   });
 
-  test("containment + 0 console errors across four tabs × both themes × breakpoints", async ({ page }) => {
+  test("containment + 0 console errors across five tabs × both themes × breakpoints", async ({ page }) => {
     page.on("console", (m) => m.type() === "error" && consoleErrors.push(`[console] ${m.text()}`));
     page.on("pageerror", (e) => consoleErrors.push(`[pageerror] ${e.message}`));
 
@@ -55,7 +60,7 @@ test.describe.serial("settings pre-pass (live)", () => {
     expect(consoleErrors, "zero console/page errors across the settings pre-pass").toEqual([]);
   });
 
-  test("tab screenshots — each of the four tabs, both themes", async ({ page }) => {
+  test("tab screenshots — each of the five tabs, both themes", async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     for (const theme of THEMES) {
       await page.emulateMedia({ colorScheme: theme });
@@ -86,6 +91,25 @@ test.describe.serial("settings pre-pass (live)", () => {
     await page.screenshot({ path: `${OUT}/settings-privacy-detail.png`, fullPage: true });
   });
 
+  test("Data feeds §14st-1 — the write-only provider key (§12st-2) + the ND-6 feeds editor (§12st-3)", async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto(`/#/settings?tab=data-feeds`);
+    await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible({ timeout: 15_000 });
+
+    // §14st-1 — the market-data provider now lives on the Data feeds tab.
+    await expect(page.getByLabel("Market data provider")).toBeVisible();
+    // §12st-2 — the write-only key field never echoes a value (an honest "set, hidden" state).
+    await expect(page.getByLabel("Provider API key (write-only)")).toBeVisible();
+    await page.screenshot({ path: `${OUT}/settings-data-feeds.png`, fullPage: true });
+
+    // §12st-3 — the ND-6 feeds editor Dialog (the ratified Accounts-dialog pattern) — on Data feeds now.
+    await page.getByRole("button", { name: /Edit feeds/ }).click();
+    await expect(page.getByRole("dialog", { name: "News feeds" })).toBeVisible();
+    await page.screenshot({ path: `${OUT}/settings-feeds-dialog.png` });
+    await page.getByRole("button", { name: "Cancel" }).click();
+  });
+
   test("System §12st + the danger Reset control (D-103) + the §9-10 degradation", async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     await page.emulateMedia({ colorScheme: "light" });
@@ -95,11 +119,12 @@ test.describe.serial("settings pre-pass (live)", () => {
     await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible({ timeout: 15_000 });
     const pinAlreadySet = await page.getByText("PIN: set").isVisible().catch(() => false);
 
-    // §12st-4 — the READ-ONLY served AI-config line.
+    // §12st-4 — the READ-ONLY served AI-config line (stays in System).
     await expect(page.getByText(/^AI is (on|off)/)).toBeVisible();
-    // §12st-2 — the write-only key field never echoes a value (an honest "set, hidden" state).
-    await expect(page.getByLabel("Provider API key (write-only)")).toBeVisible();
+    // §14st-1 — provider/key MOVED to Data feeds; System no longer carries them.
+    await expect(page.getByLabel("Provider API key (write-only)")).toHaveCount(0);
     // §9-10 — the root helper is absent on this instance → Allow LAN is disabled (not dead) with a note.
+    // Allow LAN is an ACCESS control and STAYS in System (§14st-1).
     await expect(page.getByText(/optional root helper/i)).toBeVisible();
     await expect(page.getByLabel("Allow LAN access")).toBeDisabled();
     // §12st-1 — the PIN card + the danger Reset. On a no-PIN instance it is DISABLED (the honest
@@ -111,12 +136,6 @@ test.describe.serial("settings pre-pass (live)", () => {
       await expect(reset).toBeDisabled();
       await page.screenshot({ path: `${OUT}/settings-system-degraded.png`, fullPage: true });
     }
-
-    // §12st-3 — the ND-6 feeds editor Dialog (the ratified Accounts-dialog pattern).
-    await page.getByRole("button", { name: /Edit feeds/ }).click();
-    await expect(page.getByRole("dialog", { name: "News feeds" })).toBeVisible();
-    await page.screenshot({ path: `${OUT}/settings-feeds-dialog.png` });
-    await page.getByRole("button", { name: "Cancel" }).click();
 
     // §12st-1 — set a PIN if one isn't set, so the ENABLED danger Reset + the D-103 fresh-PIN
     // ConfirmDialog can be captured (never confirmed — demo data untouched).

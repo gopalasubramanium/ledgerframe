@@ -49,16 +49,23 @@ import "./Settings.css";
 // Every value shown is a SERVED display string (D-105): the frontend computes nothing, and there is
 // NO money math on this page (P-1/D-031). Writes go through the CANONICAL endpoints only — /settings,
 // /tokens, /system/*, /auth/* — never a second code path. Tab state lives in the URL (Amendment C):
-// `?tab=general|appearance|privacy|system`, so the first-run checklist links deep-link to the tab
-// that holds the control they name.
+// `?tab=general|appearance|privacy|data-feeds|system`, so the first-run checklist links deep-link to
+// the tab that holds the control they name.
+//
+// §14st-1 (owner, Phase-3b walk 2026-07-18): FIVE tabs. A "Data feeds" tab is the canonical home for
+// feed/provider config — market data provider, write-only provider API key, stale-after posture (not
+// yet built — served only), and the ND-6 news-feeds editor. System keeps the ACCESS controls (root
+// helper status, PIN, auto-lock, Allow LAN, the AI config line, Reset data) — auto-lock and LAN are
+// access controls, not feeds.
 
 const TRUTHY = new Set(["1", "true", "yes", "on"]);
-type TabId = "general" | "appearance" | "privacy" | "system";
-const TAB_IDS: TabId[] = ["general", "appearance", "privacy", "system"];
+type TabId = "general" | "appearance" | "privacy" | "data-feeds" | "system";
+const TAB_IDS: TabId[] = ["general", "appearance", "privacy", "data-feeds", "system"];
 const TABS = [
   { value: "general", label: "General" },
   { value: "appearance", label: "Appearance" },
   { value: "privacy", label: "Privacy" },
+  { value: "data-feeds", label: "Data feeds" },
   { value: "system", label: "System" },
 ];
 
@@ -94,6 +101,7 @@ export function Settings() {
         {tab === "general" && <GeneralPanel />}
         {tab === "appearance" && <AppearancePanel />}
         {tab === "privacy" && <PrivacyPanel />}
+        {tab === "data-feeds" && <DataFeedsPanel />}
         {tab === "system" && <SystemPanel />}
       </div>
     </div>
@@ -410,8 +418,62 @@ function TokenCard() {
 }
 
 // --------------------------------------------------------------------------- //
-// SYSTEM (§9-10 + §12st) — provider/key · PIN · auto-lock · LAN · AI line · feeds · reset
+// DATA FEEDS (§14st-1) — market provider · write-only key (§12st-2) · ND-6 feeds (§12st-3)
 // --------------------------------------------------------------------------- //
+// Feed/provider config is its own nature (owner, Phase-3b walk 2026-07-18). These controls apply
+// through the app's own endpoints and work REGARDLESS of the root helper (the §9-10 refinement: only
+// Allow LAN — an access control that stays in System — genuinely needs it).
+function DataFeedsPanel() {
+  const toast = useToast();
+  const [ds, setDs] = useState<DataSource | null | undefined>(undefined);
+  const reload = useCallback(() => {
+    setDs(undefined);
+    getDataSource().then(setDs);
+  }, []);
+  useEffect(() => reload(), [reload]);
+
+  if (ds === undefined) return <CardSkeleton />;
+  if (ds === null) return <LoadError onRetry={reload} />;
+
+  return (
+    <div className="set__stack">
+      {/* Market-data provider + the write-only key (§12st-2). */}
+      <section className="lf-card set__section">
+        <header className="set__cardhead"><h2 className="lf-card__title">Market data</h2></header>
+        <div className="lf-card__body set__grid">
+          <Field label="Market data provider" helpTerm="term-data-provider" help="The lane prices come from.">
+            <Select
+              options={ds.providers.map((p) => ({ value: p, label: p }))}
+              value={ds.provider}
+              onChange={async (v) => {
+                const r = await putDataSource({ provider: v });
+                toast.show(r.ok ? { message: r.note ?? "Provider saved." } : { message: `Couldn't change provider: ${r.error}` });
+                if (r.ok) reload();
+              }}
+              aria-label="Market data provider"
+            />
+          </Field>
+
+          <ApiKeyField hasKey={ds.has_api_key} onSave={async (key) => {
+            const r = await putDataSource({ api_key: key });
+            toast.show(r.ok ? { message: "API key saved (stored, hidden)." } : { message: `Couldn't save key: ${r.error}` });
+            if (r.ok) reload();
+          }} />
+        </div>
+      </section>
+
+      {/* News feeds editor (§12st-3 / ND-6) — Dialog + multi-URL + Test, [S]-gated. */}
+      <FeedsCard />
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------- //
+// SYSTEM (§9-10 + §12st) — root helper · PIN · auto-lock · LAN · AI line · reset
+// --------------------------------------------------------------------------- //
+// §14st-1: the ACCESS controls stay here (auto-lock and LAN are access controls, not feeds); the
+// feed/provider config moved to Data feeds. `ds` is still read for the D-003 `admin_available` signal
+// that gates the ONE sudo-dependent control — Allow LAN.
 function SystemPanel() {
   const toast = useToast();
   const [ds, setDs] = useState<DataSource | null | undefined>(undefined);
@@ -450,8 +512,8 @@ function SystemPanel() {
             <p className="set__degraded">
               The optional root helper is an install-time opt-in. It isn't installed, so system service
               actions that need it — <strong>Allow LAN access</strong> — are shown but disabled.
-              Everything else on this page works regardless (a provider or auto-lock change saves; the
-              background worker just won't restart itself until the helper is installed).
+              Everything else here works regardless (an auto-lock change saves; the background worker
+              just won't restart itself until the helper is installed).
             </p>
           </div>
         )}
@@ -460,29 +522,10 @@ function SystemPanel() {
       {/* PIN (§12st-1) — require_auth; the first-run choice that had no Settings home (D-002/D-045). */}
       <PinCard pinSet={pinSet} onChanged={reload} />
 
-      {/* Provider + write-only key (§12st-2) + auto-lock. */}
+      {/* Access controls (§14st-1) — auto-lock + Allow LAN stay in System; they are not feeds. */}
       <section className="lf-card set__section">
-        <header className="set__cardhead"><h2 className="lf-card__title">Prices &amp; access</h2></header>
+        <header className="set__cardhead"><h2 className="lf-card__title">Access &amp; auto-lock</h2></header>
         <div className="lf-card__body set__grid">
-          <Field label="Market data provider" helpTerm="term-data-provider" help="The lane prices come from.">
-            <Select
-              options={ds.providers.map((p) => ({ value: p, label: p }))}
-              value={ds.provider}
-              onChange={async (v) => {
-                const r = await putDataSource({ provider: v });
-                toast.show(r.ok ? { message: r.note ?? "Provider saved." } : { message: `Couldn't change provider: ${r.error}` });
-                if (r.ok) reload();
-              }}
-              aria-label="Market data provider"
-            />
-          </Field>
-
-          <ApiKeyField hasKey={ds.has_api_key} onSave={async (key) => {
-            const r = await putDataSource({ api_key: key });
-            toast.show(r.ok ? { message: "API key saved (stored, hidden)." } : { message: `Couldn't save key: ${r.error}` });
-            if (r.ok) reload();
-          }} />
-
           <AutolockField value={cfg?.autolock_minutes ?? ""} onSave={async (mins) => {
             const r = await putSystemConfig({ autolock_minutes: mins });
             toast.show(r.ok ? { message: r.note ?? "Saved." } : { message: `Couldn't save: ${r.error}` });
@@ -518,9 +561,6 @@ function SystemPanel() {
           <p className="set__fieldhelp">Model management lives with the AI surfaces — this line reflects the served configuration only.</p>
         </div>
       </section>
-
-      {/* Feeds editor (§12st-3 / ND-6) — Dialog + multi-URL + Test, [S]-gated. */}
-      <FeedsCard />
 
       {/* Reset data — the danger variant + ConfirmDialog + D-103 fresh purge-PIN. */}
       <section className="lf-card set__section">

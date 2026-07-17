@@ -24,14 +24,14 @@ import {
 import type { TickerQuote } from "../api/chrome";
 import { useStaleCount } from "../state/staleCount";
 
-// Each first-run step links to its Settings home (D-045). Settings is built (Phase 1) with
-// URL-addressable tabs (Amendment C), so each step deep-links to the TAB that holds its control:
-// base currency/timezone → General; PIN & data provider → System; no-egress → Privacy. The journey
-// guard asserts arrival at the CONTROL, not the href (§14ac-2).
+// Each first-run step links to its Settings home (D-045). Settings is built with URL-addressable
+// tabs (Amendment C), so each step deep-links to the TAB that holds its control: base
+// currency/timezone → General; PIN → System; data provider → Data feeds (§14st-1); no-egress →
+// Privacy. The journey guard asserts arrival at the CONTROL, not the href (§14ac-2).
 const FIRST_RUN_LINKS: FirstRunLinks = {
   general: "/settings?tab=general",
   security: "/settings?tab=system",
-  prices: "/settings?tab=system",
+  prices: "/settings?tab=data-feeds",
   privacy: "/settings?tab=privacy",
 };
 

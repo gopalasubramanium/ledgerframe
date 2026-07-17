@@ -304,25 +304,27 @@ test("Amendment C journey: a first-run step deep-links to the Settings tab holdi
   renderRoutesAt("/");
   // The overlay appears (first-run incomplete + no PIN → no lock gate).
   await screen.findByRole("dialog", { name: "Set up LedgerFrame" });
-  // The Data provider step's link ("Add an API key →") deep-links to the System tab.
+  // The Data provider step's link ("Add an API key →") deep-links to the Data feeds tab (§14st-1).
   await user.click(screen.getByRole("link", { name: /Add an API key/ }));
-  // Arrival at the CONTROL, not the href: we are on /settings AND the System-tab controls are present.
+  // Arrival at the CONTROL, not the href: we are on /settings AND the provider control is present
+  // (destination-only guards lie — assert the control, which now lives on the Data feeds tab).
   await waitFor(() => expect(screen.getByTestId("loc").textContent).toBe("/settings"));
-  expect(await screen.findByLabelText("Market data provider")).toBeTruthy(); // §12st-2
-  expect(screen.getByRole("button", { name: /Set PIN/ })).toBeTruthy();      // §12st-1
+  expect(await screen.findByLabelText("Market data provider")).toBeTruthy(); // §12st-2, Data feeds tab
 });
 
 test("Amendment C: every first-run step links to the correct Settings tab", async () => {
   stubFirstRunSettings();
   renderRoutesAt("/");
   await screen.findByRole("dialog", { name: "Set up LedgerFrame" });
-  // Base currency + Timezone → General; PIN → System; provider → System; no-egress → Privacy.
+  // Base currency + Timezone → General; PIN → System; provider → Data feeds (§14st-1); no-egress → Privacy.
   const general = screen.getAllByRole("link", { name: /More options/ });
   expect(general.every((a) => a.getAttribute("href")?.includes("tab="))).toBe(true);
-  expect(screen.getByRole("link", { name: /Add an API key/ }).getAttribute("href")).toContain("tab=system");
-  // At least one step deep-links to each of general / system / privacy.
+  // The provider step ("Add an API key →") moved to the Data feeds tab with the provider/key controls.
+  expect(screen.getByRole("link", { name: /Add an API key/ }).getAttribute("href")).toContain("tab=data-feeds");
+  // At least one step deep-links to each of general / data-feeds / system (PIN) / privacy.
   const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
   expect(hrefs.some((h) => h.includes("tab=general"))).toBe(true);
+  expect(hrefs.some((h) => h.includes("tab=data-feeds"))).toBe(true);
   expect(hrefs.some((h) => h.includes("tab=system"))).toBe(true);
   expect(hrefs.some((h) => h.includes("tab=privacy"))).toBe(true);
 });

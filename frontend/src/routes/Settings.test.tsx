@@ -77,9 +77,9 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 // --- tabs + URL state (Amendment C) -----------------------------------------
-test("renders the four D-069 tabs and defaults to General", async () => {
+test("renders the five D-069 tabs (§14st-1) and defaults to General", async () => {
   renderAt();
-  for (const t of ["General", "Appearance", "Privacy", "System"]) {
+  for (const t of ["General", "Appearance", "Privacy", "Data feeds", "System"]) {
     expect(screen.getByRole("button", { name: t })).toBeTruthy();
   }
   // General is the default control set: base currency + timezone + the long-term threshold.
@@ -103,11 +103,19 @@ test("Amendment C: ?tab=privacy deep-links to the no-egress control + derived st
   expect(screen.getByText(/No-egress: On/)).toBeTruthy();
 });
 
-test("Amendment C: ?tab=system deep-links to the PIN + provider controls (first-run journey target)", async () => {
+test("Amendment C: ?tab=system deep-links to the PIN control (first-run PIN journey target)", async () => {
   renderAt("/settings?tab=system");
-  // arrival at the CONTROL, not the href: the PIN card + the provider select are on screen.
+  // arrival at the CONTROL, not the href: the PIN card is on screen (PIN stays in System, §14st-1).
   expect(await screen.findByRole("button", { name: /Set PIN/ })).toBeTruthy();
-  expect(screen.getByLabelText("Market data provider")).toBeTruthy();
+  // The provider control has MOVED to the Data feeds tab — it is NOT on System.
+  expect(screen.queryByLabelText("Market data provider")).toBeNull();
+});
+
+test("Amendment C: ?tab=data-feeds deep-links to the provider control (first-run provider journey target, §14st-1)", async () => {
+  renderAt("/settings?tab=data-feeds");
+  // arrival at the CONTROL: the market-data provider select + the write-only key field are on screen.
+  expect(await screen.findByLabelText("Market data provider")).toBeTruthy();
+  expect(screen.getByLabelText("Provider API key (write-only)")).toBeTruthy();
 });
 
 // --- honest states -----------------------------------------------------------
@@ -119,7 +127,7 @@ test("PIN card shows an honest 'not set' state and offers to set one", async () 
 
 test("write-only API key never echoes a value — an honest 'set, hidden' state", async () => {
   vi.mocked(getDataSource).mockResolvedValue({ ...DATA_SOURCE, has_api_key: true });
-  renderAt("/settings?tab=system");
+  renderAt("/settings?tab=data-feeds");
   const key = await screen.findByLabelText("Provider API key (write-only)");
   // The field is empty (never the stored secret); the placeholder states it is set + hidden.
   expect((key as HTMLInputElement).value).toBe("");
