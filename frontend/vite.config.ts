@@ -15,6 +15,11 @@ export default defineConfig({
     proxy: {
       "/health": BACKEND,
       "/api": BACKEND,
+      // The Reports Pack (D-038) is a BACKEND-served HTML artifact, not an SPA route. In
+      // production the FastAPI app serves it same-origin (registered before the SPA catch-all);
+      // dev must proxy it too, or the Reports-page entry point (a real anchor to /reports/pack)
+      // would hit the vite SPA fallback instead of the artifact. Dev parity with prod.
+      "/reports/pack": BACKEND,
     },
   },
   test: {
