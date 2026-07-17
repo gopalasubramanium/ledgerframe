@@ -20,10 +20,17 @@ from app.models import AuditEvent, Setting
 router = APIRouter()
 
 # Allow-list of keys settable via the API (never includes secrets).
+#
+# page-settings §9 / Phase 0 delta 3 (D-078 reconciliation, owner 2026-07-18): the seven
+# WRITE-ONLY keys with no consumer were REMOVED — `rotation_seconds`, `rotation_pages`,
+# `focus_page` (§9-2(b): rotation parked to R-37, re-added spec-first WITH its engine),
+# `reduced_motion`, `high_contrast` (§9-6: per-device localStorage is their only home),
+# and `refresh_interval_seconds`, `display_sleep_minutes` (§9-7: no consumer, no spec home).
+# A PUT of any of them is now an honest 400 (the unknown-key path below), pinned by
+# test_settings_allowlist.py. `voice_enabled` / `ai_model` STAY by recorded deferral (Voice
+# R-32 / AI-surfaces D-067/D-068) — exempt from this milestone's sweep by owner ruling.
 _ALLOWED_KEYS = {
-    "base_currency", "rotation_seconds", "refresh_interval_seconds", "privacy_mode",
-    "reduced_motion", "high_contrast", "voice_enabled", "display_sleep_minutes",
-    "ai_model", "focus_page", "rotation_pages",
+    "base_currency", "privacy_mode", "voice_enabled", "ai_model",
     # First-run checklist (D-045, page-first-run-checklist F-3/F-5):
     # - timezone: the device timezone becomes settable via this write surface (server
     #   zoneinfo is the validation truth — a client value we reject surfaces an honest
