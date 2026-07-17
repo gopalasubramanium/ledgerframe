@@ -882,3 +882,80 @@ frontend **exit code** + **both** accepted-page pre-passes (Pricing Health +
 Instrument Detail) stated. Screenshots: Pricing Health with the stale rows found; the
 repaired candles (1M); zoom in action; the key-slot table. `git push`. **STOP — the
 owner re-walks.**
+
+---
+
+## §17 — PHASE 3b (batch 2) FIX + RE-RUN EXECUTION RECORD (2026-07-18)
+
+All four items fixed verify-first (fail-first RED on the real cause), docs-first,
+small commits.
+
+- **DONE — §16 findings filed first** (`8566437`) — dr-3/dr-4/dr-5 + the key-slot
+  ruling + ROADMAP R-41, recorded before any fix.
+- **DONE — §14dr-3** (`298827a`) — `is_stale` **already served** per-row (verified);
+  rendered as a **Stale marker** in the Status cell + **default-ordered stale-to-top**
+  + wired the previously-**inert** `DataTable` sort. Reconciliation pin (backend):
+  `sum(is_stale)` in pricing-health `==` `/portfolio/summary.stale_count`; frontend
+  guard: marked rows == the stale rows, pinned to top; dev-smoke journey now asserts
+  **identifiability at the destination**. `page-pricing-health.md` delta note.
+- **DONE — §14dr-4** (`a90d776`) — verify-first the served OHLC is correct; the defect
+  is **rendering geometry** in `PriceChart`. Fix at the component standard: candle
+  bodies **fill-only** + wick **non-scaling stroke** (parity with every sibling
+  series), body width **band-based with a readable floor + no-overlap clamp**.
+  Fail-first: `DENSE_CANDLE_SERIES` (~130 real-shaped daily bars) + kitchen-sink
+  specimen back a unit geometry test (RED on the collapsed width) **and** an e2e
+  box-geometry test (RED on the cross bloom). Sweep: all candle consumers inherit the
+  component fix. `page-instrument-detail.md` delta note.
+- **DONE — §14dr-5** (`ac20409` + e2e delivery fix in the same series) — wheel + pinch
+  zoom about the cursor, **Advanced only**, ratified **Reset** Button,
+  **non-persistent** (a new series clears it), no served field. Unit + e2e interaction
+  coverage (the e2e dispatches a real `WheelEvent` — `page.mouse.wheel` didn't reach
+  the non-passive listener in headless Chromium). `page-instrument-detail.md` delta note.
+- **DONE — key-slot honesty** (`43999dc`) — **SET only on the active keyed provider
+  row** (labelled "shared key slot"); every other needs-key row **NOT SET** with
+  honest copy *"uses the shared slot — currently serving {provider}"*. Composed from
+  served facts (the §14dr-2 pattern), no backend change. Test exposing the bug
+  (multi-needs-key: exactly one SET). `page-settings.md §16-2` revised; ROADMAP R-41
+  filed for real per-provider credentials.
+
+### Phase 3b re-run — RESULT (isolated demo instance; owner instance untouched)
+
+Isolated **production-seeded** backend on spare port **8399** (own temp data dir,
+`LEDGERFRAME_DEMO_SEED`) + a throwaway **Vite dev** on **5199** proxying to it
+(owner's 5173→8321→`~/.ledgerframe-data` never touched; §15c). The `.env` write
+hazard (`apply_env` on the provider/key saves) was **snapshotted before and restored
+after** — verified `.env` **identical to the snapshot**; the throwaway Vite config +
+temp data dir removed; **working tree clean**.
+
+- **§14dr-3 — stale rows identifiable END-TO-END:** staleness induced honestly on the
+  isolated instance (a short `stale_after_seconds`; mock's cached quotes age past it).
+  Banner **"7 prices are stale"** → confidence card **"7 of 14 prices stale — the same
+  count the Stale banner shows (one shared reader)"** → the per-holding table shows the
+  **7 stale rows MARKED (Stale chip) and PINNED to the top** — `banner == marked ==
+  the top rows` asserted live. Header sort now wired (a Holding-header click re-sorts).
+- **§14dr-4 — candles repaired:** at **1M** (21 candles) and **1Y** (125 candles) the
+  bodies render as **filled rectangles** (no overlap; max body width < candle pitch —
+  the cross bloom is gone), asserted by rendered-box geometry. **1D** shows ~2 candles
+  honestly (daily feed). Visually sane in the screenshots.
+- **§14dr-5 — zoom:** a real wheel narrows the window (21 → 17 candles) and the
+  ratified **Reset zoom** control appears; Reset restores the full range. No horizontal
+  overflow while zoomed.
+- **Key-slot honest:** with the active provider `alphavantage` keyed → **exactly one
+  SET** ("shared key slot"), and `eodhd`/`kite` read **NOT SET** with *"uses the shared
+  slot — currently serving alphavantage"*; no-key providers read "Not needed".
+- **0 console errors · 0 overflow** across Pricing Health / Instrument Detail / Settings
+  Data feeds at 320/375/900/1366 × light/dark. (Clean-console via the Vite-dev stack —
+  no prod-CSP theme-flash error.)
+- **Gates:** backend **923 passed**; `make api-contract-check` green, contract **134
+  path-keys** (Flag 1 held — no endpoints added); frontend `npm run check` **exit 0**
+  (lint + typecheck + tokens + **vitest 288** incl. the dr-3/dr-4/dr-5 + key-slot pins
+  + **e2e 336** incl. the new `candle-geometry.spec.ts` geometry + zoom guards).
+- **Screenshots (6):** Pricing Health with the stale rows found; the repaired candles
+  at 1D/1M/1Y; zoom in action (Reset visible); the key-slot provider table.
+
+**BOTH accepted-page pre-passes stated:** Pricing Health (dr-3) and Instrument Detail
+(dr-4/dr-5) were driven end-to-end on the isolated instance; Settings Data feeds
+(key-slot) likewise.
+
+**STATUS: FIXED + RE-RUN GREEN. NEXT: the owner re-walks** (Phase 3b, judgment only),
+then the close ritual.
