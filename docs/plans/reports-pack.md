@@ -1,9 +1,10 @@
 # reports-pack — Reports Pack (`/reports/pack`) MILESTONE plan
 
-**Status: PHASE 0 BUILT — §9 RESOLVED (owner one-pass 2026-07-17, all 9 ACCEPTED as proposed) ·
-Phase 0 (print palette + GLOSSARY + the `/reports/pack` route + docs) SHIPPED · Phase 0a
-PRINT-GEOMETRY specimen PROPOSED, ⏸ AWAITING OWNER RATIFICATION.** Phase 1 (the Reports-page entry
-point + owner walk) is **BLOCKED until the owner ratifies the print geometry** (§7a). This is a
+**Status: PHASE 0a GEOMETRY RATIFIED WITH CONDITIONS (owner, 2026-07-17) — §9 RESOLVED (owner one-pass
+2026-07-17, all 9 ACCEPTED as proposed) · Phase 0 (print palette + GLOSSARY + the `/reports/pack` route
++ docs) SHIPPED · Phase 0a PRINT-GEOMETRY ratified with four conditions (§12pk-1..4, §7a).** Phase 1
+(the four condition fixes + the Reports-page entry point) is UNBLOCKED and lands THIS session; the
+owner acceptance walk (Phase 3b) + the Amendment-I ledger flip are a SEPARATE session. This is a
 **milestone plan for a sanctioned print/export artifact — the Pack is NOT an IA page (D-038).** It inherits the Reports-page rulings already
 in hand (page-reports §9: 9-1 / 9-2 / 9-11 / 9-12 / 9-13 + Amendment I) — those are **cited,
 not re-decided**. Every claim below carries a file:line cite (verify-first, D-019). Build does
@@ -280,7 +281,42 @@ by the owner looking at BOTH the on-screen rendering AND the print-emulation cap
 page-home lesson: a correct section list can still be a wrong artifact — print geometry is a
 requirement a list cannot express). The specimen note records this adaptation explicitly.
 
-### GATE STATUS — ⏸ PROPOSED, AWAITING OWNER RATIFICATION (2026-07-17)
+### GATE STATUS — ✅ RATIFIED WITH CONDITIONS (owner, 2026-07-17)
+
+**The Phase-0a print geometry is RATIFIED WITH CONDITIONS.** The owner looked at BOTH the on-screen
+rendering AND the print-emulation captures (§7a) and accepted the print geometry — light palette,
+per-section page breaks, per-section disclaimers, and the consolidated + ≥2 per-entity structure on
+real-shaped seed data. The **in-session running-header overlap fix** (§11 row 7 — a reserved top band
+so the fixed running header no longer prints on top of the section heading) is recorded as **part of
+the ratified geometry**. Four conditions attach (all four of the specimen's open items ACCEPTED as
+recommended — §12pk-1..4 below); each is a Phase-1 delta, one per commit, fail-first:
+
+- **§12pk-1 — attribution rows render SERVED display labels, never reader keys.** The §12es-3
+  label-truth rule (the UI renders the served label verbatim, never a raw key) applied to the
+  **server-side composer**: the Pack is the composer standing in for the UI here, so it resolves the
+  attribution `by_asset_class` key (`fixed_deposit`, …) to its display label from **the same /refdata
+  truth** every JSON route serves through (`refdata._label` + the per-vocab overrides — the single
+  source; ETF → "ETF", fixed_deposit → "Fixed deposit"). Never re-map or invent a label.
+- **§12pk-2 — the running header is SUPPRESSED on page 1.** The artifact header block owns page 1; the
+  running header exists for **loose pages 2+** (an accountant's stapled printout). Record the
+  convention in the DESIGN-SYSTEM §5.1a print note.
+- **§12pk-3 — single-card consolidated sections collapse to ONE heading.** A consolidated subsection
+  whose body is a single card no longer prints the section `<h2>` and the card `<h3>` as a duplicate
+  title (the DataTable-caption lesson) — one heading on paper.
+- **§12pk-4 (seed layer, NOT a Pack defect) — the dev.sh boot path yields a duplicate "Household".**
+  Migrations insert a default "Household" entity (`f4a9c2b71e08`), then the demo seed creates another,
+  so the app-boot path yields two "Household" per-entity sections while `reset-demo-data.sh`
+  (create_all + seed, no migrations) yields the canonical three. Fix in the **seed layer** so BOTH
+  boot paths yield the canonical three (get-or-create Household — the estate-seed / institution
+  resolve-or-create precedent); seed unit-verified. Record here + one line in `08-TECH-DEBT.md` only
+  if anything remains after the fix.
+
+**The owner acceptance walk (Phase 3b) is NOT this session** — this session records the ratification,
+lands the four Phase-1 fixes + the Reports-page entry point, adds the Phase-2 journey guard, and runs
+the Phase-3a scripted pre-pass to GREEN. The close (Amendment-I ledger flip) is a separate session
+after the owner's pass.
+
+### GATE STATUS (as-proposed record, superseded by the ratification above) — ⏸ PROPOSED (2026-07-17)
 
 **The Phase-0a specimen is BUILT and PROPOSED** (evidence in §11). It was rendered on the reset demo
 seed (entities **Household · Rajan Family Trust · Meera Iyer** — the seed exercises a populated
@@ -303,8 +339,10 @@ worth (739,108.20) is `value_portfolio(entity_id=Household).total_value`, the SA
 worth / Holdings readers serve; the Pack formats it with the shared `format_money_display`, never a
 recompute. There is one derivation, cited in `reports_pack.py`.
 
-**Known open items surfaced by the specimen (for the owner's ruling at the gate — NOT fixed this
-session, to respect the STOP condition):**
+**Known open items surfaced by the specimen — ALL FOUR now RATIFIED as conditions (owner 2026-07-17):
+item 1 → §12pk-1, item 2 → §12pk-2, item 3 → §12pk-3, item 4 → §12pk-4 (see the ratified GATE STATUS
+above). They were flagged not-fixed at specimen time to respect the STOP condition; they are the
+Phase-1 delta set THIS session.**
 1. **Asset-class keys render as reader keys** (e.g. `fixed_deposit` with an underscore) in the
    attribution "by asset class" rows — the reader serves the raw `key`, not the `/refdata` display
    label. A copy refinement (map keys → display labels) is a candidate for Phase 1; flagged, not
