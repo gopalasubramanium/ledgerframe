@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { InstrumentLabel } from "../components/InstrumentLabel";
 import { ArrowUpRight } from "lucide-react";
 import "./home-grid.css";
 import {
@@ -372,12 +373,12 @@ export function Home() {
                 <>
                   <MoverList
                     title="Gainers"
-                    rows={gainers.map((i) => ({ id: i.symbol, symbol: i.symbol, day_change_pct: i.quote.change_pct }))}
+                    rows={gainers.map((i) => ({ id: i.symbol, symbol: i.symbol, name: i.name, day_change_pct: i.quote.change_pct }))}
                     empty="Nothing rose today."
                   />
                   <MoverList
                     title="Losers"
-                    rows={losers.map((i) => ({ id: i.symbol, symbol: i.symbol, day_change_pct: i.quote.change_pct }))}
+                    rows={losers.map((i) => ({ id: i.symbol, symbol: i.symbol, name: i.name, day_change_pct: i.quote.change_pct }))}
                     empty="Nothing declined today."
                   />
                 </>
@@ -466,6 +467,7 @@ interface MoverItem {
   id: string | number;
   symbol: string | null;
   label?: string | null;
+  name?: string | null; // §14dr-19: instrument name beside the ticker
   day_change_pct: string | number | null;
 }
 
@@ -479,7 +481,9 @@ function MoverList({ title, rows, empty }: { title: string; rows: MoverItem[]; e
         <ul className="hm3__moverrows">
           {rows.map((r) => (
             <li className="hm3__moverrow" key={r.id}>
-              <span className="hm3__moversym">{r.symbol ?? r.label ?? "—"}</span>
+              <span className="hm3__moversym">
+                <InstrumentLabel symbol={r.symbol} name={r.name} fallback={r.label} />
+              </span>
               <span className={`hm3__moverpct hm3__moverpct--${signOf(r.day_change_pct)}`}>
                 {formatSignedPercent(r.day_change_pct)}
               </span>

@@ -507,6 +507,7 @@ def _attribute_core(holdings, total_unrealised: Decimal, total_cost: Decimal,
         sec_totals[h.sector or "Unclassified"] += c   # null-safe: never dropped or mislabelled
         holdings_out.append({
             "holding_id": h.holding_id, "label": h.label, "symbol": h.symbol,
+            "name": getattr(h, "name", None),   # §14dr-19: name beside the ticker (null when == symbol/placeholder)
             "asset_class": h.asset_class, "sector": h.sector,   # raw sector (bucket key handles null)
             "contribution_pct": float(c),
         })

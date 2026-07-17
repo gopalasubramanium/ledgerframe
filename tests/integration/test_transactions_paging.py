@@ -26,6 +26,25 @@ async def test_filter_and_total_are_server_side(app_client):
     assert r["filter"] == "ZZ"
 
 
+async def test_ledger_serves_instrument_name_beside_symbol(app_client):
+    # §14dr-19 (owner reversal of dr-16): the ledger serves the instrument NAME
+    # beside the canonical symbol; null when the name equals the symbol.
+    r = await app_client.post("/api/v1/portfolio/transactions", json={
+        "symbol": "ZNAMED", "name": "Zeta Named Fund", "type": "buy",
+        "ts": "2020-02-01T09:30:00", "quantity": 1, "price": 5, "currency": "USD",
+    })
+    assert r.status_code == 200
+    rows = (await app_client.get("/api/v1/portfolio/transactions?filter=ZNAMED")).json()["transactions"]
+    assert rows and rows[0]["name"] == "Zeta Named Fund"
+    # A symbol-only instrument serves name = null (never the symbol echoed as a name).
+    await app_client.post("/api/v1/portfolio/transactions", json={
+        "symbol": "ZBARE", "type": "buy", "ts": "2020-02-02T09:30:00",
+        "quantity": 1, "price": 5, "currency": "USD",
+    })
+    bare = (await app_client.get("/api/v1/portfolio/transactions?filter=ZBARE")).json()["transactions"]
+    assert bare and bare[0]["name"] is None
+
+
 async def test_window_reports_full_total_never_truncates_silently(app_client):
     await _seed_zz(app_client)
     page1 = (await app_client.get("/api/v1/portfolio/transactions?filter=ZZ&limit=2&offset=0")).json()

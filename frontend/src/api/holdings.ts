@@ -50,6 +50,7 @@ export interface TransactionRow {
   id: number;
   account_id?: number | null;
   symbol?: string | null;
+  name?: string | null; // §14dr-19: instrument name beside the ticker
   type: string;
   ts: string;
   quantity?: number | null;

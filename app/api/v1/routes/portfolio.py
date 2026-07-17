@@ -508,7 +508,7 @@ async def list_transactions(
         ))
 
     stmt = (
-        select(Transaction, Instrument.symbol.label("symbol"))
+        select(Transaction, Instrument.symbol.label("symbol"), Instrument.name.label("name"))
         .outerjoin(Instrument, Transaction.instrument_id == Instrument.id)
         .where(*conds)
     )
@@ -525,9 +525,10 @@ async def list_transactions(
     )).all()
 
     out = []
-    for t, symbol in rows:
+    for t, symbol, name in rows:
         out.append({
             "id": t.id, "account_id": t.account_id, "symbol": symbol,
+            "name": name if name and name != symbol else None,  # §14dr-19: name beside ticker (null when == symbol)
             "type": t.type.value if hasattr(t.type, "value") else str(t.type),
             "ts": t.ts.isoformat(),
             "quantity": to_display(D(t.quantity)), "price": to_display(D(t.price)),

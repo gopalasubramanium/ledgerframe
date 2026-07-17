@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import "./Holdings.css";
+import { InstrumentLabel } from "../components/InstrumentLabel";
 import { Upload, Download, Plus } from "../icons";
 import {
   ConfirmDialog,
@@ -335,7 +336,7 @@ export function Holdings() {
       { key: "ts", label: "Date", sortable: true, render: (t) => t.ts.slice(0, 10) },
       // Served display label for the type (item 3b — no raw enum).
       { key: "type", label: "Type", sortable: true, render: (t) => labelFor("txn_type", t.type) },
-      { key: "symbol", label: "Symbol", sortable: true, render: (t) => t.symbol ?? "—" },
+      { key: "symbol", label: "Symbol", sortable: true, render: (t) => <InstrumentLabel symbol={t.symbol} name={t.name} /> },
       { key: "quantity", label: "Qty", format: "quantity", sortable: true },
       { key: "price", label: "Price", format: "price", sortable: true },
       { key: "amount", label: "Amount", format: "signed-money", sortable: true },

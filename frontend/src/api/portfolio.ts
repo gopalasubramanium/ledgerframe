@@ -7,6 +7,7 @@ export interface MoverRow {
   id: number;
   label: string | null;
   symbol: string | null;
+  name?: string | null; // §14dr-19: instrument name beside the ticker
   price: number | null;
   currency: string | null;
   market_value: number | null;
@@ -78,6 +79,7 @@ export interface AttributionHolding {
   holding_id: number;
   label: string;
   symbol: string | null;
+  name?: string | null; // §14dr-19: instrument name beside the ticker
   asset_class: string | null;
   sector: string | null;
   contribution_pct: number;

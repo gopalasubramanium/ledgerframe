@@ -1,0 +1,27 @@
+/* §14dr-19: shared symbol+name identity pattern (promoted from .hold__ident). */
+.lf-instr {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+.lf-instr__sym {
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lf-instr__link {
+  color: var(--accent);
+  text-decoration: none;
+}
+.lf-instr__link:hover {
+  text-decoration: underline;
+}
+.lf-instr__name {
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

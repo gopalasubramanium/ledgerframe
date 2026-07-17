@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "./Portfolio.css";
+import { InstrumentLabel } from "../components/InstrumentLabel";
 import {
   AllocationDonut,
   DataTable,
@@ -192,7 +193,7 @@ export function Portfolio() {
   }, [attribution, attrSort, attrFilter]);
 
   const attrColumns: Column<AttributionHolding>[] = [
-    { key: "label", label: "Holding", sortable: true, render: (h) => (h.symbol ? <Link to={`/instrument/${encodeURIComponent(h.symbol)}`}>{h.label}</Link> : h.label) },
+    { key: "label", label: "Holding", sortable: true, render: (h) => <InstrumentLabel symbol={h.symbol} name={h.name} fallback={h.label} /> },
     { key: "asset_class", label: "Class", sortable: true, render: (h) => (h.asset_class ? labelFor("asset_class", h.asset_class) : "—") },
     { key: "sector", label: "Sector", sortable: true, render: (h) => h.sector ?? "—" },
     { key: "contribution_pct", label: "Contribution", align: "right", format: "signed-percent", sortable: true },
@@ -464,7 +465,7 @@ function MoverList({ title, rows, emptyReason }: { title: string; rows: MoverRow
           {rows.map((r) => (
             <li key={r.id} className="pf__moverrow">
               <span className="pf__moversym">
-                {r.symbol ? <Link to={`/instrument/${encodeURIComponent(r.symbol)}`}>{r.symbol}</Link> : r.label}
+                <InstrumentLabel symbol={r.symbol} name={r.name} fallback={r.label} />
               </span>
               <span className="pf__moverright">
                 {r.price != null && (
