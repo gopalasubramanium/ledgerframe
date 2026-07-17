@@ -281,6 +281,38 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "A plain count of how much of your estate documentation is in order — documents present versus those needing attention. Each document has a status: Present (on file), Missing (not held), or Outdated (needs refreshing). A record and a reminder, never a score.",
   },
+  // Settings terms (page-settings §9-4, ruled 2026-07-18). Added to docs/specs/GLOSSARY.md FIRST,
+  // then here — the two-store rule; test_glossary_parity.py polices the spellings.
+  "term-privacy-mode": {
+    term: "Privacy mode",
+    definition:
+      "The device's egress posture, set by the No-egress toggle: when on, the app makes zero outbound network calls and prices/news go stale honestly rather than reaching out. The Privacy state statement is derived from this one state, never a separate metric.",
+  },
+  "term-api-token": {
+    term: "API token",
+    definition:
+      "A scoped, read-only token that lets a LAN widget (Home Assistant, a wall display) read your summary over your local network. The raw value is shown once and never retrievable after; revocable any time. Managing tokens needs your session — an API token can neither mint nor revoke tokens.",
+  },
+  "term-data-provider": {
+    term: "Data provider",
+    definition:
+      "The Settings label for the market-price Provider — the adapter that supplies quotes (mock/csv/yahoo/alphavantage/eodhd/kite). Its API key is write-only: set, never read back.",
+  },
+  "term-density": {
+    term: "Density",
+    definition:
+      "A per-device display preference — comfortable (roomier) or compact (more rows per screen). Saved on this device only; it describes the display, not your data.",
+  },
+  "term-high-contrast": {
+    term: "High contrast",
+    definition:
+      "A per-device display axis — stronger borders and text contrast for legibility. Saved on this device only, not a server setting.",
+  },
+  "term-reduced-motion": {
+    term: "Reduced motion",
+    definition:
+      "A per-device display axis — stops animations and the ticker scroll. Saved on this device only, not a server setting; also honours your operating system's reduce-motion preference.",
+  },
 };
 
 export function lookupTerm(id: string): GlossaryEntry | undefined {
