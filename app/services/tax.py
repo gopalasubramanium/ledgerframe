@@ -26,7 +26,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.models import Account, Instrument, Transaction, TxnType
+from app.models import Account, Instrument, Setting, Transaction, TxnType
 from app.services import fx
 from app.services.portfolio import entity_account_filter
 
@@ -281,12 +281,38 @@ def _label(instr: Instrument | None, iid: int) -> tuple[str | None, str]:
     return instr.symbol, (instr.name or instr.symbol or f"#{iid}")
 
 
+#: The neutral default long-term holding threshold when nothing is stored or passed
+#: (page-settings §9-1; D-077/Guarantee 4 — a neutral integer, no jurisdiction presets).
+LONG_TERM_DAYS_DEFAULT = 365
+
+
+async def resolve_long_term_days(session: AsyncSession, param: int | None) -> int:
+    """THE one place the long-term threshold is resolved (page-settings §9-1, Amendment A / A11).
+
+    PARAM-WINS: an explicit value (a query param) overrides the stored Settings default. When
+    the caller passes ``None`` (no param), the stored ``long_term_days`` row is the default,
+    falling back to 365 when unset or unparsable. Clamped to ``[0, 3660]`` to mirror the route
+    validator (`portfolio.py`) and the settings validator. Every ``long_term_days``-taking reader
+    routes through here — no per-route re-reads, so the stored default is read in exactly one place."""
+    if param is not None:
+        return max(0, min(int(param), 3660))
+    row = (await session.execute(select(Setting).where(Setting.key == "long_term_days"))).scalars().first()
+    if row is not None and row.value is not None:
+        try:
+            return max(0, min(int(row.value), 3660))
+        except (TypeError, ValueError):
+            pass  # a malformed stored value degrades to the neutral default, never an error
+    return LONG_TERM_DAYS_DEFAULT
+
+
 async def realised_gains_report(session: AsyncSession, year: int | None = None,
-                                long_term_days: int = 365, entity_id: int | None = None) -> dict:
+                                long_term_days: int | None = None, entity_id: int | None = None) -> dict:
     """Realised gains for a calendar year, grouped by native currency, with a neutral
     short/long-term split and a caveated base-currency total at current FX. ``entity_id``
-    optionally scopes to one ownership entity (§4.1); default is the whole portfolio."""
-    long_term_days = max(0, min(int(long_term_days if long_term_days is not None else 365), 3660))
+    optionally scopes to one ownership entity (§4.1); default is the whole portfolio.
+    ``long_term_days`` defaults to the stored Settings value (page-settings §9-1); an explicit
+    value wins (PARAM-WINS)."""
+    long_term_days = await resolve_long_term_days(session, long_term_days)
     base = get_settings().base_currency
     by_group, instr_map, methods = await _txns_by_instrument(session, entity_id)
 
@@ -370,11 +396,12 @@ async def realised_gains_report(session: AsyncSession, year: int | None = None,
     }
 
 
-async def tax_lots_report(session: AsyncSession, long_term_days: int = 365,
+async def tax_lots_report(session: AsyncSession, long_term_days: int | None = None,
                           entity_id: int | None = None) -> dict:
     """Open (unsold) lots per holding — acquisition date, quantity, cost, holding period.
-    ``entity_id`` optionally scopes to one ownership entity (§4.1)."""
-    long_term_days = max(0, min(int(long_term_days if long_term_days is not None else 365), 3660))
+    ``entity_id`` optionally scopes to one ownership entity (§4.1). ``long_term_days`` defaults
+    to the stored Settings value (page-settings §9-1); an explicit value wins (PARAM-WINS)."""
+    long_term_days = await resolve_long_term_days(session, long_term_days)
     by_group, instr_map, methods = await _txns_by_instrument(session, entity_id)
     now = datetime.now(UTC)
     lots = []

@@ -10755,11 +10755,17 @@
             "name": "long_term_days",
             "required": false,
             "schema": {
-              "default": 365,
-              "maximum": 3660,
-              "minimum": 0,
-              "title": "Long Term Days",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "maximum": 3660,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Long Term Days"
             }
           },
           {
@@ -10866,11 +10872,17 @@
             "name": "long_term_days",
             "required": false,
             "schema": {
-              "default": 365,
-              "maximum": 3660,
-              "minimum": 0,
-              "title": "Long Term Days",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "maximum": 3660,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Long Term Days"
             }
           },
           {
@@ -11704,11 +11716,17 @@
             "name": "long_term_days",
             "required": false,
             "schema": {
-              "default": 365,
-              "maximum": 3660,
-              "minimum": 0,
-              "title": "Long Term Days",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "maximum": 3660,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Long Term Days"
             }
           },
           {
@@ -11800,11 +11818,17 @@
             "name": "long_term_days",
             "required": false,
             "schema": {
-              "default": 365,
-              "maximum": 3660,
-              "minimum": 0,
-              "title": "Long Term Days",
-              "type": "integer"
+              "anyOf": [
+                {
+                  "maximum": 3660,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Long Term Days"
             }
           },
           {

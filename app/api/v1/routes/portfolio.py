@@ -991,7 +991,7 @@ async def review_log_ep(payload: ReviewLogIn, session: AsyncSession = Depends(ge
 # --------------------------------------------------------------------------- #
 @router.get("/portfolio/realised-gains")
 async def realised_gains(year: int | None = Query(default=None),
-                         long_term_days: int = Query(default=365, ge=0, le=3660),
+                         long_term_days: int | None = Query(default=None, ge=0, le=3660),
                          entity_id: int | None = Query(default=None),
                          session: AsyncSession = Depends(get_db)) -> dict:
     from app.services.tax import realised_gains_report
@@ -1000,7 +1000,7 @@ async def realised_gains(year: int | None = Query(default=None),
 
 
 @router.get("/portfolio/tax-lots")
-async def tax_lots(long_term_days: int = Query(default=365, ge=0, le=3660),
+async def tax_lots(long_term_days: int | None = Query(default=None, ge=0, le=3660),
                    entity_id: int | None = Query(default=None),
                    session: AsyncSession = Depends(get_db)) -> dict:
     from app.services.tax import tax_lots_report
@@ -1009,7 +1009,7 @@ async def tax_lots(long_term_days: int = Query(default=365, ge=0, le=3660),
 
 
 @router.get("/portfolio/tax-lots.csv", response_class=PlainTextResponse)
-async def tax_lots_export(long_term_days: int = Query(default=365, ge=0, le=3660),
+async def tax_lots_export(long_term_days: int | None = Query(default=None, ge=0, le=3660),
                           entity_id: int | None = Query(default=None),
                           session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
     """§9-4 (page-reports): server-side open-tax-lots CSV export (D-050 / P-5). Born with its
@@ -1023,7 +1023,7 @@ async def tax_lots_export(long_term_days: int = Query(default=365, ge=0, le=3660
 
 @router.get("/portfolio/realised-gains.csv", response_class=PlainTextResponse)
 async def realised_gains_export(year: int | None = Query(default=None),
-                                long_term_days: int = Query(default=365, ge=0, le=3660),
+                                long_term_days: int | None = Query(default=None, ge=0, le=3660),
                                 entity_id: int | None = Query(default=None),
                                 session: AsyncSession = Depends(get_db)) -> PlainTextResponse:
     from app.services.tax import realised_gains_csv, realised_gains_report
