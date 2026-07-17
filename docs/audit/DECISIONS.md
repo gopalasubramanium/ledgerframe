@@ -405,9 +405,15 @@ AI-fallback signal (D-070); the normative validation contract (D-071).
 - **D-078 — Settings persistence split by nature** (08 §2).
   **Per-device (localStorage):** theme, density, sidebar-collapsed,
   reduced-motion, high-contrast — properties of the display.
-  **Server-persisted (settings rows):** Home layout (per D-040/D-044
-  linkage — it defines what rotation shows), language, rotation/focus
-  (D-017), and everything already server-side. Each setting's home is listed
+  **Server-persisted (settings rows):** ~~Home layout (per D-040/D-044
+  linkage — it defines what rotation shows)~~ *(**struck 2026-07-18,
+  owner-ruled, page-settings §9** — already retired by the D-046 AMENDMENT,
+  page-home §12ho1-6: Home ships ONE layout, so a layout row would store a
+  choice nothing can make)*, ~~language~~ *(**struck 2026-07-18, owner-ruled,
+  page-settings §9-2/§9** — named but never built: no key, no consumer, no
+  i18n anywhere; re-add spec-first if i18n ever lands — R-31)*, rotation/focus
+  (D-017 — parked to R-37, re-added spec-first with its engine), and
+  everything already server-side. Each setting's home is listed
   in the spec. **Hard requirement: the v1 write-only allow-list keys are
   reconciled — every allow-listed key is either consumed or removed.**
 - **D-079 — Stray repo files removed** (OQ 23). The two session-transcript
