@@ -804,11 +804,17 @@ function AutolockField({ value, onSave }: { value: string; onSave: (mins: string
 function ResetDataControl({ pinSet, onDone }: { pinSet: boolean; onDone: () => void }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const doReset = async () => {
-    setOpen(false);
-    const r = await resetData();
-    toast.show(r.ok ? { message: r.note ?? "Data reset." } : { message: `Couldn't reset: ${r.error}` });
-    if (r.ok) onDone();
+  const doReset = async (pin?: string) => {
+    // §14dr-20 / D-103: thread the freshly-entered PIN — the server rejects an ambient
+    // session (401) and only wipes with the correct fresh PIN.
+    const r = await resetData(pin ?? "");
+    if (r.ok) {
+      setOpen(false);
+      toast.show({ message: r.note ?? "Data reset." });
+      onDone();
+    } else {
+      toast.show({ message: `Couldn't reset: ${r.error}`, tone: "warning" });
+    }
   };
   return (
     <>

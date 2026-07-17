@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 
 from fastapi import Cookie, Depends, Header, HTTPException, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,6 +73,36 @@ async def get_db() -> AsyncIterator[AsyncSession]:  # pragma: no cover - thin wr
 async def pin_is_set(session: AsyncSession) -> bool:
     user = (await session.execute(select(User).limit(1))).scalars().first()
     return bool(user and user.pin_hash)
+
+
+class PinConfirm(BaseModel):
+    """Body for a D-103 irreversible action — the freshly-entered PIN (§14dr-20)."""
+
+    pin: str = Field(min_length=6, max_length=32)
+
+
+async def verify_fresh_pin(session: AsyncSession, pin: str | None) -> None:
+    """D-103 (SECURITY-BASELINE §3): an irreversible purge ALWAYS demands a freshly-entered
+    PIN. An unlocked/ambient session NEVER satisfies it — the submitted PIN is verified
+    against the stored hash, and the session token is deliberately not accepted in its place,
+    so the point of no return requires deliberate re-entry rather than ambient authority.
+
+    Pair this with ``require_pin`` on the endpoint: the guard keeps the action off API tokens
+    and unprotected installs; this checks the fresh PIN that the session can never stand in for.
+    """
+    from app.core.security import verify_pin
+
+    user = (await session.execute(select(User).limit(1))).scalars().first()
+    if not user or not user.pin_hash:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Set a PIN before permanently deleting data.",
+        )
+    if not pin or not verify_pin(pin, user.pin_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Enter your PIN to permanently delete — an unlocked session is not enough.",
+        )
 
 
 async def require_auth(

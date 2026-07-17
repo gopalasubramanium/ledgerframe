@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Float, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_auth, require_pin
+from app.api.deps import PinConfirm, get_db, require_auth, require_pin, verify_fresh_pin
 from app.core.config import get_settings
 from app.core.money import (
     ZERO,
@@ -807,12 +807,15 @@ async def restore_manual_holding(holding_id: int, session: AsyncSession = Depend
 
 
 @router.post("/portfolio/purge-deleted", dependencies=[Depends(require_pin)])
-async def purge_deleted(session: AsyncSession = Depends(get_db)) -> dict:
+async def purge_deleted(body: PinConfirm, session: AsyncSession = Depends(get_db)) -> dict:
     """Permanently hard-delete every soft-deleted holding and transaction ("empty trash").
 
-    PIN-gated (§3.5 Unit D) and irreversible. Only rows with deleted_at set are removed —
-    live rows are never touched. Purged rows were already excluded from every computation
-    (Unit B), so a final rebuild keeps the derived-holdings invariant explicit."""
+    Irreversible and D-103-class: gated by ``require_pin`` (off API tokens / unprotected
+    installs) AND a FRESH PIN (§14dr-20) — an ambient/unlocked session never satisfies it
+    (SECURITY-BASELINE §3). Only rows with deleted_at set are removed — live rows are never
+    touched. Purged rows were already excluded from every computation (Unit B), so a final
+    rebuild keeps the derived-holdings invariant explicit."""
+    await verify_fresh_pin(session, body.pin)
     dead_holdings = (await session.execute(
         select(Holding).where(Holding.deleted_at.isnot(None))
     )).scalars().all()

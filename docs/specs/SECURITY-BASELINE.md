@@ -85,6 +85,12 @@ for #10). Accepted-with-ADR: #1, #2, #3, #5, #6, #7, #8, #9, #13.
   appliance an unlocked session is ambient, so the point of no return requires a
   deliberate, explicit re-entry rather than ambient session authority. (This is the
   standing resolution of the page-holdings purge-PIN follow-up.)
+  **ENFORCED 2026-07-18 (§14dr-20):** until then D-103 was documented but NOT
+  implemented — the ConfirmDialog PIN was discarded and `require_pin` authorised on the
+  ambient session. Now `deps.verify_fresh_pin` verifies the freshly-entered PIN
+  server-side on **both** irreversible actions — `POST /portfolio/purge-deleted` and
+  `POST /system/reset-data` — and the session token is not accepted in its place. Pinned
+  by fresh-PIN tests (wrong PIN → 401) on each endpoint.
 - **ROADMAP R-1:** optional passphrase mode (8–64 chars) (D-002).
 
 ---

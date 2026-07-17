@@ -22,14 +22,31 @@ async def test_reset_clears_holdings_and_blocks_reseed(app_client):
     assert len(before) > 0
     # D-103: set a PIN → the returned cookie authenticates the client for the PIN-gated reset.
     assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "009753"})).status_code == 200
-    # Clear it.
-    r = await app_client.post("/api/v1/system/reset-data")
+    # Clear it — §14dr-20/D-103: the fresh PIN is threaded through (an unlocked session alone
+    # does NOT satisfy the wipe).
+    r = await app_client.post("/api/v1/system/reset-data", json={"pin": "009753"})
     assert r.status_code == 200
     after = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
     assert after == []
     # Transactions gone too.
     txns = (await app_client.get("/api/v1/portfolio/transactions")).json()["transactions"]
     assert txns == []
+
+
+async def test_reset_demands_a_fresh_pin_not_the_ambient_session(app_client):
+    # §14dr-20 / D-103: reset-data, like purge, always demands a freshly-entered PIN — an
+    # unlocked/ambient session never satisfies it (RED before the fix: the PIN was discarded).
+    before = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    assert len(before) > 0
+    assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "024680"})).status_code == 200
+    # Unlocked session but the WRONG fresh PIN → refused, and nothing is wiped.
+    wrong = await app_client.post("/api/v1/system/reset-data", json={"pin": "111111"})
+    assert wrong.status_code == 401
+    after = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    assert len(after) == len(before)
+    # The correct fresh PIN → the reset proceeds.
+    ok = await app_client.post("/api/v1/system/reset-data", json={"pin": "024680"})
+    assert ok.status_code == 200
 
 
 async def test_seed_runs_once(session):

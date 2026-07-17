@@ -35,6 +35,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "An unsold parcel with its acquisition date, quantity, cost and holding period. Open lots are matched by FIFO. Organisation only — not tax advice.",
   },
+  // §14dr-20: added to docs/specs/GLOSSARY.md FIRST, then here (two-store rule; the parity
+  // guard tests/unit/test_glossary_parity.py polices the spelling "Purge").
+  "term-purge": {
+    term: "Purge",
+    definition:
+      "Permanently deleting the soft-deleted (“trashed”) holdings and transactions — emptying the trash. Irreversible: the rows are gone for good and cannot be restored. A D-103 action — it always demands a freshly-entered PIN, never the unlocked session.",
+  },
   // Accounts (page-accounts §9-13). Added to docs/specs/GLOSSARY.md FIRST, then here — the
   // two-store rule; tests/unit/test_glossary_parity.py polices the spellings.
   "term-account-kind": {

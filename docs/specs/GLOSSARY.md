@@ -61,6 +61,7 @@ Liabilities    = Σ (LIABILITY-class holdings, counted negative)
 | **Holding** | The row: a quantity of one instrument in one account. **Derived** from the transaction ledger via FIFO (rebuilt on every mutation) — except **manual holdings**, which survive rebuilds. |
 | **Position** | The quantity count within a holding. (Use **Position** for the count, **Holding** for the row.) |
 | **Manual asset / holding** | A holding valued by a user-entered `manual_value` (cash, property, private, FD, insurance cash value), not a market quote. |
+| **Purge** | Permanently deleting the soft-deleted ("trashed") holdings and transactions — emptying the trash. Irreversible: the rows are gone for good and cannot be restored. A **D-103** action — it always demands a **freshly-entered PIN**, never the unlocked session. **[Help]** |
 | **Lot** | A single parcel from one buy, with its own acquisition date and unit cost. FIFO consumes lots oldest-first. |
 | **Tax lot / Open lot** | An unsold lot with acquisition date, quantity, cost, and holding period. **[Help]** |
 | **Account** | A container of holdings at an institution, with a currency, kind, and an owning entity. Canonical on the **Accounts** page. |

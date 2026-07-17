@@ -89,8 +89,10 @@ export async function getLanEnabled(): Promise<boolean> {
 }
 
 // --- Reset data (danger; ConfirmDialog + D-103 fresh purge-PIN) --------------
-export async function resetData(): Promise<{ ok: true; note?: string } | { ok: false; error: string }> {
-  const r = await apiSend<{ ok?: boolean; note?: string }>("/system/reset-data", "POST");
+// §14dr-20 / D-103: the fresh PIN is threaded through — an ambient/unlocked session never
+// satisfies the wipe (the server verifies the submitted PIN, not the session token).
+export async function resetData(pin: string): Promise<{ ok: true; note?: string } | { ok: false; error: string }> {
+  const r = await apiSend<{ ok?: boolean; note?: string }>("/system/reset-data", "POST", { pin });
   return r.ok ? { ok: true, note: r.data.note } : { ok: false, error: r.error };
 }
 

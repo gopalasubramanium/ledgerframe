@@ -10,6 +10,7 @@ import {
   Dialog,
   EmptyState,
   FileInput,
+  GlossaryTerm,
   InstrumentPicker,
   MasterSelect,
   MoneyInput,
@@ -440,12 +441,19 @@ export function Holdings() {
         <div className="hold__bar">
           <h2 className="hold__h2">Transactions</h2>
           {deletedCount > 0 && (
-            <button type="button" className="lf-btn" onClick={() => setPurgeOpen(true)}>
-              {/* §14dr-10 — removed the stray internal dev annotation that leaked into this
-                  label. The action is PIN-gated by the confirm dialog's requirePin prop (its
-                  honest home), not by an annotation in the button copy. */}
-              Purge {deletedCount} deleted
-            </button>
+            // §14dr-20 — self-explaining copy (the old "Purge N deleted" was cryptic). The word
+            // "Purge" carries a [Help] popover to its GLOSSARY definition (a sibling of the button,
+            // never nested inside it — no button-in-button). The ConfirmDialog states exactly what
+            // is destroyed and demands a fresh PIN (D-103).
+            <span className="hold__purge">
+              <button type="button" className="lf-btn" onClick={() => setPurgeOpen(true)}
+                title="Permanently delete the trashed holdings and transactions — cannot be undone">
+                Permanently delete {deletedCount} trashed…
+              </button>
+              <GlossaryTerm term="term-purge">
+                <span className="hold__purge-help" aria-label="What does purge mean?">Purge?</span>
+              </GlossaryTerm>
+            </span>
           )}
         </div>
         {txnTotal === 0 && !txnQuery ? (
@@ -573,17 +581,23 @@ export function Holdings() {
 
       <ConfirmDialog
         open={purgeOpen}
-        title="Purge deleted rows?"
-        message="Permanently removes all soft-deleted holdings and transactions. This cannot be undone."
-        confirmLabel="Purge"
+        title="Permanently delete trashed rows?"
+        message={`This permanently deletes all ${deletedCount} trashed (soft-deleted) holdings and transactions — emptying the trash. They cannot be recovered. Enter your PIN to confirm.`}
+        confirmLabel="Delete permanently"
         destructive
         requirePin
         onCancel={() => setPurgeOpen(false)}
-        onConfirm={async () => {
-          setPurgeOpen(false);
-          const res = await purgeDeleted();
-          toast.show({ message: res.ok ? "Purged." : `Couldn't purge: ${res.error}` });
-          if (res.ok) reload();
+        onConfirm={async (pin) => {
+          // §14dr-20 / D-103: thread the freshly-entered PIN — the server rejects an
+          // ambient session (401) and only proceeds with the correct fresh PIN.
+          const res = await purgeDeleted(pin ?? "");
+          if (res.ok) {
+            setPurgeOpen(false);
+            toast.show({ message: "Trash emptied — the rows are permanently deleted." });
+            reload();
+          } else {
+            toast.show({ message: `Couldn't delete: ${res.error}`, tone: "warning" });
+          }
         }}
       />
     </div>

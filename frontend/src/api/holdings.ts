@@ -190,8 +190,10 @@ export const deleteManualHolding = (id: number) =>
 export const restoreManualHolding = (id: number) =>
   apiSend<{ ok: boolean }>(`/portfolio/manual-holdings/${id}/restore`, "POST");
 
-export const purgeDeleted = (): Promise<Result<{ ok: boolean }>> =>
-  apiSend<{ ok: boolean }>("/portfolio/purge-deleted", "POST");
+// §14dr-20 / D-103: the purge always demands a freshly-entered PIN (the server never
+// accepts the ambient session in its place) — the ConfirmDialog PIN is threaded through.
+export const purgeDeleted = (pin: string): Promise<Result<{ ok: boolean }>> =>
+  apiSend<{ ok: boolean }>("/portfolio/purge-deleted", "POST", { pin });
 
 export const setHoldingTags = (id: number, tags: string[]) =>
   apiSend<{ ok: boolean }>(`/portfolio/holdings/${id}/tags`, "PUT", { tags });

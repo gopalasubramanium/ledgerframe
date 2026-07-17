@@ -1559,6 +1559,22 @@
         "title": "OngoingCostPatch",
         "type": "object"
       },
+      "PinConfirm": {
+        "description": "Body for a D-103 irreversible action \u2014 the freshly-entered PIN (\u00a714dr-20).",
+        "properties": {
+          "pin": {
+            "maxLength": 32,
+            "minLength": 6,
+            "title": "Pin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pin"
+        ],
+        "title": "PinConfirm",
+        "type": "object"
+      },
       "PinPayload": {
         "properties": {
           "pin": {
@@ -10691,7 +10707,7 @@
     },
     "/api/v1/portfolio/purge-deleted": {
       "post": {
-        "description": "Permanently hard-delete every soft-deleted holding and transaction (\"empty trash\").\n\nPIN-gated (\u00a73.5 Unit D) and irreversible. Only rows with deleted_at set are removed \u2014\nlive rows are never touched. Purged rows were already excluded from every computation\n(Unit B), so a final rebuild keeps the derived-holdings invariant explicit.",
+        "description": "Permanently hard-delete every soft-deleted holding and transaction (\"empty trash\").\n\nIrreversible and D-103-class: gated by ``require_pin`` (off API tokens / unprotected\ninstalls) AND a FRESH PIN (\u00a714dr-20) \u2014 an ambient/unlocked session never satisfies it\n(SECURITY-BASELINE \u00a73). Only rows with deleted_at set are removed \u2014 live rows are never\ntouched. Purged rows were already excluded from every computation (Unit B), so a final\nrebuild keeps the derived-holdings invariant explicit.",
         "operationId": "purge_deleted_api_v1_portfolio_purge_deleted_post",
         "parameters": [
           {
@@ -10727,6 +10743,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinConfirm"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -13816,7 +13842,7 @@
     },
     "/api/v1/system/reset-data": {
       "post": {
-        "description": "Delete all demo/portfolio/market data so you can start fresh with live data.\n\nD-103 \u2014 a destructive, irreversible action: gated by ``require_pin`` (the purge-deleted\nprecedent), which is strictly stronger than ``require_auth`` \u2014 it REFUSES on a no-PIN install\n(403) and rejects API tokens, so wiping the ledger is impossible on an unprotected box. The\nSettings control pairs it with the danger Button variant + a ConfirmDialog fresh-PIN gesture.\n\nRemoves transactions, holdings, instruments, quotes, price history, watchlists,\nsnapshots and news. Keeps your settings, PIN, and provider config. Sets a\nflag so demo data is NOT re-seeded afterwards.",
+        "description": "Delete all demo/portfolio/market data so you can start fresh with live data.\n\nD-103 \u2014 a destructive, irreversible action: gated by ``require_pin`` (off API tokens /\nunprotected installs) AND a FRESH PIN (\u00a714dr-20, the purge-deleted precedent) \u2014 an\nambient/unlocked session never satisfies it, so wiping the ledger requires deliberate\nre-entry, not ambient authority (SECURITY-BASELINE \u00a73). The Settings control pairs it\nwith the danger Button variant + a ConfirmDialog fresh-PIN gesture.\n\nRemoves transactions, holdings, instruments, quotes, price history, watchlists,\nsnapshots and news. Keeps your settings, PIN, and provider config. Sets a\nflag so demo data is NOT re-seeded afterwards.",
         "operationId": "reset_data_api_v1_system_reset_data_post",
         "parameters": [
           {
@@ -13852,6 +13878,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinConfirm"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

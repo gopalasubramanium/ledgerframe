@@ -67,7 +67,8 @@ async def test_purge_with_pin_removes_soft_deleted_only(app_client):
     # Set a PIN → the returned cookie authenticates the client for the purge.
     assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "008642"})).status_code == 200
 
-    purge = await app_client.post("/api/v1/portfolio/purge-deleted")
+    # §14dr-20 / D-103: the purge demands a FRESH PIN — the fresh PIN is threaded through.
+    purge = await app_client.post("/api/v1/portfolio/purge-deleted", json={"pin": "008642"})
     assert purge.status_code == 200
     assert purge.json()["transactions_purged"] == soft_before
 
@@ -89,7 +90,7 @@ async def test_purge_with_pin_removes_soft_deleted_only(app_client):
 async def test_purged_transaction_cannot_be_restored(app_client):
     tid = await _soft_delete_one_transaction(app_client)
     assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "007531"})).status_code == 200
-    assert (await app_client.post("/api/v1/portfolio/purge-deleted")).status_code == 200
+    assert (await app_client.post("/api/v1/portfolio/purge-deleted", json={"pin": "007531"})).status_code == 200
 
     # Row is physically gone → restore 404 (client is authenticated via the set-pin cookie).
     restore = await app_client.post(f"/api/v1/portfolio/transactions/{tid}/restore")
@@ -117,5 +118,27 @@ async def test_api_token_cannot_purge(app_client):
     raw = mint.json()["token"]
     app_client.cookies.clear()
     r = await app_client.post("/api/v1/portfolio/purge-deleted",
-                              headers={"Authorization": f"Token {raw}"})
+                              headers={"Authorization": f"Token {raw}"},
+                              json={"pin": "000000"})
     assert r.status_code == 403
+
+
+# --------------------------------------------------------------------------- #
+# §14dr-20 / D-103: an ambient (unlocked) session NEVER satisfies the purge PIN.
+# RED before the fix — the purge ran on the set-pin cookie alone, PIN discarded.
+# --------------------------------------------------------------------------- #
+async def test_purge_demands_a_fresh_pin_not_the_ambient_session(app_client):
+    await _soft_delete_one_transaction(app_client)
+    # Set + authenticate (the ambient session is now unlocked).
+    assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "013579"})).status_code == 200
+
+    # Unlocked session but the WRONG fresh PIN → refused (401). The session is not enough.
+    wrong = await app_client.post("/api/v1/portfolio/purge-deleted", json={"pin": "999999"})
+    assert wrong.status_code == 401
+    # The soft-deleted row is still there — nothing was purged.
+    _, soft = await _txn_counts()
+    assert soft >= 1
+
+    # The correct fresh PIN → the purge proceeds.
+    ok = await app_client.post("/api/v1/portfolio/purge-deleted", json={"pin": "013579"})
+    assert ok.status_code == 200

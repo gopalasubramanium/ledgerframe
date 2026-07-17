@@ -24,6 +24,18 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+/* §14dr-20 — the permanent-delete control + its [Help] popover on "Purge". */
+.hold__purge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.hold__purge-help {
+  font-size: var(--font-size-12);
+  color: var(--text-secondary);
+  text-decoration: underline dotted;
+  cursor: help;
+}
 .hold__h2 {
   margin: 0;
   font-size: var(--font-size-20);
