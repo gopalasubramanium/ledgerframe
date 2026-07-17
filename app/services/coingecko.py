@@ -106,4 +106,8 @@ async def search_coins(session: AsyncSession, q: str, limit: int = 20) -> list[d
 async def status(session: AsyncSession) -> dict:
     total = (await session.execute(select(func.count()).select_from(CoingeckoCoin))).scalar() or 0
     mapped = len(await mapped_ids(session))
-    return {"coins": total, "mapped": mapped}
+    # §14dr-13 — a true last-synced timestamp; None = never synced (the honest empty the
+    # Masters card + the picker never-synced empty read from). `updated_at` upserted on refresh.
+    synced = (await session.execute(select(func.max(CoingeckoCoin.updated_at)))).scalar()
+    return {"coins": total, "mapped": mapped,
+            "synced_at": synced.isoformat() if synced is not None else None}

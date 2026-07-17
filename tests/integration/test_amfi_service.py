@@ -54,3 +54,15 @@ async def test_refresh_is_idempotent(app_client):
     assert r2.json()["schemes"] == 5
     st = (await app_client.get("/api/v1/amfi/status")).json()
     assert st["schemes"] == 5
+
+
+async def test_status_synced_at_never_then_after_refresh(session):
+    """§14dr-13 — status serves an honest last-*synced* timestamp: None until the master
+    is synced (the never-synced empty the Masters card + picker read), an ISO string after.
+    Uses the clean `session` fixture (no demo seed) so 'never synced' is genuinely empty."""
+    from app.services import amfi as amfi_svc
+    fresh = await amfi_svc.status(session)
+    assert fresh["schemes"] == 0 and fresh["synced_at"] is None   # never synced
+    await amfi_svc.refresh_schemes(session, FIXTURE.decode("utf-8-sig"))
+    after = await amfi_svc.status(session)
+    assert after["schemes"] == 5 and isinstance(after["synced_at"], str) and after["synced_at"]

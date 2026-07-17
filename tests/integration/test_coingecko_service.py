@@ -67,3 +67,14 @@ async def test_zero_price_not_published(session):
     assert published == 0
     q = (await session.execute(select(QuoteRow).where(QuoteRow.instrument_id == instr.id))).scalars().first()
     assert q is None  # never fabricated
+
+
+async def test_status_synced_at_never_then_after_refresh(session):
+    """§14dr-13 — CoinGecko status serves an honest last-synced timestamp: None until the
+    coin master is synced (the never-synced empty), an ISO string after. Uses the clean
+    `session` fixture (no demo seed) so 'never synced' is genuinely empty."""
+    fresh = await cg.status(session)
+    assert fresh["coins"] == 0 and fresh["synced_at"] is None   # never synced
+    await cg.refresh_coins(session, json.loads(COINS_BYTES))
+    after = await cg.status(session)
+    assert after["coins"] == 5 and isinstance(after["synced_at"], str) and after["synced_at"]

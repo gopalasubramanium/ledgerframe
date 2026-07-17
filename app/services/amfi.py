@@ -102,4 +102,9 @@ async def status(session: AsyncSession) -> dict:
         select(func.count()).select_from(AmfiScheme).where(AmfiScheme.nav.isnot(None))
     )).scalar() or 0
     last = (await session.execute(select(func.max(AmfiScheme.nav_date)))).scalar()
-    return {"schemes": total, "priced": priced, "as_of": last}
+    # §14dr-13 — a true last-*synced* timestamp (when we last pulled the master), distinct
+    # from `as_of` (the NAV *data* date). None = never synced (the honest empty the Masters
+    # card + the picker never-synced empty read from). `updated_at` is upserted on refresh.
+    synced = (await session.execute(select(func.max(AmfiScheme.updated_at)))).scalar()
+    return {"schemes": total, "priced": priced, "as_of": last,
+            "synced_at": synced.isoformat() if synced is not None else None}
