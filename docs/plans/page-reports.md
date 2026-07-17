@@ -784,6 +784,10 @@ not a change (§13-2 rule):**
 - **§14rp-1/2/3** — the three walk findings, each FIXED + pinned (above). ✓
 - **Amendment-I (declined-exports ledger) is EXPLICITLY NOT CLOSED here** — it closes at the **Reports Pack
   milestone** (the five Pack-delivered dispositions stay PENDING; `CURRENT.md` keeps the ledger line). ✓
+  **→ UPDATE (2026-07-17): the Reports Pack milestone CLOSED and the ledger FLIPPED PENDING → DELIVERED.**
+  All five (Policy drift · Net worth trend · Review · Scenarios · Cash flow) are live, rendered, guarded
+  Pack sections (`reports-pack.md §0` flip table); the `CURRENT.md` PENDING line RETIRES. The oldest open
+  debt in the rebuild is closed.
 
 **Lessons MECHANISED (a lesson recorded but not mechanised recurs — the standing rule):**
 

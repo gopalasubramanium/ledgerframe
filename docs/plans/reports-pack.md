@@ -1,10 +1,10 @@
 # reports-pack — Reports Pack (`/reports/pack`) MILESTONE plan
 
-**Status: PHASE 0a GEOMETRY RATIFIED WITH CONDITIONS (owner, 2026-07-17) — §9 RESOLVED (owner one-pass
-2026-07-17, all 9 ACCEPTED as proposed) · Phase 0 (print palette + GLOSSARY + the `/reports/pack` route
-+ docs) SHIPPED · Phase 0a PRINT-GEOMETRY ratified with four conditions (§12pk-1..4, §7a).** Phase 1
-(the four condition fixes + the Reports-page entry point) is UNBLOCKED and lands THIS session; the
-owner acceptance walk (Phase 3b) + the Amendment-I ledger flip are a SEPARATE session. This is a
+**Status: DONE ✅ — MILESTONE ACCEPTED (owner, 2026-07-17).** §9 RESOLVED (all 9 as proposed) · Phase 0
+shipped · Phase 0a geometry RATIFIED WITH CONDITIONS (§12pk-1..4) · Phase 1/2/3a landed · **Phase 3b
+owner acceptance walk CLOSED (§14 — three findings §14pk-1..3 FIXED + ACCEPTED)** · **the Amendment-I
+declined-exports ledger FLIPPED PENDING → DELIVERED (§0)** — the oldest open debt in the rebuild
+closes. Print palette + DESIGN-SYSTEM §5.1a + GLOSSARY "Consolidated"/"Per-entity" RATIFIED. This is a
 **milestone plan for a sanctioned print/export artifact — the Pack is NOT an IA page (D-038).** It inherits the Reports-page rulings already
 in hand (page-reports §9: 9-1 / 9-2 / 9-11 / 9-12 / 9-13 + Amendment I) — those are **cited,
 not re-decided**. Every claim below carries a file:line cite (verify-first, D-019). Build does
@@ -60,6 +60,23 @@ Scenarios subsections (page-reports §9-12 dated amendment). **Phase 0 has BUILT
 (the LIVE anchors above name their `reports_pack.py` renderers) — **evidence is now STAGED for the
 close**. Per Amendment I the **ledger itself still flips PENDING → DELIVERED only at THIS milestone's
 close** (after the owner acceptance walk), not at Phase 0; this table is that close's evidence.
+
+### THE LEDGER FLIP — all five PENDING → **DELIVERED** (milestone close, owner ACCEPTED 2026-07-17)
+
+*The owner acceptance walk closed (§14). Every one of the five Amendment-I declined exports is now
+DELIVERED by a live, rendered, guarded Pack section — the oldest open debt in the rebuild closes.*
+
+| # | Declined export | → DELIVERED as (live section anchor) | Proving pin (§13/§14) |
+|---|-----------------|--------------------------------------|-----------------------|
+| 1 | **Policy drift** | per-entity **Policy drift** — `reports_pack._entity_drift` | `test_empty_entity_renders_served_reasons_not_blanks_or_zeros` (drift renders / served "No policy targets" reason); journey guard asserts per-entity sections |
+| 2 | **Net worth trend** | consolidated **Net worth trend** — `reports_pack._consolidated_net_worth_trend` | `test_reports_pack_renders_all_four_consolidated_sections`; journey guard `<h2>Net worth trend</h2>` |
+| 3 | **Review** | consolidated **Review** — `reports_pack._consolidated_review` | **§14pk-2** `test_review_rows_render_the_served_item_text_not_just_labels` (item text renders); four-consolidated-sections test |
+| 4 | **Scenarios** | consolidated **Scenarios** — `reports_pack._consolidated_scenarios` | `test_reports_pack_renders_all_four_consolidated_sections`; journey guard `<h2>Scenarios</h2>` |
+| 5 | **Cash flow** | consolidated **Cash flow** — `reports_pack._consolidated_cash_flow` | `test_reports_pack_renders_all_four_consolidated_sections`; journey guard `<h2>Cash flow</h2>` |
+
+**Ledger CLOSED.** The Amendment-I PENDING line **RETIRES** from `CURRENT.md`; the mirror in
+`page-reports.md` (§9 Amendment I) flips to DELIVERED. Every declined per-page export now has its
+promised home in the Reports Pack, disclaimers preserved, composed from the canonical readers.
 
 ---
 
@@ -787,3 +804,74 @@ Trust · Meera Iyer):
 (`reports-smoke` — 0 console errors, light+dark × 4 widths) · `reports-artifact-smoke` — **18/18**.
 Backend **`pytest -q` 861 passed** · `make api-contract-check` **GREEN** · frontend
 **`npm run check` from `frontend/` EXIT 0** (262 Playwright).
+
+### §14 → CLOSED — ACCEPTANCE (owner, 2026-07-17)
+
+**Owner ACCEPTED the Reports Pack milestone** (contingent on this batch — the §14es precedent; the
+batch delivered all three fixes). Three findings (§14pk-1 button anatomy · §14pk-2 Review item text ·
+§14pk-3 realised period), each **FIXED + evidenced** above; everything else on the live artifact and
+the print PDF accepted. **No ⏸ remains.** The **Amendment-I declined-exports ledger flips PENDING →
+DELIVERED** at this close (§0). Milestone **DONE**.
+
+---
+
+## 15 — §14 STRIKE-CHECK + RETROSPECTIVE (lessons MECHANISED)
+
+**Strike-check — every §9 / §12pk / §14pk item verified against the ACTUAL diff (`3623367..HEAD`, the
+Reports-page close baseline); a claim is not a change:**
+
+- **§9-1..9-11** (owner one-pass, all 9 as proposed) — the `/reports/pack` HTMLResponse route, print
+  palette (§5.1a), GLOSSARY terms, Pack-9 read posture, §0 ledger anchors — all SHIPPED in Phase 0. ✓
+- **§12pk-1** served /refdata labels — `refdata.label_for`; `reports_pack._entity_risk_attribution`;
+  pin `test_attribution_rows_render_served_labels_not_reader_keys`. ✓
+- **§12pk-2** page-1 running-header suppression — `_STYLE @media print` mask; DESIGN-SYSTEM §5.1a note;
+  RENDERED-PIXELS pin (page1=0/page2=465). ✓
+- **§12pk-3** single-card one heading — `_plain_card`; pin
+  `test_single_card_consolidated_sections_render_one_heading_not_h2_plus_h3`. ✓
+- **§12pk-4** seed get-or-creates Household — `app/seed/demo.py`; pin
+  `test_dev_boot_path_yields_exactly_three_entities_no_duplicate_household`; verified LIVE on both boot
+  paths. ✓
+- **Entry point** — `Reports.tsx` §5.4 action; vite `/reports/pack` proxy; D-041 Reports-ONLY verified. ✓
+- **§14pk-1** primary Button — `Reports.tsx` `<Button variant="primary">`; pins (render `lf-btn--primary`
+  + svg + `window.open`; live hover `text-decoration:none`). ✓
+- **§14pk-2** Review item text — `reports_pack._consolidated_review` `title`; pin
+  `test_review_rows_render_the_served_item_text_not_just_labels`. ✓
+- **§14pk-3** one realised period — `render_reports_pack` computes one `realised_year`; heading states it;
+  pin `test_realised_sections_share_one_consistent_period_label`. Multi-year all-time flagged (owner
+  observation, P-1). ✓
+- **Amendment-I ledger** — all five PENDING → DELIVERED (§0 flip table), mirrored in `page-reports.md`
+  (§15) + `CURRENT.md` (PENDING line retired). ✓
+
+**Lessons MECHANISED (a lesson recorded but not mechanised recurs):**
+
+- **(a) A composed artifact is pixel-walked like a page — assert ITEM-LEVEL content + PERIOD labels, not
+  just section presence.** The Phase-0/2 content pins asserted every section was PRESENT and the
+  disclaimers were verbatim, and were green — while the owner's PDF walk caught a Review section with
+  **labels but no item text** (§14pk-2) and a Realised section with an **inconsistent period** (§14pk-3).
+  Section-presence is necessary, not sufficient. **Folded into `TEMPLATE-page-build.md §7`** as an
+  artifact-guard line: assert a known seeded signal's TEXT is inside the artifact, and that period labels
+  derive from one source and agree with the query. The Phase-2 journey guard now asserts the Review item
+  text and the realised period pins live.
+- **(b) Verify-first the reader's ACTUAL served field names before composing.** §14pk-2 shipped
+  `i.get("body")` against a reader that serves the text as `title` (`review.py:44`) — a composer that
+  guesses a field name renders **silent blanks** that no section-presence pin sees. Reading the engine
+  (D-019) means reading its served KEYS, not just that it returns a list. (Same file, folded into §7(a).)
+- **(c) A composer must not inherit a reader's per-ITEM default as an artifact-wide truth.** §14pk-3: the
+  year-scoped realised reader defaults each entity to its own latest event year (or the current year when
+  empty); consuming that per-entity default made the artifact's period incoherent. Compute the artifact's
+  scope **once**, pass it to every section, and state it. (Folded into §7(a).)
+
+## 15a — CHANGED-FILE TABLE (from the actual diff `3623367..HEAD`, the Reports-page close baseline)
+
+**36 files changed, +2096 / −12** (21 source/doc + 15 capture assets). Grouped:
+
+| Group | Files |
+|-------|-------|
+| **Backend — the artifact + composer** | `app/services/reports_pack.py` (the composer: §12pk-1/2/3, §14pk-2/3), `app/main.py` (the `/reports/pack` route, Phase 0), `app/api/v1/routes/refdata.py` (`label_for`, §12pk-1), `app/seed/demo.py` (get-or-create Household, §12pk-4) |
+| **Backend — contract** | `docs/openapi.json`, `docs/specs/API-CONTRACT.json`, `docs/specs/API-CONTRACT.md` (131 → 132 paths, Phase 0) |
+| **Backend — tests** | `tests/unit/test_reports_pack.py` (+§12pk-1/3, §14pk-2/3 pins), `tests/integration/test_demo_seed_accounts.py` (§12pk-4 dev-boot pin) |
+| **Frontend — the entry point** | `frontend/src/routes/Reports.tsx` (§5.4 primary Button, §14pk-1), `frontend/src/routes/Reports.test.tsx`, `frontend/src/icons.ts` (`Printer`), `frontend/vite.config.ts` (`/reports/pack` dev proxy) |
+| **Frontend — dev-only guards/harness** | `frontend/e2e/smoke/reports-pack-journey-smoke.spec.ts` (journey + hover + print-emulation), `frontend/e2e/smoke/capture-pack-specimen.mjs` |
+| **Specs** | `docs/specs/DESIGN-SYSTEM.md` (§5.1a print artifact + §12pk-2 convention), `docs/specs/GLOSSARY.md` (Consolidated · Per-entity), `docs/specs/SECURITY-BASELINE.md` (Pack read posture) |
+| **Plans / records** | `docs/plans/reports-pack.md` (this plan), `docs/plans/page-reports.md` (§16 entry-point delta + §14pk-1 addendum + Amendment-I flip mirror), `docs/plans/CURRENT.md` (DONE + ledger retire), `docs/plans/TEMPLATE-page-build.md` (§7 artifact-guard line), `docs/plans/RATIFICATION.md` (§6 close row) |
+| **Capture assets (15)** | `docs/plans/assets/pack-specimen-*` — Phase-0a specimen + §12pk fixed set + §14 batch-1 superseding set (originals kept, gate record cites them) |

@@ -1460,7 +1460,34 @@ COUNTS strip (no currency affix) → contacts DataTable → documents DataTable 
 the specimen geometry by looking (`/kitchen-sink`). Out of scope until then: nav flip, `/estate` route,
 `overflow.spec.ts` route-array additions (all three), the no-money-string render guard (ships Phase 2).
 
-## REPORTS PACK — Phase 3a GREEN · AWAITING OWNER ACCEPTANCE WALK (2026-07-17)
+## REPORTS PACK — DONE ✅ (ACCEPTED, owner, 2026-07-17)
+
+**The Reports Pack milestone (D-038/D-061) is COMPLETE and owner-accepted.** Phase 0 → Phase 0a
+geometry RATIFIED WITH CONDITIONS (§12pk-1..4) → Phase 1/2/3a → **Phase 3b owner acceptance walk
+CLOSED** (§14 — three findings, all FIXED + ACCEPTED). **The Amendment-I declined-exports ledger
+FLIPPED PENDING → DELIVERED** — the oldest open debt in the rebuild closes (see below).
+
+**Walk batch 1 (§14pk-1..3) — owner walked the live artifact + the print PDF, three findings FIXED:**
+- **§14pk-1** — the "Reports Pack" entry point was a link-styled anchor → the ratified §5.4 **primary
+  Button** (icon + label; `window.open` new tab). Guards: `lf-btn--primary` + svg + `window.open` call
+  (render) + `text-decoration:none` on hover (live, §14es-1 precedent).
+- **§14pk-2** — the Review section printed area/severity tags with **no item text** (the composer read
+  `body`; the reader serves the signal as `title`, review.py:44) → render `title` verbatim. Pin: a
+  stable seeded signal string inside the artifact.
+- **§14pk-3** — the Realised per-entity period was inconsistent (empty entities "2026" vs Rajan "2024",
+  a leaked per-entity year default, tax.py:298) → ONE household `realised_year`, stated in the heading
+  (**"Realised P/L — 2024"**), consumed by both the populated section and the empty note. Multi-year
+  all-time roll-up flagged as an owner observation (P-1: adds no figure a reader produces).
+- **Re-run GREEN:** 18/18 smokes (journey + hover + print-emulation page1=0/page2=465; Reports 0
+  console errors light+dark × 4 widths); backend **861 passed**; contract GREEN; frontend
+  `npm run check` **EXIT 0**. Superseding capture set: `docs/plans/assets/pack-specimen-*-batch1.*`.
+
+**LEDGER FLIP — Amendment-I CLOSED (the oldest open debt in the rebuild):** all five Pack-delivered
+declined exports — **Policy drift · Net worth trend · Review · Scenarios · Cash flow** — are now
+**DELIVERED** as live, rendered, guarded Pack sections (reports-pack.md §0 flip table; each cites its
+`reports_pack.py` anchor + its §13/§14 pin). The PENDING line is RETIRED.
+
+<details><summary>Build history (Phase 0a→3a, retained)</summary>
 
 **Phase-0a print geometry RATIFIED WITH CONDITIONS (owner, 2026-07-17) → Phase 1/2/3a landed this
 session; Phase 3b (owner walk) NOT started (no self-certification).** The owner looked at both the
@@ -1490,10 +1517,6 @@ point · tile-integrity spot (household realised **804.02 SGD** == the Pack's Tr
 one `realised_gains_report` derivation) · fresh print PDF committed. Full record: reports-pack.md
 §12–§13.
 
-**AWAITING THE OWNER ACCEPTANCE WALK (Phase 3b) — a SEPARATE session.** The **Amendment-I
-declined-exports ledger STAYS PENDING**; it flips PENDING → DELIVERED only at this milestone's close
-(after the walk), against the §0 ledger-mapping table.
-
 ### Phase-0 record (retained)
 
 **`GET /reports/pack` is BUILT** (D-038/D-061; `reports-pack.md`). §9 RESOLVED (owner one-pass
@@ -1510,20 +1533,20 @@ zero/single-entity) · SECURITY-BASELINE Pack read-posture line + gap-#7 read-au
 paginated print PDF (`docs/plans/assets/pack-specimen-*`). The thin entity (Meera, 0 accounts) proves
 Pack-3 honesty; the print running-header overlap was found by looking and fixed (top band reserved).
 
-*(Superseded: the print geometry was ratified with conditions on 2026-07-17 and Phase 1/2/3a landed —
-see the Phase-3a block at the top of this section.)* The **Amendment-I declined-exports ledger stays
-PENDING**; it flips PENDING → DELIVERED only at this milestone's close (after the walk), against the
-§0 ledger-mapping table (now citing live `reports_pack.py` anchors).
+*(Superseded: the print geometry was ratified with conditions and the milestone CLOSED on 2026-07-17 —
+see the DONE block at the top of this section.)*
+
+</details>
 
 ## NEXT
-*(Accounts ✅ and Reports ✅ are DONE — see their DONE entries above. Reports Pack is Phase-3a GREEN,
-awaiting the owner acceptance walk — see the block just above.)*
-1. **Reports Pack — owner acceptance walk (Phase 3b)** on the live artifact + print output, then the
-   **close ritual** (retrospective + `RATIFICATION.md §6`; **flip the Amendment-I declined-exports
-   ledger PENDING → DELIVERED** against the §0 table; strike-check §9/§12pk; push). No self-cert.
-2. Then the standing queue, unchanged: **Settings** · **Help · Legal** · the **AI-surfaces milestone** ·
-   **Voice** (definition still owed — only after the owner defines it, ROADMAP **R-32**) · then release
-   **Gates C→F** and tag `v2.0.0`.
+*(Accounts ✅, Reports ✅, and Reports Pack ✅ are DONE — see their DONE entries above. The Amendment-I
+declined-exports ledger — the oldest open debt in the rebuild — is CLOSED.)*
+1. **Settings** (`page-settings.md`, **PLAN ONLY, verify-first** — nothing is built for Settings yet).
+   The accumulated candidates list in this file is the seed; the **`long_term_days` seam** (page-reports
+   Amendment J — a read-only 365 today, no persisted store) and the **rotation-keys re-add** live there.
+2. Then **Help · Legal** · the **AI-surfaces milestone** · **Voice** — **⚠ its definition is STILL owed;
+   nothing starts until the owner defines it** (ROADMAP **R-32**) · then release **Gates C→F** and tag
+   `v2.0.0`.
 
 **Release posture unchanged (RD-9 Amendment 3):** the release gate is **FULL COMPLETION**; Gates C–F stay
 dormant until the owner accepts the full set. **Standing, owner-only:** the **CLA counsel review** before the

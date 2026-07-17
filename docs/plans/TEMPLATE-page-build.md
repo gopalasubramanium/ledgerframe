@@ -408,6 +408,21 @@ the theme/density matrix. Written as checkable statements.*
       right characters does not prove the right bytes; an export that egresses to a spreadsheet needs both.*
       An export figure that mirrors an on-screen section carries the section's disclaimer, and a
       **now-snapshot** in a period artifact is labelled explicitly **as-of** (never reads as a period figure).
+- [ ] **A COMPOSED ARTIFACT IS PIXEL-WALKED LIKE A PAGE — ITEM-LEVEL CONTENT + PERIOD LABELS, NOT JUST
+      SECTION PRESENCE (reports-pack §15).** A print/export artifact assembled from many readers passes its
+      content pins (every section present, disclaimers verbatim, empty reasons) while still being **wrong to
+      the eye** — the owner's PDF walk caught **two** such defects the pins missed: a Review section that
+      rendered **category/severity labels with no item text** (a blank wearing a costume — the composer read a
+      field name the reader does not serve), and a Realised section whose **period was inconsistent across
+      entities** (a leaked per-entity year default: empties "2026" vs a populated "2024"). *Section-presence
+      pins are necessary but not sufficient.* Artifact guards must assert **ITEM-LEVEL content** (a known
+      seeded signal's text is INSIDE the artifact, not just its section heading) and **PERIOD/scope labels**
+      (the populated section's period label and the empty note derive from ONE period source and agree with
+      the query). Corollary — **verify-first the reader's ACTUAL served field names before composing** (§14pk-2
+      shipped `i.get("body")` against a reader that serves `title`); a composer that guesses a field name
+      renders silent blanks. And a composer must **not inherit a reader's per-item default** (a year-scoped
+      reader's per-entity year default) as if it were an artifact-wide truth — compute the artifact's scope
+      **once** and pass it to every section (§14pk-3).
 - [ ] **Request-body assertion (Holdings §9-35):** for any payload assembled from
       UI state (row selections, include/exclude, filters), a test asserts the
       **actual request body** equals the intended data — not merely that a handler
