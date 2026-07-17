@@ -117,6 +117,33 @@ async def test_served_histories_differ_per_instrument(session):
     assert aapl != msft
 
 
+async def test_demo_history_regenerates_not_a_frozen_cache(session):
+    # §14dr-24: on the deterministic mock/demo provider, get_history_cached must serve the
+    # CURRENT generator, never a frozen pre-existing PriceHistory shape (a generator change —
+    # e.g. dr-18's diversification — must propagate). Seed a stale-shaped SPY candle + a
+    # fresh fetch marker (which the pre-fix code short-circuited to), then assert the served
+    # series reflects the live generator, not the seeded value.
+    from datetime import UTC, datetime, timedelta
+
+    from app.models import PriceHistory, Setting
+    from app.services.market import _get_or_create_instrument, get_history_cached
+
+    end = datetime.now(UTC)
+    start = end - timedelta(days=30)
+    instr = await _get_or_create_instrument(session, "SPY", None)
+    session.add(PriceHistory(
+        instrument_id=instr.id, interval="1d", ts=end - timedelta(days=1),
+        open=Decimal("1"), high=Decimal("1"), low=Decimal("1"), close=Decimal("1"), volume=Decimal("0"),
+    ))
+    session.add(Setting(key=f"hist_fetched:{instr.id}:1d", value=datetime.now(UTC).isoformat()))
+    await session.flush()
+
+    candles = await get_history_cached(session, "SPY", "1d", start, end)
+    closes = [float(c.close) for c in candles]
+    # The live mock generator keeps SPY near its catalog base (~540), never the stale 1.0.
+    assert candles and max(closes) > 100
+
+
 async def test_demo_series_shapes_are_diverse():
     from datetime import UTC, datetime, timedelta
 

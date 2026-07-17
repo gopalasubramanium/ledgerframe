@@ -368,6 +368,13 @@ async def get_history_cached(
     from app.schemas.common import Candle
 
     instrument = await _get_or_create_instrument(session, symbol, None)
+    # §14dr-24: the mock/demo provider is deterministic and free, so its PriceHistory cache
+    # is redundant AND would FREEZE a generator change (the dr-18 per-symbol diversification)
+    # in pre-existing rows — the upsert below never overwrites an existing timestamp. So for
+    # demo we always regenerate from the live generator; real providers keep their (costly,
+    # rate-limited) cache untouched.
+    active_name = getattr(get_provider(), "name", "mock")
+    is_demo = active_name == "mock"
     marker_key = f"hist_fetched:{instrument.id}:{interval}"
     marker = (await session.execute(select(Setting).where(Setting.key == marker_key))).scalars().first()
     fresh = False
@@ -398,9 +405,11 @@ async def get_history_cached(
             for r in rows
         ]
 
-    if fresh or not allow_fetch:
+    if (fresh or not allow_fetch) and not is_demo:
         # Serve cached data without a (possibly slow) provider call. When fetching
         # isn't allowed (time-budget exceeded), return whatever we have, even empty.
+        # Demo is exempt (§14dr-24): its generator is instant + authoritative, so we
+        # never serve its frozen cache.
         cached = await _from_db()
         if cached or not allow_fetch:
             return cached
@@ -410,7 +419,6 @@ async def get_history_cached(
     # (CoinGecko), a manual asset, or an instrument overridden to a different source is
     # served from cache and never sent to the wrong (e.g. equity) history endpoint.
     diag = await route_for_instrument(session, instrument)
-    active_name = getattr(get_provider(), "name", "mock")
     hsrc, hreason = _history_source(diag, active_name)
     if hsrc is None:
         log.debug("history not routed to active provider for %s: %s", symbol, hreason)

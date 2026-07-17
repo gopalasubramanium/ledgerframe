@@ -15,6 +15,18 @@ async def test_performance_returns_series_and_stats(app_client):
     assert d["benchmark_symbol"]
 
 
+async def test_benchmark_series_differs_from_portfolio_series(app_client):
+    # §14dr-24: the benchmark rides the served-history path (SPY) and the portfolio line
+    # is a separate reconstruction — they are re-based to the same start but must not be
+    # the same curve, and the benchmark tracks SPY's real movement (never a flat line).
+    d = (await app_client.get("/api/v1/portfolio/performance?days=365")).json()
+    series = [p["value"] for p in d["series"]]
+    bench = [p["value"] for p in d["benchmark"]]
+    assert len(series) > 2 and len(bench) == len(series)
+    assert series != bench
+    assert max(bench) != min(bench)
+
+
 async def test_performance_excludes_constant_manual_assets(app_client):
     # The invested series should move (priced holdings), not be a flat manual line.
     d = (await app_client.get("/api/v1/portfolio/performance?days=365")).json()
