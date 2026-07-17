@@ -568,3 +568,88 @@ tokens+tests+overflow, 334, incl. the taller Data feeds tab).
 
 **STATUS: STOPPED after Phase 3a.** NEXT: **Phase 3b — the owner walk** (separate
 session, judgment only, no self-certification), then the close ritual.
+
+---
+
+## §14 — PHASE 3b OWNER WALK — FINDINGS (2026-07-18)
+
+The owner walked the live Data feeds tab. **Two findings filed** (this docs commit),
+then fixed verify-first (fail-first RED on the real cause, no mutating smokes against
+the owner's live instance — an isolated demo stack only).
+
+### §14dr-1 — BUG (P1): provider API-key save fails; toast renders "[object Object]"
+
+**Reproduce:** Data feeds tab → switch Market data provider to `alphavantage` → paste
+a key → **Save key**. Toast: *"Couldn't save key: [object Object]"*. The key is NOT
+saved.
+
+**Real cause (layer 1 — verified, not guessed).** RED capture against an isolated
+stack: `PUT /api/v1/system/data-source` with the Save-key body `{"api_key": "…"}`
+returns **HTTP 422**, body:
+`{"detail":[{"type":"missing","loc":["body","provider"],"msg":"Field required","input":{"api_key":"…"}}]}`.
+The `DataSourceIn` model (`app/api/v1/routes/system.py:151-156`) declares
+`provider: str` **required**, while `api_key` / `base_currency` / `stale_after_seconds`
+are all optional partial-update fields. The Save-key control posts **only**
+`{api_key}` (`frontend/src/routes/Settings.tsx:475-476` → `putDataSource({ api_key })`),
+and the reader's own type already declares `provider?` optional
+(`frontend/src/api/systemConfig.ts:27`). So the key-save 422s **every time**,
+independent of the provider switch — `provider` being required is the contract
+anomaly. This is NOT a legitimate rejection: the user's intent (store a key for the
+active provider) is valid; the endpoint wrongly demands a field the partial-update
+caller has no reason to send.
+- **Fix level: BACKEND (the standard).** Make `DataSourceIn.provider` optional and
+  only write `LEDGERFRAME_MARKET_PROVIDER` when present — aligning it with the three
+  fields that are already optional and with the reader contract. Contract regen
+  same-commit (`provider` moves required→optional in the OpenAPI body schema). Note
+  string made conditional (no `"now using 'None'"`).
+
+**Error surface (layer 2 — SYSTEMIC, verified).** `client.ts:21` does
+`detail = String(body.detail)`. A FastAPI 422 `detail` is an **array of objects**, so
+`String([{…}])` → `"[object Object]"`. Every reader feeds the toast/`role=alert`
+through this one choke point (`error: r.error`, all of `api/*.ts`), so **every 422
+across the app** renders "[object Object]" today — not just this call site.
+- **Second hazard found in the RED body:** the 422 `detail[].input` **echoes the
+  posted body** — i.e. the pasted API key. A naive `JSON.stringify(detail)` would leak
+  the write-only key into a toast. The fix therefore extracts the served **`msg`
+  text only**, never the object.
+- **Fix level: THE COMPONENT / THE STANDARD (Estate-Edit fix-at-the-standard
+  precedent).** In `client.ts` `request()`, replace `String(body.detail)` with a
+  helper that renders the served reason TEXT: `string` → as-is; validation **array**
+  → join the `.msg` fields; object-with-`.msg` → its `.msg`; else `HTTP {status}`.
+  D-105: the served string IS the display string, and for a 422 the served reason is
+  the `msg`. Fail-first guard: a failed mutation renders the served reason text;
+  assert the actual message; assert `"[object"` never appears; assert the echoed
+  input value never appears.
+- **Accepted-page delta:** the client-error standard is a Settings-touching change
+  (the Data feeds tab is an accepted page). Dated delta note in `page-settings.md §16`
+  + the SETTINGS pre-pass re-run stated in §13/the report.
+
+### §14dr-2 — OWNER-DECISION, ACCEPTED (2026-07-18): configured-state tables
+
+Read-only, served-strings-only surfacing of existing config. Both **frontend-only**
+(verified — the payloads already carry every field; both endpoints already load on
+the Data feeds tab). No new components: `DataTable` + `MetaStrip` from the inventory.
+
+1. **Market data card → provider table.** Columns: provider · coverage summary ·
+   needs key · key SET/NOT SET · active marker · tier note (where served). Sources
+   already loaded on the tab: `/system/providers` serves `active` (active marker) and
+   `capabilities[name]` (`asset_classes`, `regions` → coverage; `needs_key` → needs
+   key); `/system/data-source` serves `has_api_key` and `av_tier` (`app/…/system.py:96-148`).
+   **No additive field, no backend change.** Honest key rendering under the single
+   shared key slot (`LEDGERFRAME_MARKET_API_KEY` — one value, not per-provider):
+   `needs_key=false` → "Not needed"; `needs_key=true` → SET / NOT SET from the one
+   stored-key fact (`has_api_key`). The active marker distinguishes which provider the
+   key actually serves; the tier note (`av_tier`) shows on the active `alphavantage`
+   row. **Never the key value** — SET/NOT SET only (write-only stands).
+2. **News feeds card → configured-feeds list.** `/news/feeds` already serves
+   `{feeds, defaults}` (`app/…/news.py:162`); the list is displayed read-only in the
+   card (the *Edit feeds…* Dialog stays the editor). Frontend-only. Empty state honest:
+   "No feeds configured."
+3. Both are **accepted-page-settings surfaces**: dated delta notes in
+   `page-settings.md §16` + the SETTINGS pre-pass re-run stated in the report.
+
+**Re-run + STOP.** Phase 3a re-run on the reset demo instance: key-save exercised
+end-to-end (a keyed save SUCCEEDS + key-state shows SET; a rejected save shows the
+served reason verbatim), both new tables at all widths, 0 console errors, suites +
+contract + frontend exit 0. Screenshots: the fixed save (success AND an honest
+rejection), both tables, the empty states. `git push`. STOP — the owner re-walks.
