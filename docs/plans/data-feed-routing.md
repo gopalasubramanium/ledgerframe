@@ -1834,3 +1834,71 @@ beside tickers across the swept surfaces; the renamed purge flow demanding a **f
 crypto adds both producing **visible** transaction rows. Screenshots per finding. Suites + contract +
 frontend **exit code** + accepted-page pre-passes. `git push`. **STOP — the owner re-walks;** the close
 ritual follows only from chat.
+
+### §24 — PHASE 3b (batch 6) FIX + RE-RUN EXECUTION RECORD (2026-07-18)
+
+Five findings resolved docs-first, one fix per commit, verify-first with fail-first RED on the real cause.
+The three genuine decisions were owner-ruled at kickoff (§23). **Contract 134 path-keys HELD** (dr-20 added
+a request-body shape to two existing endpoints — no path added/removed).
+
+- **DONE — records filed first** (`374df8f`) — §23 findings + verification + owner rulings + CURRENT NEXT,
+  before any fix.
+- **DONE — §14dr-18** (`26e231f`) — verified NOT a data-layer defect (history already per-instrument via the
+  active provider; each chart binds its own series; Home==Portfolio intentional §9-8; STOP not triggered).
+  Diversified the demo `_walk` generator so amplitude/period/phase are all per-symbol (was one shared
+  envelope, only the phase seeded). Regression pins: two served histories differ; normalised turning-point
+  spread ≥ 5 across the demo universe (RED on the shared-envelope code).
+- **DONE — §14dr-19** (`7d5ae62`) — owner reversal of dr-16: symbol+name on every surface via the new shared
+  `InstrumentLabel` (promoted from the Holdings identity subtext). Backend `name` added ONLY where genuinely
+  absent (attribution `analytics._attribute_core`; transactions ledger `list_transactions`); every other
+  movers/quotes surface already served it. Ticker strip stays symbol-only (owner exception, flagged). Pins:
+  ledger serves name/null; InstrumentLabel suppresses name==symbol.
+- **DONE — §14dr-17** (`0c1e790`) — REFRESH ALL MARKET DATA, contract-held frontend orchestration of the
+  quotes(+indices)/FX/news lane endpoints with a per-lane result summary on the dr-8 async standard
+  (re-click guarded); masters excluded, honest scope caption + tooltip + journey-guarded Masters-card link.
+  No new endpoint.
+- **DONE — §14dr-20** (`04c5ba4`) — cryptic copy AND a live **D-103 violation** (PIN collected then
+  discarded; server authorised on the ambient session). `deps.verify_fresh_pin` now verifies the fresh PIN
+  server-side on BOTH `purge-deleted` and `reset-data` (the session token is not accepted in its place);
+  self-explaining copy + explicit ConfirmDialog + new GLOSSARY "Purge" term (spec-first + popover). Contract
+  delta (PinConfirm body) recorded; SECURITY-BASELINE §3 "ENFORCED" note. Pins: wrong fresh PIN → 401,
+  correct → 200, on each endpoint.
+- **DONE — §14dr-21** (`e8a5a1e`) — verified NO code divergence (MF and crypto adds both record a
+  TransactionIn; no asset_class branch). The owner's observation is a back-dated-buy reveal gap: a single Add
+  that records a transaction now applies the finding-#8 reveal (sort by "recently added", jump to page 1).
+  Pin: MF (back-dated) and crypto adds both record a buy transaction.
+
+**Phase 3b (batch 6) re-run — RESULT (isolated demo instance; owner instance untouched).** Isolated
+demo-seeded backend on spare port **8399** (temp data dir, `LEDGERFRAME_DEMO_SEED`) + a throwaway **Vite
+dev** on **5199** proxying to it (owner's 5173→8321→`~/.ledgerframe-data` never touched; `[[prepass-harness]]`).
+The `.env` was snapshotted before and verified byte-IDENTICAL after (md5 `0f421eb5…`); throwaway
+`vite.prepass.config.ts` + driver scripts removed; working tree clean; both isolated servers down. Every
+finding exercised end-to-end via the real UI, all **PASS**, **0 console errors**. Live egress worked (AMFI
+14,227 schemes; CoinGecko 17,630 coins; ECB 30 FX rates; news briefing refreshed):
+
+- **§14dr-18:** AAPL and MSFT price-history charts render **visibly different** shapes (distinct
+  frequency/amplitude, not one wave phase-shifted). *(dr18-aapl / dr18-msft / dr18-nvda)*
+- **§14dr-17:** the honest scope caption + the served per-lane toast **"Quotes & indices: Refreshed 15 of 26
+  · 11 failed · FX rates: Updated 30 rates · News: Briefing refreshed."** *(dr17-scope-caption /
+  dr17-per-lane-summary)*
+- **§14dr-19:** symbol+name together on Home Contributors/Detractors + Gainers/Losers + Quotes, the Holdings
+  table, the Transactions ledger (NVDA · NVIDIA Corp; 143263 · Parag Parikh Liquid Fund…), and the Portfolio
+  Return-attribution table; the bottom ticker stays symbol-only. *(dr19-home / dr19-holdings-ledger /
+  dr19-portfolio-attribution)*
+- **§14dr-20:** the renamed **"Permanently delete 2 trashed…"** button + "Purge?" [Help] link, and the
+  ConfirmDialog stating exactly what is destroyed + the fresh-PIN gesture. *(dr20-confirm-dialog)*
+- **§14dr-21:** two **back-dated** mutual-fund buys (2021-06-15, 2020-03-10 · code 143263) **recorded and
+  revealed** in the ledger ("Showing 1–2 of 2"); the add toast reads "Added — showing the recorded
+  transaction." *(dr21-mf-ledger-row / dr21-mf-ledger-after)*
+
+- **Gates:** backend **936 passed** (was 929; +7 across dr-18/19/20/21); `make api-contract-check` current,
+  contract **134 path-keys** (HELD); ruff clean; frontend `npm run check` **exit 0** — lint + typecheck +
+  tokens + check:copy + **vitest 310** + **overflow e2e 337**.
+- **Screenshots:** per finding (charts AAPL/MSFT/NVDA · refresh scope + per-lane summary · names on Home /
+  ledger / attribution · renamed purge dialog · MF back-dated ledger rows).
+
+**Accepted-page pre-passes stated:** Pricing Health (refresh-all), Instrument Detail (charts), Portfolio +
+Home (names), and the Holdings ledger / purge flow / Add flow were driven end-to-end on the isolated instance.
+
+**STATUS: FIXED + RE-RUN GREEN. NEXT: the owner re-walks** (Phase 3b batch 6; the close ritual follows only
+from chat, NOT self-started).

@@ -1593,8 +1593,9 @@ rebuild — is CLOSED.)*
    collected then discarded; server authorizes on ambient session) → fix D-103 for real (fresh-PIN on
    purge + reset-data) + honest copy + GLOSSARY term · **dr-21** MF-records-no-txn VERIFIED does NOT
    reproduce in code (backdated-date pagination reveal gap) → reveal + regression pin. Prior: batch 5
-   §14dr-15/16 (§21/§22), batch 4 §14dr-13 + R-42 (§20). STOP after the batch-6 re-run for the owner
-   re-walk; the close ritual follows only from chat.
+   §14dr-15/16 (§21/§22), batch 4 §14dr-13 + R-42 (§20). **Batch 6 FIXED + RE-RUN GREEN (§24, 2026-07-18)** —
+   backend 936 · vitest 310 · overflow e2e 337 · contract 134 held · isolated re-run 0 console errors,
+   screenshots per finding. **STOPPED for the owner re-walk;** the close ritual follows only from chat.
 2. **intraday-series (R-42)** — `docs/plans/intraday-series.md` (**stub filed; PLAN ONLY**). **ACTIVATED
    with an owner definition** (tier-aware · user-triggered · persisted; §20 / §14dr-13). Sequenced as the
    milestone **immediately after data-feed-routing closes, BEFORE Help** (owner ruling 2026-07-18).
