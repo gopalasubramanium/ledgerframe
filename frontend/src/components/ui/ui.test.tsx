@@ -203,6 +203,42 @@ test("InstrumentPicker is class-aware: same-class selectable, cross-class naviga
   expect(onSelect).not.toHaveBeenCalled(); // never selectable into the wrong flow
 });
 
+test("§14dr-12: an empty class-scoped search shows an honest empty state + create path (per class)", async () => {
+  // Verify-first: the picker IS class-scoped (D-097) and has a create path. The "XRP returned
+  // nothing" symptom was a MISSING honest empty message — a bare create option read as "nothing".
+  // Fail-first RED: today no "No {class} instruments match" line renders on an empty result.
+  vi.mocked(searchInstruments).mockResolvedValue({
+    ok: true,
+    data: { existing: [], other_class: [], suggestions: [] },
+  });
+  const onSelect = vi.fn();
+  // Crypto (the XRP case): honest scoped empty + create.
+  const { unmount } = render(<InstrumentPicker onSelect={onSelect} allowCreate assetClass="crypto" />);
+  await userEvent.type(screen.getByRole("combobox"), "XRP");
+  const cryptoEmpty = await screen.findByText(/No crypto instruments match/i);
+  expect(cryptoEmpty).toBeInTheDocument();
+  await userEvent.click(cryptoEmpty); // the honest empty IS the create path here
+  expect(onSelect).toHaveBeenCalledWith({ kind: "create", query: "XRP" });
+  unmount();
+
+  // Mutual fund: the same honesty, scoped to the picked class.
+  render(<InstrumentPicker onSelect={vi.fn()} allowCreate assetClass="mutual_fund" />);
+  await userEvent.type(screen.getByRole("combobox"), "Nowhere Fund");
+  expect(await screen.findByText(/No mutual fund instruments match/i)).toBeInTheDocument();
+});
+
+test("§14dr-12: with create disabled, an empty search still states the honest scoped empty (no blank menu)", async () => {
+  vi.mocked(searchInstruments).mockResolvedValue({
+    ok: true,
+    data: { existing: [], other_class: [], suggestions: [] },
+  });
+  render(<InstrumentPicker onSelect={vi.fn()} allowCreate={false} assetClass="crypto" />);
+  await userEvent.type(screen.getByRole("combobox"), "XRP");
+  // Not blank: an honest info line, and NO create affordance.
+  expect(await screen.findByText(/No crypto instruments match/i)).toBeInTheDocument();
+  expect(screen.queryByText(/create/i)).toBeNull();
+});
+
 test("DataTable marks sortable headers with aria-sort and exports server-side", async () => {
   const onSort = vi.fn();
   const onExport = vi.fn();

@@ -49,6 +49,9 @@ export function InstrumentPicker({
     other_class: InstrumentSearchItem[];
     suggestions: { symbol: string; name: string }[];
   }>(EMPTY);
+  // §14dr-12 — track whether a fetch is in flight so the honest empty state shows only AFTER a
+  // search returns nothing (not during the debounce), never a premature "no match" flash.
+  const [loading, setLoading] = useState(false);
   const boxRef = useRef<HTMLSpanElement>(null);
   const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
@@ -57,12 +60,17 @@ export function InstrumentPicker({
     const q = query.trim();
     if (!q) {
       setRes(EMPTY);
+      setLoading(false);
       return;
     }
     let live = true;
+    setLoading(true);
     const t = setTimeout(async () => {
       const r = await searchInstruments(q, assetClass);
-      if (live) setRes(r.ok ? r.data : EMPTY);
+      if (live) {
+        setRes(r.ok ? r.data : EMPTY);
+        setLoading(false);
+      }
     }, 250);
     return () => {
       live = false;
@@ -89,8 +97,13 @@ export function InstrumentPicker({
   }, [open, place]);
 
   const q = query.trim();
-  const hasAny =
-    res.existing.length > 0 || res.other_class.length > 0 || res.suggestions.length > 0 || (allowCreate && q);
+  const anyResults =
+    res.existing.length > 0 || res.other_class.length > 0 || res.suggestions.length > 0;
+  // §14dr-12 — after a class-scoped search returns nothing, say so — scoped by the picked class —
+  // rather than showing a bare create option (which reads as "nothing happened", the XRP report).
+  const classLabel = assetClass ? assetClass.replace(/_/g, " ") : "";
+  const emptyState = !!q && !loading && !anyResults;
+  const hasAny = anyResults || (allowCreate && !!q) || emptyState;
 
   return (
     <div className="lf-picker">
@@ -195,18 +208,41 @@ export function InstrumentPicker({
               </li>
             ))}
 
-            {allowCreate && q && (
-              <li
-                role="option"
-                aria-selected={false}
-                className="lf-picker__option lf-picker__create"
-                onMouseDown={() => {
-                  onSelect({ kind: "create", query: q });
-                  setOpen(false);
-                }}
-              >
-                ＋ Create new instrument “{q}”
-              </li>
+            {/* §14dr-12 — honest class-scoped empty state. When a search returns nothing, say so
+                (scoped by class); if create is allowed the message IS the create path (the owner's
+                copy: "No crypto instruments match — create 'XRP'"), else it's an honest info line. */}
+            {emptyState ? (
+              allowCreate ? (
+                <li
+                  role="option"
+                  aria-selected={false}
+                  className="lf-picker__option lf-picker__create"
+                  onMouseDown={() => {
+                    onSelect({ kind: "create", query: q });
+                    setOpen(false);
+                  }}
+                >
+                  No {classLabel ? `${classLabel} ` : ""}instruments match — create “{q}”
+                </li>
+              ) : (
+                <li className="lf-picker__empty" aria-live="polite">
+                  No {classLabel ? `${classLabel} ` : ""}instruments match
+                </li>
+              )
+            ) : (
+              allowCreate && q && (
+                <li
+                  role="option"
+                  aria-selected={false}
+                  className="lf-picker__option lf-picker__create"
+                  onMouseDown={() => {
+                    onSelect({ kind: "create", query: q });
+                    setOpen(false);
+                  }}
+                >
+                  ＋ Create new instrument “{q}”
+                </li>
+              )
             )}
           </ul>,
           document.body,

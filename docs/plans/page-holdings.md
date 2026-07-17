@@ -701,3 +701,27 @@ ratification look before Phase 1 assembly.
     arrives in B; an explicit-null clear leaves B via the default account — RED before against
     the truthy guard, which either ignored it or hit the NOT-NULL constraint). The account-scoped
     journey guards (Holdings account chip + Accounts) re-run in the report.
+
+## DELTA NOTE — 2026-07-18 (R-38 data-feed-routing Phase 3b re-walk batch 3, §14dr-12)
+
+- **Instrument picker now shows an honest class-scoped empty state.** **Verify-first:** the
+  picker is **already** class-scoped (D-097) — it passes the picked `asset_class` and the
+  `/instruments/search` endpoint filters by it, routing crypto suggestions to CoinGecko. So
+  "add the class filter" was **not** the fix (it exists). The real cause of "XRP returned
+  nothing, not even an honest empty" was a **missing empty-state message**: with all three
+  buckets empty (crypto suggestions come from the local CoinGecko cache, empty on a fresh
+  instance), the menu rendered only a **bare** "＋ Create new instrument" option, which read
+  as "nothing happened". Fix (frontend, no backend/contract — the filter is present):
+  - When a class-scoped search returns nothing, the picker shows **"No {class} instruments
+    match — create '{q}'"** (the owner's copy) — the honest empty message IS the create path;
+    scoped by the picked asset class. With create disabled it degrades to an honest info line
+    ("No {class} instruments match"), never a blank menu.
+  - A `loading` guard shows the message only **after** a search resolves empty (no "no match"
+    flash during the debounce; the create affordance still shows while loading).
+  - Fail-first PER CLASS: adding **Crypto** with a no-match query shows "No crypto instruments
+    match — create 'XRP'"; **Mutual fund** likewise; and the create-disabled path shows the
+    honest info line with no create affordance (all RED before — bare create option only).
+  - **Noted, not fixed (minimal scope):** the crypto suggestion catalog depends on a synced
+    CoinGecko cache and the provider call swallows outages to `[]` (`markets.py:214-215`) — a
+    separate honesty follow-through, out of this finding's core scope. Holdings pre-pass
+    re-run per class stated in the report.
