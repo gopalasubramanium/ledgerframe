@@ -1681,3 +1681,156 @@ render) were driven end-to-end on the isolated instance.
 
 **STATUS: FIXED + RE-RUN GREEN. NEXT: the owner re-walks** (Phase 3b batch 5 — the LAST batch; the
 CLOSE RITUAL follows only from chat, NOT self-started).
+
+---
+
+## §23 — PHASE 3b RE-WALK (batch 6) — FINDINGS + VERIFICATION (owner, 2026-07-18)
+
+The owner re-walked batch 5 (masters, naming, full CoinGecko sync — ACCEPTED) and filed **FIVE**
+findings (§14dr-17..21). Same discipline: docs commit first; one fix per commit; fail-first RED on
+the real cause; environment gate; frontend exit code; isolated instance for mutating checks;
+accepted-page touches get dated delta notes + pre-pass re-runs. **Verify-first paid off hard this
+batch: two findings did NOT reproduce as filed (dr-18, dr-21) and one hid a bigger defect than
+filed (dr-20 → a live D-103 violation).** The owner ruled the three genuine decisions at kickoff
+(recorded per finding below); the build follows those rulings.
+
+### §14dr-17 — one-click refresh with an honest scope (owner-ruled)
+
+**Verified (today).** The Pricing Health header "Refresh all prices" (`PricingHealth.tsx:243-249`,
+a bespoke `lf-iconbtn` spinner — NOT the ratified `Button loading`) hits **`POST /system/refresh-data`**
+(`system.py:495`, `require_auth`), which touches the **QUOTES lane only** — it iterates
+`_display_symbols` (holdings + watchlist + overview + `global_market_symbols()` proxies) and calls
+`refresh_quote` per symbol, on an in-route budget (40s overall / 8s per symbol). It does **not**
+touch FX, news, or the masters. The other lanes each already have their own `require_auth` trigger:
+**FX** `POST /fx/ecb/refresh` (`ecb.py:23`), **news** `POST /briefing/refresh` (`news.py:187`);
+**indices** have no dedicated endpoint (their ETF-proxy symbols ride the quotes lane via
+`_display_symbols`). Each adapter already paces (Yahoo 1.5s min-interval + 429 backoff `yahoo.py:101,149`;
+ECB `timeout=20`; feeds `FETCH_TIMEOUT=6.0`). `POST /system/refresh-data` already returns a per-*symbol*
+result summary (`{refreshed,total,skipped,failed[]}`, `system.py:533`); there is no cross-*lane* summary.
+
+**Owner ruling (2026-07-18):** the button becomes **REFRESH ALL MARKET DATA** — quotes + FX + indices +
+news, every configured lane — on the dr-8 async standard (pending, served per-lane result summary,
+re-click guarded). **Masters are EXCLUDED by ruling** (rarely change; budget) and remain manual in
+Settings → Data feeds; the button's copy/tooltip states its scope honestly (with a link to the Masters
+card, journey-guarded). **Orchestration ruling (2026-07-18): CONTRACT-HELD (frontend).** The frontend
+orchestrates the three existing lane endpoints (quotes[+indices via display-symbols], FX, news) with a
+per-lane result summary + a single re-click guard on the dr-8 `Button loading` standard — **no new
+endpoint (contract 134 HELD)**; each lane keeps its own pacing + summary. Masters excluded, honest copy
++ link to the Masters card (`#/settings?tab=data-feeds`, journey-guarded, §14ac-2).
+
+### §14dr-18 — "every chart renders the same series" (VERIFIED: NOT a data-layer defect; STOP not triggered)
+
+**Verified, in the owner's stated order.** (1) GET history serves **DIFFERENT series per instrument**:
+`GET /instruments/{symbol}/history` (`markets.py:478`) → `get_history_cached` (`market.py:352-454`),
+which resolves per-instrument routing (`route_for_instrument`) and calls the **active provider's**
+`get_history` (`market.py:421`) with a DB cache fallback; the mock/demo adapter's series is seeded
+**per symbol** (per-symbol base + `_seed(symbol)` sinusoid phase, `mock.py:78-84,118-143`); alphavantage
+is likewise symbol-specific (`external.py:207`). (2) History is **NOT** served by a rogue generator that
+bypasses the active provider — every adapter implements `get_history` and the route consumes it;
+`seed/demo.py` never populates `PriceHistory` at all. (3) **NOT** a frontend binding defect — every chart
+binds its own instrument's series (`InstrumentDetail.tsx:101-247`, `Portfolio.tsx:154-253`,
+`Home.tsx:251-289`, `Markets.tsx:560-573`); static fixtures are unused outside tests/KitchenSink.
+
+**STOP-condition determination: NOT triggered.** History routing (active-provider + cache fallback) was
+**never inside R-38's quotes-only scope** (`data-feed-routing.md:379-380`) — it was built independently
+and already works; **no new routing machinery is needed and none is mis-wired**, so no owner scope ruling
+is owed.
+
+**Root cause of the *visual*.** All demo series — instrument history AND the reconstructed portfolio
+performance line (`analytics.py:230-239`) — come from the **same two-sinusoid `_walk` family**
+(`mock.py:78-84`), and `PriceChart`'s min/max normalization strips the differing base levels, leaving
+visually-similar "waves." The **Home sparkline == Portfolio line equality is intentional** (Home
+summarises Portfolio's series, §9-8, `Home.tsx:69-71`) — it must **not** be "fixed."
+
+**Owner ruling (2026-07-18): diversify the demo generator + pin.** Record the verification (no defect);
+diversify the demo mock generator's per-symbol phase/amplitude/trend so demo charts are visibly distinct
+(a demo-seed refinement in `mock.py`, no product behaviour, production routing untouched); add a
+**regression pin** asserting two instruments' served histories are NOT identical and each chart binds its
+own series. Home==Portfolio (§9-8) preserved.
+
+### §14dr-19 — ticker AND name on every surface (owner reversal of dr-16, dated 2026-07-18)
+
+**Owner reversal (dated, original preserved).** dr-16 ruled Transactions symbol-only ("code-only
+parity"). The owner **REVERSES** that: instruments render **symbol + name together** (symbol prominent,
+name secondary — the one existing pattern: Holdings identity subtext `Holdings.tsx:285-293` with its
+`name !== symbol` guard) wherever they appear. The dr-16 ruling text is preserved in §21/§22; this is the
+superseding reversal.
+
+**Verified — name already served on most surfaces; only two need a backend add.**
+- Portfolio Contributors/Detractors (`Portfolio.tsx:466`, symbol-only) — **name SERVED** (`_hv`
+  `"name"`, `portfolio.py:74`); FE type `MoverRow` needs the field, no backend change.
+- Portfolio Return-attribution table (`Portfolio.tsx:195`, `label`) — **name NOT served**
+  (`analytics.py:32-36`); **backend add required** (+ its CSV `portfolio.py:397`).
+- Home quote cards — **already symbol+name** (`QuoteCardRow.tsx:73-77`); done.
+- Home Contributors/Detractors + Gainers/Losers (`Home.tsx:483`, symbol-only) — **name SERVED**
+  (portfolio `_hv`; markets `OverviewInstrument.name` `markets.ts:37`); the gainers/losers map drops it
+  client-side (`Home.tsx:376,381`) — carry it through, no backend change.
+- Transactions ledger Symbol column (`Holdings.tsx:338`, `t.symbol`) — **name NOT served**
+  (`portfolio.py:511,531` select/serialize symbol only); **backend add required**.
+- Reports/exports — Holdings CSV **already has** a name column (`portfolio.py:513,519`); Transactions
+  CSV is the round-trip import schema (symbol only, `csv_import.py:53`) — left as-is (round-trip contract).
+
+ONE display pattern (symbol prominent, name secondary), additive served fields only where genuinely
+absent (attribution + transactions). **EXCEPTION (owner-proposed, flag for re-walk confirmation):** the
+bottom **ticker strip stays symbol-only** (density; conventional; `TickerStrip.tsx` has no `name`) —
+implemented as proposed, flagged.
+
+### §14dr-20 — "Purge N deleted" is cryptic (VERIFIED cryptic AND a live D-103 VIOLATION)
+
+**Verified.** "Purge {N} deleted" (`Holdings.tsx:446`) is the **permanent hard-delete** of all
+soft-deleted holdings + transactions (`purge_deleted`, `portfolio.py:808-830` — real `session.delete`,
+"empty trash", irreversible; dr-10 verified its count). It **is D-103-class** (the only irreversible
+action; reset-data `system.py:397` is the sibling).
+
+**Verification surfaced a bigger defect than filed — D-103 is currently VIOLATED.** The ConfirmDialog
+collects a `requirePin` PIN (`Holdings.tsx:575-579`) but the Holdings `onConfirm` **discards it**
+(`Holdings.tsx:581-586` calls `purgeDeleted()` with no args; `holdings.ts:192` sends no PIN). The backend
+`require_pin` (`deps.py:184-212`) never calls `verify_pin` — it authorizes on the **ambient session
+token** (`token_is_valid`). So the entered PIN is theatre; authority rests on the unlock session. **This
+directly violates D-103** (`DECISIONS.md:704-711`, `SECURITY-BASELINE.md:81-87`: "Purge-PIN NEVER binds
+to the unlock session … always demands fresh PIN entry … an unlocked/ambient session does not satisfy the
+purge PIN"). The **same discard pattern applies to Settings "Reset data"** (`systemConfig.ts:92`). No
+GLOSSARY "Purge" term exists.
+
+**Owner ruling (2026-07-18): fix D-103 for real now.** Server-side **fresh-PIN verification** on purge +
+reset-data (consistent posture), so an ambient session no longer satisfies the gate — enforcing the
+already-ratified D-103. Honest **self-explaining copy** + ConfirmDialog stating exactly what is
+permanently deleted and that it cannot be undone; new **GLOSSARY "Purge"** term (spec-first). **Contract
+impact accepted:** transmitting the PIN adds a request field to the two endpoints (`purge-deleted`,
+`reset-data`) — recorded as a same-commit contract delta (D-103 enforcement). Proposed copy in the fix
+record; the owner ratifies the copy at the re-walk.
+
+### §14dr-21 — mutual-fund add records no transaction; crypto does (VERIFIED: does NOT reproduce in code)
+
+**Verified.** Both tiles are `branch: "listed"` (`Holdings.tsx:718-719`) and take the **identical**
+submit path → `addTransaction` → `POST /portfolio/transactions`; the only differing field is
+`asset_class` (`Holdings.tsx:837`). Backend `add_transaction` (`portfolio.py:549-580`) **always** writes
+a `Transaction` — **no asset_class branch**; `_ensure_instrument` never skips a transaction; listed
+holdings are *derived* from the ledger (`rebuild_holdings_from_transactions`). There is **no code path**
+where a listed MF add creates a holding without a transaction. The dialog's own promise (GLOSSARY
+"Holding" `GLOSSARY.md:61`: holdings are **derived from the transaction ledger via FIFO**) is exactly
+what the MF path already does.
+
+**Most likely cause of the owner's observation (rule-out-pagination-first, confirmed by code).** The
+ledger windows most-recent-first, `limit=100` (`portfolio.py:475-524`), no asset_class filter. A **MF
+purchase entered with a back-date** (realistic for funds) sinks below the 100-row window, while a crypto
+entered at today's default (`Holdings.tsx:766`) stays on page 1 — the MF transaction **exists** (counted
+in `total`, reachable via the "added" sort — the finding-#8 precedent) but is off the default window.
+That is a sort/window *reveal* gap, not a lost transaction.
+
+**Resolution (verify-first on the isolated instance, then fix the true layer).** Reproduce both create
+paths end-to-end on the isolated instance; if the MF row is off-window (the expected outcome), apply the
+**finding-#8 reveal** to single Adds (post-add the ledger surfaces the just-added row / "recently added"),
+so "records a buy transaction" is *visible*, not just true. Add the **regression pin the owner asked for**:
+a transaction row exists after each class's add flow (MF + crypto). If — contrary to the code — the MF add
+genuinely records nothing on the live instance, escalate to the true divergence and (for an
+already-added fund) a served, logged backfill (the dr-16 pattern), never a silent insert.
+
+### Re-run + STOP — batch 6
+
+3a re-run (isolated demo instance, owner instance untouched, `[[prepass-harness]]`): refresh-all
+exercised with per-lane results; two instruments' charts visibly DIFFERENT (diversified demo gen); names
+beside tickers across the swept surfaces; the renamed purge flow demanding a **fresh PIN** (D-103); MF +
+crypto adds both producing **visible** transaction rows. Screenshots per finding. Suites + contract +
+frontend **exit code** + accepted-page pre-passes. `git push`. **STOP — the owner re-walks;** the close
+ritual follows only from chat.

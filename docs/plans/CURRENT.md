@@ -1584,11 +1584,17 @@ Reports ✅, Reports Pack ✅ also DONE. The Amendment-I declined-exports ledger
 rebuild — is CLOSED.)*
 1. **data-feed-routing (R-38 activation)** — `docs/plans/data-feed-routing.md`, verify-first. Provider
    routing matrix (built + accepted through the Phase-3b walk); **currently in the Phase-3b re-walk** —
-   **batch 5** (the **LAST batch before close**) filed **§14dr-15** (CoinGecko Sync-now keeps the stale
-   2-coin cache — must refetch the full list, AMFI parity) + **§14dr-16** (master-created instruments
-   carry only the code, no name — create-path drop + served backfill) (§21). Prior: batch 4 §14dr-13
-   masters-sync regression + R-42 activation (§20). STOP after the batch-5 re-run for the owner re-walk;
-   the close ritual follows only from chat.
+   **batch 6** (§23) filed **FIVE** findings §14dr-17..21: **dr-17** refresh-all-market-data honest scope
+   (owner-ruled, contract-held frontend orchestration) · **dr-18** "identical charts" VERIFIED not a
+   data-layer defect (STOP not triggered — history already per-instrument; the look is a demo-generator
+   cosmetic + intentional Home==Portfolio §9-8) → diversify demo gen + regression pin · **dr-19** owner
+   REVERSAL of dr-16 (symbol+name on every surface; two backend name adds, rest FE; ticker stays
+   symbol-only, flagged) · **dr-20** "Purge N deleted" cryptic AND a live **D-103 violation** (PIN
+   collected then discarded; server authorizes on ambient session) → fix D-103 for real (fresh-PIN on
+   purge + reset-data) + honest copy + GLOSSARY term · **dr-21** MF-records-no-txn VERIFIED does NOT
+   reproduce in code (backdated-date pagination reveal gap) → reveal + regression pin. Prior: batch 5
+   §14dr-15/16 (§21/§22), batch 4 §14dr-13 + R-42 (§20). STOP after the batch-6 re-run for the owner
+   re-walk; the close ritual follows only from chat.
 2. **intraday-series (R-42)** — `docs/plans/intraday-series.md` (**stub filed; PLAN ONLY**). **ACTIVATED
    with an owner definition** (tier-aware · user-triggered · persisted; §20 / §14dr-13). Sequenced as the
    milestone **immediately after data-feed-routing closes, BEFORE Help** (owner ruling 2026-07-18).
