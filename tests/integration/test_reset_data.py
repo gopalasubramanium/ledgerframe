@@ -4,10 +4,24 @@
 from __future__ import annotations
 
 
+async def test_reset_without_pin_is_refused(app_client):
+    # D-103 (page-settings System tab): reset-data is require_pin — a destructive, irreversible
+    # wipe must be impossible on a no-PIN install. No PIN set → 403, and nothing is deleted.
+    before = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    assert len(before) > 0
+    r = await app_client.post("/api/v1/system/reset-data")
+    assert r.status_code == 403, r.text
+    # Data is untouched.
+    after = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
+    assert len(after) == len(before)
+
+
 async def test_reset_clears_holdings_and_blocks_reseed(app_client):
     # Demo data is present initially.
     before = (await app_client.get("/api/v1/portfolio/holdings")).json()["holdings"]
     assert len(before) > 0
+    # D-103: set a PIN → the returned cookie authenticates the client for the PIN-gated reset.
+    assert (await app_client.post("/api/v1/auth/set-pin", json={"pin": "009753"})).status_code == 200
     # Clear it.
     r = await app_client.post("/api/v1/system/reset-data")
     assert r.status_code == 200

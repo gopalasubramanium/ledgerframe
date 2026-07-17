@@ -51,6 +51,18 @@ async def test_long_term_days_is_settable_and_reads_back(app_client):
     assert got["stored"]["long_term_days"] == "500"
 
 
+async def test_long_term_days_is_served_in_defaults(app_client):
+    """page-settings Phase 1 (D-105 / Amendment A): GET /settings serves the RESOLVED threshold in
+    `defaults.long_term_days` (the ONE helper) so the Settings field renders it verbatim rather than
+    the frontend carrying a 365 literal. Unset → the 365 default; set → the stored resolution."""
+    got = (await app_client.get("/api/v1/settings")).json()
+    assert got["defaults"]["long_term_days"] == 365
+
+    await app_client.put("/api/v1/settings", json={"values": {"long_term_days": "500"}})
+    got = (await app_client.get("/api/v1/settings")).json()
+    assert got["defaults"]["long_term_days"] == 500
+
+
 async def test_long_term_days_validator_mirrors_route_bounds(app_client):
     """The numeric validator mirrors the route's `ge=0, le=3660` — a non-numeric or
     out-of-range value is an honest 400, never a silently-stored bad threshold."""

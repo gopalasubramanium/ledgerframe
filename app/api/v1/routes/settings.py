@@ -59,6 +59,8 @@ HOME_QUOTE_SOURCE_DEFAULT = "holdings"
 
 @router.get("/settings")
 async def get_settings_endpoint(session: AsyncSession = Depends(get_db)) -> dict:
+    from app.services.tax import resolve_long_term_days
+
     rows = (await session.execute(select(Setting))).scalars().all()
     stored = {r.key: r.value for r in rows if r.key in _ALLOWED_KEYS}
     s = get_settings()
@@ -77,6 +79,10 @@ async def get_settings_endpoint(session: AsyncSession = Depends(get_db)) -> dict
             # guess it — and never carries a vocabulary copy (D-005).
             "home_quote_source": HOME_QUOTE_SOURCE_DEFAULT,
             "home_quote_sources": list(HOME_QUOTE_SOURCES),
+            # page-settings §9-1 / Amendment A — the RESOLVED long-term threshold (the ONE helper, the
+            # same value the tax/realised-gains readers use), SERVED so the Settings field renders it
+            # verbatim (D-105) instead of the frontend carrying a 365 literal.
+            "long_term_days": await resolve_long_term_days(session, None),
         },
     }
 

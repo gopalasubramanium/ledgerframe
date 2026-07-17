@@ -64,6 +64,16 @@ async def test_read_token_cannot_mint_tokens(app_client):
     assert r.status_code == 403
 
 
+async def test_read_token_cannot_revoke_tokens(app_client):
+    """page-settings §9-8: token management is require_session — a read-only API token can neither
+    MINT nor REVOKE tokens. A token presenting itself to DELETE /tokens/{id} is 403 (the Settings
+    Privacy card's revoke stays session-gated; D-103 is not cited here — a revoked token is
+    re-creatable, so it takes the session, not a fresh PIN)."""
+    raw = (await _mint(app_client))["token"]
+    r = await app_client.delete("/api/v1/tokens/1", headers={"Authorization": f"Token {raw}"})
+    assert r.status_code == 403
+
+
 # (3) hashed at rest — raw never stored, only its SHA-256; never returned by list
 async def test_token_stored_hashed_only(app_client):
     created = await _mint(app_client)

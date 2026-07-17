@@ -13,7 +13,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import __version__
-from app.api.deps import get_db, pin_is_set, require_auth
+from app.api.deps import get_db, pin_is_set, require_auth, require_pin
 from app.core.config import get_settings
 from app.core.egress import egress_client
 from app.providers.ai import get_ai_provider
@@ -304,9 +304,14 @@ async def set_ai_config(payload: AIConfigIn) -> dict:
     return {"ok": True, "available": health.available, "detail": health.detail}
 
 
-@router.post("/system/reset-data", dependencies=[Depends(require_auth)])
+@router.post("/system/reset-data", dependencies=[Depends(require_pin)])
 async def reset_data(session: AsyncSession = Depends(get_db)) -> dict:
     """Delete all demo/portfolio/market data so you can start fresh with live data.
+
+    D-103 — a destructive, irreversible action: gated by ``require_pin`` (the purge-deleted
+    precedent), which is strictly stronger than ``require_auth`` — it REFUSES on a no-PIN install
+    (403) and rejects API tokens, so wiping the ledger is impossible on an unprotected box. The
+    Settings control pairs it with the danger Button variant + a ConfirmDialog fresh-PIN gesture.
 
     Removes transactions, holdings, instruments, quotes, price history, watchlists,
     snapshots and news. Keeps your settings, PIN, and provider config. Sets a
