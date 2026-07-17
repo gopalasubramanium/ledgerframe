@@ -1584,9 +1584,11 @@ Reports ✅, Reports Pack ✅ also DONE. The Amendment-I declined-exports ledger
 rebuild — is CLOSED.)*
 1. **data-feed-routing (R-38 activation)** — `docs/plans/data-feed-routing.md`, verify-first. Provider
    routing matrix (built + accepted through the Phase-3b walk); **currently in the Phase-3b re-walk** —
-   **batch 4** filed **§14dr-13** (masters-sync affordance regression) + **activated R-42** (§20). Batch 4
-   is FRONTEND-wiring (the sync engine already exists — Step-1 verified, no new engine); STOP after its
-   re-run for the owner re-walk.
+   **batch 5** (the **LAST batch before close**) filed **§14dr-15** (CoinGecko Sync-now keeps the stale
+   2-coin cache — must refetch the full list, AMFI parity) + **§14dr-16** (master-created instruments
+   carry only the code, no name — create-path drop + served backfill) (§21). Prior: batch 4 §14dr-13
+   masters-sync regression + R-42 activation (§20). STOP after the batch-5 re-run for the owner re-walk;
+   the close ritual follows only from chat.
 2. **intraday-series (R-42)** — `docs/plans/intraday-series.md` (**stub filed; PLAN ONLY**). **ACTIVATED
    with an owner definition** (tier-aware · user-triggered · persisted; §20 / §14dr-13). Sequenced as the
    milestone **immediately after data-feed-routing closes, BEFORE Help** (owner ruling 2026-07-18).

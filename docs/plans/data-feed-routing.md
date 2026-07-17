@@ -1533,3 +1533,85 @@ isolated instance.
 
 **STATUS: FIXED + RE-RUN GREEN. NEXT: the owner re-walks** (Phase 3b batch 4, judgment
 only; the close ritual follows only after that re-walk).
+
+---
+
+## §21 — PHASE 3b RE-WALK (batch 5) — FINDINGS (owner, 2026-07-18) — LAST batch before close
+
+The owner re-walked batch 4: **masters sync ACCEPTED** (AMFI 14,224 schemes live; add-from-
+master worked end-to-end), **two findings filed**. Docs commit first, then one fix per commit,
+fail-first RED on the real cause; environment gate; frontend exit code; isolated instance for
+mutating checks; accepted-page touches get dated delta notes + pre-pass re-runs. This is the
+**last batch before the close ritual** (owner re-walks; the close prompt follows from chat —
+NOT self-started).
+
+### §14dr-15 — BUG: CoinGecko Sync-now keeps the stale cache — 2 coins vs v1's ~17k
+
+**Symptom (owner, live batch-4 re-run).** CoinGecko **Sync now** reported only **2 entries**
+(the demo seed) and **XRP was unfindable** in the crypto picker. The batch-4 record already
+named the cause (§20 re-run note): `POST /coingecko/refresh` only fetches `coins/list` when the
+cache is **EMPTY** — a seeded/stale cache is kept forever.
+
+**Root cause (verified).** `app/api/v1/routes/coingecko.py` (no-file branch):
+`if (await cg.status(session))["coins"] == 0:` gates the `fetch_coins_list()` refetch. The demo
+seed (2 coins, `app/seed/demo.py:212-213`) makes `coins == 2`, so the guard is false and the
+master is **never refreshed**. This **diverges from AMFI**: `amfi_refresh` **always** refetches
+`NAVAll.txt` and re-upserts the whole master (`amfi.py:42-47` → `refresh_schemes` full upsert) —
+two patterns for one job, the divergence IS the defect.
+
+**Fix (verify-first, mirror AMFI — one pattern, not two).** The Sync-now path performs a REAL
+refresh: **always** `fetch_coins_list()` and re-upsert the cached master via `cg.refresh_coins`
+(the same on-conflict upsert AMFI uses — "replace" == full upsert, AMFI parity; stale-not-pruned
+is a shared property, not this finding). **Rate budget:** `coins/list` is **one call**
+(`coingecko.py adapter → fetch_coins_list` makes a single GET, 20s timeout via `egress_client`);
+the sync is user-triggered, so one list + one `simple/price` per sync — within budget. The served
+result reports the real count. **Fail-first:** RED reproduces kept-stale-cache on the seeded
+instance (coins stays 2 after Sync-now); GREEN with the full list (assert **order-of-magnitude
+> 10,000**, not a brittle exact count). The picker then finds **XRP/Ripple** from the synced
+master (the dr-12/dr-13 never-synced→synced guard extended).
+
+### §14dr-16 — BUG: master-created instruments carry only the code — no name
+
+**Symptom (owner, live).** Adding from the AMFI master created an instrument whose ONLY identity
+is the **scheme code** ("103504" in Holdings, Transactions, the ticker). The master HAS the name;
+the create path drops it.
+
+**Root cause (verified — a frontend wiring drop, backend already supports name).**
+1. `InstrumentPicker.tsx:186` — picking a **suggestion** calls `onSelect({ kind: "create", query:
+   s.symbol })`, **dropping `s.name`** (the search DOES return it: `markets.py:206` serves
+   `{symbol: code, name: scheme.name}`). The `InstrumentPick` create variant has no `name` field.
+2. `Holdings.tsx:952` — the Add flow tracks only `symbol` (`setSymbol(...)`); `addTransaction`
+   (`824-836`) sends **no `name`**. Backend `add_transaction` DOES accept + persist `payload.name`
+   → `_ensure_instrument(name=...)` (`portfolio.py:555`, `csv_import.py:466-477`) — the field is
+   dropped **before** it reaches the wire.
+3. The existing `backfill_instrument_name` / `_name_from_cache` (`market.py:555/_`) heals a
+   name-less mutual fund only via its `amfi_code` **identifier** — but the Add flow does NOT map
+   the instrument (no `map-amfi` call), so "103504" has **no identifier** and stays name-less.
+
+**Fix (verify-first, equities precedent: symbol + name both first-class).**
+1. **Create path** — the picker's create-from-suggestion carries `s.name`; Holdings threads it into
+   the `addTransaction` payload (`name`); frontend `TransactionIn` gains `name`. Symbol/code stays
+   the canonical id. New master-created instruments persist the name immediately (RED on today's
+   drop). No engine/contract change (backend field already exists).
+2. **Surfaces** already render name wherever equities do — Holdings identity subtext
+   (`Holdings.tsx:291`), Instrument Detail header subtitle (`InstrumentDetail.tsx:137`), the picker
+   echo, Reports/exports carrying instrument names. The Transactions **Symbol** column stays the
+   canonical code (equity parity) — no new column invented.
+3. **BACKFILL (served repair, mirror the existing pattern)** — a name-less mutual fund whose SYMBOL
+   is a bare AMFI code (the unmapped "103504") resolves its name by matching `symbol → AmfiScheme.
+   code` directly (codes are unique — safe; crypto symbols are ambiguous, so crypto stays
+   identifier-only). Runs on **master refresh** (AMFI + CoinGecko) over all name-less instruments —
+   **served** in the refresh result (`names_backfilled`), **logged** per repair (`AuditEvent`),
+   **idempotent** (a second run finds nothing; never overwrites a real name). No new endpoint —
+   folded into the existing refresh the owner already runs (contract HELD at 134). **Fail-first:**
+   RED — a seeded name-less "103504" + its AMFI scheme stays name-less pre-fix; GREEN after; a
+   second run is a no-op.
+
+### Re-run + STOP — this is the LAST batch before the close
+
+3a re-run (isolated demo instance, owner instance untouched, `[[prepass-harness]]`): full
+CoinGecko sync live (count in the **tens of thousands**), **XRP added end-to-end** from the synced
+dropdown with its **NAME visible** in Holdings; the "103504" instrument shows its **scheme name
+after backfill**. Screenshots: Masters card with real counts, the crypto picker finding **Ripple**,
+Holdings showing the named mutual fund. Suites + contract + frontend **exit code** + accepted-page
+pre-passes. `git push`. **STOP — the owner re-walks;** the close ritual follows only from chat.
