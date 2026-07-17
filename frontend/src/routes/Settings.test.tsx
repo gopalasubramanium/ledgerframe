@@ -35,10 +35,20 @@ vi.mock("../api/feeds", () => ({
   testFeeds: vi.fn(async () => []),
 }));
 vi.mock("../api/system", () => ({ setPin: vi.fn(async () => ({ ok: true })) }));
+// R-38 routing-matrix editor (Phase 1) readers/writers — mocked so the Data feeds tab's third card
+// renders deterministically (served strings only; no network in tests).
+vi.mock("../api/routing-matrix", () => ({
+  getRoutingMatrix: vi.fn(),
+  getProviders: vi.fn(),
+  putRoutingCell: vi.fn(),
+  deleteRoutingCell: vi.fn(async () => ({ ok: true, deleted: true })),
+}));
 
 import { getSettings } from "../api/settings";
 import { listTokens } from "../api/tokens";
 import { getDataSource, getPinSet } from "../api/systemConfig";
+import { getRoutingMatrix, getProviders, putRoutingCell, deleteRoutingCell } from "../api/routing-matrix";
+import type { ProvidersResp } from "../api/routing-matrix";
 
 const SETTINGS: SettingsData = {
   stored: { privacy_mode: "true" },
@@ -68,11 +78,28 @@ function renderAt(path = "/settings") {
   );
 }
 
+const PROVIDERS: ProvidersResp = {
+  active: "mock",
+  capabilities: {
+    yahoo: { asset_classes: ["equity", "etf", "crypto"], regions: ["*"], needs_key: false },
+    eodhd: { asset_classes: ["equity", "etf", "crypto"], regions: ["US", "SG", "IN", "*"], needs_key: true },
+    kite: { asset_classes: ["equity"], regions: ["IN"], needs_key: true },
+  },
+  default_priority: {},
+};
+
 beforeEach(() => {
   vi.mocked(getSettings).mockResolvedValue(SETTINGS);
   vi.mocked(listTokens).mockResolvedValue([]);
   vi.mocked(getDataSource).mockResolvedValue(DATA_SOURCE);
   vi.mocked(getPinSet).mockResolvedValue(false);
+  vi.mocked(getRoutingMatrix).mockResolvedValue({ cells: [] });
+  vi.mocked(getProviders).mockResolvedValue(PROVIDERS);
+  vi.mocked(putRoutingCell).mockResolvedValue({
+    ok: true,
+    cell: { asset_class: "equity", listing_country: "US", provider: "yahoo", degraded: false, caveat: null, updated_at: null },
+  });
+  vi.mocked(deleteRoutingCell).mockResolvedValue({ ok: true, deleted: true });
 });
 afterEach(() => cleanup());
 
@@ -180,4 +207,77 @@ test("token is shown ONCE at creation and never re-revealed", async () => {
   // Dismiss — it is gone and never re-read.
   fireEvent.click(screen.getByRole("button", { name: "Done" }));
   expect(screen.queryByText("lf_tok_RAWSECRET")).toBeNull();
+});
+
+// --- R-38 routing-matrix editor (Phase 1; Settings → Data feeds, §9) ----------
+// The third Data feeds card. Every value is a SERVED string (D-005); capability is validated by the
+// honest edit-time 400 rendered verbatim (§9-3); an empty matrix changes nothing (§9-2).
+
+test("routing matrix: the empty matrix shows the ratified verbatim empty state (§9-2)", async () => {
+  vi.mocked(getRoutingMatrix).mockResolvedValue({ cells: [] });
+  renderAt("/settings?tab=data-feeds");
+  expect(await screen.findByText("No routing rules yet")).toBeTruthy();
+  // The verbatim reason — an empty matrix implies nothing (PARAM-WINS honesty).
+  expect(screen.getByText(/An empty matrix changes nothing/)).toBeTruthy();
+  // The [Help] popover term is the GLOSSARY entry (parity guard green).
+  expect(screen.getByText("Routing matrix")).toBeTruthy();
+});
+
+test("routing matrix: renders Active + degraded caveat cells from served state (§9-7)", async () => {
+  vi.mocked(getRoutingMatrix).mockResolvedValue({
+    cells: [
+      { asset_class: "equity", listing_country: "US", provider: "yahoo", degraded: false, caveat: null, updated_at: null },
+      { asset_class: "equity", listing_country: "IN", provider: "eodhd", degraded: true,
+        caveat: "eodhd needs credentials — add them in Settings", updated_at: null },
+    ],
+  });
+  renderAt("/settings?tab=data-feeds");
+  // The healthy cell shows Active; the unkeyed cell shows the SERVED caveat (not colour alone).
+  expect(await screen.findByText("Active")).toBeTruthy();
+  expect(screen.getByText("eodhd needs credentials — add them in Settings")).toBeTruthy();
+});
+
+test("routing matrix: an edit-time capability-mismatch 400 is rendered verbatim (§9-3)", async () => {
+  vi.mocked(putRoutingCell).mockResolvedValue({ ok: false, error: "kite doesn't cover US" });
+  renderAt("/settings?tab=data-feeds");
+  // Fill the add-rule flow: class + market + provider, then Add.
+  fireEvent.change(await screen.findByLabelText("New rule — asset class"), { target: { value: "equity" } });
+  fireEvent.change(screen.getByLabelText("New rule — market"), { target: { value: "US" } });
+  fireEvent.change(screen.getByLabelText("New rule — provider"), { target: { value: "kite" } });
+  fireEvent.click(screen.getByRole("button", { name: /Add rule/ }));
+  // The server's honest reason is surfaced verbatim in an alert — never swallowed, never fabricated.
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toBe("kite doesn't cover US");
+});
+
+test("routing matrix: adding a valid rule PUTs the served cell and reloads (§9-11)", async () => {
+  renderAt("/settings?tab=data-feeds");
+  fireEvent.change(await screen.findByLabelText("New rule — asset class"), { target: { value: "equity" } });
+  fireEvent.change(screen.getByLabelText("New rule — market"), { target: { value: "US" } });
+  fireEvent.change(screen.getByLabelText("New rule — provider"), { target: { value: "yahoo" } });
+  fireEvent.click(screen.getByRole("button", { name: /Add rule/ }));
+  await waitFor(() =>
+    expect(putRoutingCell).toHaveBeenCalledWith({ asset_class: "equity", listing_country: "US", provider: "yahoo" }));
+  // Success reloads the grid (getRoutingMatrix called again after the initial load).
+  await waitFor(() => expect(vi.mocked(getRoutingMatrix).mock.calls.length).toBeGreaterThanOrEqual(2));
+});
+
+test("routing matrix: Clear deletes the cell (§9-2 fall-through)", async () => {
+  vi.mocked(getRoutingMatrix).mockResolvedValue({
+    cells: [{ asset_class: "equity", listing_country: "US", provider: "yahoo", degraded: false, caveat: null, updated_at: null }],
+  });
+  renderAt("/settings?tab=data-feeds");
+  fireEvent.click(await screen.findByRole("button", { name: /Clear rule for/ }));
+  await waitFor(() => expect(deleteRoutingCell).toHaveBeenCalledWith("equity", "US"));
+});
+
+test("routing matrix: editing a cell's provider PUTs the change (§9-11)", async () => {
+  vi.mocked(getRoutingMatrix).mockResolvedValue({
+    cells: [{ asset_class: "equity", listing_country: "US", provider: "yahoo", degraded: false, caveat: null, updated_at: null }],
+  });
+  renderAt("/settings?tab=data-feeds");
+  const cellSelect = await screen.findByLabelText(/Provider for Equity · US/);
+  fireEvent.change(cellSelect, { target: { value: "eodhd" } });
+  await waitFor(() =>
+    expect(putRoutingCell).toHaveBeenCalledWith({ asset_class: "equity", listing_country: "US", provider: "eodhd" }));
 });

@@ -148,3 +148,18 @@ async def test_delete_wildcard_country_cell(app_client):
         "asset_class": "crypto", "listing_country": "*", "provider": "coingecko"})
     d = await app_client.delete(f"{_MATRIX}/crypto/*")
     assert d.status_code == 200 and d.json()["deleted"] is True
+
+
+async def test_matrix_writes_require_auth(app_client):
+    """The matrix CRUD is a mutation → require_auth (§4b, the source_override precedent).
+    Locked (PIN set + no session), PUT and DELETE must 401 — a config write can never
+    happen unauthenticated."""
+    await app_client.post("/api/v1/auth/set-pin", json={"pin": "007654"})
+    await app_client.post("/api/v1/auth/lock")
+    app_client.cookies.clear()
+
+    put = await app_client.put(_MATRIX, json={
+        "asset_class": "equity", "listing_country": "US", "provider": "yahoo"})
+    assert put.status_code == 401
+    dele = await app_client.delete(f"{_MATRIX}/equity/US")
+    assert dele.status_code == 401

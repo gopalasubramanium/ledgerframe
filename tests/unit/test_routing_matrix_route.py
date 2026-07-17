@@ -92,3 +92,30 @@ def test_global_fund_can_be_routed_by_matrix_but_in_fund_cannot():
                   availability={"eodhd": ProviderAvailability(
                       name="eodhd", configured=True, has_credentials=True)})
     assert glob.source_selected == "eodhd" and glob.route_rule == "matrix"
+
+
+# FLAG 2 (ratified by the owner, 2026-07-18): the resolve-time matrix gate is CAPABILITY
+# (live-capable + keyed), NOT chain-membership. A cell may name a capable, keyed provider
+# that is OUTSIDE the lane's fallback chain and it prices — Amendment A's fall-through
+# reasons (rate-limit / unkeyed / tier / error) are exhaustive and chain-membership is
+# deliberately not among them (data-feed-routing §12 Flag 2 / §9-1 / §9-3).
+def test_flag2_capable_keyed_non_chain_member_cell_prices():
+    # eodhd is capable for crypto (equity/etf/crypto, region "*") and needs a key, but it is
+    # NOT in the crypto lane chain [coingecko, alphavantage, yahoo, csv, manual]. An UNMAPPED
+    # crypto reaches step 3.5, so a keyed eodhd cell prices it despite being off-chain.
+    avail = {"eodhd": ProviderAvailability(name="eodhd", configured=True, has_credentials=True)}
+    d = _route(asset_class="crypto", listing_country=None, mappings=set(),
+               matrix_provider="eodhd", active_provider="mock", availability=avail)
+    assert "eodhd" not in d.priority_chain      # genuinely off the lane chain…
+    assert d.source_selected == "eodhd"         # …yet it prices (capability, not membership)
+    assert d.route_rule == "matrix"
+
+
+# The same off-chain provider, UNKEYED, must fall through — capability alone is not enough
+# (Amendment A: unkeyed is an exhaustive fall-through reason). Guards against the gate
+# collapsing to "capable ⇒ prices" and silently dropping the keyed requirement.
+def test_flag2_off_chain_cell_still_needs_a_key():
+    d = _route(asset_class="crypto", listing_country=None, mappings=set(),
+               matrix_provider="eodhd", active_provider="mock", availability={})
+    assert d.source_selected == "mock"          # eodhd unkeyed → fell through to active
+    assert d.route_rule == "active" and d.route_rule != "matrix"

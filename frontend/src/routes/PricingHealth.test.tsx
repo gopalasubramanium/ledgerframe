@@ -14,7 +14,8 @@ function row(over: Partial<Record<string, unknown>>) {
     valuation_label: "Market quote", status: "Fresh", source: "market", entitlement: "delayed",
     price_ts: "2026-07-11T00:00:00Z", is_stale: false, failure_reason: null, source_override: null,
     route_lane: "equity", route_source: "market", priority_chain: ["market", "manual"],
-    mapping_required: false, auth_required: false, confidence: 92, confidence_band: "high", confidence_factors: ["Live market quote"],
+    mapping_required: false, auth_required: false, route_rule: "lane",
+    confidence: 92, confidence_band: "high", confidence_factors: ["Live market quote"],
     ...over,
   };
 }
@@ -25,13 +26,16 @@ vi.mock("../api/pricing-health", () => ({
     data: {
       base_currency: "SGD",
       holdings: [
-        row({ id: 1, symbol: "AAPL", label: "AAPL", status: "Fresh", is_stale: false, confidence: 92, confidence_band: "high" }),
-        row({ id: 2, symbol: "D05", label: "DBS", status: "Cached", is_stale: true, confidence: 60, confidence_band: "medium", source: "kite", auth_required: true }),
-        row({ id: 3, symbol: null, label: "My Flat", status: "Manual", is_stale: false, confidence: 40, confidence_band: "low", valuation_method: "manual_valuation", source: "manual", priority_chain: [] }),
-        row({ id: 4, symbol: "RELIANCE", label: "Reliance", status: "Delayed", is_stale: true, confidence: 55, confidence_band: "medium" }),
+        // Each holding carries a distinct served route_rule so the provenance column shows all four
+        // values (§9-10): matrix · override · lane · active.
+        row({ id: 1, symbol: "AAPL", label: "AAPL", status: "Fresh", is_stale: false, confidence: 92, confidence_band: "high", route_rule: "matrix", route_source: "yahoo" }),
+        row({ id: 2, symbol: "D05", label: "DBS", status: "Cached", is_stale: true, confidence: 60, confidence_band: "medium", source: "kite", auth_required: true, route_rule: "override", source_override: "kite" }),
+        row({ id: 3, symbol: null, label: "My Flat", status: "Manual", is_stale: false, confidence: 40, confidence_band: "low", valuation_method: "manual_valuation", source: "manual", priority_chain: [], route_rule: "lane" }),
+        row({ id: 4, symbol: "RELIANCE", label: "Reliance", status: "Delayed", is_stale: true, confidence: 55, confidence_band: "medium", route_rule: "active" }),
       ],
       summary: { Fresh: 1, Cached: 1, Manual: 1, Delayed: 1 },
       confidence: { overall: 68, overall_band: "medium", by_band: { high: { count: 1, value_pct: 40 }, medium: { count: 2, value_pct: 45 }, low: { count: 1, value_pct: 15 } } },
+      provider_tier_note: null,
     },
   })),
   getIdentifierDuplicates: vi.fn(async () => ({ ok: true, data: { duplicates: [], count: 0 } })),
@@ -55,7 +59,7 @@ vi.mock("../state/staleCount", () => ({
 }));
 
 import { PricingHealth } from "./PricingHealth";
-import { getIdentifierDuplicates, getNoEgress } from "../api/pricing-health";
+import { getIdentifierDuplicates, getNoEgress, getPricingHealth } from "../api/pricing-health";
 
 function renderPage() {
   return render(
@@ -139,4 +143,53 @@ test("no-egress disables Refresh all with an honest state (ND-3)", async () => {
   const btn = await screen.findByRole("button", { name: /Refresh all/ });
   await waitFor(() => expect((btn as HTMLButtonElement).disabled).toBe(true));
   expect(await screen.findByText(/Refresh unavailable — no-egress is on/)).toBeTruthy();
+});
+
+// --- R-38 provenance (Phase 1; §9-10/§9-8) — served route_rule, read-only (D-072) -----------
+test("provenance column: the served route_rule chip renders all four values (§9-10)", async () => {
+  renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  // The served route_rule values (matrix · override · lane · active) appear as plain chips — the
+  // frontend never recomputes provenance (one derivation from route(), D-105).
+  await waitFor(() => {
+    expect(screen.getAllByText("matrix").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("override").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("active").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("lane").length).toBeGreaterThan(0);
+  });
+});
+
+test("route detail MetaStrip shows Source · Rule · Lane (read-only, §9-10)", async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  const menus = await screen.findAllByRole("button", { name: /Actions for AAPL/ });
+  await user.click(menus[0]);
+  await user.click(await screen.findByText("Details"));
+  const dialog = await screen.findByRole("dialog");
+  // The route-detail strip carries the served Rule (AAPL priced via matrix, source yahoo).
+  expect(within(dialog).getByText("Rule")).toBeTruthy();
+  expect(within(dialog).getByText("matrix")).toBeTruthy();
+  expect(within(dialog).getByText("yahoo")).toBeTruthy();
+});
+
+test("tier note: the served av_tier honest string renders only when present (§9-8)", async () => {
+  // Default response has provider_tier_note null → no note.
+  const { unmount } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  expect(screen.queryByText(/index via ETF proxy/)).toBeNull();
+  unmount();
+  // A non-premium AV key → the served honest string is surfaced (never a fabricated real-index label).
+  vi.mocked(getPricingHealth).mockResolvedValueOnce({
+    ok: true,
+    data: {
+      base_currency: "SGD",
+      holdings: [row({ id: 1, symbol: "AAPL", label: "AAPL", route_rule: "active" })],
+      summary: { Fresh: 1 },
+      confidence: { overall: 90, overall_band: "high", by_band: { high: { count: 1, value_pct: 100 }, medium: { count: 0, value_pct: 0 }, low: { count: 0, value_pct: 0 } } },
+      provider_tier_note: "index via ETF proxy — key not premium",
+    },
+  });
+  renderPage();
+  expect(await screen.findByText("index via ETF proxy — key not premium")).toBeTruthy();
 });
