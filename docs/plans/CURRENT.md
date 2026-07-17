@@ -1602,6 +1602,16 @@ rebuild — is CLOSED.)*
    cache → mock/demo `get_history_cached` regenerates (real providers unchanged). **Batch 7 FIXED + RE-RUN
    GREEN (§26, 2026-07-18)** — backend 938 · vitest 314 · overflow/tile e2e 337 · contract 134 held ·
    isolated re-run (mock-forced, owner `.env` untouched) 0 console errors, screenshots per finding.
+   **Batch 8 (§27, 2026-07-18)** — the owner re-walked batch 7 on his **REAL alphavantage instance**: charts
+   still comb (two interleaved levels). **§14dr-25** (P1) — the history cache serves **interleaved
+   demo+real duplicate-date candles**: the `(instrument, interval, ts)` unique key is on the exact
+   timestamp, and demo (non-midnight ts) + real (midnight ts) candles for the same trading date BOTH survive
+   → sawtooth on instrument history AND the benchmark. Verified-first with a dumped repro (rows cited).
+   Fix at the cache layer, four parts (date-normalised tz-safe key + `source` column migration · real
+   supersedes demo · idempotent served purge (dr-16 pattern) + read-time collapse · fail-first pins).
+   **§26-bis standing rule:** a real-data-render finding is NOT closeable on a mock-forced run — the re-run
+   now covers BOTH postures (mock-forced + a budget-aware real-provider slice). Ratifications carried:
+   dr-22 + dr-23 flow ACCEPTED; the dr-23 button label awaits the owner's explicit word.
    **STOPPED for the owner re-walk;** the close ritual follows only from chat.
 2. **intraday-series (R-42)** — `docs/plans/intraday-series.md` (**stub filed; PLAN ONLY**). **ACTIVATED
    with an owner definition** (tier-aware · user-triggered · persisted; §20 / §14dr-13). Sequenced as the

@@ -2041,3 +2041,76 @@ and Portfolio (Performance benchmark) were driven end-to-end on the isolated ins
 
 **STATUS: FIXED + RE-RUN GREEN. NEXT: the owner re-walks** (Phase 3b batch 7; the close ritual follows only
 from chat, NOT self-started).
+
+## §27 — PHASE 3b RE-WALK (batch 8) — §14dr-25: history-cache integrity (owner, 2026-07-18)
+
+The owner re-walked batch 7 on his **REAL premium-keyed (alphavantage) instance**: the charts are still
+wrong — a **sawtooth "comb"** (two interleaved price levels per date range) on instrument history AND the
+Performance benchmark. This is a **real-data rendering defect** that batch 7's **mock-forced** re-run could
+not have caught (§26 forced `LEDGERFRAME_MARKET_PROVIDER=mock` to spare the owner's quota) — see the
+standing re-run rule below.
+
+### §26-bis — STANDING RE-RUN RULE (the lesson batch 7 taught)
+
+**A finding about real-data rendering CANNOT be verified mock-forced.** Batch 7's mock-forced re-run
+exercised the *demo* history path (`is_demo=True` → regenerate, never touch the cache) and reported green —
+but the owner's comb lives on the **real** path (`is_demo=False` → serve the persistent `price_history`
+cache), which the mock run never entered. From now on, **both postures are covered**: the isolated re-run
+runs once **mock-forced** (free, reproducible, exercises the demo path) AND once against the **real
+provider** on a **budget-aware slice** (2–3 instruments, not the whole book — the alphavantage free tier is
+~25 req/day). A finding tagged "real-data render" is not closeable on a mock run alone.
+
+### §14dr-25 — BUG (P1): the history cache serves interleaved demo+real duplicate-date candles
+
+**Verified first (dumped, not guessed).** Reproduced the owner's persistent-instance state on a temp DB —
+an instrument (AAPL) that once cached **DEMO** candles and later got **REAL alphavantage** candles for the
+same trading dates — then served it through `get_history_cached` with a real (non-mock) provider active
+(`allow_fetch=False`, so it serves the cache). The dump (`scratchpad/dump_comb.py`), **actual rows cited**:
+
+```
+RAW price_history (stored):            SERVED via get_history_cached:
+  2026-07-10T00:00:00Z  close=190        8 candles across 4 DISTINCT dates
+  2026-07-10T14:32:07Z  close=250        close sequence: 190,250,190,250,190,250,190,250
+  2026-07-11T00:00:00Z  close=190        DUPLICATE DATES SERVED: True   ← the comb
+  2026-07-11T14:32:07Z  close=250
+  … (repeats per date)
+```
+
+**Root cause (both (a) and (b), and they are the same event).** The `price_history` unique key is
+`ix_hist_instr_interval_ts = (instrument_id, interval, ts)` — unique on the **exact timestamp**, NOT the
+trading date (`app/models/__init__.py:333`). The two providers stamp a **different time-of-day for the same
+trading day**:
+- **Legacy DEMO** candles: `ts = start + n·days` where `start = now − Nd`, so ts carries **now's
+  HH:MM:SS** (non-midnight) — `mock.get_history` (`app/providers/market/mock.py:135-160`).
+- **REAL alphavantage** candles: `ts = datetime.fromisoformat(date).replace(tzinfo=UTC)` → **00:00:00 UTC**
+  (midnight) — `external.py:223` (eodhd `parse_eod` is identical).
+
+So the same trading DATE is stored under **two distinct timestamps** at **two price levels** (demo residue
+vs real) → the unique index permits BOTH → sorted by ts the series alternates real@00:00 / demo@14:32 =
+**the comb**. (a) legacy demo residue coexisting with real candles AND (b) tz/time-keyed duplicates are the
+**same** mechanism: (a) is the source of the two levels, (b) is why both survive. The
+"upsert-never-overwrites-existing-timestamps" policy (`market.py:440-457`) protected the demo residue
+against the real data — the exact failure the policy annotation must now carve out. The **benchmark
+inherits it**: `performance_series` keys `closes = {c.ts: …}` and takes `axis = [c.ts for c in
+bench_candles]` (`analytics.py:240,278`), so duplicate-ts bench candles comb the benchmark line too.
+
+**Fix — at the CACHE layer, four parts (this batch):**
+1. **Keying** — one candle per `(instrument, trading DATE, interval)`, date-normalised & tz-safe. Daily
+   intervals (`1d/1w/1mo`) normalise `ts` to **00:00:00 UTC** on write; the existing `(instrument, interval,
+   ts)` unique index then enforces one-row-per-date for daily. Intraday (R-42, unbuilt) keeps its real ts
+   (distinct per bar) — the normalisation is daily-only. New `price_history.source` column labels provenance
+   going forward. Migration on the ADR-0001 chain (head `c1d4e7a90f38`).
+2. **Precedence** — REAL provider candles **SUPERSEDE** demo/mock candles for the same date. The
+   upsert-never-overwrites annotation is amended (original preserved, dated): it protects **real** data from
+   being overwritten; it does NOT protect **demo** rows from real data.
+3. **One-time served cleanup** (idempotent, logged, the dr-16 repair pattern) — purge demo-source rows for
+   any `(instrument, date)` where a real row exists; report counts. Plus a **read-time collapse** so the
+   served series is strictly-unique-ascending even before the purge runs.
+4. **Pins, fail-first** — served history has strictly unique ascending dates (RED on today's duplicates); a
+   demo row + real row for the same date serves the **real** one; the benchmark series inherits all of it.
+
+### Ratifications carried from the owner's re-walk
+
+- **dr-22 (truncation)** and the **dr-23 purge flow** — **ACCEPTED as shipped** (owner re-walk). The dr-23
+  button label **"PIN to permanently delete"** stands as implemented **pending the owner's explicit word at
+  this re-walk** — §14 is NOT closed on it without the ruling.
