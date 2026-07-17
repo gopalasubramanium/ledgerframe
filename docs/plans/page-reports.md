@@ -806,3 +806,30 @@ not a change (§13-2 rule):**
 utf-8-sig always) live in **DESIGN-SYSTEM §5.1 "Export artifacts"** and are enforced by `_csv_response`
 (BOM) + the same-batch code tests (headers/disclaimers/stat block). The next export page copies the note,
 not a per-endpoint habit.
+
+---
+
+## 16 — POST-CLOSE DELTA: the Reports Pack entry point (2026-07-17, reports-pack §7a Phase 1)
+
+**The Amendment-K phasing corollary ends here.** This page closed (§14) deliberately WITHOUT the Reports
+Pack entry point: Amendment K (§9-11) phased the Pack as its own milestone and recorded — not rendered —
+the entry point (D-041 preserved), because *the artifact did not yet exist*. It now does (the
+`/reports/pack` route shipped in the Pack milestone's Phase 0, and its Phase-0a print geometry was
+ratified with conditions by the owner on 2026-07-17). Per §9-11 / Amendment K, the entry point **ships
+with the Pack milestone** — this delta records its arrival on the accepted Reports page.
+
+- **What shipped:** a **§5.4 PageHeader action** — an anchor labelled **"Reports Pack"** (the GLOSSARY
+  term) with the `Printer` icon — that opens the print artifact at **`/reports/pack`** in a **new tab**.
+  It is a real anchor (a full backend-served HTML route, NOT an SPA `<Link>`), `target="_blank"
+  rel="noopener"`.
+- **D-041 Reports-ONLY preserved:** verified no other surface links `/reports/pack` (grep of
+  `frontend/src` / `frontend/e2e` — only the dev capture harness and historical mockup notes reference
+  the route, neither a live inbound link); no sidebar entry, no cross-page link. The entry point lives
+  on the Reports page and nowhere else.
+- **Geometry:** placed in the PageHeader action slot — ratified §5.4 anatomy — so no new §12 geometry
+  ruling is needed (the header-action slot is standard page anatomy; the owner ratifies its look at the
+  Pack milestone's Phase-3b walk, not here).
+- **Guarded:** a render test (`Reports.test.tsx`) pins the link's `href` / `target` / `rel` / label; the
+  Pack milestone's Phase-2 artifact JOURNEY guard clicks the REAL control and asserts arrival at the
+  rendered artifact (reports-pack §12pk / page-accounts §14ac-2 — a cross-page affordance is guarded as a
+  journey, not destination-only). Frontend `lint` / `typecheck` / `check:tokens` / Reports vitest green.

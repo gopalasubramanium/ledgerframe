@@ -201,6 +201,18 @@ test("§12rp-4: all three served disclaimers render VERBATIM, each noting it tra
   expect(screen.getByText("This disclaimer travels into the export (tax-lots.csv).")).toBeTruthy();
 });
 
+test("Reports Pack entry point: a §5.4 header action links /reports/pack, opening in a new tab", async () => {
+  // reports-pack §7a Phase 1 — the Amendment-K phasing corollary ends: the Pack artifact now exists,
+  // so the Reports page (and ONLY the Reports page, D-041) gains the entry point.
+  renderPage();
+  const link = await screen.findByRole("link", { name: /Open the Reports Pack/i });
+  // A real anchor (backend HTML route, not an SPA <Link>), opening in a new tab.
+  expect(link.getAttribute("href")).toBe("/reports/pack");
+  expect(link.getAttribute("target")).toBe("_blank");
+  expect(link.getAttribute("rel")).toContain("noopener");
+  expect(link.textContent).toContain("Reports Pack"); // the GLOSSARY term, exact spelling
+});
+
 test("Amendment J: the long-term threshold is READ-ONLY (rendered value, no input control)", async () => {
   const { container } = renderPage();
   await screen.findByText("Realised sales for the year — gains in each instrument's native currency");

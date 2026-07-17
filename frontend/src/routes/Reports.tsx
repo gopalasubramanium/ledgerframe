@@ -5,7 +5,7 @@ import { Button, DataTable, EmptyState, GlossaryTerm, PageHeader, Select, Skelet
 import type { Column, SelectOption } from "../components/ui";
 import { apiDownload } from "../api/client";
 import { formatMoney, formatQuantity } from "../format/number";
-import { Download } from "../icons";
+import { Download, Printer } from "../icons";
 import {
   getRealisedGains,
   getStatements,
@@ -31,8 +31,13 @@ import "./Reports.css";
 //   • §12rp-4 — the subtitle, both EmptyState wordings and the travel captions are PROTECTED COPY.
 // Money is a backend-served value rendered by the display formatters (D-105 posture — no client math);
 // disclaimers are the served display strings, rendered VERBATIM. Symbols LINK to detail (D-098).
-// AMENDMENT K: NO Reports Pack entry point + NO AI-helper placeholder (records only). AMENDMENT J: the
-// long-term threshold is rendered READ-ONLY (no persisted setting exists — §10-9), never an input.
+// AMENDMENT J: the long-term threshold is rendered READ-ONLY (no persisted setting exists — §10-9),
+// never an input. The AI-helper placeholder stays deferred (Amendment K, D-060 intact — records only).
+// REPORTS PACK ENTRY POINT (reports-pack §7a Phase 1, 2026-07-17 — the Amendment-K phasing corollary
+// ends now that the Pack artifact exists): a §5.4 PageHeader action opens the print artifact at
+// /reports/pack in a new tab. Reachable from Reports ONLY (D-041/D-061); no sidebar entry, no other
+// inbound link. /reports/pack is a BACKEND-served HTML route (not an SPA route), so it is a real
+// anchor (full navigation, new tab), not a react-router <Link>.
 
 function symbolCell(symbol: string, name: string) {
   return (
@@ -266,6 +271,18 @@ export function Reports() {
       <PageHeader
         title="Reports"
         subtitle="Statements, the Realised P/L report and open tax lots — for your accountant. Every export carries the same disclaimers you see here."
+        actions={
+          <a
+            className="lf-btn lf-btn--icon"
+            href="/reports/pack"
+            target="_blank"
+            rel="noopener"
+            aria-label="Open the Reports Pack (opens the printable report in a new tab)"
+          >
+            <Printer aria-hidden="true" focusable="false" />
+            Reports Pack
+          </a>
+        }
       />
 
       {/* 1) STATEMENTS — the all-years rollup table; the Year control scopes the Realised stat + export */}

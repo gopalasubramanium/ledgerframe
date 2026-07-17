@@ -33,6 +33,7 @@ export {
   Pencil,
   Upload,
   Download,
+  Printer,
   Plus,
   CircleCheck,
   // Status
