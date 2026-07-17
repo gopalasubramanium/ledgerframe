@@ -1,0 +1,398 @@
+# page-settings — Settings (`/settings`) build plan
+
+> **STATUS: PLAN ONLY — complete through §9, STOP.** No code, no migrations, no
+> contract changes, no new allow-list keys, no specimen, no Phase 0. The §9
+> one-pass happens in chat with the owner; the items below carry **PROPOSED**
+> resolutions and **⚑** genuine owner calls — they are not resolved here.
+> Frontend check: **N/A — plan-only, no code touched.**
+>
+> Derived from the specs per `TEMPLATE-page-build.md`. Every claim cites its
+> spec `file:line` or the repo `file:line` it was **verified against** (grep, not
+> recall). Nothing about Settings is built yet — no route, no page, no contract
+> change. This plan reads the engine first (verify-first, D-019).
+
+---
+
+## 0. THE CANDIDATES LEDGER (verify-first deliverable)
+
+Every candidate setting, its spec source, its **current** persistence home
+verified in the repo, and a proposed disposition. **No row without a spec
+cite.** Homes: `env` = `app/core/config.py` `Settings`; `row` = a
+`_ALLOWED_KEYS` DB `Setting`; `local` = per-device localStorage; `param` =
+request query-param default; `NONEXISTENT`.
+
+**The `_ALLOWED_KEYS` set as it stands** (`app/api/v1/routes/settings.py:23-39`,
+**14 keys**): `base_currency, rotation_seconds, refresh_interval_seconds,
+privacy_mode, reduced_motion, high_contrast, voice_enabled,
+display_sleep_minutes, ai_model, focus_page, rotation_pages, timezone,
+first_run_complete, home_quote_source`.
+
+**⚠ VERIFY-FIRST DIVERGENCE — 9 of 14 allow-list keys are WRITE-ONLY.** A grep
+for every key across `app/**` (backend) **and** `frontend/src/**` found **no
+consumer** for `rotation_seconds`, `rotation_pages`, `focus_page`,
+`refresh_interval_seconds`, `reduced_motion`, `high_contrast`,
+`display_sleep_minutes`, and the DB rows `voice_enabled` / `ai_model` (the
+*env* forms of the last two are consumed; the DB rows are not). Only
+`base_currency`, `timezone`, `privacy_mode`, `first_run_complete`,
+`home_quote_source` have a live reader. This is the exact condition **D-078's
+hard requirement** forbids — *"every allow-listed key is either consumed or
+removed"* (`DECISIONS.md:411-412`). It is the spine of §9-2, §9-6, §9-7 below.
+
+| Setting (user-facing) | Spec source (file:line) | Current home (verified) | Proposed disposition |
+|---|---|---|---|
+| **Base / reporting currency** | D-045 `DECISIONS.md:323`; IA `INFORMATION-ARCHITECTURE.md:395`; GLOSSARY `GLOSSARY.md:226` | `env` `config.py:55` **+** `row` `settings.py:24` **+** `.env` write & in-proc reload `settings.py:117-126` — **CONSUMED** (valuation) | Settings → System/General; first-run links here (D-045). Existing surface. |
+| **Timezone** | D-045 `DECISIONS.md:323`; IA `:395` | `env` `config.py:56` **+** `row` `settings.py:33` **+** `.env` write `settings.py:131-136`; validated vs IANA `settings.py:83-87` — **CONSUMED** (Clock) | Settings → System/General. `Combobox` (long IANA list). |
+| **PIN (set / change)** | D-002 `DECISIONS.md:93-96`; D-045 `:323`; IA `:395` | `auth.py:60` set-pin · `:106` unlock · `:126` lock · `:142` state; `User.pin_hash` `deps.py:73` — **CONSUMED** | Settings → System (set/change); [S]-gated (`require_auth`). first-run links here. |
+| **Data provider (market)** | D-045 `DECISIONS.md:323`; D-014 `.env` `DECISIONS.md:192` | `env` `config.py:59` **+** `GET/PUT /system/data-source` `system.py:113,158`; `api_key` write-only `system.py` `DataSourceIn` — **CONSUMED** | Settings → System; provider + write-only key (D-003). first-run links here. |
+| **No-egress toggle (`privacy_mode`)** | **D-069** `DECISIONS.md:355`; D-004 `:106`; D-045 `:324`; GLOSSARY `GLOSSARY.md:277` | `row` `settings.py:24`; read `egress.py:52`, `feeds.py:53`; written frontend `AppShell.tsx:195` — **CONSUMED** | Settings → **Privacy** (ONE canonical home). first-run + UpdateBanner (D-066) respect it. |
+| **Density** | D-045 `DECISIONS.md:326`; D-078 per-device `:406`; DESIGN-SYSTEM `DESIGN-SYSTEM.md:197-198` | `local` (DisplayProvider) — **CONSUMED** per-device | Settings → **Appearance** (per-device). |
+| **Theme** | D-078 per-device `DECISIONS.md:406`; D-066 | `local` (chrome theme cycle) — **CONSUMED** | Appearance (per-device). Chrome cycle stays; ⚑ dup vs move is IA (§9-6). |
+| **High contrast** | D-078 per-device `DECISIONS.md:406` | `local` (DisplayProvider) **AND** `row` `high_contrast` `settings.py:25` = **WRITE-ONLY (no consumer)** | Appearance (per-device); **remove the redundant row** (D-078). §9-6. |
+| **Reduced motion** | D-078 per-device `DECISIONS.md:406` | `local` (DisplayProvider) **AND** `row` `reduced_motion` `settings.py:25` = **WRITE-ONLY** | Appearance (per-device); **remove the redundant row** (D-078). §9-6. |
+| **Sidebar collapsed** | D-078 per-device `DECISIONS.md:406` | `local` (chrome) — **CONSUMED** per-device | Per-device; chrome toggle owns it — likely no Settings control. |
+| **Rotation page-set + interval** | **D-044** `DECISIONS.md:319-321`; D-017 `:198-202`; IA `:134-137`; D-078 server `:409` | `row` `rotation_pages,focus_page,rotation_seconds` `settings.py:24,26` = **ALL WRITE-ONLY**; `env` default only `config.py:100` | ⚑ §9-2 owner call: **wire (ship)** or **remove (park)** — D-078 forbids leaving write-only. |
+| **Refresh interval** | *(weak — only the key itself; refresh belongs to worker/Pricing Health, page-news ND-8 `page-news.md:283-286`)* | `row` `refresh_interval_seconds` `settings.py:24` = **WRITE-ONLY** | §9-6/§9-7: reconcile — **remove** (no spec home) unless owner defines a consumer. |
+| **Display sleep (kiosk)** | *(weak — no spec cite beyond the key)* | `row` `display_sleep_minutes` `settings.py:25` = **WRITE-ONLY** | §9-6/§9-7: reconcile — **remove** unless owner names a kiosk consumer. OPEN QUESTION. |
+| **Voice enabled** | R-32 Voice **definition still owed, owner-only** (`ROADMAP.md` R-32; CURRENT NEXT `CURRENT.md:1547`) | `env` `config.py:88` consumed `voice/service.py:45`; `row` `voice_enabled` `settings.py:25` = **WRITE-ONLY** | **DEFER to the Voice milestone**; do not surface a control until R-32 is defined; remove/keep the row is part of that milestone. |
+| **AI model / AI config** | D-067/D-068 AI-surfaces milestone (`DECISIONS.md:352` context; deferred D-067) | `env` `config.py:81` + `GET/PUT /system/ai-config` `system.py:251,277`; `row` `ai_model` `settings.py:26` = **WRITE-ONLY** | System tab shows served AI config (present); **DEFER model management to AI-surfaces**; row reconciled there. |
+| **Autolock minutes** | D-002 access lock `DECISIONS.md:93-96` | `env` `config.py:52` + `GET/PUT /system/config` `system.py:199,222` — **CONSUMED** | Settings → System. |
+| **LAN access (`allow_lan`)** | D-001 posture `DECISIONS.md:88-92`; D-002; SECURITY-BASELINE | `env` `config.py:51` (`lan_exposed` `:105-109`) + `/system/config` — **CONSUMED** | Settings → System (posture; a PIN precondition, `deps.py:96-100`). |
+| **Stale-after seconds** | freshness posture (three-layer, GLOSSARY) | `env` `config.py:69` + `/system/data-source` — **CONSUMED** | Settings → System. |
+| **API tokens** | **D-069** `DECISIONS.md:355`; P-7 | `GET/POST /tokens`, `DELETE /tokens/{id}` `tokens.py:26,32,42` (`require_session`); raw token once `tokens.py:37-39` — **CONSUMED** | Settings → **Privacy/Security** API-token card; [S]-gated; shown once. |
+| **`long_term_days` threshold** | **Amendment J** `page-reports.md:465-484`; §9-7 `:522`; D-077/Guarantee 4 `page-reports.md:254` | **NONEXISTENT as a setting** — not in `_ALLOWED_KEYS` `settings.py:23-39`, not in `env`; served `param` default **365** `portfolio.py:994,1003,1012,1026`, reader default `tax.py:285,373` (clamp `:289,377`) | ⚑ §9-1 owner call: **add allow-list key (ships with Settings)** per Amendment J, or **stay parked** (Reports keeps its read-only 365 line). |
+| **`home_quote_source`** | page-home §9-7 (`API-CONTRACT.md:91`); D-046/D-052 | `row` `settings.py:38`, served default `settings.py:65` — **CONSUMED** (Home) | **NOT a Settings-page control** — a Home in-page source select. Listed for allow-list completeness only. |
+| **`first_run_complete`** | D-045 `settings.py:31-32` | `row` `settings.py:33`, consumed by the checklist — **CONSUMED** | Internal flag, no user control. |
+| **RSS feeds (ND-6)** | page-news **ND-6** `page-news.md:277-279` | `GET/PUT /news/feeds`, `GET /news/feeds/test` `news.py:162,171,177` (PUT `require_auth`) — **CONSUMED** | ⚑ §9-3 owner call: **Settings vs News** — ONE canonical home. |
+
+---
+
+## 1. IDENTITY
+
+*Source: IA §2 (page map), §3 (nav + rotation); DESIGN-SYSTEM §3 (templates).*
+
+| Field | Value | Spec ref |
+|-------|-------|----------|
+| Page name (H1 = nav label = route) | **Settings** | IA `:84`; D-022 |
+| Route | `/settings` | IA `:84` |
+| Nav group | **System** (Settings · Help · Legal) | IA `:109`; D-043 `DECISIONS.md:316` |
+| Page template | **Settings** (sectioned/tabbed configuration, System group) | DESIGN-SYSTEM `:230` |
+| Rotation eligibility | Eligible as any nav page (D-044) — but a config surface is a poor rotation target; ⚑ not a blocker | IA `:134`; D-044 `DECISIONS.md:319` |
+| One-line purpose | Configuration across **4 tabs**, incl. **Privacy** and **API-token** cards | IA `:84`, `:369-378` |
+
+> **Not worklist, not overview.** DESIGN-SYSTEM §3 maps Settings to the
+> **Settings** template (`DESIGN-SYSTEM.md:230`), not the Reports-group Worklist
+> note. It is *"sectioned/tabbed configuration."*
+
+**The four tabs (D-069 `DECISIONS.md:355`; IA `:371`):**
+1. **General / System** — base currency, timezone, PIN, data provider, autolock,
+   LAN, stale-after; the sudo-helper-dependent controls (D-003) degrade gracefully.
+2. **Appearance** — theme, density, high contrast, reduced motion (per-device,
+   D-078); **persona is gone** (D-069 `:376`); **nav-customization is gone** (D-043).
+3. **Privacy** — no-egress toggle + egress **state statement**, *"AI never
+   persists"* statement, privacy-mode indicator, API-token card
+   (`DECISIONS.md:355`; IA `:371-376`).
+4. **Data / Advanced (System-degrading)** — provider/AI config, reset-data,
+   refresh, fetch-history; degrades without the sudo helper (D-003/D-069, IA `:377`).
+
+*(⚑ Tab membership is a §9-5 geometry/owner call — the spec fixes "4 tabs +
+Privacy + tokens + Appearance-minus-persona", not the exact per-tab split.)*
+
+---
+
+## 2. OWNERSHIP TABLE
+
+*Copied from IA §Settings (`INFORMATION-ARCHITECTURE.md:369-378`). Settings is a
+**configuration** surface: it OWNS the settings it writes (there is no other
+canonical home for a preference), and it **degrades**, never recomputes.*
+
+**Owns (canonical, authoritative, fully explained here):**
+- Every **user preference / configuration value** in the Candidates Ledger whose
+  home is `env`, `row`, or `local` and whose disposition is a Settings control —
+  base currency, timezone, PIN, data provider, autolock, LAN, stale-after,
+  no-egress, theme, density, contrast, motion, rotation config *(if §9-2 ships)*.
+- The **Privacy section** (no-egress toggle; egress-state statement; "AI never
+  persists" statement; privacy-mode indicator) — canonical home (D-069, IA `:371-374`).
+- The **API-token management card** (create/name/revoke; token shown once) — D-069, IA `:374-376`.
+- The **System/Advanced controls** surfacing `/system/*` config — D-003/D-069.
+
+**Summarises (other pages' info — via the named reader, linked, never recomputed):**
+
+| Summary shown | Canonical page | Shared reader reused | Link target |
+|---------------|----------------|----------------------|-------------|
+| Egress state statement ("This device makes no network calls") | Settings owns the toggle; the STATE is derived from the same `privacy_mode` row | `egress.py` gate reader (`:52`) | — (own page) |
+| `long_term_days` threshold (**if** §9-1 lands here) | **Reports** (`/reports`) shows it read-only today (Amendment J) | `tax.py` readers' default | `/reports` |
+
+**Links to:**
+- **Reports** (`/reports`) — the `long_term_days` read-only line links *here* once
+  the setting lands (Amendment J, `page-reports.md:482`).
+- **first-run checklist** links *into* Settings homes (D-045, IA `:396`): base
+  currency, timezone, PIN, data provider, no-egress — each step's Settings home
+  lives on this page.
+
+**Enforcement corollary (P-1/D-031):** Settings adds **no figure** a canonical
+page does not show; it surfaces the egress state as a **plain statement**, not a
+new metric (D-069, `DECISIONS.md:355`).
+
+---
+
+## 3. API SURFACE
+
+*Source: `API-CONTRACT.json` (frozen baseline) + `API-CONTRACT.md` delta table.*
+
+### 3a. Endpoints consumed (already in the frozen contract)
+
+| Method + path | Purpose on this page | Response shape pinned? |
+|---------------|----------------------|------------------------|
+| `GET /api/v1/settings` | Read stored prefs + served defaults (`settings.py:47-68`) | **No** — serves a free `{stored, defaults}` dict; allow-list keys are **invisible to shape checks** (`API-CONTRACT.md:91`) → pinned by **served-value tests**, not schema |
+| `PUT /api/v1/settings` | Write prefs; unknown key → **honest 400** (`settings.py:97-99`, `require_auth`) | Behaviour pinned (`API-CONTRACT.md:93`) |
+| `GET/POST /api/v1/tokens`, `DELETE /api/v1/tokens/{id}` | API-token card (`tokens.py:26,32,42`, `require_session`) | Present, D-069 (`API-CONTRACT.md:95`) |
+| `GET/PUT /api/v1/system/data-source` | Provider + write-only key + base currency (`system.py:113,158`) | Present |
+| `GET/PUT /api/v1/system/config` | Timezone, autolock, LAN (`system.py:199,222`) | Present |
+| `GET/PUT /api/v1/system/ai-config` | AI provider/model (`system.py:251,277`) — **surfaced read-only-ish; model mgmt DEFERRED to AI-surfaces** | Present |
+| `GET /api/v1/system/admin/available` | **D-003 graceful-degradation signal** — are the root helper + sudoers present (`system.py:570`)? | Present |
+| `GET /api/v1/system/data-source` `admin_available` (`system.py:147`) | Same D-003 signal, per-control | Present |
+| `POST /api/v1/system/reset-data`, `refresh-data`, `fetch-history` | Advanced/System actions (`system.py:307,400,445`, `require_auth`) | Present |
+| `GET /api/v1/system/version-check`, `/update-status` | Update posture; **version-check no-egress guarded (C-3)** (`system.py:488,536`) | Present |
+| `GET/PUT /api/v1/news/feeds`, `GET /news/feeds/test` | **If** feeds land here (§9-3) (`news.py:162,171,177`) | Present |
+| `POST /api/v1/auth/set-pin` · `unlock` · `lock` · `GET /auth/state` | PIN set/change; [S] session contract (`auth.py:60,106,126,142`) | Present |
+
+### 3b. Contract deltas (needed but not in the baseline — BUILD BACKEND-FIRST)
+
+**Fast-path finding (page-pricing-health §13): §3b is essentially EMPTY.**
+Verify-first found every reader Settings needs **already in the frozen
+contract**. The only contract-touching work is **owner-gated in §9** and, if
+approved, is allow-list-key surgery (invisible to shape regen — pinned by
+served-value tests, `API-CONTRACT.md:91`), not new endpoints:
+
+| kind | Endpoint (current → intended) | Decision | Why this page needs it |
+|------|-------------------------------|----------|------------------------|
+| add *(⚑ §9-1)* | `PUT /settings` `_ALLOWED_KEYS` **+ `long_term_days`** (numeric validator, mirror `ge=0, le=3660` `portfolio.py:994`) | Amendment J `page-reports.md:481-482` | Only if the owner rules the threshold ships with Settings; readers then default to the stored value; Reports' read-only line links here |
+| remove *(⚑ §9-6/§9-7)* | `_ALLOWED_KEYS` **− write-only keys** (`reduced_motion, high_contrast, refresh_interval_seconds, display_sleep_minutes`, and `rotation_*`/`focus_page` if §9-2 parks rotation) | **D-078** `DECISIONS.md:411-412` | D-078 forbids a key with no consumer; each removal is a served-value / unknown-key-400 test |
+
+> **Note (allow-list keys are invisible to shape checks).** Neither an add nor a
+> removal changes `API-CONTRACT.json` (the endpoint serves a free dict). Each
+> key therefore ships a **served-value test** and, for a removal, an
+> **unknown-key-400 test** (`settings.py:97-99`) — the D-078 reconciliation is
+> proven by tests, not by the contract regen (`API-CONTRACT.md:91`, page-home §12ho1-6).
+
+---
+
+## 4. COMPONENTS
+
+*Source: DESIGN-SYSTEM §5 (ratified inventory). Ratified components only; a new
+component needs a §5 amendment (§9-5).*
+
+| Ratified component | Role on this page | Data source | Prop/state not exercised at kitchen-sink |
+|--------------------|-------------------|-------------|------------------------------------------|
+| **PageHeader** (§5.4) | H1 "Settings" + subtitle; tab strip host | — | — |
+| **Segmented** (`DESIGN-SYSTEM.md:529`) | **The four tabs** (already the "tabs" primitive for Markets region tabs / News buckets) | — | ⚑ **as a `role="tablist"` affordance** — never used for full-page tab navigation (§9-5) |
+| **Card / `.lf-card` + `.lf-card__body`** (D-100) | Each settings section/card (Privacy card, token card, Appearance card) | — | — |
+| **Switch** (`DESIGN-SYSTEM.md:669`) | no-egress toggle; boolean prefs — *"available to the future Settings page"* | `PUT /settings` `privacy_mode` | first used on first-run; page-scale use here |
+| **MasterSelect** | Base currency (currency master, MASTER-DATA §3) | `/refdata` + `/system/data-source` | — |
+| **Combobox** (`DESIGN-SYSTEM.md:670`) | Timezone (~400 IANA zones — the F-4 case) | `/system/config`, validated `settings.py:83-87` | — |
+| **Select** (`ui/Select`) | Data/AI provider (user-scope, not a master); density | `/system/data-source`, `/system/ai-config` | — |
+| **TextInput** | Token name; AI base-url; write-only key/api-key fields | `/tokens`, `/system/*` | password-style masking for write-only keys (§9 note) |
+| **Button** (§5.4, `DESIGN-SYSTEM.md:383-408`) | Create token, Save, Reset — lucide icon + label (`Plus`/`Pencil`) | `/tokens`, `/system/*` | — |
+| **ConfirmDialog (+ PIN)** | Revoke token; reset-data; risky System actions — **fresh PIN** (D-103, never the unlock session) | `/tokens`, `/system/reset-data` | — |
+| **Dialog** | Token-created "shown once" reveal; feeds editor (if §9-3) | `/tokens`, `/news/feeds` | — |
+| **StatusChip** (`DESIGN-SYSTEM.md:536`) | Privacy-mode indicator; provider/admin availability (D-003) | `privacy_mode`, `admin/available` | label MANDATORY; tone semantic-only |
+| **EmptyState** | No tokens yet; a System control unavailable sans helper (D-003) — **honest reason** | `/tokens`, `admin/available` | — |
+| **Toast/Snackbar** | Save confirmation; base-currency restart notice (`settings.py:126`) | `PUT /settings` | `tone` (warning on restart) |
+| **GlossaryTerm `[Help]`** | Terms shown (no-egress, base currency, density…) | glossary slice | parity vs `GLOSSARY.md` (§5, §9-4) |
+
+**Data source (Holdings retrospective):** every component wires to a **real,
+frozen-contract endpoint** (table above). **No mock-backed affordance** is
+planned — this is a config page over existing `/settings`, `/tokens`, `/system/*`
+readers. If build discovers one, it is a §9 item.
+
+**Affordances the ratified inventory lacks (amendment required before build — see §9):**
+- **⚑ A true `Tabs` (`role="tablist"`/`tabpanel`) control.** The inventory has
+  **`Segmented`** (`role="group"` + `aria-pressed`, `DESIGN-SYSTEM.md:529`), used
+  as "tabs" on Markets/News. Whether `Segmented` is an acceptable affordance for
+  a **4-tab full-page** settings surface, or Settings warrants a proper `Tabs`
+  amendment (WCAG tab semantics, deep-linkable), is **§9-5** — an owner call, not
+  a default. **No new component is authored in this plan.**
+
+**Component usage rules the build must honour (DESIGN-SYSTEM §5/§6):** cards are
+layered (D-100); scroll = content only, header outside (D-101); popover overlays
+portal to the viewport (§6); write-only key fields never render a stored value
+back (D-003 write-only-key rule, `settings.py` secrets note `:4-6`); the token
+card shows the raw token **once** and never re-reads it (`tokens.py:37-39`).
+
+**Tables — dataset-size posture (D-094).** The only tabular surface is the
+**API-token list** (`GET /tokens`) — **bounded** (a handful of tokens per
+install); client-side sort/filter is acceptable; revisit if a user ever holds
+tens of tokens (they will not). Not an unbounded/append-only table.
+
+---
+
+## 4b. PER-VARIANT FIELD & ACTION SPECS
+
+**N/A — Settings has no entity variants.** It has *tabs/sections*, not asset
+classes or policy types. The per-tab field split is a §1 / §9-5 layout question,
+not a D-089/D-090/D-091 applicability matrix. *(Deferred cross-milestone
+dependencies are handled honestly: Voice controls DEFER to R-32; AI-model
+management DEFERs to AI-surfaces — visible placeholder + recorded pending
+decision, never silently dropped, D-068 precedent.)*
+
+---
+
+## 5. VOCABULARIES
+
+*Source: MASTER-DATA.md. Categorical fields → vocabulary + control.*
+
+| Field on this page | Vocabulary / master | Fixed (/refdata) or extensible | MASTER-DATA ref |
+|--------------------|---------------------|-------------------------------|-----------------|
+| Base / reporting currency | `SUPPORTED_CURRENCIES` (9 codes) | Fixed (code const, `config.py:18`; served) | MASTER-DATA §3 (amended — the constant is canonical) |
+| Timezone | IANA zoneinfo (server truth, `settings.py:84-86`) | Fixed (validated server-side) — **user data over a big list**, use `Combobox` | not a MASTER-DATA master (system-provided) |
+| Data provider | market-provider set (`_MARKET_PROVIDERS`, `system.py`) | Fixed (served by `/system/data-source`) | served, not a master → `Select` |
+| AI provider | `_AI_PROVIDERS` (`system.py`) | Fixed (served by `/system/ai-config`) | served → `Select` |
+| Density | comfortable / compact | Fixed (DESIGN-SYSTEM §2.5, `:202-204`) | per-device → `Select`/`Segmented` |
+| Theme, contrast, motion | display axes | Fixed (DESIGN-SYSTEM §2) | per-device (D-078) |
+
+**Not a master (user records / system-provided):** timezone (system list →
+`Combobox`), providers (served lists → `Select`), API-token names (free text →
+`TextInput`). No inline enum lists — every categorical is served (D-005).
+
+---
+
+## 6. DECISIONS IN FORCE
+
+*Source: `docs/audit/DECISIONS.md`. Each decision constraining this page.*
+
+| Decision | What it forbids / requires on this page |
+|----------|------------------------------------------|
+| **D-069** (`:355`) | 4 tabs; Privacy section (no-egress toggle + **state statement**, "AI never persists", privacy indicator); API-token card (once, [S]-gated, P-7); Appearance gains density, **loses persona**; nav-customization dies; System degrades sans sudo helper. |
+| **D-045** (`:322-326`) | Settings provides the **homes** the first-run checklist links to (base currency, timezone, PIN, data provider, no-egress); density is a plain Appearance option. |
+| **D-078** (`:405-412`) | **Persistence split by nature** — theme/density/contrast/motion/sidebar are **per-device localStorage**; server rows are `home_layout`(retired)/language/rotation/… **HARD: every allow-list key is consumed or removed.** |
+| **D-044** (`:319-321`) | Rotation kept fully configurable; page-set + interval **set in Settings, server-persisted** (D-017); skips error/empty pages; top-bar toggle stays. |
+| **D-017** (`:198-202`) | Rotation config lives in **settings rows**, not localStorage; `DashboardConfig`/`RotationItem` tables dropped; write-only keys become read-back-and-consumed (D-078). |
+| **D-002** (`:93-96`) | PIN = numeric ≥ 6; an **access lock, not encryption**; Argon2 + lockout; PIN set/change lives here. |
+| **D-103** (`CURRENT.md`, page-chrome C-6) | A risky action's PIN (revoke, reset-data) is **always a fresh PIN**, never the unlock session. |
+| **D-003** (`:97-101`) | `.env` writes + sudo helper are **install-time opt-in**; controls **hidden/disabled with explanation** when the helper is absent (`admin_available`, `system.py:147,570`); write-only key API (values never read back); allow-list, never free-form shell. |
+| **D-004** (`:102-111`) | No-egress toggle is Guarantee 5; accepted gaps (#5 per D-003, #6 per D-002, #7 no-PIN-open-local) are **recorded ADR posture**, not revisited here. |
+| **D-005** | Every categorical served (`/refdata`, `/system/*`); frontend carries **zero** vocabulary copies. |
+| **D-043** (`:312-318`) | Nav-customization control **removed**; Settings never reorders nav. |
+| **D-077 / Guarantee 4** (`page-reports.md:254`) | `long_term_days` is a **neutral user-set integer** — **no jurisdiction presets** if surfaced here. |
+| **Amendment J** (`page-reports.md:465-484`) | The `long_term_days` seam: add to `_ALLOWED_KEYS` + numeric validator, readers read the stored default, Reports links here — **only if the owner rules it ships** (§9-1). |
+| **P-1 / D-031** | Settings adds no figure a canonical page does not show; egress **state** is a statement, not a metric. |
+| **P-7 / D-065** | Scope principle — the token card passes P-7 (D-069). |
+
+---
+
+## 7. ACCEPTANCE CRITERIA
+
+*(Written now so build has the bar; not exercised in this plan.)*
+
+- [ ] **Happy path:** all four tabs render; each control reads its current value
+      from a real endpoint and writes through the **canonical** endpoint (no
+      second code path) — `/settings`, `/tokens`, `/system/*`, `/auth/*`.
+- [ ] **Empty state:** no tokens → EmptyState with reason; a System control
+      unavailable without the sudo helper → **honest disabled + explanation**
+      (D-003, `admin_available`), never a dead button.
+- [ ] **Error state:** a `PUT` failure surfaces an honest error; an **unknown
+      key** is a 400 shown as a real message (`settings.py:97-99`), never silent.
+- [ ] **Privacy is honest:** no-egress ON → the **state statement** reads *"This
+      device makes no network calls"* (D-069); UpdateBanner/version-check make
+      **zero** outbound calls (C-3, `system.py` no-egress guard) — assert via a
+      network trace, not a claim.
+- [ ] **Write-only keys never echo:** the data-source/AI api-key and any secret
+      field never render a stored value back (D-003 write-only-key rule).
+- [ ] **Token shown once:** the raw token appears exactly once at creation
+      (`tokens.py:37-39`); a re-open never re-reveals it; revoke needs a **fresh
+      PIN** (D-103).
+- [ ] **D-078 reconciliation (if §9-6/§9-7 land):** every remaining allow-list
+      key has a **served-value test**; every removed key has an
+      **unknown-key-400 test**; no write-only key survives (grep + test).
+- [ ] **[S]-gating (D-069/D-002):** token management + settings/system mutations
+      require a valid session when a PIN is set; an **API token is 403'd** on
+      these mutations (`deps.py:85-87,168-172`); a no-PIN local install stays open.
+- [ ] **Both densities + both themes** correct; **interactive OPEN states**
+      verified in light AND dark — `Combobox` (timezone), `Select` (provider),
+      `Switch`, ConfirmDialog PIN, token Dialog — added to `/kitchen-sink`.
+- [ ] **Keyboard + WCAG AA:** the tab strip is keyboard-operable with correct
+      roles (⚑ decided by §9-5: `Segmented` `aria-pressed` vs a `Tabs` `tablist`);
+      focus ring, labels, no colour-only meaning (StatusChip label mandatory).
+- [ ] **No frontend money math:** base-currency change is a backend `.env` write
+      + in-proc reload + worker restart (`settings.py:117-126`); the frontend
+      renders served strings only.
+- [ ] **Terms match GLOSSARY** (§9-4): every shown term
+      (no-egress, base currency, density, API token, privacy mode, rotation…)
+      exists in `GLOSSARY.md` with identical spelling **and** in the frontend
+      glossary slice; guarded by `test_glossary_parity.py`.
+- [ ] **Copy hygiene (§11-8):** no `D-0…`/`P-…`/`§…`/endpoint/enum name in any
+      user-facing string; a changed label updated **app-wide** (§11-4).
+- [ ] **Overflow suite (ADR-0004):** extend `e2e/overflow.spec.ts` to
+      `/settings` — zero horizontal overflow at 320/375/900/1366 × both themes;
+      only `.lf-shell__content` scrolls vertically (page-markets §12mk1-1).
+- [ ] **Cross-page journeys (page-accounts §14ac-2):** first-run → each Settings
+      home is a **click-the-control** journey test arriving at the right tab/anchor;
+      Reports' `long_term_days` link (if §9-1) lands on the right Settings control.
+- [ ] **Request-body assertion:** a `PUT /settings` from tab state asserts the
+      **actual body** equals the intended keys (Holdings §9-35).
+
+---
+
+## 8. BUILD PHASES
+
+*One commit per phase. Deltas first (if any survive §9), then assembly, then tests.*
+
+- **Phase 0 — Contract/allow-list deltas (ONLY if §9-1/§9-6/§9-7 approve
+  changes):** backend-first. Add `long_term_days` (validator) and/or **remove**
+  write-only keys; each ships its **served-value / unknown-key-400 test** in the
+  **same commit** (D-078; keys are invisible to contract regen). If §9 approves
+  **no** key changes, **Phase 0 is skipped** (fast-path).
+- **Phase 0a — Component ratification:** confirm-only **if** §9-5 rules
+  `Segmented` is the tab affordance (inventory already covers it). If §9-5 rules
+  a `Tabs` amendment, Phase 0a ratifies `Tabs` at `/kitchen-sink` **before**
+  assembly (new component gate).
+- **Phase 1 — Page assembly:** compose the four tabs from ratified components,
+  wired to `/settings`, `/tokens`, `/system/*`, `/auth/*`; honest
+  empty/error/degraded states (D-003); Privacy state statement; token-once Dialog.
+- **Phase 2 — Tests:** render/component tests; the §7 criteria; served-value +
+  unknown-key-400 tests; glossary parity; extend the overflow suite; drift +
+  typecheck + lint green.
+- **Phase 3a — Scripted pre-pass (green before the walk):** drive all four tabs
+  live in both themes across breakpoints; toggle no-egress and **trace the
+  network** for zero outbound; set/change PIN; create + revoke a token
+  (fresh-PIN); flip provider with the sudo helper absent (degradation).
+- **Phase 3b — Owner acceptance walk (LIVE, judgment only):** copy, tab feel,
+  privacy semantics, degradation wording; each finding a numbered
+  `page-settings.md §*` entry, re-verified live. Owner closes; never self-certify.
+- **Close ritual (page-accounts §15-2):** record the close (plan retrospective +
+  `RATIFICATION.md §6`), strike-check every §9/walk item against the diff, and
+  **`git push`** before the owner re-uploads.
+
+---
+
+## 9. NEEDS DECISION — PROPOSED resolutions (owner rules in the §9 one-pass)
+
+> **Do not resolve here.** Each item carries a PROPOSED resolution for the owner
+> to accept/amend; **⚑** marks a genuine owner call. No build starts on any open
+> item. New ideas → ROADMAP, not assumptions.
+
+| # | Item | Why it blocks / what's needed | Proposed resolution (owner to approve) |
+|---|------|-------------------------------|-----------------------------------------|
+| **9-1 ⚑** | **The `long_term_days` seam (Amendment J)** | Verified: **no persisted setting backs it** — absent from `_ALLOWED_KEYS` (`settings.py:23-39`), served default 365 (`portfolio.py:994,1003,1012,1026`; `tax.py:285,373`). Amendment J recorded the seam but left *ships-with-Settings vs parked* to this plan (`page-reports.md:481-484`). | **Ship it with Settings:** add `long_term_days` to `_ALLOWED_KEYS` with a numeric validator mirroring `ge=0, le=3660`; the `tax.py` readers read the stored value as their default; Reports' read-only line becomes a **link to this control** (the accepted §9-7 resolution). Neutral integer, **no jurisdiction presets** (D-077/Guarantee 4). *Alternative: stay parked — Reports keeps served-365 read-only. Owner's call.* |
+| **9-2 ⚑** | **Rotation-keys: wire or remove** | `rotation_pages`/`focus_page`/`rotation_seconds` are **already in `_ALLOWED_KEYS`** (`settings.py:24,26`) but **write-only — no consumer** (verified backend+frontend). D-044 keeps rotation "fully configurable" (`DECISIONS.md:319`); D-078 **forbids** a write-only key (`:411-412`). CURRENT.md framed this as a "re-add" (`CURRENT.md:1546`) — but the keys already exist unconsumed. | **Two coherent options, owner picks:** (a) **Ship rotation config with Settings** — build the page-set + interval control AND the frontend rotation consumer that reads these rows (satisfies D-044 + D-078); or (b) **Park rotation** — **remove** the three write-only keys now (D-078 reconciliation) and re-add them *with their consumer* when rotation ships. Leaving them as-is is not an option (D-078). |
+| **9-3 ⚑** | **ND-6 feeds management placement** | page-news deferred feed CRUD to "the Settings plan" — *"nothing built there now; the `/news/feeds*` endpoints exist"* (`page-news.md:277-279`; `news.py:162,171,177`). One canonical home (P-1); an IA challenge either way. | **Feeds management lives in Settings → Data/System** (config, not content — the provider-key precedent, ND-6). News stays display-only. A `Dialog` + `TextInput` multi-URL editor + Test, [S]-gated (`PUT /news/feeds` is `require_auth`). *Alternative: a Feeds card on News. Owner rules the single home.* |
+| **9-4** | **Terminology gaps (GLOSSARY parity)** | CLAUDE.md hard rule: every shown term is in `GLOSSARY.md`. Verified present: **Base currency** (`GLOSSARY.md:226`), **No-egress toggle** (`:277`). **Absent:** *Density, API token, Privacy mode, Rotation, Data provider, High contrast, Reduced motion, Appearance* (grep found no canonical entries). | Author the missing terms **spec-first in `GLOSSARY.md`** (canonical) then the frontend slice, guarded by `test_glossary_parity.py` — during **build**, not now. Some (Appearance/Data provider) may be plain UI labels, not glossary terms; the owner confirms which need entries. *(Spec-first, never popover-only — page-heatmap §13-1.)* |
+| **9-5 ⚑** | **Four tabs vs the ratified templates/components** | DESIGN-SYSTEM §3 maps Settings to the **Settings template** — *"sectioned/tabbed"* (`:230`). The inventory has **`Segmented`** (`role="group"`+`aria-pressed`, used as Markets/News "tabs", `:529`) but **no `Tabs` (`role="tablist"`) component** — a new component is forbidden without a §5 amendment. | **Default: use `Segmented` as the tab strip** (no amendment; matches Markets/News precedent), with the four D-069 tabs as segments. **⚑ Owner call:** if a full-page settings surface warrants proper tab semantics (WCAG `tablist`/`tabpanel`, deep-linkable `#privacy`), raise a **`Tabs` §5 amendment** in Phase 0a. Also confirm the **per-tab field split** (§1) — the spec fixes the *set*, not the *arrangement*. |
+| **9-6 ⚑** | **D-078 persistence split — which keys move / are removed** | D-078: theme/density/contrast/motion/sidebar are **per-device localStorage** (`:406`); the chrome already stores them in localStorage (0 server hits). But `reduced_motion`/`high_contrast` **also exist as write-only server rows** (`settings.py:25`) — redundant, D-078-violating. | **Remove `reduced_motion` + `high_contrast` from `_ALLOWED_KEYS`** (per-device is their only home, D-078) — a Phase-0 reconciliation with an unknown-key-400 test each. Appearance reads/writes them via the **per-device** DisplayProvider, not the server. *(Moving any per-device axis to server is an IA/ownership change, not a default — owner rules if any should be server-persisted for kiosk.)* |
+| **9-7** | **Allow-list pinning + the write-only reconciliation** | Allow-list keys are **invisible to contract regen** (`API-CONTRACT.md:91`) — a served field/removal produces no diff. D-078 requires **every** key consumed or removed. Beyond 9-2/9-6, `refresh_interval_seconds` + `display_sleep_minutes` are write-only with **no spec home**. | **Per-key served-value test obligation** stated in the plan: each surviving key ships a served-value test; each removal ships an unknown-key-400 test (page-home §12ho1-6 precedent). **Propose removing `refresh_interval_seconds` + `display_sleep_minutes`** (no consumer, no spec) unless the owner names a consumer. This is the D-078 hard requirement discharged. |
+| **9-8** | **[S]-gating + PIN against the real session contract** | D-069 says the token card is **[S]-gated**; verify what [S] means. Verified: tokens use **`require_session`** (`tokens.py:26,32,42`; `deps.py:159-181`) — human session only, **API tokens 403'd**; settings/system mutations use **`require_auth`** (`deps.py:77-110`). **Both are OPEN on a no-PIN local install** (`deps.py:102-103,173-174`). | **[S] = a valid human session when a PIN is set; open on a no-PIN local install** (the accepted D-004 gap #7). Token management stays on `require_session` (an API token cannot mint/revoke tokens); risky actions (revoke, reset-data) additionally take a **fresh PIN** (D-103, `require_pin`). No contract change — state the mapping in the plan; test the 403-on-token path. |
+| **9-9** | **No-egress toggle — one canonical home** | first-run sets it (D-045, `DECISIONS.md:324`); UpdateBanner respects it (D-066, `:352`); it is consumed by `egress.py:52`/`feeds.py:53` and written by the chrome (`AppShell.tsx:195`). Multiple writers, one truth. | **Settings → Privacy is the ONE canonical home** (D-069); first-run and any chrome affordance write the **same `privacy_mode` row** through `PUT /settings` (no second code path). Settings shows the **egress state statement** (D-069). The state is derived from the one row — cannot disagree. |
+| **9-10** | **System tab without the sudo helper (D-003)** | D-003: controls **hidden/disabled with explanation** when the helper is absent; the signal is served (`admin_available`, `system.py:147,570`). The **graceful-degradation shape** is a plan decision, not an implementation detail. | Each sudo-dependent control renders **disabled with an honest EmptyState/explanation** ("System controls need the optional root helper — install-time opt-in") keyed off `admin_available`; read-only status still shows; no dead buttons, no fabricated success. Non-helper controls (currency, timezone, no-egress, tokens, appearance) work regardless. |
+
+**Open questions (not assumptions):** `refresh_interval_seconds` /
+`display_sleep_minutes` provenance (9-7) — if the owner names a consumer they
+stay; otherwise removed. **Deferred by prior decision:** Voice controls → R-32
+(definition owed, owner-only); AI-model management → AI-surfaces (D-067/D-068).
+New ideas surfaced during build → ROADMAP with rationale, never silent scope.
+
+---
+
+**Sign-off to start build:** §9 has no open blocker · §3b deltas (if any survive
+§9) approved · no §4 component needs an unresolved amendment (§9-5).
+
+*(End of plan — STOP at §9. The §9 one-pass happens in chat with the owner.)*

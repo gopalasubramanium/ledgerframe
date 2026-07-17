@@ -1538,6 +1538,27 @@ see the DONE block at the top of this section.)*
 
 </details>
 
+## SETTINGS — PLAN DRAFTED, awaiting §9 one-pass (2026-07-17)
+
+**`docs/plans/page-settings.md` authored complete through §9 (PLAN ONLY, verify-first).**
+Nothing built — no route, no page, no contract change, no new allow-list key, no Phase 0.
+Frontend check: **N/A — plan-only, no code touched.** The §9 one-pass happens in chat.
+- **Candidates Ledger (§0)** verifies every setting's spec source + real persistence home.
+  **⚠ Key finding: 9 of 14 `_ALLOWED_KEYS` are WRITE-ONLY** — `rotation_seconds`,
+  `rotation_pages`, `focus_page`, `refresh_interval_seconds`, `reduced_motion`,
+  `high_contrast`, `display_sleep_minutes` (+ the DB rows `voice_enabled`/`ai_model`) have
+  **no consumer** in `app/**` or `frontend/src/**`. That is the exact D-078 hard-requirement
+  violation (`DECISIONS.md:411-412`) and the spine of §9-2/§9-6/§9-7.
+- **§3b is essentially EMPTY** (fast-path) — every reader is already in the frozen contract
+  (`/settings`, `/tokens`, `/system/*`, `/auth/*`, `/news/feeds`). The only contract-touching
+  work is owner-gated allow-list surgery (invisible to shape regen; pinned by served-value tests).
+- **§9 items** carry PROPOSED resolutions; **⚑** owner calls: 9-1 `long_term_days` seam
+  (Amendment J — ship-with-Settings vs parked), 9-2 rotation-keys wire-or-remove, 9-3 ND-6
+  feeds placement, 9-5 `Segmented`-as-tabs vs a `Tabs` §5 amendment, 9-6 D-078 per-device
+  reconciliation. Named non-⚑: 9-4 GLOSSARY parity gaps, 9-7 allow-list pinning, 9-8 [S]=
+  `require_session`/`require_auth` (open on no-PIN local), 9-9 no-egress one canonical home,
+  9-10 System-tab graceful degradation (D-003 `admin_available`).
+
 ## NEXT
 *(Accounts ✅, Reports ✅, and Reports Pack ✅ are DONE — see their DONE entries above. The Amendment-I
 declined-exports ledger — the oldest open debt in the rebuild — is CLOSED.)*
