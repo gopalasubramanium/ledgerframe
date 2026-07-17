@@ -2,7 +2,7 @@
 // Every value shown is a SERVED string (D-105); these tests assert the page renders what the readers
 // serve and behaves honestly (no dead buttons, no fabricated success, write-only key never echoed).
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { cleanup, render, screen, fireEvent, within } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { DisplayProvider } from "../theme/DisplayProvider";
@@ -90,7 +90,8 @@ test("renders the four D-069 tabs and defaults to General", async () => {
 test("General serves long_term_days verbatim (D-105 — the frontend carries no 365 literal)", async () => {
   renderAt("/settings?tab=general");
   const field = await screen.findByLabelText("Long-term threshold in days");
-  expect((field as HTMLInputElement).value).toBe("365");
+  // The field seeds from the served default via an effect — wait for the value, don't race it.
+  await waitFor(() => expect((field as HTMLInputElement).value).toBe("365"));
 });
 
 // Amendment C — tab state is URL-addressable; deep-linking lands on that tab's CONTROL (§14ac-2).
