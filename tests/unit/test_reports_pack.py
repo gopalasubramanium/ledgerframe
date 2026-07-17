@@ -79,6 +79,21 @@ async def test_review_rows_render_the_served_item_text_not_just_labels(app_clien
     )
 
 
+async def test_realised_sections_share_one_consistent_period_label(app_client):
+    """§14pk-3: every per-entity Realised P/L section is scoped to ONE household-wide period, stated in
+    the heading, and the empty-entity note cites the SAME period — not a per-entity year default that
+    leaked the current year for empty entities. The seed's only realised event is 2024 (AAPL), so the
+    household period is 2024; the empty entities must say '… for 2024', never the current year."""
+    html = (await app_client.get("/reports/pack")).text
+    assert "Realised P/L — 2024" in html, "the Realised section heading states the true period (2024)"
+    assert "No realised events recorded for 2024." in html, "the empty-entity note cites the SAME period"
+    # The leaked per-entity current-year default is gone (empties no longer say the wall-clock year).
+    from datetime import date
+    assert f"No realised events recorded for {date.today().year}." not in html or date.today().year == 2024, (
+        "empty entities must not leak the current year as the realised period"
+    )
+
+
 async def test_single_card_consolidated_sections_render_one_heading_not_h2_plus_h3(app_client):
     """§12pk-3: a single-card consolidated subsection prints ONE heading — the section <h2> — never a
     duplicated card <h3> of the same text (the DataTable-caption lesson). Per-entity sections keep

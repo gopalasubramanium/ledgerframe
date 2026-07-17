@@ -279,12 +279,17 @@ async def _entity_drift(session: AsyncSession, entity_id: int) -> str:
     return _card("Policy drift", inner + _disclaimer(drift.get("disclaimer")))
 
 
-async def _entity_realised(session: AsyncSession, entity_id: int) -> str:
-    report = await realised_gains_report(session, entity_id=entity_id)
+async def _entity_realised(session: AsyncSession, entity_id: int, realised_year: int) -> str:
+    # §14pk-3: scope every entity's realised section to ONE household-wide period (`realised_year`,
+    # computed once in render_reports_pack), stated in the heading, so the period is consistent across
+    # the artifact. Without it the reader's per-entity default leaked — a populated entity got its
+    # latest event year while empty entities got the CURRENT year (Rajan "2024" vs empties "for 2026").
+    report = await realised_gains_report(session, year=realised_year, entity_id=entity_id)
+    title = f"Realised P/L — {realised_year}"
     groups = report.get("currency_groups", [])
     if not groups:
-        return _card("Realised P/L",
-                     _empty_note(f"No realised events recorded for {report.get('year')}.")
+        return _card(title,
+                     _empty_note(f"No realised events recorded for {realised_year}.")
                      + _disclaimer(report.get("disclaimer")))
     rows = "".join(
         f'<tr><td>{_esc(g.get("currency", ""))}</td>'
@@ -306,7 +311,7 @@ async def _entity_realised(session: AsyncSession, entity_id: int) -> str:
         f'<strong class="{cur_cls}">{current_fx}</strong></p>'
         f"{excluded_note}"
     )
-    return _card("Realised P/L", inner + _disclaimer(report.get("disclaimer")))
+    return _card(title, inner + _disclaimer(report.get("disclaimer")))
 
 
 async def _entity_risk_attribution(session: AsyncSession, base: str, entity_id: int) -> str:
@@ -397,6 +402,14 @@ async def render_reports_pack(session: AsyncSession) -> str:
         + _section("Scenarios", await _consolidated_scenarios(session))
     )
 
+    # §14pk-3: ONE household-wide realised period for the whole artifact — the latest year with any
+    # recorded realised event across the household (or the current year if none). The year-scoped
+    # reader (`realised_gains_report`, tax.py:284) is the period truth; every per-entity realised
+    # section and every empty note consumes THIS value, so the period is consistent. (A household with
+    # realised events across MULTIPLE years shows the latest here — a true all-time roll-up would add a
+    # figure no reader produces, P-1; recorded as an owner observation in §14, not guessed silently.)
+    realised_year = (await realised_gains_report(session))["year"]
+
     entities = await list_entities(session)  # ordered by Entity.name (alphabetical) — Pack-6.
     if not entities:
         # Pack-4 degenerate case: consolidated + an honest omission note, never an empty per-entity shell.
@@ -414,7 +427,7 @@ async def render_reports_pack(session: AsyncSession) -> str:
             cards = (
                 await _entity_net_worth(session, base, eid)
                 + await _entity_drift(session, eid)
-                + await _entity_realised(session, eid)
+                + await _entity_realised(session, eid, realised_year)
                 + await _entity_risk_attribution(session, base, eid)
             )
             blocks.append(_section(f"Per-entity — {ent['name']}", cards, kind="entity"))

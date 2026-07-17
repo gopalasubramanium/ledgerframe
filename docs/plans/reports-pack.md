@@ -724,3 +724,31 @@ data.
 served_item_text_not_just_labels` asserts a stable, date-independent seeded signal
 (*"… documents marked missing or outdated"* — the seed's one MISSING + one OUTDATED estate document)
 is INSIDE the artifact — **RED** on the pre-fix `body` (proven by revert), **GREEN** on `title`.
+
+### §14pk-3 — Realised per-entity period was inconsistent (a leaked year default) → **FIXED**
+
+**Finding (PDF walk).** In one artifact, empty entities said *"No realised events recorded for **2026**"*
+while Rajan rendered a **2024** event — an inconsistent, unexplained period.
+
+**Verify-first (cite).** `realised_gains_report` is **calendar-year-scoped** (`app/services/tax.py:284`).
+With **no `year`** it defaults to **`years[0]`** — the entity's latest event year — **or the current
+year if the entity has none** (`tax.py:298`, `yr = int(year) if year else (years[0] if years else
+datetime.now(UTC).year)`). So each entity's section was scoped to a **different** period: Rajan → 2024
+(its event year), the empty entities → 2026 (the wall-clock year). **Root cause: a per-entity year
+default leaking** — the section never stated any period, so the divergence read as a bug.
+
+**Fix (scope to the ruled intent — one household period, stated explicitly).** `render_reports_pack`
+computes **one** `realised_year` = the household-wide latest recorded realised year
+(`realised_gains_report(session)["year"]`, or the current year if the household has none). **Every**
+per-entity realised section is scoped to that year (`realised_gains_report(year=realised_year, …)`),
+the **heading states it** (`Realised P/L — {year}`), and the **empty note derives from the SAME value**
+— one source, both templates. **Fail-first pin:** `test_realised_sections_share_one_consistent_period_
+label` asserts the populated heading (`Realised P/L — 2024`) AND the empty note (`… for 2024`) agree,
+and that no empty entity leaks the current year — **RED** on the pre-fix default (proven by revert).
+
+**Owner observation (recorded, NOT a blocker).** The Pack summarises the household's **latest recorded
+realised year** (the seed's entire recorded realised history is a single year, 2024, so the artifact is
+fully honest today). A household accruing realised events across **multiple** years would show only the
+latest here; a true multi-year all-time roll-up would sum per-year reader outputs into a figure **no
+single reader produces** (P-1 / D-031 — the Pack adds no figure its readers do not already produce), so
+it is deferred to an **owner line**, not guessed. Flagged for the owner's future call.
