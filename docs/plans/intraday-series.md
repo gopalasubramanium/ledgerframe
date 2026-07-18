@@ -502,3 +502,49 @@ replaces the `slice(0,10)` truncation, `InstrumentDetail.tsx:52-56`), and the se
 `disabledPeriods` (the hardcoded `INTRADAY_REASON`/`DISABLED_PERIODS` constants are gone).
 Phase 1 completes the loading/empty treatment + the pan interaction. Per-item status is
 tracked in the commit train; the pre-pass section below records the walk.
+
+---
+
+## PHASE 2 — TESTS (GREEN)
+
+Backend **1138 → 1139** (+1: the fetched→cached-fresh 12h-marker trigger-flow pin,
+`test_intraday_storage.py`). Frontend vitest **316 → 320** (+4: carryover fallback,
+in-flight dr-8 skeleton e2e, PriceChart loading unit, pan-when-zoomed). `npm run check`
+**exit 0** (lint · typecheck · design-tokens · internal-copy · 320 vitest · **337
+Playwright overflow** incl. Instrument Detail at 320/375/768/1366/1440 both themes — the
+chart changes introduce no overflow). `ruff` green. `make api-contract-check` **current**
+— **no contract shape changed** in Phase 1/2 (the availability shape was frozen in Phase 0),
+so the path-key count is **unchanged**. Sweep coverage: trigger flow (fetch→fetched→
+cached-fresh) · served disabled reasons per class/tier/provider/egress (Phase 0
+availability suite) · carryover fallback · pan/zoom/reset · daily-path regression
+(`test_daily_history_unchanged_without_range`) · comb-impossible re-asserted
+(`test_intraday_storage.py` partition pins) · idempotent re-fetch under the 12h marker.
+
+## PHASE 3a — SCRIPTED PRE-PASS (GREEN)
+
+Driven in a real Chromium against **isolated** instances (temp data dirs; owner's
+`~/.ledgerframe-data`, `5173→8321`, and repo `.env` all **untouched** — `.env` sha256
+verified unchanged after the run; `prepass-harness` memory). Two postures:
+
+**Mock/demo posture (no egress) — 9/9 checks, 0 console errors:**
+
+| # | Check | Result |
+|---|-------|--------|
+| 1 | AAPL 1D → 1-minute intraday, time-of-day axis (tooltip "17:13") | PASS |
+| 2 | AAPL 5D → 5-minute intraday | PASS |
+| 3 | Re-pick 1D re-renders (instant on mock) | PASS |
+| 4 | Advanced → zoom → **pan** (window 112-1264 → 288-1440) | PASS |
+| 5 | Reset zoom restores the full range (data-window cleared) | PASS |
+| 6 | Mutual fund (HDFCNIFTY) greys 1D/5D with the served once-daily-NAV reason | PASS |
+| 7 | Carryover: 1D → fund falls back to a daily range (6M), no dead empty | PASS |
+| 8 | Kitchen-sink specimen renders the served-state matrix | PASS |
+| 9 | 0 console errors across the walk | PASS |
+
+**Real-posture slice (isolated real-keyed instance, owner `.env` read-only + verified
+unchanged, budget-aware):** learned **`av_tier = premium`** → intraday enabled. TWO
+instruments × (1D, 5D) fetched **once each** (4 live Alpha Vantage `TIME_SERIES_INTRADAY`
+calls + the 1 tier probe): AAPL/MSFT 1D → **1-min, ~825 real market-session candles**;
+5D → **5-min, ~933 candles**; real timestamps, time-of-day present. A re-view served
+**`fetch_state=cached`** — the 12h marker prevents any second spend. Browser render slice
+(cached, no re-spend): **4/4** — smooth 1-/5-minute charts, time-of-day axis (1D "14:33";
+5D "07-14 18:30"), **0 console errors**, screenshots captured. Owner data untouched.
