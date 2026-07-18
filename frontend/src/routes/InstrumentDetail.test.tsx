@@ -123,6 +123,32 @@ test("§14dr-6: choosing amfi_nav reveals the AMFI code field and Save maps it b
   );
 });
 
+test("§14dr-27(d): the AMFI code pre-fills on edit from the persisted mapping (no re-ask)", async () => {
+  // The owner's finding: editing a mapped fund re-asked the scheme code every time. The
+  // pre-populate wire (InstrumentDetail EditDialog) reads meta.identifiers — it was blank
+  // only because the Add flow never persisted the amfi_code (now fixed, §14dr-27c). With the
+  // mapping present, the field is pre-filled and an unchanged Save does NOT re-map.
+  vi.mocked(api.getInstrument).mockResolvedValue({
+    ok: true,
+    data: { ...DETAIL, instrument: { ...DETAIL.instrument, symbol: "PPFAS", name: "PPFAS Flexi Cap",
+      asset_class: "mutual_fund", source_override: "amfi_nav",
+      identifiers: [{ id_type: "amfi_code", value: "122639" }] } },
+  });
+  const user = userEvent.setup();
+  renderAt("PPFAS");
+  await waitFor(() => expect(screen.getByRole("heading", { name: "PPFAS", level: 1 })).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  const dialog = screen.getByRole("dialog");
+  // Pre-populated from the persisted amfi_code identifier — not blank.
+  const code = within(dialog).getByLabelText("AMFI scheme code") as HTMLInputElement;
+  expect(code.value).toBe("122639");
+  // Saving without changing the code does NOT re-map (it is already persisted).
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  expect(vi.mocked(api.mapAmfi)).not.toHaveBeenCalled();
+  expect(vi.mocked(api.patchInstrument)).toHaveBeenCalledWith(
+    "PPFAS", expect.objectContaining({ source_override: "amfi_nav" }));
+});
+
 test("§14dr-7: 1D/5D ranges are disabled with a reason (daily-only data, no fabricated intraday)", async () => {
   // The store holds daily closes only (every live provider fetches daily), so 1D/5D
   // promised an intraday granularity the data can't differ on — "1D" rendered a couple
