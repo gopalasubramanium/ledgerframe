@@ -2,8 +2,34 @@
 
 **Status: ⏸ GATES C–F STANDING/DORMANT. GATE A CLOSED (+ A9–A11 addendum) · GATE B CLOSED
 (owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, as REFINED by Amendment 4 and
-EXTENDED by Amendment 5, owner 2026-07-18 — Voice is POST-RELEASE; the v2.0.0 set is enumerated below,
-now incl. R-45 + R-46; the R-41/R-43/R-44 release-scope ruling remains PENDING with the owner).**
+EXTENDED by Amendments 5 + 6, owner 2026-07-18 — Voice is POST-RELEASE; the v2.0.0 set is enumerated
+below, now incl. R-45 + R-46 + R-43 (with R-8); the R-41/R-43/R-44 ruling is now RESOLVED by
+Amendment 6 — R-43 IN, R-41 + R-44 POST-RELEASE).**
+
+> ## ⚠ RD-9 SCOPE AMENDMENT 6 (owner, 2026-07-18) — **the R-41 / R-43 / R-44 ruling: R-43 IN (with R-8); R-41 + R-44 POST-RELEASE.**
+>
+> **RESOLVES the "STILL PENDING" R-41 / R-43 / R-44 release-scope ruling left open by Amendment 5
+> (below, preserved).** Recorded at the **data-feed-routing (R-38) POST-CLOSE DELTA D1** session.
+> Owner rulings 2026-07-18, with the owner's stated rationales:
+>
+> - **R-43 — Historical valuation backfill: ⚡ IN v2.0.0.** Rationale: **Time-to-Value / first-open
+>   credibility** — a flat/linear Net-worth trend undermines the first open. **Includes the Net-worth
+>   snapshot-now trigger.** **Hard-depends on R-8 (historical FX)** → **R-8 becomes in-scope with it**
+>   (pulled into v2.0.0 as R-43's dependency).
+> - **R-41 — Per-provider credentials: ⛔ POST-RELEASE.** Rationale: **YAGNI** — no felt friction until
+>   a second keyed provider is actually in use; the shared key slot + active-marker honesty holds until
+>   then.
+> - **R-44 — News thumbnails: ⛔ POST-RELEASE.** Rationale: **cosmetic**; a **new egress surface** that
+>   **can ride the R-45 egress ruling later** (same decision class).
+>
+> **Sequencing (architect, under owner delegation — owner may override):** **R-43 immediately after
+> intraday-series (R-42), before Help** — R-42 and R-43 grow the **same history store**, so the
+> storage/keying decisions should be made **adjacently**.
+>
+> **The v2.0.0 set is now:** all pages DONE + Settings + data-feed-routing (R-38) + intraday-series
+> (R-42) + **R-43 (with R-8)** + Help + Legal + AI-surfaces (D-067/D-068) + **R-45** + **R-46** +
+> chrome-sidebar-refresh (R-39, FINAL) + Gates C→F clear. (R-41 + R-44 are POST-RELEASE.)
+> ROADMAP status cells updated for R-8 / R-41 / R-43 / R-44.
 
 > ## ⚠ RD-9 SCOPE AMENDMENT 5 (owner, 2026-07-18) — **v2.0.0 scope += R-45, R-46.**
 >
@@ -22,12 +48,12 @@ now incl. R-45 + R-46; the R-41/R-43/R-44 release-scope ruling remains PENDING w
 > AI-surfaces (D-067/D-068) + **R-45** + **R-46** + chrome-sidebar-refresh (R-39, FINAL) + Gates C→F
 > clear.
 >
-> ### ⚠ STILL PENDING with the owner (do NOT resolve): the **R-41 / R-43 / R-44** release-scope ruling.
+> ### ~~⚠ STILL PENDING with the owner (do NOT resolve): the **R-41 / R-43 / R-44** release-scope ruling.~~ **RESOLVED by Amendment 6 (above), owner 2026-07-18.**
 >
-> R-41 (per-provider credentials), R-43 (historical valuation backfill), and R-44 (news thumbnails) are
+> ~~R-41 (per-provider credentials), R-43 (historical valuation backfill), and R-44 (news thumbnails) are
 > **release-scope CANDIDATES** raised by R-38; the owner has **not yet ruled** whether they gate v2.0.0.
-> Recorded as **PENDING**, verbatim — unresolved until the owner rules. (R-45/R-46 above ARE ruled in;
-> R-41/R-43/R-44 are NOT.)
+> Recorded as **PENDING**, verbatim — unresolved until the owner rules.~~ (R-45/R-46 above ARE ruled in.)
+> **Amendment 6 now rules: R-43 IN (with R-8); R-41 + R-44 POST-RELEASE.**
 
 > ## ⚠ RD-9 SCOPE AMENDMENT 4 (owner, 2026-07-18) — **the v2.0.0 set is ENUMERATED; Voice (R-32) is POST-RELEASE.**
 >

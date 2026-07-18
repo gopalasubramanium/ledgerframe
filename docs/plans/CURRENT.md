@@ -41,24 +41,29 @@ carryover).
 
 ---
 
-## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5)
+## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6)
 
 The remaining v2.0.0 set, in sequence:
 
-1. **Help** — `[Help]` retrofit, owner-picked targets (RD-9 Amendment 4).
-2. **Legal.**
-3. **AI-surfaces** — D-067 / D-068.
-4. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
+1. **R-43** — historical valuation backfill (with **R-8** historical FX, its hard
+   dependency) — **pulled into v2.0.0, RD-9 Amendment 6**; sequenced **immediately after
+   intraday-series, before Help** (R-42 + R-43 grow the same history store — adjacent
+   storage/keying decisions). Includes the Net-worth snapshot-now trigger.
+2. **Help** — `[Help]` retrofit, owner-picked targets (RD-9 Amendment 4).
+3. **Legal.**
+4. **AI-surfaces** — D-067 / D-068.
+5. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
    Amendment 5; egress ruling required, take together with R-44).
-5. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
+6. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
    suggestion: adjacent to R-39).
-6. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
-7. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
+7. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
+8. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
    carries the batch-9 deferred verifications — dr-25 chart sign-off, dr-28 owner-eyes).
-8. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
+9. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
 
-**Pending with the owner (do NOT resolve):** the **R-41 / R-43 / R-44** release-scope
-ruling — release-scope candidates raised by R-38, not yet ruled in or out.
+**R-41 / R-43 / R-44 — RESOLVED (RD-9 Amendment 6, owner 2026-07-18):** R-43 **IN** (with
+R-8); **R-41** (per-provider credentials — YAGNI) and **R-44** (news thumbnails —
+cosmetic, rides the R-45 egress ruling) are **POST-RELEASE**.
 
-**Post-release:** **Voice (R-32)** — post-release, definition owed. **R-40** (Alpha
-Vantage premium feed expansion) — parked, definition owed.
+**Post-release:** **R-41** · **R-44** (above) · **Voice (R-32)** — post-release, definition
+owed · **R-40** (Alpha Vantage premium feed expansion) — parked, definition owed.
