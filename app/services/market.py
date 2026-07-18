@@ -39,10 +39,15 @@ def _is_stale(received_at: datetime, entitlement: str | None = None) -> bool:
     return age > threshold
 
 
-def _history_source(diag, active_name: str) -> tuple[str | None, str | None]:
+def _history_source(diag, active_name: str, interval: str | None = None) -> tuple[str | None, str | None]:
     """Which source (if any) may fetch *history* for this instrument (§4). Returns
-    ``(source, reason)`` — ``source=None`` means no fetch (cache-only) with a reason."""
-    from app.providers.market.router import capabilities_for
+    ``(source, reason)`` — ``source=None`` means no fetch (cache-only) with a reason.
+
+    §12-R3: the capability check is PER ASSET CLASS. A source that quotes a class it cannot serve
+    history for (Alpha Vantage + crypto/fx — its daily/intraday endpoints are equity-only) is
+    refused HERE, at the capability layer, so the wrong-instrument fetch is impossible by
+    construction. ``interval`` selects the daily vs intraday capability (defaults to daily)."""
+    from app.providers.market.router import can_fetch_history, can_fetch_intraday, capabilities_for
 
     src = diag.source_selected
     if src is None:
@@ -53,8 +58,13 @@ def _history_source(diag, active_name: str) -> tuple[str | None, str | None]:
         return None, "NAV history not available yet"
     if src == "coingecko":
         return None, "canonical-id price history not available yet"
-    if not capabilities_for(src).history:
-        return None, f"{src} does not provide history"
+    caps = capabilities_for(src)
+    ac = diag.asset_class
+    is_intraday = interval is not None and interval not in _DAILY_INTERVALS
+    capable = can_fetch_intraday(caps, ac) if is_intraday else can_fetch_history(caps, ac)
+    if not capable:
+        kind = "intraday" if is_intraday else "history"
+        return None, f"{src} does not provide {ac} {kind}"
     if src != active_name:
         return None, f"history owned by {src}, not the active provider"
     return src, None
@@ -419,7 +429,7 @@ async def intraday_availability(session: AsyncSession, instrument, *, no_egress:
     interval + ``enabled`` + a served ``reason``/``state`` for every disabled case. Decides
     the single gate once, in priority order (class → routing → capability → tier → egress),
     since 1D and 5D differ only in interval."""
-    from app.providers.market.router import capabilities_for
+    from app.providers.market.router import can_fetch_intraday, capabilities_for
 
     provider = get_provider()
     active = getattr(provider, "name", "mock")
@@ -433,6 +443,9 @@ async def intraday_availability(session: AsyncSession, instrument, *, no_egress:
         reason = "Mutual-fund NAV is published once daily — no intraday series."
     else:
         diag = await route_for_instrument(session, instrument)
+        # §12-R3: the daily history-source check already refuses a class the provider can't serve at
+        # all (AV + crypto/fx — its endpoints are equity-only), so a wrong-class intraday fetch is
+        # impossible. The provider-level intraday-incapability check stays distinct below.
         hsrc, hreason = _history_source(diag, active)
         if hsrc is None:
             state = "class_disabled"
@@ -440,6 +453,10 @@ async def intraday_availability(session: AsyncSession, instrument, *, no_egress:
         elif not caps.intraday:
             state = "provider_incapable"
             reason = f"{_provider_label(active)} doesn't provide intraday prices."
+        elif not can_fetch_intraday(caps, ac):
+            # A provider that does intraday for SOME classes but not this one (per-class §12-R3).
+            state = "class_disabled"
+            reason = f"{_provider_label(active)} doesn't provide intraday prices for this asset class."
         elif active == "alphavantage" and av_tier != "premium":
             state = "tier_disabled"
             reason = _AV_INTRADAY_TIER_REASON.get(av_tier or "unknown", _AV_INTRADAY_TIER_REASON["unknown"])
@@ -736,6 +753,57 @@ async def repair_extended_hours_intraday(session: AsyncSession) -> dict:
     return {"purged": purged, "instruments": len(instruments)}
 
 
+async def repair_wrong_class_candles(session: AsyncSession) -> dict:
+    """§12-R3 — a served, idempotent, logged purge of WRONG-INSTRUMENT candles (the dr-25/W-3
+    pattern). A candle stored from a provider that cannot serve that instrument's asset class as
+    history/intraday is garbage: Alpha Vantage's TIME_SERIES_DAILY is an equity endpoint, so the
+    BTC/XRP daily rows it cached (live BTC 64,024 vs AV "BTC" close 28.38) are a different
+    instrument's numbers entirely (the F-1/F-3 root). A row is wrong-instrument when its ``source``
+    provider can serve NEITHER history NOR intraday for the instrument's class. Reports counts; a
+    second run finds nothing. Never removes a candle from a source that legitimately owns the class."""
+    from app.models import AuditEvent, Instrument, PriceHistory
+    from app.providers.market.router import can_fetch_history, can_fetch_intraday, capabilities_for
+
+    rows = (await session.execute(
+        select(PriceHistory, Instrument.asset_class)
+        .join(Instrument, Instrument.id == PriceHistory.instrument_id)
+    )).all()
+    purged = 0
+    instruments: set = set()
+    by_source: dict[str, int] = {}
+    for row, ac_raw in rows:
+        src = (row.source or "").strip()
+        if not src:
+            continue  # a sourceless (manual/seed) row is not a provider mistake — leave it
+        ac = ac_raw.value if hasattr(ac_raw, "value") else str(ac_raw or "")
+        caps = capabilities_for(src)
+        # Interval-precise: a DAILY candle is garbage only when the source HAS a daily endpoint that
+        # does not cover this class (so it came from the wrong-class endpoint — AV crypto). A source
+        # with no daily endpoint at all (its candles weren't fetched from a mismatched endpoint) is
+        # left alone. Same logic for intraday. This never purges a legit candle whose source simply
+        # lacks the OTHER kind of endpoint.
+        is_daily = row.interval in _DAILY_INTERVALS
+        if is_daily:
+            wrong = caps.history and not can_fetch_history(caps, ac)
+        else:
+            wrong = caps.intraday and not can_fetch_intraday(caps, ac)
+        if wrong:
+            await session.delete(row)
+            purged += 1
+            instruments.add(row.instrument_id)
+            by_source[src] = by_source.get(src, 0) + 1
+    if purged:
+        detail = ", ".join(f"{n}×{s}" for s, n in sorted(by_source.items()))
+        session.add(AuditEvent(
+            category="mutation", action="repair_wrong_class_candles",
+            detail=f"purged {purged} wrong-instrument candle(s) across {len(instruments)} "
+                   f"instrument(s) [{detail}]"))
+        await session.flush()
+    log.info("§12-R3 wrong-instrument candle purge: purged %d candle(s) across %d instrument(s) %s",
+             purged, len(instruments), by_source)
+    return {"purged": purged, "instruments": len(instruments), "by_source": by_source}
+
+
 async def get_history_cached(
     session: AsyncSession,
     symbol: str,
@@ -772,6 +840,16 @@ async def get_history_cached(
     )).scalars().first() is None:
         await repair_extended_hours_intraday(session)
         session.add(Setting(key="hist_extended_hours_purged_v1", value=datetime.now(UTC).isoformat()))
+        await session.flush()
+
+    # §12-R3: one-time served purge of wrong-instrument candles (crypto rows cached from AV's
+    # equity endpoint, the F-1/F-3 root), idempotent + guarded by a Setting marker. A fresh DB has
+    # no such rows, so this is a cheap no-op there; it is the belt to the class-aware capability gate.
+    if (await session.execute(
+        select(Setting).where(Setting.key == "hist_wrong_class_candles_purged_v1")
+    )).scalars().first() is None:
+        await repair_wrong_class_candles(session)
+        session.add(Setting(key="hist_wrong_class_candles_purged_v1", value=datetime.now(UTC).isoformat()))
         await session.flush()
 
     instrument = await _get_or_create_instrument(session, symbol, None)
@@ -834,7 +912,7 @@ async def get_history_cached(
     # (CoinGecko), a manual asset, or an instrument overridden to a different source is
     # served from cache and never sent to the wrong (e.g. equity) history endpoint.
     diag = await route_for_instrument(session, instrument)
-    hsrc, hreason = _history_source(diag, active_name)
+    hsrc, hreason = _history_source(diag, active_name, interval)
     if hsrc is None:
         log.debug("history not routed to active provider for %s: %s", symbol, hreason)
         return await _from_db()

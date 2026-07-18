@@ -153,7 +153,7 @@ async def test_upsert_real_supersedes_demo_residue(session, monkeypatch):
 
     monkeypatch.setattr(market, "get_provider", lambda: _RealFetch())
     # route history to the active provider for a plain equity
-    monkeypatch.setattr(market, "_history_source", lambda diag, name: (name, "test"))
+    monkeypatch.setattr(market, "_history_source", lambda diag, name, interval=None: (name, "test"))
 
     end = datetime.now(UTC)
     candles = await market.get_history_cached(session, "MSFT", "1d", end - timedelta(days=30), end)

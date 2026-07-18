@@ -59,11 +59,16 @@ async def acquire_history(session: AsyncSession, base_currency: str | None = Non
         return {"ok": True, "acquired": False,
                 "message": "Demo history is generated offline — no download needed."}
 
+    # §12-R3: purge wrong-instrument candles (crypto rows cached from AV's equity endpoint) BEFORE
+    # valuing, so the backfill never reads garbage. Idempotent — a second build finds nothing.
+    from app.services.market import repair_wrong_class_candles
+    purge = await repair_wrong_class_candles(session)
+
     # ECB per-date FX — one fetch = the whole EUR-reference daily history back to 1999.
     csv_text = await fetch_ecb_hist()
     fx = await ingest_hist(session, csv_text)
     await session.commit()
-    log.info("acquire_history: ECB FX ingested — %s dates, %s rows (base %s)",
-             fx.get("dates"), fx.get("rows"), base)
-    return {"ok": True, "acquired": True, "fx": fx,
+    log.info("acquire_history: ECB FX ingested — %s dates, %s rows; purged %s garbage candle(s) (base %s)",
+             fx.get("dates"), fx.get("rows"), purge.get("purged"), base)
+    return {"ok": True, "acquired": True, "fx": fx, "purged": purge.get("purged", 0),
             "message": f"Exchange-rate history downloaded — {fx.get('dates', 0)} publication days."}

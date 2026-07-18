@@ -43,6 +43,13 @@ class ProviderCapabilities:
     fetch_on_demand: bool = True     # False = rate-limited; serve cache, refresh via worker
     needs_key: bool = False
     asset_classes: frozenset[str] = field(default_factory=frozenset)
+    # §12-R3: history/intraday capability is PER ASSET CLASS. A provider may quote a class it cannot
+    # serve *history* for — Alpha Vantage's TIME_SERIES_DAILY/_INTRADAY are equity endpoints, so its
+    # crypto/fx history is wrong-instrument garbage (the F-1 root). Empty = falls back to
+    # ``asset_classes`` (the class-agnostic default: a provider serves history for everything it
+    # covers). Set explicitly to narrow history/intraday below the class set.
+    history_asset_classes: frozenset[str] = field(default_factory=frozenset)
+    intraday_asset_classes: frozenset[str] = field(default_factory=frozenset)
     regions: frozenset[str] = field(default_factory=frozenset)  # ISO-3166 alpha-2, or "*"
     entitlement: str = "delayed"     # best entitlement this provider claims
 
@@ -66,6 +73,10 @@ CAPABILITIES: dict[str, ProviderCapabilities] = {
         name="alphavantage", history=True, intraday=True, search=True, fx=True, indices=True,
         fetch_on_demand=False, needs_key=True,
         asset_classes=frozenset({"equity", "etf", "fx", "crypto", "index"}),
+        # §12-R3: AV quotes crypto/fx but its TIME_SERIES_DAILY/_INTRADAY are EQUITY endpoints — its
+        # history/intraday is equity/etf ONLY. Crypto history rides CoinGecko (step 4); AV never.
+        history_asset_classes=frozenset({"equity", "etf"}),
+        intraday_asset_classes=frozenset({"equity", "etf"}),
         regions=frozenset({"US", "*"}), entitlement="delayed"),
     "amfi_nav": ProviderCapabilities(
         name="amfi_nav", history=True, search=True, fetch_on_demand=False, needs_key=False,
@@ -94,6 +105,29 @@ CAPABILITIES: dict[str, ProviderCapabilities] = {
 def capabilities_for(name: str) -> ProviderCapabilities:
     """Capabilities for a provider name; a safe quote-only default if unknown."""
     return CAPABILITIES.get(name, ProviderCapabilities(name=name))
+
+
+def _covers_class(classes: frozenset[str], asset_class: str) -> bool:
+    ac = (asset_class or "").strip().lower()
+    return bool(classes) and (ac in classes or "*" in classes)
+
+
+def can_fetch_history(caps: ProviderCapabilities, asset_class: str) -> bool:
+    """§12-R3: True only if the provider serves DAILY history for this asset class. Falls back to
+    the class-agnostic ``asset_classes`` when ``history_asset_classes`` is unset (a provider that
+    serves history for everything it covers). Makes fetching a class the provider cannot serve
+    impossible by construction (the Flag-2 quote-capability precedent, per class)."""
+    if not caps.history:
+        return False
+    return _covers_class(caps.history_asset_classes or caps.asset_classes, asset_class)
+
+
+def can_fetch_intraday(caps: ProviderCapabilities, asset_class: str) -> bool:
+    """§12-R3: True only if the provider serves INTRADAY bars for this asset class (as
+    :func:`can_fetch_history`, for sub-daily)."""
+    if not caps.intraday:
+        return False
+    return _covers_class(caps.intraday_asset_classes or caps.asset_classes, asset_class)
 
 
 @dataclass(frozen=True)
