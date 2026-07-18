@@ -559,7 +559,7 @@ owner DB — `~/.ledgerframe-data/db/ledgerframe.db` copied to scratchpad, never
 place). Standing rules apply: RED-first on the real cause, one delta per commit, both
 postures, STOP at the end for the owner re-walk.*
 
-### W-1 — INR-priced holdings valued WITHOUT FX conversion (data-integrity, P1) — VERIFYING → FIX
+### W-1 — INR-priced holdings valued WITHOUT FX conversion (data-integrity, P1) — FIXED (W-1a `47384f3`, W-1b `f1f70a3`)
 
 **Owner-walk evidence (screenshots):** TSLA 100 × USD 380.84 → SGD 49,176.57 (USD→SGD
 ~1.291 — correct). 145834: 100 × INR 14.8131 → "Value (SGD) 1,481.31" (raw INR magnitude;
@@ -595,7 +595,7 @@ state** (served `fx unavailable` reason + confidence factor via the existing mec
 never a fabricated 1.0. Net worth / Portfolio totals read the same corrected valuation
 (`portfolio.py:209,425`) — no re-derivation.
 
-### W-2 — instrument `currency` vs `pricing_currency` divergence (data class) — VERIFYING → FIX
+### W-2 — instrument `currency` vs `pricing_currency` divergence (data class) — FIXED (`6291c97`)
 
 **VERIFIED (DB dump):** ALL three AMFI funds carry `currency='USD'`, `pricing_currency='INR'`
 (instruments 25/26/28) — the divergence is the **class**, not one row. `recognise_amfi_fund`
@@ -605,12 +605,76 @@ in the D1 helper; extend the D1-b repair (`recognise_unconverted_amfi_funds`,
 `market.py:155-193`) to heal existing rows (idempotent, counted). Identity card render field
 to be cited before the fix.
 
-### W-3 — 5D spike artifacts at session boundaries (verify, then rule-ready) — VERIFYING
+### W-3 — 5D spike artifacts at session boundaries (verify, then rule-ready) — FIXED (`fd94f9d`)
 
-Owner's TSLA 5D shows tall paired vertical spikes at regular intervals (likely session
-boundaries). **Verify first:** dump the served 5D candles around the spike timestamps —
-extended-hours candles (AV `TIME_SERIES_INTRADAY` defaults `extended_hours=true`), bad
-ticks, or a rendering artifact across session gaps? Fix policy is cause-dependent (extended
-hours → `extended_hours=false` + idempotent cleanup + pin; bad ticks → STOP for an owner
-policy ruling, no silent filtering; rendering → chart gap/join fix + overflow suite).
-**dr-25 carryover** resolution depends on this — stated at close.
+**VERIFIED CAUSE (read-only DB dump):** **extended-hours candles** (cause (a)), not bad
+ticks and not a rendering artifact. TSLA 5min spanned **08:00–23:55 UTC** — 540/930 candles
+OUTSIDE the regular US session (13:30–20:00 UTC); the regular-session open (13:30 UTC) had
+volume **1,071,821** vs **~2,651** pre-market. The paired spikes are the open/close volume
+jumps against thin pre/post-market bars, repeated each of the 5 days. Alpha Vantage
+`TIME_SERIES_INTRADAY` was fetched WITHOUT `extended_hours`, so AV's default `true` returned
+the 04:00–20:00 ET window (`external.py:224-227`, pre-fix).
+
+**FIX:** the AV client sends `extended_hours=false` (regular 09:30–16:00 ET only —
+`external.py:224-233`). A one-time idempotent `repair_extended_hours_intraday`
+(`market.py`, the dr-25 cleanup pattern) purges rows already stored outside the regular
+session (US/Eastern wall-clock, DST-correct), scoped to non-daily intervals so daily rows
+are never touched; guarded by a `hist_extended_hours_purged_v1` Setting marker in
+`get_history_cached`. **No bad-tick filtering** (that would be the silent data-filtering the
+product must never do — none was needed; the cause was policy, not outliers).
+
+**ROADMAP candidate (owner to rule):** extended hours as an explicit USER choice (a
+pre/post-market toggle). NOT built — the honest default is the regular session. Filed here
+as a candidate row for the owner, per the finding's "do NOT build it" instruction.
+
+### PHASE 3b BATCH-1 REPORT (W-1 · W-2 · W-3) — GREEN, STOP for owner re-walk
+
+**Per-finding.** Each: verified cause (dumps + cites, above) · fix at the cause · commit ·
+RED→GREEN · posture evidence.
+
+- **W-1a `47384f3`** — market value + day change convert FROM `quote.currency` (ranked above
+  the drift-prone `holding.currency`); cost stays on the recorded holding currency (the
+  transactions recorded SGD cost — a separate, pre-existing data concern, flagged not
+  silently rewritten). `native_currency` now serves the price currency. RED→GREEN:
+  `test_fx_quote_currency.py` (INR fund in SGD account converts; TSLA/USD unchanged;
+  mixed-book net worth).
+- **W-1b `f1f70a3`** — `fx.get_rate_or_none` never fabricates 1.0; the valuation converts via
+  `convert_checked`, so a genuinely-missing rate flags the holding (served `failure_reason`
+  + `−30` confidence factor) and contributes 0 to net worth — never a silent 1.0. Latent in
+  the owner's book (all quote currencies ECB-covered) but the class defect is closed.
+  RED→GREEN: `test_missing_rate_is_flagged_never_fabricated_one`.
+- **W-2 `6291c97`** — `recognise_amfi_fund` reconciles `instrument.currency='INR'` too; the
+  D1-b repair now also triggers on a `currency != INR` divergence, so the owner's
+  already-converted-but-USD rows (25/26/28) are healed, not skipped. RED→GREEN:
+  `test_repair_heals_currency_only_divergence` + currency assertion in the existing pin.
+- **W-3 `fd94f9d`** — `extended_hours=false` + `repair_extended_hours_intraday` (idempotent,
+  counted, non-daily-scoped). RED→GREEN: `extended_hours=false` param pin +
+  `test_extended_hours_purge_removes_only_out_of_session_intraday`.
+
+**Both-postures.** Mock suite: 1145 backend pass. **Real-posture (isolated COPY of the
+owner DB, FX forced through the cached ECB reference rates, no egress, owner `.env` sha256
+verified UNCHANGED, owner live stack untouched):** D1-b healed all 3 funds
+(currency USD→INR); valuation in SGD — **145834: 100×14.8131 INR → S$19.86** (was raw
+1,481.31); **102000 → S$1,518.30** (was 113,223.00); **TSLA/USD → S$49,175.32** (unchanged);
+**net worth S$472,508.70**, ~S$113k of unconverted INR magnitude removed; `fx_unavailable`
+False (rates present, honestly converted). W-3 purge on the real rows: intraday **1841 →
+786** (purged 1055 extended-hours candles, 1 instrument = TSLA); the 786 remaining are
+regular-session only.
+
+**Gates.** Backend **1139 → 1145** (+6). Frontend `npm run check` **exit 0** (from
+`frontend/`; 337 Playwright overflow incl. Instrument Detail all breakpoints/themes — no
+frontend source changed). `ruff` clean. `make api-contract-check` **current** — **no
+contract shape changed** (path-key count unchanged at 134; the fx-unavailable reason rides
+the existing `failure_reason` + `confidence_factors`).
+
+**Cleanup counts.** W-3 real data: 1055 extended-hours candles purged (idempotent — a
+second run is 0). W-2 real data: 3 funds healed (idempotent — second run 0).
+
+**dr-25 carryover.** The 5D DATA is clean after W-3 — the extended-hours rows are purged and
+new fetches are regular-session only, so the session-boundary spikes have no source. The
+visual 5D render on the real-keyed instance is the owner re-walk's to confirm (below); the
+carryover resolves once the owner sees the clean 5D.
+
+**STOP.** Batch-1 (W-1/W-2/W-3) is code-complete, gated, and pushed. No close ritual, no
+`RATIFICATION`/`CURRENT.md` close record, no CLI ratification — this batch STOPS here for the
+owner re-walk in chat (per the batch instruction). The fix commits themselves are pushed.
