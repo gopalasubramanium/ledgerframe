@@ -640,13 +640,42 @@ instance, driving the whole flow through the API/services:
 - (e) TODAY's net worth = **797,193.17 SGD, unchanged** on the live path (byte-identical engine).
 - (f-perf) ▲-B before/after stated at step 4.
 
-### NEXT — reaches the 0a PIXEL specimen
+- **§9-T — GLOSSARY** — "Snapshot" + "Backfill" spec-first (GLOSSARY.md → glossary.ts), parity
+  green (64 pins). Reconciled with the retired page/nav alias (D-022). — commit `1f5a8fd`.
+- **Frontend (Phase-1-into-0a) — Net-worth trend wiring** — the empty state's "Build history"
+  primary Button (§9-2 trigger) + served progress polling (message + n-of-m + current date);
+  once history exists, a header snapshot-now icon Button (§9-6, disabled with the served
+  "Backfill in progress" reason during a run) + a Build/Rebuild action; a provenance note when
+  the trend includes reconstructed history; the §9-5 carried-forward reason surfaced as the chart
+  coverage note. Design tokens only; frontend check exit 0 (337 e2e + unit). — commit `65f4a35`.
+- **§9-8 — demo trend now a CONSISTENT backfill** — replaced the synthetic 80%→100% easing
+  (which interleaved with the real backfill as a visual comb, caught in the live drive) with a
+  coarse (monthly) run of the real engine; `run_backfill` gains `stride_days` + `commit`. — commit
+  `63cd864`.
+
+**LIVE 0a PIXEL SPECIMEN — DRIVEN GREEN (2026-07-18, isolated instance, prod dist same-origin).**
+Screenshots captured; the owner walk ratifies (never this CLI):
+- **(a)** the Net-worth trend renders a **clean multi-year backfilled line** (2023→2026) with the
+  Snapshot + Build-history header actions and the served provenance note.
+- **(b)** clicking "Build history" shows the **served "Building history…" progress** (spinner on
+  the button); the live daily backfill completed **1258 days in 11.5s**, then the trend refilled.
+- **(d)** the snapshot-now icon Button is present and **disabled/grayed during the backfill**
+  (§9-6 honest-disable) — verified in the progress screenshot.
+- **(e)** today's headline is **unchanged** on the live path (byte-identical engine).
+
+**OPEN FINDINGS for the owner walk (not blockers; recorded honestly):**
+1. **Per-date-valuation perf.** `/portfolio/stats` + `/portfolio/performance` are materially
+   slower now (per-date valuation; ~2.5–5s each) and the demo seed's backfill lifted the test
+   suite ~7→~9.7 min. A **batched as-of preload** (resolve txns/prices once, value in-memory) is
+   the worthwhile follow-up — flagged since step 4.
+2. **A single transient 500** appeared once in the live drive under concurrent page reads during a
+   backfill. WAL + a 30s busy timeout are already configured (`db/base.py:144`), so it is not a
+   simple lock; likely a slow-request edge tied to finding 1. Verify on the owner walk.
+
+### NEXT — remaining for the full milestone (owner-directed)
 
 - **Step 6 — history acquisition** (network; owner validates on-stack). AMFI confirming call →
   chunked archive fetcher; CoinGecko `market-chart/range`; AV `outputsize=full`. Build vs fixtures.
-- **Frontend (Phase-1-into-0a)** — the "Build history" trigger + served progress; provenance/gap
-  rendering; the snapshot-now icon `Button` + disabled-with-reason; empty/no-egress states.
-- **Step 10 — GLOSSARY (§9-T spec-first "Snapshot"/"Backfill") + gates + the rendered pixel walk.**
-
-The **backend of the 0a specimen is proven at the API level** (above). The remaining rendered
-pixel walk needs the frontend wiring + GLOSSARY. The next session continues from this log.
+- **Perf follow-up** (finding 1): batched as-of preload for the analytics + backfill hot paths.
+- **Phase 1 polish / Phase 3a pre-pass** (both themes/breakpoints, no-egress state) → the owner
+  0a ratification, then Phase 1 assembly proper.
