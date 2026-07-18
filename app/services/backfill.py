@@ -92,10 +92,14 @@ async def _manual_base(session: AsyncSession, base_currency: str) -> tuple:
 
 
 async def run_backfill(session: AsyncSession, base_currency: str | None = None,
-                       write_progress: bool = True) -> dict:
-    """Reconstruct + persist the daily backfilled net-worth series. Idempotent. Returns a summary
-    (days written, span, runtime). Commits its own work (callable from a background task or the
-    demo seed). Progress is written to the served status file when ``write_progress``."""
+                       write_progress: bool = True, stride_days: int = 1,
+                       commit: bool = True) -> dict:
+    """Reconstruct + persist the backfilled net-worth series. Idempotent. Returns a summary
+    (days written, span, runtime). The user-triggered path uses the default DAILY cadence
+    (``stride_days=1``); the demo seed uses a coarser stride for a cheap-but-consistent line (the
+    same engine + data, fewer points). ``commit=False`` lets a caller mid-transaction (the seed)
+    fold this into its own commit. Progress is written to the served status file when
+    ``write_progress``."""
     import time as _time
 
     base = (base_currency or get_settings().base_currency)
@@ -134,9 +138,12 @@ async def run_backfill(session: AsyncSession, base_currency: str | None = None,
                       current=start.isoformat(), message="Building history…")
     t0 = _time.monotonic()
     written = 0
+    last_idx = len(days) - 1
     for i, d in enumerate(days):
         if d in real_dates:
             continue  # a live/manual row already owns this date
+        if stride_days > 1 and (i % stride_days) != 0 and i != last_idx:
+            continue  # coarser cadence (demo) — value every stride-th day + always the last
         v = await value_portfolio(session, base, warm=False, as_of=d, hist_fx=hist_fx)
         market_assets = sum((h.market_value_base for h in v.holdings if h.market_value_base > 0), ZERO)
         market_liab = -sum((h.market_value_base for h in v.holdings if h.market_value_base < 0), ZERO)
@@ -156,7 +163,10 @@ async def run_backfill(session: AsyncSession, base_currency: str | None = None,
         if write_progress and (i % 25 == 0):
             _write_status(running=True, ok=False, failed=False, done=i + 1, total=total,
                           current=d.isoformat(), message="Building history…")
-    await session.commit()
+    if commit:
+        await session.commit()
+    else:
+        await session.flush()
     runtime = round(_time.monotonic() - t0, 1)
     if write_progress:
         _write_status(running=False, ok=True, failed=False, done=total, total=total,

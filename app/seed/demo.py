@@ -253,32 +253,17 @@ async def seed_demo_data(session: AsyncSession) -> bool:
         if key in _seed_tags and h.account_id is not None:
             session.add(HoldingTag(account_id=h.account_id, holding_key=key, tags=_json.dumps(_seed_tags[key])))
 
-    # Synthetic net-worth snapshots (page-net-worth ND-1) so the demo trend renders POPULATED.
-    # Demo-only, seed-flag convention — a REAL appliance accumulates these from the 6-hour worker
-    # (app/worker.generate_snapshots); no history is ever fabricated on a real install. The series
-    # ends at today's real seeded net worth and eases up to it (no claim of a specific past).
-    from datetime import timedelta
-
+    # R-43 §9-8: a CONSISTENT backfilled net-worth trend for the demo — reconstructed by the real
+    # engine from the generated price/FX history (NOT the old synthetic 80%→100% easing, which
+    # interleaved with the real backfill as a visual comb). A coarse (monthly) stride keeps the seed
+    # cheap; the user's 'Build history' trigger refills it daily. A real appliance accumulates
+    # forward snapshots from the 6-hour worker and reconstructs the rest on the user's trigger — no
+    # history is ever fabricated on a real install; the demo backfill rests on the generated fixture.
     from app.core.config import get_settings
-    from app.models import NetWorthSnapshot
-    from app.services.portfolio import value_portfolio
+    from app.services.backfill import run_backfill
 
     base_ccy = get_settings().base_currency
-    val = await value_portfolio(session, base_ccy)
-    assets_now = sum((h.market_value_base for h in val.holdings if h.market_value_base > 0), D("0"))
-    liab_now = -sum((h.market_value_base for h in val.holdings if h.market_value_base < 0), D("0"))  # stored positive (worker convention)
-    net_now = val.total_value
-    _POINTS = 26  # ~6 months of weekly snapshots
-    _now = datetime.now(UTC)
-    for i in range(_POINTS):
-        frac = D("0.80") + D("0.20") * (D(i) / D(_POINTS - 1))  # 80% → 100%, ending at today's real value
-        ts = _now - timedelta(weeks=(_POINTS - 1 - i))
-        session.add(NetWorthSnapshot(
-            ts=ts, base_currency=base_ccy,
-            assets=(assets_now * frac).quantize(D("1")),
-            liabilities=(liab_now * frac).quantize(D("1")),
-            net_worth=(net_now * frac).quantize(D("1")),
-        ))
+    await run_backfill(session, base_ccy, write_progress=False, stride_days=30, commit=False)
 
     # Insurance protection register (page-insurance) — a realistic household set so the page renders
     # POPULATED, exercising every honesty case live: a NON-BASE (USD) policy (§12in-1), a LAPSED policy
