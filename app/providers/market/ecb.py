@@ -10,13 +10,19 @@ fresher entitled provider rate.
 
 from __future__ import annotations
 
+import io
+import zipfile
 from decimal import Decimal, InvalidOperation
 from xml.etree import ElementTree as ET
 
 from app.core.egress import egress_client
 
 DAILY_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
-HIST_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.csv"
+# F-4: the legacy ``eurofxref-hist.csv`` URL served a SIX-YEAR-STALE, corrupt object from ECB's own
+# edge (last-modified 2020, a 2010 counting-pattern nonsense row atop 2009 data) while the
+# maintained ``.zip`` was current + genuine (top row 2026-07-17). Ingest the ZIP, not the CSV.
+HIST_ZIP_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip"
+HIST_URL = HIST_ZIP_URL  # back-compat alias; the CSV URL is deliberately no longer fetched
 
 
 def parse_ecb_daily(xml_text: str) -> tuple[str | None, dict[str, Decimal]]:
@@ -94,13 +100,25 @@ def parse_ecb_hist_csv(csv_text: str) -> dict[str, dict[str, Decimal]]:
     return out
 
 
+def extract_hist_csv(zip_bytes: bytes) -> str:
+    """Extract the single CSV member from ``eurofxref-hist.zip``. Pure + testable. Raises on a
+    malformed archive or a zip with no CSV member (a corrupt download is refused, never guessed)."""
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
+        name = next((n for n in z.namelist() if n.lower().endswith(".csv")), None)
+        if name is None:
+            raise ValueError("eurofxref-hist.zip contained no CSV member")
+        return z.read(name).decode("utf-8-sig", errors="replace")
+
+
 async def fetch_ecb_hist(timeout: float = 60.0) -> str:
-    """One fetch = the whole daily EUR-reference history back to 1999 (~2,800 rows).
-    Routed through the egress choke point, so no-egress raises EgressBlocked (Guarantee 5)."""
+    """One fetch = the whole daily EUR-reference history back to 1999 (~2,800 rows). F-4: fetch the
+    MAINTAINED ``eurofxref-hist.zip`` (the legacy .csv URL served a 6-year-stale corrupt object from
+    ECB's edge), unzip in-memory, return the CSV text. Routed through the egress choke point, so
+    no-egress raises EgressBlocked (Guarantee 5)."""
     async with await egress_client(
         "ECB FX history backfill", timeout=timeout,
         headers={"User-Agent": "LedgerFrame/1.0 (+local)"}, follow_redirects=True,
     ) as c:
-        r = await c.get(HIST_URL)
+        r = await c.get(HIST_ZIP_URL)
         r.raise_for_status()
-        return r.text
+        return extract_hist_csv(r.content)

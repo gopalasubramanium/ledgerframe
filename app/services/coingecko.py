@@ -26,12 +26,19 @@ QUOTE_CCY = "USD"
 
 
 async def ingest_history(session: AsyncSession, instrument_id: int, chart_json: dict,
-                         interval: str = "1d") -> int:
+                         interval: str = "1d", *, verify: bool = False) -> int:
     """§12 step 4: parse a ``market_chart/range`` payload and upsert daily PriceHistory rows for
     ``instrument_id`` (source='coingecko', keyed to midnight UTC). Idempotent — re-ingesting the
     same window overwrites in place on the (instrument_id, interval, ts) unique index, never
-    duplicating. Returns the number of candles ingested."""
+    duplicating. Returns the number of candles ingested.
+
+    F-4: when ``verify`` (the acquisition path), a payload that HAD points but parsed to nothing
+    (all dropped as corrupt/non-positive) is refused (``IngestIntegrityError``) rather than stored
+    as a silently-empty series."""
     candles = parse_market_chart_range(chart_json)
+    if verify and (chart_json or {}).get("prices"):
+        from app.services.ingest_guard import assert_not_truncated
+        assert_not_truncated(len(candles), source="CoinGecko market_chart", minimum=1)
     if not candles:
         return 0
     payload = [{"instrument_id": instrument_id, "interval": interval, "ts": c.ts,

@@ -44,14 +44,26 @@ def _iso(on_date: str | date | datetime) -> str:
 # --------------------------------------------------------------------------- #
 # Ingestion
 # --------------------------------------------------------------------------- #
-async def ingest_hist(session: AsyncSession, csv_text: str) -> dict:
+async def ingest_hist(session: AsyncSession, csv_text: str,
+                      *, max_staleness_days: int | None = None) -> dict:
     """Parse the ECB history CSV and upsert every (currency, date) rate.
 
     Idempotent: re-ingesting the same file overwrites in place (no duplicate rows), and a
     later file that carries new dates simply appends them — the periodic-append path. EUR=1
     per date is stored explicitly so an EUR-quoted or EUR-based book resolves without a
-    special case. Returns ``{dates, rows}``."""
+    special case. Returns ``{dates, rows}``.
+
+    F-4 integrity: when ``max_staleness_days`` is set (the acquisition path passes 7), the parsed
+    series must be non-truncated and its NEWEST date fresh — else ``IngestIntegrityError`` is raised
+    and NOTHING is written (the store is never poisoned with a stale/corrupt file, even from the
+    genuine authoritative source). Existing callers that omit it keep the pure-ingest behaviour."""
     by_date = parse_ecb_hist_csv(csv_text)
+    if max_staleness_days is not None:
+        from app.services.ingest_guard import assert_fresh, assert_not_truncated
+        assert_not_truncated(len(by_date), source="ECB eurofxref-hist")
+        latest = max(by_date) if by_date else None  # ISO date-string keys sort chronologically
+        assert_fresh(latest, now=datetime.now(UTC), max_age_days=max_staleness_days,
+                     source="ECB eurofxref-hist")
     now = datetime.now(UTC)
     payload: list[dict] = []
     for day, rates in by_date.items():

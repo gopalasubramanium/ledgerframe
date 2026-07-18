@@ -19,6 +19,7 @@ series is never fabricated in its place.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import UTC, datetime
 
@@ -31,8 +32,15 @@ from app.providers.market.amfi import chunk_date_ranges, fetch_nav_history
 from app.providers.market.coingecko import fetch_market_chart_range
 from app.providers.market.ecb import fetch_ecb_hist
 from app.services.fx_history import ingest_hist
+from app.services.ingest_guard import IngestIntegrityError
 
 log = logging.getLogger("ledgerframe")
+
+# F-4: hard wall on the FX download (no stage may spin indefinitely) + the FX staleness ceiling.
+ECB_FETCH_TIMEOUT_S = 90
+FX_MAX_STALENESS_DAYS = 7
+# Hard per-instrument fetch wall for the price-acquisition stages (crypto/fund history).
+PRICE_FETCH_TIMEOUT_S = 60
 
 # The served refusal shown when no-egress blocks the exchange-rate download (D-105).
 NO_EGRESS_MESSAGE = (
@@ -68,9 +76,21 @@ async def acquire_history(session: AsyncSession, base_currency: str | None = Non
     from app.services.market import repair_wrong_class_candles
     purge = await repair_wrong_class_candles(session)
 
-    # ECB per-date FX — one fetch = the whole EUR-reference daily history back to 1999.
-    csv_text = await fetch_ecb_hist()
-    fx = await ingest_hist(session, csv_text)
+    # ECB per-date FX — one fetch of the MAINTAINED zip (F-4). Hard timeout so no stage can spin
+    # indefinitely (the F-4 hang); a stale/corrupt or truncated file is REFUSED (integrity gate),
+    # not ingested — both degrade to a served error the caller shows, and the build is retriable.
+    try:
+        csv_text = await asyncio.wait_for(fetch_ecb_hist(), timeout=ECB_FETCH_TIMEOUT_S)
+    except TimeoutError:  # asyncio.TimeoutError is TimeoutError on 3.11+
+        return {"ok": False, "acquired": False,
+                "message": "Exchange-rate download timed out — retry Build history."}
+    try:
+        fx = await ingest_hist(session, csv_text, max_staleness_days=FX_MAX_STALENESS_DAYS)
+    except IngestIntegrityError as exc:
+        await session.rollback()
+        return {"ok": False, "acquired": False,
+                "message": f"Exchange-rate data failed the freshness check — {exc.reason}. "
+                           "Not ingested; retry Build history."}
     await session.commit()
     # Per-instrument price history — each class routed to the provider that can serve it (§12-R3).
     prices = await acquire_prices(session, base)
@@ -143,8 +163,9 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
                     counts["skipped"] += 1
                     log.info("acquire_prices: %s crypto has no coingecko_id — skipped (honest)", instr.symbol)
                     continue
-                chart = await fetch_market_chart_range(cid, "usd", start, end)
-                counts["crypto"] += await ingest_crypto_history(session, instr.id, chart)
+                chart = await asyncio.wait_for(
+                    fetch_market_chart_range(cid, "usd", start, end), timeout=PRICE_FETCH_TIMEOUT_S)
+                counts["crypto"] += await ingest_crypto_history(session, instr.id, chart, verify=True)
             elif ac == "mutual_fund":
                 code = await _identifier(session, instr.id, "amfi_code") or (
                     instr.symbol if (instr.symbol or "").isdigit() else None)
@@ -153,8 +174,8 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
                     log.info("acquire_prices: %s fund has no amfi_code — skipped (honest)", instr.symbol)
                     continue
                 for a, b in chunk_date_ranges(start.date(), end.date()):
-                    text = await fetch_nav_history(a, b)
-                    counts["mutual_fund"] += await ingest_nav_history(session, instr.id, str(code), text)
+                    text = await asyncio.wait_for(fetch_nav_history(a, b), timeout=PRICE_FETCH_TIMEOUT_S)
+                    counts["mutual_fund"] += await ingest_nav_history(session, instr.id, str(code), text, verify=True)
             else:
                 counts["skipped"] += 1
         except Exception as exc:  # noqa: BLE001 — one instrument's failure never aborts the build

@@ -118,7 +118,10 @@ class ExternalMarketDataProvider:
         return {None: "unknown", True: "premium", False: "free"}[self._index_entitled]
 
     async def _get(self, params: dict) -> dict:
-        params = {**params, "apikey": self._key}
+        # F-4 (owner on-stack confirmation): the working premium call carries entitlement=delayed —
+        # it selects the delayed dataset the product is entitled to (AV ignores it where N/A). A
+        # caller may override it explicitly.
+        params = {"entitlement": "delayed", **params, "apikey": self._key}
         # Tight timeout so a slow/limited provider can't hang dashboard requests.
         async with self._sem, await egress_client("price refresh", timeout=8) as client:
             r = await client.get(_BASE, params=params)

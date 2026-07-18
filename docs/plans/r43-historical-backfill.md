@@ -911,3 +911,47 @@ Then the owner restarts, opens Net worth, reviews the served coverage preflight,
 history**, and reviews the trend + Portfolio card. Findings return via chat. **No close ritual /
 ratification in this CLI** — the 0a/3b ratification + F-1/F-2/F-3 ledger closure happen in chat
 after the owner's re-run.
+
+---
+
+## 14. F-4 — INGEST INTEGRITY (2026-07-19, owner on-stack attribution + fix)
+
+**Attribution RESOLVED — no interception anywhere** (owner, on-stack). `ax4z.com` is Myra Security
+GmbH's legitimate CDN CNAME domain (WHOIS: Myra Security GmbH; php.net's zone file documents it as
+"a shortcut domain for CNAMEs by myracloud"); ECB's `www` CNAME→Myra edge is ECB's real
+infrastructure. **The defect:** ECB's edge served a **STALE-CORRUPT object** for the legacy
+`eurofxref-hist.csv` URL — last-modified 2020-06-18, a nonsense counting-pattern row dated
+2010-02-14 atop 2009 data, 733,262 bytes — while the **`.zip` is current + genuine** (verified
+twice: top row 2026-07-17, SGD 1.4765; 635,583 bytes in <0.5s). No hosts/resolver/harness action;
+all interception-related orders dropped.
+
+**Provider confirmations (owner on-stack, all CONFIRMED):** (a) AMFI archive — `frmdt`/`todt`
+`dd-MMM-yyyy`, semicolon CSV, header exactly as parsed (the ▲-D uncertainty is RESOLVED — the
+step-5 built assumption was correct); (b) CoinGecko range — `[[ms,price],…]` daily, 360d on the
+free tier; (c) AV `TIME_SERIES_DAILY&outputsize=full` — "Output Size: Full size" on the premium
+key, working call carries `entitlement=delayed` (added to the AV client). Key was rotated after a
+transcript leak; `.env` updated.
+
+**F-4 fix (fail-first, gates green):**
+- **Ingest the ZIP, not the CSV** — `ecb.fetch_ecb_hist` fetches `eurofxref-hist.zip` and unzips
+  in-memory (`extract_hist_csv`, pure/testable); the legacy CSV URL is no longer fetched.
+- **Ingest integrity guard** — new `app/services/ingest_guard.py`: `assert_fresh` (newest date must
+  be within N days — the decisive stale-corrupt tell) + `assert_not_truncated` (a plausible row
+  count). `fx_history.ingest_hist(max_staleness_days=7)` refuses a stale/corrupt or truncated file
+  and writes NOTHING; generalised to CoinGecko + AMFI ingests (`verify=True` on the acquisition
+  path) — AV history already returns `[]` on error (never a partial fabrication). RED = today's
+  real file (newest date 2010) → refused.
+- **Hard timeout + served error + resumable** — `acquire_history` wraps the FX fetch in
+  `asyncio.wait_for(90s)` and the per-instrument price fetches in `wait_for(60s)`; a timeout or an
+  integrity refusal degrades to a **served error** the trigger UI shows, and the build is
+  retriable (no stage can spin indefinitely — the F-4 hang).
+- **AV `entitlement=delayed`** — added to the AV client's base params (owner's working call).
+
+## 15. LESSONS (recorded)
+
+- **§15-L1 (F-4) — Provenance is not integrity.** Even the genuine, authoritative source served a
+  **six-year-stale corrupt object** from its own edge. Authenticating the *source* (WHOIS, CNAME,
+  TLS) proves origin, not payload correctness. **Freshness + sanity verification is mandatory on
+  every ingest** — the newest date must be recent and the parse non-truncated — and a failing
+  check REFUSES the data with a served error, never a silent bad write. Generalised across every
+  history/FX parser (ECB, AMFI, CoinGecko, AV).

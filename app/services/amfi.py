@@ -19,13 +19,22 @@ from app.providers.market.amfi import parse_nav_all, parse_nav_history
 
 
 async def ingest_nav_history(session: AsyncSession, instrument_id: int, scheme_code: str,
-                             history_text: str, interval: str = "1d") -> int:
+                             history_text: str, interval: str = "1d", *, verify: bool = False) -> int:
     """§12 step 5: parse an AMFI history report and upsert daily PriceHistory rows for
     ``instrument_id`` — but ONLY the rows for ``scheme_code`` (scheme filtering; a report may carry
     the whole fund house). NAV → close, keyed to the NAV date at midnight UTC, source='amfi_nav'. An
     N.A. NAV is skipped (never a fabricated candle). Idempotent on the (instrument, interval, ts)
-    unique index. Returns the number of dated NAVs stored."""
-    recs = [r for r in parse_nav_history(history_text)
+    unique index. Returns the number of dated NAVs stored.
+
+    F-4: when ``verify`` (the acquisition path), a report that has data lines but parses to ZERO
+    records (a malformed/truncated payload — e.g. a broken header) is refused
+    (``IngestIntegrityError``); a legitimately scheme-filtered empty result is NOT (the report
+    parsed fine, it just held other schemes)."""
+    all_recs = parse_nav_history(history_text)
+    if verify and any(";" in ln for ln in history_text.splitlines()[1:]):
+        from app.services.ingest_guard import assert_not_truncated
+        assert_not_truncated(len(all_recs), source="AMFI history report", minimum=1)
+    recs = [r for r in all_recs
             if r.code == str(scheme_code) and r.nav is not None and r.nav_date is not None]
     if not recs:
         return 0
