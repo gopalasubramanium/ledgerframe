@@ -1084,7 +1084,95 @@ quotes-override on BTC/XRP is NOT auto-migrated. No close ritual / ratification 
 
 ---
 
-## 18. LESSONS (recorded)
+## 18. F-7 CLUSTER (2026-07-19, owner Pricing Health diagnostics ~05:06, post-F-6) — INVESTIGATED
+
+Read-only investigation first: a **scratch copy** of the owner's DB
+(`~/.ledgerframe-data/db/ledgerframe.db` → scratchpad), his live stack untouched, `.env` unread and
+unmodified (sha256 `460a2da0…7afae6`, recorded not altered).
+
+### F-7b #1 — "PHANTOM PROVIDERS": THE PREMISE IS FALSE (no defect; ruling voided)
+
+The report was that `eodhd` and `kite` "are not platform providers … exist nowhere in the specs or
+registry". **The evidence says otherwise, so nothing was repaired.**
+
+- Both are **registered adapters**: `app/providers/market/eodhd.py`, `app/providers/market/kite.py`,
+  declared in the capability registry at `app/providers/market/router.py:96-100` (`eodhd`) and
+  `:101-105` (`kite`), both `needs_key=True`.
+- The chains the owner saw are **not data**. They are the shipped policy constant
+  `DEFAULT_PRIORITY` (`router.py:149-162`) — `us_equity` = `["eodhd", "alphavantage", "yahoo",
+  "csv", "manual"]` (`:152`) and `in_equity` = `["kite", "eodhd", "alphavantage", "yahoo", "csv",
+  "manual"]` (`:150`). TSLA rendered the first verbatim; SBICARD.BSE the second.
+- **Row provenance on his instance: no phantom rows exist to repair.** The only per-instrument
+  routing data is `routing_matrix`, which holds exactly 4 rows, none naming eodhd or kite:
+  `(equity, US, alphavantage)`, `(mutual_fund, IN, amfi_nav)`, `(crypto, *, coingecko)`,
+  `(etf, *, alphavantage)`. `instruments.source_override` is `NULL` for TSLA and SBICARD.
+
+So: **not** seeded demo data, **not** a fabricated default, **not** user-edited config — the
+served chain is the correct, spec'd priority policy including two keyed providers this instance has
+no credentials for. The **one-time idempotent repair ruling is VOID** (there is nothing to remove,
+and removing registered providers from the policy would be the actual data loss). What is *arguably*
+a defect is presentational — the chain does not distinguish "configured here" from "supported but
+unkeyed" — and that is **left as an open recommendation for a chat ruling**, not fixed here.
+
+### F-7b #2 — what happens at an unavailable chain entry (file:line)
+
+No exception is swallowed at the chain, because **chain membership never selects a provider**.
+`route()` picks only an override (`router.py:275-281`), a cache-publish adapter, the matrix cell
+(credential-gated at `:338-342`), or the active provider (`:350`). An unkeyed `eodhd`/`kite` in the
+chain is inert; at most `_auth_gap` (`:198-212`) sets `auth_required`. So the phantom-led chains are
+**not** the cause of the two stale quotes — the cause is F-7a/F-7b #3 below.
+
+### F-7b #3 — "Refreshed 26 of 26" counted CACHE READS (verified cause, P1)
+
+`app/api/v1/routes/system.py` (pre-fix `:534-536`) counted a symbol as refreshed whenever the
+returned quote merely **had a price**:
+
+    if q.price is not None and q.entitlement.value != "unavailable":
+        refreshed += 1
+
+A cache read satisfies that. Three paths return the cache while looking like success:
+`market.py` route-skip (pre-fix `:582-585`), null-price fallback (`:588-592`), and the blanket
+`except Exception` (`:619-621`, which also prevents the real error ever reaching `failed[]`).
+Hence a pass that fetched **nothing** could toast **26 of 26** with quotes visibly stale — exactly
+the owner's screen. (Same flaw in the per-holding sibling, `portfolio.py:343`.)
+
+### F-7a #4 — ROUTE CHANGE DID NOT INVALIDATE THE CACHED QUOTE (verified cause, P1)
+
+`refresh_quote` skipped whenever the routed source was not the **active** provider (pre-fix
+`market.py:582-585`), returning the cache verbatim. There was **no freshness check and no
+source-matches-route check anywhere** — nothing compared `quotes.source` to `diag.source_selected`.
+
+Owner's DB confirms the shape: BTC (id 15) and XRP (id 27) carry `source_override='coingecko'` with
+`coingecko_id` = `bitcoin` / `ripple` linked at **2026-07-18 21:00:49 / 21:01:20**, while their
+quote rows are `source='alphavantage'`, `received_at=2026-07-18 20:59` — cached **one minute before
+the correction** and never replaced. Compounding it, the only CoinGecko quote-publish path was the
+manual Settings "Sync now" (`api/v1/routes/coingecko.py:59-61`); refresh-all never reached it.
+
+### F-7c #5 — crypto history acquisition (refutes the sequencing hypothesis)
+
+Acquisition **does not read** `quotes.source` or `instruments.source_override`. `acquire.py:153-177`
+branches purely on `asset_class`; a crypto instrument with a linked `coingecko_id` is fetched
+unconditionally via `fetch_market_chart_range` (`:175-176`). So the stale AV quote **cannot** have
+blocked history, and there is **no quote-refresh → build-history sequencing dependency**
+(`backfill.py:180-206` runs acquire → backfill only). Real blockers, in order: no-egress
+(`acquire.py:62`); an ECB FX failure returning early **before** `acquire_prices` (`:82-93`); an
+unresolvable `coingecko_id`; no dated transaction (`:144-148`). Coverage counts any ≥1 daily candle
+(`coverage.py:98-116`). **Awaiting the owner's re-run outcome to close F-7c** — if it is still 4/6,
+the ECB-early-return path (`acquire.py:82-93`) is the first thing to read, not the routing.
+
+### 18-R — RULINGS APPLIED
+
+- **R1 (F-7b, voided).** Unknown-provider repair NOT performed: no unknown providers exist. Recorded
+  above with the dumps that falsify the premise. Chain presentation left as an open recommendation.
+- **R2 (F-7b #3, applied).** Refresh reports are per-instrument honest: `refreshed` counts real
+  fetches only, every un-refreshed symbol carries its own reason, and the response adds
+  `still_stale[]` so no surface can read clean while a covered quote is stale.
+- **R3 (F-7a #4, applied).** A cached quote whose `source` differs from the routed source is
+  **route-mismatched** and is refetched from the new route regardless of freshness.
+
+---
+
+## 19. LESSONS (recorded)
 
 - **§15-L1 (F-4) — Provenance is not integrity.** Even the genuine, authoritative source served a
   **six-year-stale corrupt object** from its own edge. Authenticating the *source* (WHOIS, CNAME,
