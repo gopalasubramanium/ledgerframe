@@ -105,6 +105,17 @@ One concept per word; do not interchange.
 | **Source** | User-facing | The provenance term — what owns a given price. This is the word shown to users. |
 | **Provider** | Settings only | The adapter/config concept (mock/csv/yahoo/alphavantage/eodhd/kite; metadata adapters amfi_nav/coingecko/ecb_fx). Appears only in Settings. |
 | **Routing / route** | Internal | The per-instrument decision of which source owns a price. Internal + **Pricing Health** diagnostics only. |
+
+### Intraday price series (R-42)
+
+Sub-daily price bars, so the short chart ranges (1D / 5D) can show honest sub-daily
+granularity instead of the daily-only store. Tier-aware, user-triggered, persisted once
+fetched; a range with no intraday data stays honestly disabled with a **served** reason.
+
+| Term | Canonical definition |
+|------|----------------------|
+| **Intraday** | Sub-daily price bars for a single trading day (e.g. 1-minute bars for the 1D range). Shown only where a source actually served them — never fabricated; a range with no intraday data stays honestly disabled with a served reason. **[Help]** |
+| **Interval** | The bar granularity of a price series (`1min`, `5min`, `1d`). The **range** you pick (1D / 5D / 1M …) maps to an interval on the server; the interval literal is internal and is never shown in copy. **[Help]** |
 | **Routing matrix** | User-facing (Settings → Data feeds) | Your table of *which provider prices each kind of instrument in each market* — one choice per asset-class × listing-country. It is a **preference layer**, not a price: a cell only takes effect when the provider you named can actually price that instrument, and it **can never fabricate, replace, or worsen** a value — if the named provider can't price a holding, LedgerFrame falls back to its normal source exactly as before. It never executes trades and never advises. Pricing Health shows the outcome **read-only**. **[Help]** *(data-feed-routing §9-T, ruled 2026-07-18.)* |
 
 ---

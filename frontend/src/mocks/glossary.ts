@@ -8,6 +8,19 @@ export interface GlossaryEntry {
 }
 
 export const GLOSSARY: Record<string, GlossaryEntry> = {
+  // Intraday price series (R-42 §9-T). Added to docs/specs/GLOSSARY.md FIRST, then here —
+  // the two-store rule; tests/unit/test_glossary_parity.py polices the identical spelling
+  // ("Intraday", "Interval"). The `interval` literal (1min/5min) never appears in copy.
+  "term-intraday": {
+    term: "Intraday",
+    definition:
+      "Sub-daily price bars for a single trading day (e.g. 1-minute bars for the 1D range). Shown only where a source actually served them — never fabricated; a range with no intraday data stays honestly disabled with a served reason.",
+  },
+  "term-interval": {
+    term: "Interval",
+    definition:
+      "The bar granularity of a price series (1min, 5min, 1d). The range you pick (1D / 5D / 1M …) maps to an interval on the server; the interval literal is internal and is never shown in copy.",
+  },
   // Reports (page-reports §9-9). Added to docs/specs/GLOSSARY.md FIRST, then here — the two-store
   // rule; tests/unit/test_glossary_parity.py polices the spellings. "Statements" (plural) is the
   // confirmed label; copy uses "Realised P/L report", never the deprecated "Realised gains" (D-026).
