@@ -548,3 +548,69 @@ calls + the 1 tier probe): AAPL/MSFT 1D → **1-min, ~825 real market-session ca
 **`fetch_state=cached`** — the 12h marker prevents any second spend. Browser render slice
 (cached, no re-spend): **4/4** — smooth 1-/5-minute charts, time-of-day axis (1D "14:33";
 5D "07-14 18:30"), **0 console errors**, screenshots captured. Owner data untouched.
+
+---
+
+## PHASE 3b — OWNER ACCEPTANCE WALK — FINDINGS LEDGER (2026-07-18)
+
+*The owner's 3b walk surfaced three findings. Verify-first: each verified cause is dumped
+with `file:line` cites BEFORE any fix (real-data dumps from a **read-only copy** of the
+owner DB — `~/.ledgerframe-data/db/ledgerframe.db` copied to scratchpad, never queried in
+place). Standing rules apply: RED-first on the real cause, one delta per commit, both
+postures, STOP at the end for the owner re-walk.*
+
+### W-1 — INR-priced holdings valued WITHOUT FX conversion (data-integrity, P1) — VERIFYING → FIX
+
+**Owner-walk evidence (screenshots):** TSLA 100 × USD 380.84 → SGD 49,176.57 (USD→SGD
+~1.291 — correct). 145834: 100 × INR 14.8131 → "Value (SGD) 1,481.31" (raw INR magnitude;
+honest ≈ S$20–22). 102000: INR 1,132.23 × 100 → "113,223.00" (same raw pattern). Net worth
+therefore includes ~S$113k+ of unconverted INR magnitude.
+
+**VERIFIED CAUSE (read-only DB dump + code cites):** *not* a missing FX rate — INR **is**
+present (ECB cache, `EUR→INR = 110.1020`, `EUR→SGD = 1.4765`, 30 currencies loaded;
+`ecb_fx.py:73-79`). The real cause: the valuation derives the value's currency from the
+**holding**, not the **quote**. In the owner's book both funds have **`holding.currency =
+'SGD'`** (holdings 4 & 6) while **`quote.currency = 'INR'`** (the AMFI NAV's true currency).
+`_value_one_holding` computes `native_ccy` as `currency_for_symbol(sym) or h.currency or
+instrument.currency or base` (`portfolio.py:279-284`). For an AMFI scheme code
+(`"145834"`, no exchange suffix) `currency_for_symbol` returns `None`
+(`app/core/symbols.py:99-115`), so **`h.currency='SGD'` wins**. Then `mv_native = qty ×
+quote.price` (an INR magnitude) is passed to `fx.convert(mv_native, 'SGD', 'SGD')`
+(`portfolio.py:302,322`), which same-currency short-circuits to **rate 1.0**
+(`fx.py:69-70`) — the value renders as raw INR labelled SGD. Reproduces the walk figures
+exactly: 100×14.8131 = 1481.31; 100×1132.23 = 113223. The `holding.currency='SGD'` is itself
+drift: the FIFO builder defaults it from the txn/account currency when the symbol has no
+exchange suffix (`portfolio.py:472-483`). **Class:** the currency used to interpret a
+**live price** must be the **quote's** currency, ranked above the drift-prone holding /
+instrument currency. **Silent-1.0 note:** the `Decimal("1")` fallbacks at `fx.py:52,57` are
+*latent* here (every quote currency in the book — INR, USD — is ECB-covered) but are a real
+class defect the fix must also close (W-1b).
+
+**FIX (two deltas):** (a) **W-1a** — the market value + day change of a live-quoted holding
+convert FROM `quote.currency` (authoritative), ranked above `h.currency`/`instrument.currency`;
+cost basis stays in the stored holding currency (the recorded cost currency — a separate,
+pre-existing data concern, flagged not silently changed). (b) **W-1b** — kill the silent
+`Decimal("1")` FX fallback: a genuinely-unavailable rate surfaces an **honest flagged
+state** (served `fx unavailable` reason + confidence factor via the existing mechanism),
+never a fabricated 1.0. Net worth / Portfolio totals read the same corrected valuation
+(`portfolio.py:209,425`) — no re-derivation.
+
+### W-2 — instrument `currency` vs `pricing_currency` divergence (data class) — VERIFYING → FIX
+
+**VERIFIED (DB dump):** ALL three AMFI funds carry `currency='USD'`, `pricing_currency='INR'`
+(instruments 25/26/28) — the divergence is the **class**, not one row. `recognise_amfi_fund`
+sets `pricing_currency='INR'` but never touches `instrument.currency` (`market.py:150`),
+leaving the USD residue the Identity card renders. Fix: reconcile the full currency field set
+in the D1 helper; extend the D1-b repair (`recognise_unconverted_amfi_funds`,
+`market.py:155-193`) to heal existing rows (idempotent, counted). Identity card render field
+to be cited before the fix.
+
+### W-3 — 5D spike artifacts at session boundaries (verify, then rule-ready) — VERIFYING
+
+Owner's TSLA 5D shows tall paired vertical spikes at regular intervals (likely session
+boundaries). **Verify first:** dump the served 5D candles around the spike timestamps —
+extended-hours candles (AV `TIME_SERIES_INTRADAY` defaults `extended_hours=true`), bad
+ticks, or a rendering artifact across session gaps? Fix policy is cause-dependent (extended
+hours → `extended_hours=false` + idempotent cleanup + pin; bad ticks → STOP for an owner
+policy ruling, no silent filtering; rendering → chart gap/join fix + overflow suite).
+**dr-25 carryover** resolution depends on this — stated at close.
