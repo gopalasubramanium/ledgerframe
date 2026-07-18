@@ -567,6 +567,59 @@ async def route_for_instrument(session: AsyncSession, instrument):
     )
 
 
+async def _refetch_route_mismatched(session: AsyncSession, instrument, diag) -> Quote | None:
+    """§18-R3 (F-7a) — refetch a ROUTE-MISMATCHED quote from the source the route now names.
+
+    A quote is route-mismatched when its stored ``source`` differs from
+    ``diag.source_selected`` — i.e. the user corrected an override (or the matrix /
+    mapping changed) after the value was cached. Freshness is deliberately NOT
+    consulted: the cached value is wrong-provenance, not merely old.
+
+    Returns the refreshed quote, or ``None`` when nothing was refetched (already
+    on-route, no per-instrument fetch path for that source, egress off, unmapped, or the
+    fetch failed) — the caller then serves the cache exactly as before. Never raises.
+    """
+    src = diag.source_selected
+    if src is None:
+        return None
+    cached = await session.get(QuoteRow, instrument.id)
+    if cached is None or cached.source == src:
+        return None                     # nothing cached, or already on-route: unchanged behaviour
+    previous_source = cached.source     # read before the upsert below invalidates the row
+    # CoinGecko is the one cache-publish adapter with a per-instrument on-demand fetch
+    # (`/simple/price` by canonical id). amfi_nav publishes the whole NAVAll file on its own
+    # cadence, and manual/statement lanes are never fetched — those keep serving the cache.
+    if src != "coingecko":
+        return None
+    from app.core.egress import egress_allowed
+    from app.models import InstrumentIdentifier
+
+    if not await egress_allowed():
+        return None                     # no-egress: honest stale cache, never a fabricated value
+    cid = (await session.execute(
+        select(InstrumentIdentifier.value).where(
+            InstrumentIdentifier.instrument_id == instrument.id,
+            InstrumentIdentifier.id_type == "coingecko_id",
+        ).limit(1)
+    )).scalars().first()
+    if not cid:
+        return None                     # unmapped: routing already reports mapping_required
+    try:
+        from app.providers.market import coingecko as cg_provider
+        from app.services.coingecko import publish_prices
+
+        if await publish_prices(session, await cg_provider.fetch_prices([cid])) == 0:
+            return None
+        # publish_prices writes via a raw upsert, so the row we loaded above is stale in
+        # the identity map — reload it or we'd re-serve the very value we just replaced.
+        await session.refresh(cached)
+    except Exception as exc:  # noqa: BLE001 — a failed refetch degrades to the cache, never raises
+        log.warning("route-mismatch refetch failed for %s from %s: %s", instrument.symbol, src, exc)
+        return None
+    log.info("route-mismatch refetch: %s moved from %s to %s", instrument.symbol, previous_source, src)
+    return await get_cached_quote(session, instrument.symbol, instrument.exchange)
+
+
 async def refresh_quote(session: AsyncSession, symbol: str, exchange: str | None = None) -> Quote:
     """Fetch a fresh quote and upsert it. On provider failure, return the last
     cached quote marked stale/cached rather than raising.
@@ -581,7 +634,15 @@ async def refresh_quote(session: AsyncSession, symbol: str, exchange: str | None
     diag = await route_for_instrument(session, instrument)
     if diag.source_selected != getattr(provider, "name", "mock"):
         # Authoritative source is a cache-publish adapter, manual, or unavailable —
-        # never let the active provider fetch/overwrite it.
+        # never let the active provider fetch/overwrite it. But first honour a ROUTE
+        # CHANGE (§18-R3, F-7a): a cached quote whose source is not the source the route
+        # NOW names is route-mismatched, and serving it verbatim strands the holding on
+        # the previous provider forever (the owner's BTC/XRP: corrected to CoinGecko,
+        # Source stayed alphavantage across every refresh). Refetch from the new route
+        # regardless of freshness; fall back to the cache only if that can't be done.
+        refetched = await _refetch_route_mismatched(session, instrument, diag)
+        if refetched is not None:
+            return refetched
         return await get_cached_quote(session, symbol, exchange)
     try:
         q = await provider.get_quote(symbol, exchange)
