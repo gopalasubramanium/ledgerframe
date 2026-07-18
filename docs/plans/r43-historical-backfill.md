@@ -1044,6 +1044,46 @@ Rulings dated 2026-07-19, reversible by a later dated entry (the R-38/R-42 prece
    unmapped crypto serves the mapping blocker, not the build CTA.
 4. **Gates + demo** — full suite, ruff, contract 138, frontend `npm run check` exit 0 from `frontend/`.
 
+### 17-P — F-6 FIX-BATCH PROGRESS LOG (2026-07-19, resumed after a mid-session machine crash)
+
+Recovery was verify-first from files: working tree **clean**, no partial F-6 edits to assess or
+revert — steps 1–3 were already committed before the crash; only step 4 (gates) was outstanding.
+**All four build-order deltas are DONE**; the batch STOPS at the owner's on-stack re-run.
+
+#### DONE — committed, tested, gates green
+
+- **§16/§17 investigation + rulings** — F-6 causes verified (#1–#4) and R1–R4 recorded (reasoning of
+  record before the code). — commit `2bd07d9` (docs-only).
+- **Step 1 (§17-R2 linker disambiguation)** — `_link_coingecko_by_symbol` resolves an ambiguous
+  symbol by **top market cap**: live caps fetched for the candidate ids via the existing
+  `/simple/price?include_market_cap` (ONE call, budget-aware), persisted, and linked only when one
+  positive cap **dominates** (runner-up None/0, or top ≥ 10× runner-up); no dominant cap → served
+  candidates, never a silent guess; graceful fallback to stored caps on fetch failure. — commit
+  `e4778c8`.
+- **Step 2 (§17-R1/R2 wiring)** — `acquire_prices` auto-resolves the CoinGecko id via that ONE linker
+  before skipping, then fetches CoinGecko history. History routes by **class capability**, so an AV
+  quotes-override on a crypto instrument no longer blocks acquisition. — commit `961005c`.
+- **Step 3 (§17-R3 blocker strings)** — `coverage_summary` names the **blocker** for an uncovered
+  instrument (no CoinGecko mapping / no provider supplies the class), falling back to the build CTA
+  only for a genuinely not-yet-built, mappable instrument. No CTA the user just performed. — commit
+  `a15d169`.
+- **Step 4 (gates)** — full backend suite **1201 passed** (0 failures; +12 over the §13 baseline of
+  1189, from the three F-6 deltas); `ruff` **All checks passed**; contract **current at 138**
+  path-keys (no API-shape change, as ruled); frontend `npm run check` **exit 0 from `frontend/`**
+  (337 e2e+unit). Demo/F-6 subset (`demo|coingecko|coverage|acquire`) 75 passed — demo lane
+  unregressed.
+
+#### STOP — OWNER ON-STACK RE-RUN
+
+The batch stops here. §17-R2's disambiguation is pinned in tests but the **live** BTC→bitcoin /
+XRP→ripple resolution runs against the owner's egress and budget — it is confirmed on their stack,
+not in this CLI. The owner restarts, opens Net worth, runs **Build history**, and reviews whether
+BTC/XRP now acquire history and what the trend card serves for anything still uncovered. Findings
+return via chat. **§17-R4 remains an open recommendation awaiting a chat ruling** — the AV
+quotes-override on BTC/XRP is NOT auto-migrated. No close ritual / ratification in this CLI.
+
+---
+
 ## 18. LESSONS (recorded)
 
 - **§15-L1 (F-4) — Provenance is not integrity.** Even the genuine, authoritative source served a
