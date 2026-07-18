@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 from app.core.egress import egress_client
 from app.core.money import D, price
@@ -44,6 +45,13 @@ _CRYPTO = {"BTC", "ETH", "LTC", "XRP", "BCH", "ADA", "DOGE", "SOL", "DOT", "MATI
 # Routed to that endpoint instead of GLOBAL_QUOTE. Non-premium keys get a notice,
 # which we treat as "unavailable" so the Global page falls back to the ETF proxy.
 _AV_INDEX_SYMBOLS = {"SPX", "COMP", "NDX", "DJI", "RUT", "RUI", "RUA", "VIX", "OEX", "MID", "SML"}
+
+# R-42 §9-2: the intraday intervals we map ranges to (1D → 1min, 5D → 5min). AV's
+# TIME_SERIES_INTRADAY stamps timestamps in US/Eastern market time (there is no UTC
+# option), so we localise to UTC — the stored ts stays tz-explicit and time-of-day is
+# preserved (intraday is NEVER midnight-normalised, §2.1/§9-5).
+_AV_INTRADAY_INTERVALS = {"1min", "5min"}
+_AV_INTRADAY_TZ = ZoneInfo("America/New_York")
 
 
 class RateLimited(Exception):
@@ -207,8 +215,18 @@ class ExternalMarketDataProvider:
     async def get_history(self, instrument_id: str, interval: str, start: datetime, end: datetime) -> list[Candle]:
         try:
             outputsize = "full" if (end - start).days > 100 else "compact"
+            is_intraday = interval in _AV_INTRADAY_INTERVALS
             is_index = instrument_id.upper() in _AV_INDEX_SYMBOLS
-            if is_index:
+            if is_intraday:
+                # R-42 §9-3: intraday is a premium AV tier; the server-side av_tier gate
+                # refuses it before we ever get here for a free/unknown key. `outputsize=full`
+                # returns the full trailing intraday window (~30 days) — we filter to [start,end].
+                data = await self._get({
+                    "function": "TIME_SERIES_INTRADAY", "symbol": instrument_id,
+                    "interval": interval, "outputsize": "full",
+                })
+                series = data.get(f"Time Series ({interval})") or _find_time_series(data)
+            elif is_index:
                 data = await self._get({
                     "function": "INDEX_DATA", "symbol": instrument_id, "interval": "daily", "outputsize": outputsize,
                 })
@@ -220,7 +238,11 @@ class ExternalMarketDataProvider:
                 raise ValueError("empty history")
             candles: list[Candle] = []
             for date_str, row in series.items():
-                ts = datetime.fromisoformat(date_str).replace(tzinfo=UTC)
+                ts = datetime.fromisoformat(date_str)
+                # Intraday timestamps are US/Eastern market time → localise to UTC (tz-explicit,
+                # time-of-day preserved); daily timestamps are date-only → midnight UTC.
+                ts = ts.replace(tzinfo=_AV_INTRADAY_TZ).astimezone(UTC) if is_intraday \
+                    else ts.replace(tzinfo=UTC)
                 if not (start <= ts <= end):
                     continue
                 # Field names tolerated (AV uses '1. open'… but index keys may vary).

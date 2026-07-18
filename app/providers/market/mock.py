@@ -70,6 +70,10 @@ _CATALOG: dict[str, dict] = {
 # Plausible FX rates relative to USD (DEMO).
 _USD_RATES = {"USD": 1.0, "SGD": 1.35, "INR": 83.5, "EUR": 0.92, "GBP": 0.79, "JPY": 157.0, "AUD": 1.50, "CNY": 7.25, "HKD": 7.81}
 
+# §9-7 (R-42): the mock's intraday bar cadence, keyed to the ranges the owner mapped
+# (1D → 1-min, 5D → 5-min). Any other non-daily interval falls back to 5-min.
+_MOCK_INTRADAY_STEP = {"1min": timedelta(minutes=1), "5min": timedelta(minutes=5)}
+
 
 def _seed(text: str) -> int:
     return int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)
@@ -136,11 +140,16 @@ class MockMarketDataProvider:
         self, instrument_id: str, interval: str, start: datetime, end: datetime
     ) -> list[Candle]:
         info = self._info(instrument_id)
-        step = timedelta(days=1) if interval in ("1d", "1w", "1mo") else timedelta(minutes=30)
+        # §9-7: align the mock cadence to the owner-ruled real intervals (1-min for "1min",
+        # 5-min for "5min") so the pins assert the true range→interval mapping — replacing the
+        # old flat 30-min bars. Each intraday bar buckets on its own step so no two share a
+        # _walk value (an honest wiggle, not one level repeated).
+        step = timedelta(days=1) if interval in ("1d", "1w", "1mo") \
+            else _MOCK_INTRADAY_STEP.get(interval, timedelta(minutes=5))
         candles: list[Candle] = []
         t = start
         while t <= end:
-            idx = t.toordinal() if step.days else int(t.timestamp() // 1800)
+            idx = t.toordinal() if step.days else int(t.timestamp() // int(step.total_seconds()))
             base = info["base"] * _walk(instrument_id, idx)
             o = base * (1 + math.sin(idx / 5.0) * 0.004)
             c = base

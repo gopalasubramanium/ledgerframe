@@ -39,6 +39,7 @@ class ProviderCapabilities:
     fx: bool = False
     news: bool = False
     indices: bool = False           # real index levels (vs ETF proxies)
+    intraday: bool = False          # sub-daily bars (R-42 §9-6); the flag matches the adapter
     fetch_on_demand: bool = True     # False = rate-limited; serve cache, refresh via worker
     needs_key: bool = False
     asset_classes: frozenset[str] = field(default_factory=frozenset)
@@ -52,17 +53,17 @@ class ProviderCapabilities:
 _ALL = frozenset({"equity", "etf", "index", "fx", "crypto", "commodity"})
 CAPABILITIES: dict[str, ProviderCapabilities] = {
     "mock": ProviderCapabilities(
-        name="mock", history=True, search=True, fx=True, news=True, indices=True,
+        name="mock", history=True, intraday=True, search=True, fx=True, news=True, indices=True,
         asset_classes=_ALL, regions=frozenset({"*"}), entitlement="delayed"),
     "csv": ProviderCapabilities(
         name="csv", history=True, asset_classes=frozenset({"equity", "etf"}),
         regions=frozenset({"*"}), entitlement="end-of-day"),
     "yahoo": ProviderCapabilities(
-        name="yahoo", history=True, search=True, fx=True, indices=True,
+        name="yahoo", history=True, intraday=True, search=True, fx=True, indices=True,
         fetch_on_demand=False, asset_classes=_ALL, regions=frozenset({"*"}),
         entitlement="delayed"),
     "alphavantage": ProviderCapabilities(
-        name="alphavantage", history=True, search=True, fx=True, indices=True,
+        name="alphavantage", history=True, intraday=True, search=True, fx=True, indices=True,
         fetch_on_demand=False, needs_key=True,
         asset_classes=frozenset({"equity", "etf", "fx", "crypto", "index"}),
         regions=frozenset({"US", "*"}), entitlement="delayed"),

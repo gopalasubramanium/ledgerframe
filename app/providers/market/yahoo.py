@@ -57,6 +57,11 @@ def to_yahoo_symbol(symbol: str) -> str:
     return s
 
 
+# R-42 §9-2: internal interval → (Yahoo interval code, Yahoo range). Yahoo limits how
+# far back each intraday granularity goes, so the range is pinned per interval.
+_YAHOO_INTRADAY = {"1min": ("1m", "1d"), "5min": ("5m", "5d")}
+
+
 def _range_for(days: int) -> str:
     if days <= 5:
         return "5d"
@@ -206,7 +211,11 @@ class YahooMarketDataProvider:
     async def get_history(self, instrument_id: str, interval: str, start: datetime, end: datetime) -> list[Candle]:
         ysym = to_yahoo_symbol(instrument_id)
         try:
-            res = await self._chart(ysym, {"interval": "1d", "range": _range_for((end - start).days)})
+            # R-42 §9-2: map our internal intraday intervals to Yahoo's codes + a compatible
+            # range (Yahoo caps intraday history per interval). Daily is unchanged. Yahoo chart
+            # timestamps are unix epoch → already tz-explicit UTC and time-preserving below.
+            yv, yr = _YAHOO_INTRADAY.get(interval, ("1d", _range_for((end - start).days)))
+            res = await self._chart(ysym, {"interval": yv, "range": yr})
             ts = res.get("timestamp") or []
             q = (res.get("indicators") or {}).get("quote") or [{}]
             q0 = q[0] if q else {}
