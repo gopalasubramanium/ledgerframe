@@ -159,6 +159,44 @@ test("PriceChart: Advanced candles zoom on wheel + Reset restores the full range
   expect(screen.queryByRole("button", { name: "Reset zoom" })).toBeNull();
 });
 
+// Owner addition (2026-07-18) — a zoomed chart can PAN horizontally (drag / shift-scroll) and
+// Reset still restores. Zoom (§14dr-5) narrowed the window but couldn't move it. Pan is pure
+// index-space, so it works identically on daily and intraday series. Fail-first RED before pan.
+// (jsdom has no layout width, so drag is a no-op there; shift-scroll drives the deterministic path.)
+test("PriceChart: a zoomed chart PANS horizontally via shift-scroll, same width, Reset restores (owner 2026-07-18)", async () => {
+  const { container } = render(<PriceChart series={DENSE_CANDLE_SERIES} mode="candles" interval="1D" />);
+  const plot = container.querySelector(".lf-pricechart__plot") as HTMLElement;
+  const count = () => container.querySelectorAll(".lf-candle--up, .lf-candle--down").length;
+  // Not zoomed → not pannable, no window hook.
+  expect(plot.getAttribute("data-window")).toBeNull();
+  expect(plot.classList.contains("lf-pricechart__plot--pannable")).toBe(false);
+
+  // Zoom in → a window appears and the plot becomes pannable.
+  fireEvent.wheel(plot, { deltaY: -120, clientX: 100 });
+  await waitFor(() => expect(plot.getAttribute("data-window")).not.toBeNull());
+  const win0 = plot.getAttribute("data-window")!;
+  const [lo0, hi0] = win0.split("-").map(Number);
+  const visible = count();
+  expect(plot.classList.contains("lf-pricechart__plot--pannable")).toBe(true);
+
+  // Shift-scroll right → the window moves to LATER data, SAME width (a pan, not a re-zoom).
+  fireEvent.wheel(plot, { deltaY: 120, shiftKey: true, clientX: 100 });
+  await waitFor(() => expect(plot.getAttribute("data-window")).not.toBe(win0));
+  const [lo1, hi1] = plot.getAttribute("data-window")!.split("-").map(Number);
+  expect(lo1).toBeGreaterThan(lo0);        // moved to later data
+  expect(hi1 - lo1).toBe(hi0 - lo0);       // width unchanged → panned, not zoomed
+  expect(count()).toBe(visible);           // same number of candles visible
+
+  // Shift-scroll left → moves back toward earlier data.
+  fireEvent.wheel(plot, { deltaY: -120, shiftKey: true, clientX: 100 });
+  await waitFor(() => expect(Number(plot.getAttribute("data-window")!.split("-")[0])).toBeLessThan(lo1));
+
+  // Reset restores the full range and drops the window hook (non-persistent).
+  await userEvent.click(screen.getByRole("button", { name: "Reset zoom" }));
+  await waitFor(() => expect(plot.getAttribute("data-window")).toBeNull());
+  expect(count()).toBe(DENSE_CANDLE_SERIES.length);
+});
+
 test("PriceChart: NO zoom in Simple view (Advanced only, §14dr-5)", () => {
   const { container } = render(
     <PriceChart series={DENSE_CANDLE_SERIES} interval="1D" controls defaultView="simple" />,

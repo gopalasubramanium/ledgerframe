@@ -126,6 +126,11 @@ export function PriceChart({
   useEffect(() => setZoom(null), [series]);
   const zoomed = advanced && zoom != null;
   const zSeries = zoomed ? series.slice(zoom!.lo, zoom!.hi + 1) : series;
+  // Owner-ruled addition (2026-07-18): horizontal PAN while zoomed. Zoom (§14dr-5) narrows the
+  // window but had no way to move it left/right. A ref mirrors the live window so the native
+  // pointer/wheel handlers below can decide to pan (drag or shift/horizontal-scroll) vs zoom.
+  const zoomRef = useRef<{ lo: number; hi: number } | null>(null);
+  zoomRef.current = zoom;
 
   // Wheel + pinch zoom about the cursor (Advanced only). Native non-passive listeners so
   // preventDefault stops the page from scrolling while zooming. Recomputes the [lo,hi] window in
@@ -155,9 +160,54 @@ export function PriceChart({
       if (!r.width) return 0.5; // no layout (e.g. jsdom) → zoom about the centre
       return Math.min(Math.max((clientX - r.left) / r.width, 0), 1);
     };
+    const PAN_STEP = 0.2; // one shift/horizontal wheel notch pans 20% of the visible window
+    // Pan the [lo,hi] window by a fraction of its own width, clamped to the full series.
+    const applyPan = (deltaFrac: number) => {
+      setZoom((z) => {
+        if (!z) return z; // pan is a no-op when not zoomed
+        const w = z.hi - z.lo;
+        let shift = Math.round(deltaFrac * w);
+        if (shift === 0) shift = deltaFrac > 0 ? 1 : deltaFrac < 0 ? -1 : 0; // a notch always moves
+        let nlo = z.lo + shift;
+        let nhi = z.hi + shift;
+        if (nlo < 0) { nlo = 0; nhi = w; }
+        if (nhi > n0 - 1) { nhi = n0 - 1; nlo = n0 - 1 - w; }
+        return { lo: nlo, hi: nhi };
+      });
+    };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      // While zoomed, a shift-held or horizontal-dominant wheel PANS; otherwise it zooms.
+      if (zoomRef.current && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))) {
+        applyPan(Math.sign(e.deltaX || e.deltaY) * PAN_STEP);
+        return;
+      }
       applyZoom(e.deltaY < 0 ? 0.8 : 1.25, fracAt(e.clientX));
+    };
+    // Drag-to-pan (pointer): absolute from the grab anchor so the window follows the cursor
+    // 1:1 and never drifts. No-op without layout (jsdom) — the wheel path covers tests there.
+    let drag: { x: number; lo: number; w: number } | null = null;
+    const onPointerDown = (e: PointerEvent) => {
+      const z = zoomRef.current;
+      if (!z) return;
+      drag = { x: e.clientX, lo: z.lo, w: z.hi - z.lo };
+      el.classList.add("lf-pricechart__plot--grabbing");
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!drag) return;
+      const r = el.getBoundingClientRect();
+      if (!r.width) return; // no layout → cannot pan by pixels
+      e.preventDefault();
+      const shift = Math.round((-(e.clientX - drag.x) / r.width) * drag.w);
+      let nlo = drag.lo + shift;
+      let nhi = nlo + drag.w;
+      if (nlo < 0) { nlo = 0; nhi = drag.w; }
+      if (nhi > n0 - 1) { nhi = n0 - 1; nlo = n0 - 1 - drag.w; }
+      setZoom({ lo: nlo, hi: nhi });
+    };
+    const endDrag = () => {
+      drag = null;
+      el.classList.remove("lf-pricechart__plot--grabbing");
     };
     const gap = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
     let pinch = 0;
@@ -174,10 +224,20 @@ export function PriceChart({
     el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("touchstart", onTouchStart, { passive: false });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+    el.addEventListener("pointerleave", endDrag);
     return () => {
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", endDrag);
+      el.removeEventListener("pointercancel", endDrag);
+      el.removeEventListener("pointerleave", endDrag);
     };
   }, [advanced, series]);
 
@@ -298,7 +358,13 @@ export function PriceChart({
       ) : n < 2 ? (
         <p className="lf-pricechart__empty">{coverageNote ?? "No price history for the selected period."}</p>
       ) : (
-      <div className="lf-pricechart__plot" ref={wrapRef} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+      <div
+        className={`lf-pricechart__plot${zoomed ? " lf-pricechart__plot--pannable" : ""}`}
+        ref={wrapRef}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHover(null)}
+        data-window={zoomed ? `${zoom!.lo}-${zoom!.hi}` : undefined}
+      >
         <svg
           className="lf-pricechart__svg"
           viewBox={`0 0 ${VW} ${height}`}
@@ -406,7 +472,7 @@ export function PriceChart({
             (`controls`) — never on a page (e.g. Net worth) that has no view toggle. */}
         {controls && <span>View: {advanced ? "Advanced" : "Simple"}</span>}
         {/* Honest metadata: the zoom control only exists in Advanced, so the hint shows only there. */}
-        {advanced && <span>Scroll or pinch to zoom{zoomed ? ` · showing ${n} of ${series.length}` : ""}</span>}
+        {advanced && <span>Scroll or pinch to zoom{zoomed ? ` · drag or shift-scroll to pan · showing ${n} of ${series.length}` : ""}</span>}
         {effOverlays.length > 0 && <span>Overlays: {effOverlays.join(" · ")}</span>}
         {benchmark && <span>Benchmark overlaid (indexed)</span>}
         {comparison && (

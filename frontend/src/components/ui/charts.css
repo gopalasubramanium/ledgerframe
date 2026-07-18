@@ -187,6 +187,10 @@
 /* Chart controls (view toggle + period) use the shared `Segmented` primitive (segmented.css) —
    page-news §13a. `.lf-pricechart__controls` stays as their flex-row container. */
 .lf-pricechart__plot { position: relative; touch-action: pan-y; }
+/* Owner addition (2026-07-18) — horizontal pan while zoomed: a grab cursor advertises the
+   drag affordance, switching to grabbing during the drag. Only present while zoomed. */
+.lf-pricechart__plot--pannable { cursor: grab; }
+.lf-pricechart__plot--grabbing { cursor: grabbing; }
 /* §14dr-5 — zoom reset overlay: a ratified Button pinned top-right of the plot, only while zoomed. */
 .lf-pricechart__zoom { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 1; }
 .lf-pricechart__vol { fill: var(--text-tertiary); opacity: 0.4; }
