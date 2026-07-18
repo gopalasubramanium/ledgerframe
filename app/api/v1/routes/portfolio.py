@@ -1011,6 +1011,16 @@ async def backfill_status() -> dict:
     return backfill.read_status()
 
 
+@router.get("/net-worth/coverage")
+async def net_worth_coverage(session: AsyncSession = Depends(get_db)) -> dict:
+    """§12 step 7 (F-1): the Build-history coverage preflight — per-instrument earliest/latest real
+    candle + per-currency FX coverage + a served summary, so the trigger never runs blind against a
+    zero-coverage store. Numbers are read straight from the store (they match it)."""
+    from app.services.coverage import coverage_summary
+
+    return await coverage_summary(session, get_settings().base_currency)
+
+
 @router.post("/net-worth/snapshot", dependencies=[Depends(require_auth)])
 async def take_snapshot(session: AsyncSession = Depends(get_db)) -> dict:
     """Write a dated net-worth snapshot now (§9-6, provenance=manual). Refused with a served

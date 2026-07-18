@@ -75,6 +75,12 @@ vi.mock("../api/net-worth", () => ({
     },
   })),
   getInsurance: vi.fn(async () => ({ ok: true, data: { base_currency: "SGD", count: 0, total_cash_value: 0, total_cash_value_display: "0.00" } })),
+  // §12 step 7: coverage preflight — default all-covered so it stays hidden for the other tests.
+  getCoverage: vi.fn(async () => ({
+    ok: true,
+    data: { base_currency: "SGD", instruments: [], total: 2, covered_count: 2, all_covered: true,
+      coverage_label: "History is complete for every holding." },
+  })),
   getReview: vi.fn(async () => ({
     ok: true,
     // §12rv1-5 — the shared review reader serves display-cased severity ("Review"/"Info").
@@ -91,7 +97,7 @@ vi.mock("../api/client", async (orig) => ({
 }));
 
 import { NetWorth } from "./NetWorth";
-import { getNetWorthHistory, getInsurance } from "../api/net-worth";
+import { getNetWorthHistory, getInsurance, getCoverage } from "../api/net-worth";
 
 function renderPage() {
   return render(
@@ -170,4 +176,31 @@ test("insurance exclusion line shows the verbatim wording when ≥1 policy (D-03
   expect(await screen.findByText(/Insurance cash value \(excluded\):/)).toBeTruthy();
   expect(await screen.findByText("15,000.00")).toBeTruthy();   // the SERVED display string, verbatim (D-105)
   expect(await screen.findByText(/see Insurance/)).toBeTruthy();
+});
+
+test("§12 step 7 (F-1): the served coverage preflight renders uncovered holdings verbatim", async () => {
+  // A partial-coverage summary → the trigger surfaces which holdings still need history (D-105).
+  vi.mocked(getCoverage).mockResolvedValueOnce({
+    ok: true,
+    data: {
+      base_currency: "SGD", total: 2, covered_count: 1, all_covered: false,
+      coverage_label: "History covers 1 of 2 holding(s) — Build history to fill the rest.",
+      instruments: [
+        { instrument_id: 1, symbol: "TSLA", name: "Tesla", asset_class: "equity",
+          price_earliest: "2019-01-01", price_latest: "2026-07-18", price_days: 1900,
+          needs_fx: true, fx_currency: "USD", fx_earliest: "1999-01-04", fx_latest: "2026-07-17",
+          covered: true, summary: "Prices 2019-01-01→2026-07-18; USD FX 1999-01-04→2026-07-17" },
+        { instrument_id: 2, symbol: "BTC", name: "Bitcoin", asset_class: "crypto",
+          price_earliest: null, price_latest: null, price_days: 0,
+          needs_fx: true, fx_currency: "USD", fx_earliest: null, fx_latest: null,
+          covered: false, summary: "No price history yet — run Build history to acquire it" },
+      ],
+    },
+  });
+  renderPage();
+  // The served label + the uncovered holding's served summary are rendered verbatim.
+  expect(await screen.findByText("History covers 1 of 2 holding(s) — Build history to fill the rest.")).toBeTruthy();
+  expect(await screen.findByText("No price history yet — run Build history to acquire it")).toBeTruthy();
+  // The covered holding (TSLA) is NOT listed — only the gaps are surfaced.
+  expect(screen.queryByText("Tesla")).toBeNull();
 });

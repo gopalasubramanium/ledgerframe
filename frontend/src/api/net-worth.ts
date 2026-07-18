@@ -32,6 +32,33 @@ export interface BackfillStatus {
 }
 export const startBackfill = () => apiSend<{ ok: boolean; running: boolean; message: string }>("/net-worth/backfill", "POST");
 export const getBackfillStatus = () => apiGet<BackfillStatus>("/net-worth/backfill-status");
+
+// §12 step 7 (F-1): the Build-history coverage preflight. Every field is a SERVED display string
+// (D-105) — the frontend renders `summary`/`coverage_label` verbatim, never derives coverage.
+export interface CoverageInstrument {
+  instrument_id: number;
+  symbol: string | null;
+  name: string | null;
+  asset_class: string | null;
+  price_earliest: string | null;
+  price_latest: string | null;
+  price_days: number;
+  needs_fx: boolean;
+  fx_currency: string | null;
+  fx_earliest: string | null;
+  fx_latest: string | null;
+  covered: boolean;
+  summary: string;
+}
+export interface CoverageResp {
+  base_currency: string;
+  instruments: CoverageInstrument[];
+  total: number;
+  covered_count: number;
+  all_covered: boolean;
+  coverage_label: string;
+}
+export const getCoverage = () => apiGet<CoverageResp>("/net-worth/coverage");
 export const takeSnapshot = () => apiSend<{ ok: boolean; ts: string; net_worth: number }>("/net-worth/snapshot", "POST");
 
 // Signed per-class STATEMENT (page-net-worth ND-4, D-033). Distinct from allocation:

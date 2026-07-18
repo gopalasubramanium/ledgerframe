@@ -8044,6 +8044,74 @@
         ]
       }
     },
+    "/api/v1/net-worth/coverage": {
+      "get": {
+        "description": "\u00a712 step 7 (F-1): the Build-history coverage preflight \u2014 per-instrument earliest/latest real\ncandle + per-currency FX coverage + a served summary, so the trigger never runs blind against a\nzero-coverage store. Numbers are read straight from the store (they match it).",
+        "operationId": "net_worth_coverage_api_v1_net_worth_coverage_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Net Worth Coverage Api V1 Net Worth Coverage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Net Worth Coverage",
+        "tags": [
+          "portfolio"
+        ]
+      }
+    },
     "/api/v1/net-worth/history": {
       "get": {
         "description": "The unified net-worth trend \u2014 backfilled + live + manual points, each with served\nprovenance and a \u00a79-5 carried-forward flag/reason so the chart consumes served truth only.",

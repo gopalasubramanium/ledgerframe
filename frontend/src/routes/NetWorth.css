@@ -209,3 +209,40 @@
   color: var(--text-secondary);
   font-size: 0.85em;
 }
+
+/* §12 step 7 (F-1): the served Build-history coverage preflight. Reads as an honest heads-up
+   (attention colour on the label), not an error — the build still proceeds with it visible. */
+.nw__coverage {
+  margin: 0 var(--space-5) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-2);
+  background: var(--surface);
+}
+.nw__coverage-label {
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+  color: var(--attention);
+}
+.nw__coverage-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.nw__coverage-item {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+.nw__coverage-sym {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 4rem;
+}
+.nw__coverage-summary {
+  font-variant-numeric: tabular-nums;
+}

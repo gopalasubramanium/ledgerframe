@@ -26,6 +26,7 @@ import { getPerformance, getPortfolioStats, getPortfolioSummary } from "../api/p
 import type { PortfolioStats, PortfolioSummary, PerformanceResp } from "../api/portfolio";
 import {
   getBackfillStatus,
+  getCoverage,
   getInsurance,
   getLiquidity,
   getNetWorthHistory,
@@ -37,6 +38,7 @@ import {
 } from "../api/net-worth";
 import type {
   BackfillStatus,
+  CoverageResp,
   InsuranceResp,
   LiquidityResp,
   NetWorthHistoryResp,
@@ -108,9 +110,16 @@ export function NetWorth() {
     getPortfolioStats().then((r) => setStats(r.ok ? r.data : null));
   }, []);
 
+  // §12 step 7 (F-1) — the served Build-history coverage preflight (per-instrument history + FX).
+  const [coverage, setCoverage] = useState<CoverageResp | null>(null);
+  const loadCoverage = useCallback(() => {
+    getCoverage().then((r) => setCoverage(r.ok ? r.data : null));
+  }, []);
+
   useEffect(() => {
     reload();
-  }, [reload]);
+    loadCoverage();
+  }, [reload, loadCoverage]);
 
   // Trend chart: single series (net_worth), sliced to the window on the client (display only).
   const trendPoints = useMemo<PricePoint[]>(() => {
@@ -153,10 +162,11 @@ export function NetWorth() {
       if (!r.data.running) {
         clearInterval(id);
         getNetWorthHistory().then((h) => setHistory(h.ok ? h.data : null));
+        loadCoverage();  // §12 step 7: coverage improves after a build — re-read the served summary
       }
     }, 1500);
     return () => clearInterval(id);
-  }, [backfill?.running]);
+  }, [backfill?.running, loadCoverage]);
 
   const statementColumns: Column<StatementRow>[] = [
     { key: "asset_class", label: "Class", render: (r) => labelFor("asset_class", r.asset_class) },
@@ -224,6 +234,22 @@ export function NetWorth() {
             <Select value={window} onChange={setWindow} options={WINDOWS.map((w) => ({ value: w, label: w }))} aria-label="Time window" />
           </div>
         </div>
+        {/* §12 step 7 (F-1): the served coverage preflight — shown before/while a build runs so the
+            trend is never reconstructed blind. Every string is served (D-105), rendered verbatim.
+            Hidden once history is complete (all holdings covered). */}
+        {coverage && coverage.total > 0 && !coverage.all_covered && (
+          <div className="nw__coverage" data-testid="coverage-preflight">
+            <p className="nw__coverage-label">{coverage.coverage_label}</p>
+            <ul className="nw__coverage-list">
+              {coverage.instruments.filter((i) => !i.covered).map((i) => (
+                <li key={i.instrument_id} className="nw__coverage-item">
+                  <span className="nw__coverage-sym">{i.symbol ?? i.name}</span>
+                  <span className="nw__coverage-summary">{i.summary}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="lf-card__body">
           <CardBody data={history} block onRetry={reload}>
             {() =>
