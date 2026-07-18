@@ -142,9 +142,11 @@ async def run_backfill(session: AsyncSession, base_currency: str | None = None,
         market_liab = -sum((h.market_value_base for h in v.holdings if h.market_value_base < 0), ZERO)
         assets = money(market_assets + manual_assets)
         liabilities = money(market_liab + manual_liab)
-        # §9-5: mark the point carried-forward when a holding could not be honestly valued that
-        # date — its FX was unavailable (W-1b) or it had no price on/before the date. NULL = clean.
-        gap = any(h.fx_unavailable or not h.is_priced for h in v.holdings)
+        # §9-5: mark the point carried-forward when a genuine per-date FX gap made a holding's
+        # value unstatable in base (W-1b) — the honest whole-trend gap. A single always-unpriced
+        # holding (e.g. a fund whose NAV history isn't loaded yet) is estimated at cost per-holding
+        # (val_method), not a trend gap, so it does NOT flag every point. NULL = clean.
+        gap = any(h.fx_unavailable for h in v.holdings)
         session.add(NetWorthSnapshot(
             ts=_midnight(d), base_currency=base, assets=assets, liabilities=liabilities,
             net_worth=money(assets - liabilities), source="backfilled",
