@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime, time
 from decimal import Decimal
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
@@ -620,9 +621,37 @@ async def _refetch_route_mismatched(session: AsyncSession, instrument, diag) -> 
     return await get_cached_quote(session, instrument.symbol, instrument.exchange)
 
 
+class QuoteRefresh(NamedTuple):
+    """What one refresh attempt actually did — so callers can report honestly.
+
+    §18-R2 (F-7b): ``refresh_data`` used to count "refreshed" as *"the returned quote has a
+    price"*, which is true of a pure cache read. A pass that fetched nothing could
+    therefore toast "Refreshed 26 of 26" while the underlying quotes stayed stale.
+    ``outcome`` distinguishes a real fetch from a cache fallback, and ``reason`` carries
+    the per-instrument explanation to the surface.
+    """
+
+    quote: Quote
+    outcome: str                  # "fetched" | "not_owned" | "no_data" | "error"
+    reason: str | None = None
+
+    @property
+    def fetched(self) -> bool:
+        return self.outcome == "fetched"
+
+
 async def refresh_quote(session: AsyncSession, symbol: str, exchange: str | None = None) -> Quote:
     """Fetch a fresh quote and upsert it. On provider failure, return the last
-    cached quote marked stale/cached rather than raising.
+    cached quote marked stale/cached rather than raising. See :func:`refresh_quote_detailed`
+    for the outcome-carrying form used by the refresh report.
+    """
+    return (await refresh_quote_detailed(session, symbol, exchange)).quote
+
+
+async def refresh_quote_detailed(
+    session: AsyncSession, symbol: str, exchange: str | None = None
+) -> QuoteRefresh:
+    """:func:`refresh_quote`, plus WHAT HAPPENED (fetched vs served from cache, and why).
 
     Routes per instrument: the active market provider only fetches instruments it
     actually owns. AMFI/CoinGecko-published, manual, or unmapped instruments are served
@@ -635,22 +664,30 @@ async def refresh_quote(session: AsyncSession, symbol: str, exchange: str | None
     if diag.source_selected != getattr(provider, "name", "mock"):
         # Authoritative source is a cache-publish adapter, manual, or unavailable —
         # never let the active provider fetch/overwrite it. But first honour a ROUTE
-        # CHANGE (§18-R3, F-7a): a cached quote whose source is not the source the route
+        # CHANGE (§18-R3 (F-7a)): a cached quote whose source is not the source the route
         # NOW names is route-mismatched, and serving it verbatim strands the holding on
         # the previous provider forever (the owner's BTC/XRP: corrected to CoinGecko,
         # Source stayed alphavantage across every refresh). Refetch from the new route
         # regardless of freshness; fall back to the cache only if that can't be done.
         refetched = await _refetch_route_mismatched(session, instrument, diag)
         if refetched is not None:
-            return refetched
-        return await get_cached_quote(session, symbol, exchange)
+            return QuoteRefresh(refetched, "fetched")
+        active = getattr(provider, "name", "mock")
+        owner = diag.source_selected or "no configured source"
+        return QuoteRefresh(
+            await get_cached_quote(session, symbol, exchange), "not_owned",
+            diag.reason or f"served from cache — {owner} owns this price, not the active "
+                           f"provider ({active})")
     try:
         q = await provider.get_quote(symbol, exchange)
         if q.price is None:
             # Provider couldn't deliver (e.g. rate-limited). Do NOT write a null
             # price (the column is NOT NULL, and a null would poison the session).
             # Return the last cached quote, or an explicit "unavailable".
-            return await get_cached_quote(session, symbol, exchange)
+            return QuoteRefresh(
+                await get_cached_quote(session, symbol, exchange), "no_data",
+                f"no data from {getattr(provider, 'name', 'the provider')} "
+                "(unsupported on this provider, or limit hit)")
         # Race-safe upsert: concurrent dashboard requests often refresh the same
         # symbol at once (SPY appears on Home, Markets and Global). A check-then-
         # insert would hit "UNIQUE constraint failed: quotes.instrument_id"; an
@@ -676,10 +713,11 @@ async def refresh_quote(session: AsyncSession, symbol: str, exchange: str | None
         await session.flush()
         q.is_stale = False
         q.price_display = format_price_display(q.price, instrument.asset_class)  # D-105
-        return q
+        return QuoteRefresh(q, "fetched")
     except Exception as exc:  # noqa: BLE001
         log.warning("quote refresh failed for %s: %s", symbol, exc)
-        return await get_cached_quote(session, symbol, exchange)
+        return QuoteRefresh(
+            await get_cached_quote(session, symbol, exchange), "error", str(exc)[:160])
 
 
 async def get_cached_quote(

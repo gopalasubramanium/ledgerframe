@@ -511,7 +511,7 @@ async def refresh_data(session: AsyncSession = Depends(get_db)) -> dict:
     global tiles) from the current provider. Reports exactly what updated/failed."""
     import time
 
-    from app.services.market import backfill_instrument_name, refresh_quote
+    from app.services.market import backfill_instrument_name, refresh_quote_detailed
 
     provider = get_settings().market_provider
     symbols = await _display_symbols(session)
@@ -522,30 +522,40 @@ async def refresh_data(session: AsyncSession = Depends(get_db)) -> dict:
     budget_s = 40.0
     per_symbol_s = 8.0
     start = time.monotonic()
+    # §18-R2 (F-7b) — the report is PER-INSTRUMENT HONEST. `refreshed` counts symbols this pass
+    # actually FETCHED (``outcome == "fetched"``), never a cache read that merely happened to
+    # carry a price. Everything not fetched lands in `failed` with its own reason, so the
+    # count can no longer read "N of N" while quotes it covers stay stale.
     refreshed, succeeded, failed, skipped = 0, [], [], 0
+    stale_after: list[str] = []
     for sym in symbols:
         if time.monotonic() - start > budget_s:
             skipped += 1
             continue
         try:
-            q = await asyncio.wait_for(refresh_quote(session, sym), timeout=per_symbol_s)
+            r = await asyncio.wait_for(refresh_quote_detailed(session, sym), timeout=per_symbol_s)
             await backfill_instrument_name(session, sym)
             await session.commit()                      # persist per symbol; isolates failures
-            if q.price is not None and q.entitlement.value != "unavailable":
+            if r.fetched:
                 refreshed += 1
                 succeeded.append(sym)
             else:
-                failed.append({"symbol": sym, "reason": f"no data from {provider} "
-                               "(unsupported on this provider, or limit hit)"})
+                failed.append({"symbol": sym, "reason": r.reason or f"not refreshed from {provider}"})
+            if r.quote.is_stale or r.quote.price is None:
+                stale_after.append(sym)
         except (TimeoutError, Exception) as exc:  # noqa: BLE001
             await session.rollback()                    # discard the in-flight symbol only
             reason = "timed out" if isinstance(exc, TimeoutError) else str(exc)[:160]
             failed.append({"symbol": sym, "reason": reason})
+            stale_after.append(sym)
     if skipped:
         failed.append({"symbol": f"+{skipped} more", "reason": "skipped — refresh time budget reached; try again"})
     return {
         "ok": True, "refreshed": refreshed, "total": len(symbols), "skipped": skipped,
         "succeeded": succeeded, "failed": failed,
+        # The honesty pin: symbols still stale AFTER this pass. A caller rendering
+        # "Refreshed N of M" must not imply everything is current while this is non-empty.
+        "still_stale": stale_after,
         "errors": [f"{f['symbol']}: {f['reason']}" for f in failed],
     }
 

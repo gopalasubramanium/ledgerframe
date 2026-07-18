@@ -41,7 +41,7 @@ vi.mock("../api/pricing-health", () => ({
   getIdentifierDuplicates: vi.fn(async () => ({ ok: true, data: { duplicates: [], count: 0 } })),
   getNoEgress: vi.fn(async () => false),
   refreshHolding: vi.fn(async () => ({ ok: true, data: { ok: true, refreshed: true } })),
-  refreshAllData: vi.fn(async () => ({ ok: true, data: { ok: true, refreshed: 2, total: 4, skipped: 0, succeeded: [], failed: [], errors: [] } })),
+  refreshAllData: vi.fn(async () => ({ ok: true, data: { ok: true, refreshed: 2, total: 4, skipped: 0, succeeded: [], failed: [], still_stale: [], errors: [] } })),
   refreshAllMarketData: vi.fn(async () => [
     { lane: "Quotes & indices", ok: true, detail: "Refreshed 2 of 4" },
     { lane: "FX rates", ok: true, detail: "Updated 30 rates" },

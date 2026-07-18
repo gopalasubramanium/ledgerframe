@@ -76,6 +76,9 @@ export interface RefreshSummary {
   skipped: number;
   succeeded: string[];
   failed: { symbol: string; reason: string }[];
+  // §18-R2 (F-7b): symbols still stale AFTER the pass. The lane may never read as fully
+  // successful while this is non-empty — that is exactly the "26 of 26 but stale" lie.
+  still_stale: string[];
   errors: string[];
 }
 
@@ -108,10 +111,12 @@ export async function refreshAllMarketData(): Promise<LaneResult[]> {
     q.ok
       ? {
           lane: "Quotes & indices",
-          ok: q.data.failed.length === 0,
+          ok: q.data.failed.length === 0 && (q.data.still_stale?.length ?? 0) === 0,
           detail: `Refreshed ${q.data.refreshed} of ${q.data.total}${
-            q.data.failed.length ? ` · ${q.data.failed.length} failed` : ""
-          }${q.data.skipped ? ` · ${q.data.skipped} skipped` : ""}`,
+            q.data.failed.length ? ` · ${q.data.failed.length} not refreshed` : ""
+          }${q.data.skipped ? ` · ${q.data.skipped} skipped` : ""}${
+            q.data.still_stale?.length ? ` · ${q.data.still_stale.length} still stale` : ""
+          }`,
         }
       : { lane: "Quotes & indices", ok: false, detail: q.error },
   );
