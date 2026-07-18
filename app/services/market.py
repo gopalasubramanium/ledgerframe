@@ -152,6 +152,47 @@ async def recognise_amfi_fund(session: AsyncSession, instrument, code: str) -> i
     return await publish_navs_to_instruments(session)
 
 
+async def recognise_unconverted_amfi_funds(session: AsyncSession) -> dict:
+    """D1-b — one-time idempotent repair (the dr-25 cleanup pattern). Heals the 145834
+    residue: instruments carrying an ``amfi_code`` identifier but left unconverted by the
+    PRE-D1 Add-flow linker (pricing_currency != INR or valuation_method != official_nav)
+    and/or missing an ``amfi_nav`` quote while the master has a NAV. Runs the shared
+    :func:`recognise_amfi_fund` over each, converging it. Idempotent (a second run finds
+    nothing), logged with counts, and strictly ADDITIVE — never deletes user data. Ships as
+    normal product-upgrade code (runs once at startup on the live instance)."""
+    from app.models import AmfiScheme, AuditEvent, Instrument, InstrumentIdentifier
+    from app.models import Quote as QuoteRow
+
+    idents = (await session.execute(
+        select(InstrumentIdentifier).where(InstrumentIdentifier.id_type == "amfi_code")
+    )).scalars().all()
+    repaired = 0
+    for ident in idents:
+        instr = await session.get(Instrument, ident.instrument_id)
+        if instr is None:
+            continue
+        needs_fields = (instr.pricing_currency != "INR"
+                        or instr.valuation_method != "official_nav")
+        has_amfi_quote = (await session.execute(
+            select(QuoteRow.instrument_id).where(
+                QuoteRow.instrument_id == instr.id, QuoteRow.source == "amfi_nav")
+        )).first() is not None
+        scheme = await session.get(AmfiScheme, ident.value)
+        missing_nav_quote = (scheme is not None and scheme.nav is not None
+                             and not has_amfi_quote)
+        if needs_fields or missing_nav_quote:
+            await recognise_amfi_fund(session, instr, ident.value)
+            repaired += 1
+    if repaired:
+        session.add(AuditEvent(
+            category="mutation", action="recognise_unconverted_amfi_funds",
+            detail=f"recognised {repaired} mapped-but-unconverted India MF(s)"))
+        await session.flush()
+    log.info("D1-b AMFI recognition repair: converted %d mapped-but-unconverted fund(s)",
+             repaired)
+    return {"repaired": repaired}
+
+
 async def _link_amfi_by_symbol(session: AsyncSession, instrument) -> str | None:
     """§14dr-27(c/d): if a mutual fund's symbol is exactly a synced AMFI scheme code, attach
     the ``amfi_code`` mapping and recognise it as an India-listed official-NAV fund. This

@@ -128,6 +128,21 @@ async def lifespan(app: FastAPI):
                 await session.rollback()
                 log.warning("demo seed skipped: %s", exc)
 
+    # D1-b (data-feed-routing POST-CLOSE DELTA) — one-time idempotent repair for the
+    # 145834 residue: India MFs the pre-D1 Add-flow linker mapped but left unconverted
+    # (pricing_currency USD / valuation_method market_quote, no published NAV). Convergent
+    # + additive (never deletes user data); a second boot finds nothing. Best-effort.
+    try:
+        from app.services.market import recognise_unconverted_amfi_funds
+
+        async with get_sessionmaker()() as session:
+            healed = await recognise_unconverted_amfi_funds(session)
+            if healed["repaired"]:
+                await session.commit()
+                log.info("recognised %d mapped-but-unconverted India MF(s)", healed["repaired"])
+    except Exception as exc:  # noqa: BLE001
+        log.warning("AMFI recognition repair skipped: %s", exc)
+
     # Load cached ECB reference FX into the in-process map (used only as an FX
     # fallback when the provider can't serve a pair). Best-effort; never fatal.
     try:
