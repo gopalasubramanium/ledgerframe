@@ -567,17 +567,42 @@ orchestrator writes backfilled snapshots and the served trend + demo generation 
   when the venue gives none; an INR fund recorded in SGD now derives INR cost, not SGD (the
   **pre-release-walk 10c root cause**). Recorded numbers never rewritten. Integration suite 648
   passed, 0 regressions. — commit `6f6d8aa`.
+- **Step 5(c) (§9-4c) — edit-path trade-date FX re-capture** — `update_transaction` re-captures
+  `fx_to_base`/`fx_base` after an edit (mirroring add), so changing currency/date never leaves a
+  stale rate (§2.5 gap). Pin RED-first; 129 edit-surface tests pass. — commit `0dce8fb`.
 
-### NEXT — the remaining Phase-0 cluster (owner to sequence; each RED-first)
+### ⚠ SEQUENCING FINDING (2026-07-18) — steps 4 and 5(a) are DATA-COUPLED
 
-- **Step 4 (§9-7 / ⚠-B) — analytics consolidation.** RED proving `performance_series` /
-  `time_weighted_return` mis-value a mixed-currency book (W-1 drift at `analytics.py:262,399` +
-  current-FX-across-history), THEN both consume the date-aware engine; forked valuation DELETED;
-  before/after figures reported. *Risk: a semantics change (as-of positions vs today's-qty) and a
-  per-date perf cost — deserves its own careful commit with the analytics tests as the net.*
-- **Step 5(a)(c) — trade-date cost-basis FX + edit-path.** (a) cost basis at the STORED
-  trade-time `fx_base` per lot (via `fifo_report` open lots), ≤7-day nearest-rate fallback
-  flagged else honest-missing; (c) edit path preserves/recomputes stored trade-time FX.
+Verified empirically on the demo book: `price_history` has **0 rows** and `ecb_fx_history` is
+**empty**, so `value_portfolio(as_of=…)` returns positions but **0 priced**. Consequences:
+
+- **Step 4 cannot land cleanly in isolation.** Consolidating `performance_series`/`time_weighted_
+  return` onto the date-aware engine (which reads persisted `PriceHistory` via `_price_close_asof`)
+  would **flatten the demo Portfolio performance line** — a regression to an ACCEPTED page — because
+  the demo never persists `PriceHistory` (only `get_history_cached` does, lazily). A faithful
+  consolidation must either preload history first or run after the backfill populates it.
+- **Step 5(a) has the same shape.** The honest-missing fallback flips cross-currency cost to
+  native-labelled when no per-date rate exists; with `ecb_fx_history` empty, the demo's
+  cross-currency costs (BTC/XRP/funds) all go honest-missing → the accepted Portfolio/Net-worth
+  cost figures change. Meaningful only once the R-8 store is populated.
+
+**Both depend on demo data population — which is step 9 (demo generation of `PriceHistory` +
+`ecb_fx_history` + backfilled snapshots).** The plan lists step 9 last, but it is in fact the
+ENABLER for the remaining correctness steps to land without regressing accepted pages. Recommended
+revised order: **step 9 (demo/data generation) → step 4 + step 5(a)** (now verifiable, non-
+regressing) → steps 6/7/8 → 0a. Owner to confirm this re-sequence before the coupled changes land.
+
+### NEXT — the remaining Phase-0 cluster
+
+- **Step 9 (§9-8) — demo generation (now the recommended enabler).** Generate consistent demo
+  `PriceHistory` + `ecb_fx_history` + backfilled `net_worth_snapshots` so the date-aware engine
+  has data in the demo/pre-pass lane (network-free) — unblocks 4 and 5(a) AND feeds the trend.
+- **Step 4 (§9-7 / ⚠-B) — analytics consolidation.** RED proving the W-1 / current-FX drift, THEN
+  both consume the date-aware engine; forked valuation DELETED; before/after figures reported.
+  *Land after step 9 so the demo perf line stays alive.*
+- **Step 5(a) — trade-date cost-basis FX.** Cost basis at the STORED trade-time `fx_base` per lot
+  (via `fifo_report` open lots), ≤7-day nearest-rate fallback flagged else honest-missing. *Land
+  after step 9 so the demo cross-currency costs resolve.*
 - **Step 6 — history acquisition.** AMFI authorized confirming call → chunked archive fetcher;
   crypto CoinGecko `market-chart/range` adapter (capability flag per free-tier limits); AV
   `outputsize=full` premium. Budget-aware, user-triggered. *Network-dependent — validate on the
