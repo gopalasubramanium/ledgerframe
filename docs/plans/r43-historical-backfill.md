@@ -782,3 +782,75 @@ ECB `eurofxref-hist` ingest, AV `outputsize=full`, crypto history via CoinGecko 
 archive). Independent of step 6: the **backfill coverage preflight** (F-1 #4), the **perf-card
 coverage/honesty policy** (F-2 §9-5), and **surfacing `cost_fx_unavailable`** (F-3 #4) are
 render/served-string honesty gaps. Sequencing ruled in chat.
+
+---
+
+## 12. FIX BATCH — RULINGS + BUILD ORDER (2026-07-19, architect under the owner's standing delegation)
+
+The §11 causes are verified. The fixes are ruled and sequenced. Rulings are dated, reversible by
+a later dated entry (the R-38/R-42 precedent). The shared root — **step 6 (real acquisition)
+never ran on-stack** — is now built as part of this batch, and the three render/served-string
+honesty gaps (F-1 preflight, F-2 policy, F-3 surfacing) land alongside it.
+
+### 12-R — RULINGS (dated 2026-07-19)
+
+- **§12-R1 — F-2 policy: REFUSE-UNTIL-COVERAGE.** Date-aware metrics (TWR, 1Y return,
+  volatility, drawdown) render an **honest served state** — *"Insufficient price & FX history for
+  this window — build history"* — until the window has real coverage. **Principle pinned:** a
+  headline risk metric is never computed from a series dominated by carried-from-nothing values.
+  **Computability threshold (pinned):** the date-aware series is computable from the **first date
+  at which every then-held holding has a real price within the §9-5 carry window AND per-date FX
+  exists for that holding's price currency → base**; before that date the metric refuses. Each
+  metric on the Portfolio card carries its **basis label** (live vs date-aware) — no mixed silent
+  bases (F-2's exact defect: +131.13% live beside −99.93% date-aware on one card).
+- **§12-R2 — F-3 surfacing: EXCLUSIONS ARE LOUD.** `cost_fx_unavailable` / `cost_fx_approximate`
+  are **serialized and rendered**: excluded lots flagged on the Holdings row; Portfolio cost
+  basis annotated (*"excludes N lots — FX unavailable"*); served reason strings (D-105).
+  **Recorded numbers are still never rewritten** — the defect is the unflagged omission (D-020 /
+  D-076 excluded-count), not a rewrite.
+- **§12-R3 — Class-aware history capability.** A provider's history/intraday capability is
+  **per asset class** (AV daily+intraday = equity/etf only). Fetching a class the provider cannot
+  serve is **impossible by construction** — refused at the capability layer, mirroring the Flag-2
+  quote-capability precedent. This is why the live BTC/XRP AV daily candles are wrong-instrument
+  garbage (BTC "close" 28.38 vs live 64,024): AV `TIME_SERIES_DAILY` is an equity endpoint.
+
+### 12-B — BUILD ORDER (one delta per commit; contract regen same-commit, baseline 137)
+
+1. **F-3 surfacing** (§12-R2) — serialization + Holdings/Portfolio rendering; excluded lots flag;
+   annotation counts correct; zero regressions on fully-covered books. Contract regen (new fields).
+2. **ECB ingest wired into the product flow** — Build-history preflight ingests/refreshes
+   `eurofxref-hist` (one keyless fetch) before valuing; idempotent append; no-egress → honest
+   served refusal.
+3. **Class-aware capability + garbage purge** (§12-R3) — capability gating per class; one-time
+   idempotent purge of wrong-instrument crypto candles (crypto rows from AV daily/intraday),
+   logged counts (dr-25/W-3); AV history for a crypto instrument refused at the capability layer;
+   purge second run = 0.
+4. **CoinGecko history adapter** (crypto daily range) — free-tier depth cited honestly; capability
+   true for crypto daily; budget-aware chunking; pins on shape/keying (midnight-UTC daily,
+   `source=coingecko`).
+5. **AMFI archive fetcher** (`DownloadNAVHistoryReport_Po.aspx`, ~90-day chunks, back only as far
+   as the book needs) — build against the documented params + a recorded fixture; exact params
+   marked **TO-CONFIRM on-stack (▲-D)**; pins on chunk stitching + scheme filtering.
+6. **AV equities full depth** (`outputsize=full`) for held equities — calls-per-instrument stated;
+   12h idempotency marker honored.
+7. **Coverage preflight on Build history (F-1)** — per-instrument coverage summary
+   (earliest/latest real candle + FX coverage) served + surfaced in the trigger UI before running;
+   the run proceeds with the summary visible; re-runs supersede (idempotent §9-1).
+8. **F-2 policy implementation** (§12-R1) — computability threshold; served insufficient-coverage
+   states on the Portfolio card; basis labels; pins: the owner's BTC-only scenario (garbage-free
+   but coverage-poor) renders the served refusal, NOT −99.93%; a fully-covered demo book computes
+   normally.
+9. **Demo + gates** — demo lane stays consistent (generated coverage → demo computes everything;
+   assert no demo regressions); full suite, ruff, contract count, frontend exit code from
+   `frontend/`.
+
+### 12-STOP — OWNER ON-STACK VALIDATION WINDOW (the ruled option-1)
+
+After step 9, print — verbatim, copy-pasteable — the commands for the owner to run on THEIR
+machine (their premium key, their egress): (a) the AMFI archive confirming call (exact URL +
+params) for one of their schemes; (b) one CoinGecko daily-range call for BTC; (c) one AV
+`outputsize=full` call for one held equity. Owner pastes the raw responses back; any param delta
+→ a fail-first pin update stating the delta. Then owner restarts, opens Net worth, reviews the
+served coverage preflight, runs **Build history**, reviews the trend + Portfolio card. Findings
+return via chat. **No close ritual in this CLI** — 0a/3b ratification + F-ledger closure happen in
+chat after the owner's re-run.
