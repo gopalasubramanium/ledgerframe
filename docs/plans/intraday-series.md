@@ -1,16 +1,16 @@
 # intraday-series — Intraday price series (ROADMAP R-42) build plan
 
-> **STATUS: PLAN — PLAN-ONLY THROUGH §9, NOT BUILT.** R-42 was **ACTIVATED** with an
-> owner **definition** at the data-feed-routing §14dr-13 re-walk (2026-07-18;
-> `ROADMAP.md:54`), sequenced as the milestone **immediately after data-feed-routing
-> closes, BEFORE Help**. data-feed-routing (R-38) is **CLOSED** (RATIFICATION §6,
-> 2026-07-18; `CURRENT.md:20`). This file is the full plan authored per
-> `TEMPLATE-page-build.md` (adapted for a feature milestone the way `data-feed-routing.md`
-> was), **verify-first** (every claim cites `file:line`). **The §9 one-pass is walked with
-> the owner in chat** — the PROPOSED resolutions below are the reasoning of record, not
-> commitments; ⚑ marks the calls the owner must rule. **Nothing is built until §9 is
-> resolved** — no code, no migration, no contract change. Frontend exit code for this
-> plan-only pass: **N/A** (no frontend touched).
+> **STATUS: §9 RESOLVED (owner 2026-07-18, in chat) → PHASE 0 IN PROGRESS (backend-first,
+> STOP at 0a specimen).** R-42 was **ACTIVATED** with an owner **definition** at the
+> data-feed-routing §14dr-13 re-walk (2026-07-18; `ROADMAP.md:54`), sequenced as the
+> milestone **immediately after data-feed-routing closes, BEFORE Help**. data-feed-routing
+> (R-38) is **CLOSED** (RATIFICATION §6, 2026-07-18; `CURRENT.md:20`). This file is the full
+> plan authored per `TEMPLATE-page-build.md` (adapted for a feature milestone the way
+> `data-feed-routing.md` was), **verify-first** (every claim cites `file:line`). **The §9
+> one-pass was walked with the owner in chat on 2026-07-18 and every item is now RULED** —
+> the rulings are recorded in **§9-RULINGS** below; the §9 PROPOSED table stands as the
+> reasoning of record. Build now proceeds **backend-first** (Phase 0), **STOPPING at the
+> Phase 0a specimen** for owner ratification in chat. Phase 1 does not begin here.
 
 ---
 
@@ -357,5 +357,94 @@ stand as the reasoning of record (the R-38 §9 precedent, `data-feed-routing.md:
 
 ---
 
-**STOP — PLAN-ONLY.** The §9 one-pass is walked with the owner in chat; build proceeds
-backend-first only after the owner rules §9. No Phase 0 work begins here.
+## §9-RULINGS — OWNER RULINGS (2026-07-18, walked in chat)
+
+*The §9 one-pass was walked with the owner on 2026-07-18. Every item below is now RULED;
+the PROPOSED table above stands as the reasoning of record. Rationales are the owner's,
+summarised. Build proceeds backend-first (Phase 0), STOPPING at the 0a specimen.*
+
+- **§9-1 Storage + retention — RULED: accepted (owner 2026-07-18).** Same `price_history`
+  table, **interval-dimensioned** (§2.1: the partition is structural — `market.py:579` hard
+  SQL `interval == interval`, daily helpers early-return non-daily `:448/:471/:493`); **no
+  new table, no migration.** Add the **structural-partition pin** (§4) so daily↔intraday can
+  never comb. Retention is **truly forever — no prune, ever.** The honest growth math (§9-1
+  PROPOSED: ≈390 candles/instrument/trading-day for 1D 1-min) stands; growth is bounded in
+  practice because fetches are user-triggered per instrument/range (only viewed windows
+  persist), not a full-book poll. *Owner rationale:* a retention guarantee that silently
+  prunes is not a guarantee — future bloat is managed **by roadmap, never by silent
+  pruning**. Filed **ROADMAP R-47 "intraday compaction / downsampling"** (parked) as the
+  honest release valve if growth ever bites.
+
+- **§9-2 Range→interval mapping — RULED: accepted (owner 2026-07-18).** **1D → 1-minute;
+  5D → 5-minute** (≈390-point render budget per range; both native Alpha Vantage
+  `TIME_SERIES_INTRADAY` intervals). 1M/3M/6M/YTD/1Y/5Y/Max stay **daily, unchanged**. 1D and
+  5D un-grey on premium; the honest-disable states that REMAIN (each a **served** reason,
+  D-105): free/unknown tier · mutual-fund (AMFI NAV once-daily) · a provider that cannot
+  serve intraday · no-egress.
+
+- **§9-3 Fetch trigger — RULED: accepted (owner 2026-07-18).** The **range button itself is
+  the trigger**, **Instrument Detail only**. First click on an unfetched range = fetch, with
+  a **served in-progress state**; the 12h `hist_fetched:{id}:{interval}` marker
+  (`market.py:561`) is the idempotency/budget lock — repeated clicks never re-spend. The
+  `av_tier` gate is **server-side** (the backend refuses an intraday interval when
+  `av_tier != premium`, not merely a UI grey); the free tier keeps the honest disable with a
+  **served, tier-keyed** reason string. **This milestone also fixes the dr-7 D-105 gap
+  (§9-9):** the disable reasons and the disabled set move from frontend constants
+  (`InstrumentDetail.tsx:50-51`) to **served**.
+
+- **§9-4 Upsert — RULED: accepted (owner 2026-07-18).** **Additive-idempotent, per-interval
+  source precedence.** The annotated upsert-never-overwrites-a-real-row +
+  real-supersedes-demo policy (`market.py:643-661`) extends per-interval; intraday keys on
+  **exact per-bar ts** (no midnight-normalise, §2.1) and inserts new bars, never rewriting an
+  existing real bar. A partial-day re-fetch fills later bars as new ts rows.
+
+- **§9-5 Scope — RULED: accepted (owner 2026-07-18).** **Instrument-Detail-only.** The
+  **benchmark overlay is HIDDEN on 1D/5D** with a served reason —
+  **"Benchmark comparison is daily-range only"** (exact string, served). Benchmark-intraday
+  is filed to **ROADMAP R-48 "benchmark on intraday ranges"** (parked). **At this milestone's
+  close**, update the `pre-release-walk.md` dr-25 carryover wording (item 1, `:18-24`) to
+  match — the 1D/5D final chart sign-off is **instrument-line-only** on intraday (no
+  two-line portfolio+benchmark assertion for 1D/5D). *(Noted now; the edit lands at close per
+  the close-ritual.)*
+
+- **§9-6 Routing — RULED: accepted (owner 2026-07-18).** Intraday rides the **active provider
+  only**; the matrix does **NOT** gain a second lane. Add an `intraday: bool` capability
+  (`router.py:37` seam) so `_history_source` refuses intraday honestly when the active
+  provider lacks it. Filed **ROADMAP R-49 "history / intraday routing lane"** (parked) with
+  the survey's finding as rationale — history routing is a different shape (the matrix can
+  **block** but not **redirect**, `market.py:41-59,616`), so a second lane is its own
+  milestone.
+
+- **§9-7 Mock cadence — RULED: accepted (owner 2026-07-18).** Align the mock provider to the
+  real intervals (**1-min for `"1min"`, 5-min for `"5min"`**) so the pins assert the true
+  range→interval mapping; **replace the 30-min bars** (`mock.py:139`).
+
+- **§9-8 Demo data — RULED: accepted (owner 2026-07-18).** The demo cache **generates
+  intraday** for the mock provider (the option-1 precedent) — 1D/5D stay **alive in demo**;
+  no dead controls.
+
+- **§9-9 Served disable decision (dr-7 D-105 gap) — RULED: folded into §9-3.** Served,
+  tier-keyed; the frontend renders the served availability map and deletes the hardcoded
+  `INTRADAY_REASON`/`DISABLED_PERIODS` constants.
+
+- **§9-10 Trigger component gap — RULED: accepted (owner 2026-07-18).** Reuse `Segmented`
+  (range control) + the dr-8 `Button loading` async standard; no new component expected. If
+  Phase 0a surfaces a composition gap, raise a §5 DESIGN-SYSTEM amendment **at 0a**, never
+  mid-build.
+
+- **§9-T Terminology — RULED: accepted (owner 2026-07-18).** Author spec-first —
+  **"Intraday"** and **"Interval"** into `GLOSSARY.md` then `mocks/glossary.ts` (parity
+  guard); `interval` literals stay out of user copy.
+
+- **Chart time rendering — RULED: accepted (owner 2026-07-18).** The chart's ts→date
+  truncation (`InstrumentDetail.tsx:110`) must render **intraday time-of-day**; intraday
+  points are **NOT midnight-normalised** — that is the structural daily/intraday partition:
+  the read filters `interval == interval` as hard SQL (`market.py:579`) and the daily helpers
+  early-return for non-daily (`market.py:448/:471/:493`). This is the **comb-impossible
+  proof** the §4 pin asserts.
+
+---
+
+**STOP AT 0a.** §9 is RULED and recorded. Build proceeds backend-first (Phase 0, §11);
+the session STOPS at the **Phase 0a specimen** for owner ratification in chat. Phase 1
+(assembly) is a separate instruction and does not begin here.
