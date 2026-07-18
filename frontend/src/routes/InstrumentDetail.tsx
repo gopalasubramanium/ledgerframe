@@ -43,6 +43,9 @@ function chipVal(v: string | null | undefined | false) {
   return v ? <span className="lf-chip">{v}</span> : "—";
 }
 const PERIODS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "Max"];
+// The default daily range the page falls back to when a carried-over intraday range is
+// served-disabled on the instrument now being viewed (period-carryover fallback, Phase 1).
+const DEFAULT_DAILY_RANGE = "6M";
 // R-42 §9-9 — the 1D/5D disable decision (dr-7) is now SERVED: the range control renders the
 // enabled/disabled + reason from the history reader's `intraday` availability map (D-105),
 // never a frontend constant. The range→interval mapping is server-side too — the page sends a
@@ -117,9 +120,21 @@ export function InstrumentDetail() {
     getInstrumentHistory(sym, periodToDays(period), period).then((h) => {
       if (!live) return;
       if (h.ok) {
+        const avail = h.data.intraday ?? null;
+        // Period-carryover fallback (0a gate): a range carried over from a prior instrument
+        // may be served-disabled on this one (tier/class/capability/egress). The SERVED
+        // availability decides — never render an empty for a range the control shows as
+        // disabled. Fall back to the default daily range; the effect re-fires for it (keep
+        // `fetching` true through the re-fetch so the loading treatment covers the swap).
+        const carried = avail?.ranges?.[period];
+        if (carried && !carried.enabled) {
+          setIntraday(avail);
+          setPeriod(DEFAULT_DAILY_RANGE);
+          return;
+        }
         setCandles(h.data.candles);
         setHistInterval(h.data.interval);
-        setIntraday(h.data.intraday ?? null);
+        setIntraday(avail);
       } else {
         setCandles([]);
       }

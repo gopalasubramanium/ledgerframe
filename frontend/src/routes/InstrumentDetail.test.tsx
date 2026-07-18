@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastProvider } from "../components/ui";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { DisplayProvider } from "../theme/DisplayProvider";
@@ -195,6 +195,79 @@ test("R-42/§9-9: 1D/5D render the SERVED disabled state + reason (no frontend c
   // A clickable range still works and is not disabled.
   expect(screen.getByRole("button", { name: "1M" })).toBeEnabled();
   await user.click(oneD); // no-op while disabled — no throw, no period change
+});
+
+test("R-42 Phase 1: an intraday range carried over to an instrument where it's served-disabled falls back to a daily range (no honest-empty on a disabled control)", async () => {
+  // 0a gate: navigating from 1D on an intraday-capable instrument to one where 1D is
+  // served-disabled kept 1D ACTIVE with an honest empty. Fix (§9-9/D-105): the SERVED
+  // availability decides — on load a carried disabled range falls back to the default daily
+  // range, so an empty is never rendered for a range the control shows as disabled.
+  // Fail-first RED before the fallback exists.
+  const NAV_REASON = "Mutual-fund NAV is published once daily — no intraday series.";
+  const intradayCandles = [
+    { ts: "2026-07-10T14:30:00", open: 1, high: 2, low: 1, close: 1.5 },
+    { ts: "2026-07-10T14:31:00", open: 1.5, high: 2, low: 1, close: 1.7 },
+  ];
+  const dailyCandles = [
+    { ts: "2026-07-01T00:00:00", open: 1, high: 2, low: 1, close: 1.5 },
+    { ts: "2026-07-02T00:00:00", open: 1.5, high: 2, low: 1, close: 1.7 },
+  ];
+  vi.mocked(api.getInstrumentHistory).mockImplementation(async (sym: string, _days: number, range?: string) => {
+    const enabled = sym === "AAPL"; // AAPL is intraday-capable; the fund is not
+    const ranges = {
+      "1D": { interval: "1min", enabled, state: enabled ? "available" : "class_disabled", reason: enabled ? null : NAV_REASON },
+      "5D": { interval: "5min", enabled, state: enabled ? "available" : "class_disabled", reason: enabled ? null : NAV_REASON },
+    };
+    const base = { benchmark_reason: "Benchmark comparison is daily-range only." };
+    const isIntradayRange = range === "1D" || range === "5D";
+    if (isIntradayRange) {
+      return { ok: true, data: {
+        symbol: sym, interval: range === "1D" ? "1min" : "5min",
+        candles: enabled ? intradayCandles : [],
+        intraday: { ranges, ...base, requested_range: range, fetch_state: enabled ? "fetched" : "class_disabled" },
+      } };
+    }
+    return { ok: true, data: {
+      symbol: sym, interval: "1d", candles: dailyCandles,
+      intraday: { ranges, ...base, requested_range: null, fetch_state: null },
+    } };
+  });
+  vi.mocked(api.getInstrument).mockImplementation(async (sym: string) => ({
+    ok: true,
+    data: sym === "HDFCNIFTY"
+      ? { ...DETAIL, instrument: { ...DETAIL.instrument, symbol: "HDFCNIFTY", name: "HDFC Nifty", asset_class: "mutual_fund" } }
+      : DETAIL,
+  }));
+
+  const user = userEvent.setup();
+  render(
+    <ThemeProvider><DisplayProvider><ToastProvider><RefdataProvider>
+      <MemoryRouter initialEntries={["/instrument/AAPL"]}>
+        <nav><Link to="/instrument/HDFCNIFTY">go-fund</Link></nav>
+        <Routes><Route path="/instrument/:symbol" element={<InstrumentDetail />} /></Routes>
+      </MemoryRouter>
+    </RefdataProvider></ToastProvider></DisplayProvider></ThemeProvider>,
+  );
+
+  // On AAPL: pick 1D (enabled) — the intraday view is active.
+  await waitFor(() => expect(screen.getByRole("heading", { name: "AAPL", level: 1 })).toBeInTheDocument());
+  await user.click(screen.getByRole("button", { name: "1D" }));
+  await waitFor(() => expect(screen.getByText(/Interval: 1-minute/)).toBeInTheDocument());
+  expect(screen.getByRole("button", { name: "1D" })).toHaveAttribute("aria-pressed", "true");
+
+  // Navigate to the fund WITHOUT touching the range control — 1D is carried over. The fund
+  // serves 1D disabled; the page must fall back to a daily range, not render an empty on 1D.
+  await user.click(screen.getByRole("link", { name: "go-fund" }));
+  await waitFor(() => expect(screen.getByRole("heading", { name: "HDFCNIFTY", level: 1 })).toBeInTheDocument());
+
+  // 1D is disabled with the SERVED reason…
+  await waitFor(() => expect(screen.getByRole("button", { name: "1D" })).toBeDisabled());
+  expect(screen.getByRole("button", { name: "1D" })).toHaveAccessibleDescription(/once daily/i);
+  // …and it is NOT the active range — the page fell back to a daily range.
+  expect(screen.getByRole("button", { name: "1D" })).toHaveAttribute("aria-pressed", "false");
+  // No honest-empty rendered for the disabled range; the daily chart renders instead.
+  expect(screen.queryByText(/No intraday prices for this range/)).toBeNull();
+  expect(screen.getByText(/Interval: 1d/)).toBeInTheDocument();
 });
 
 test("Ongoing cost submits the entered bps (fund-wrapped only, D-099)", async () => {
