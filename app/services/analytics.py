@@ -1,19 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Portfolio performance analytics.
 
-Reconstructs a portfolio value series from current holdings × historical prices
-(a common "today's holdings, valued back through time" view), plus a benchmark
-series indexed to the same starting value, and deterministic summary stats.
+Reconstructs a portfolio value series through the ONE date-aware valuation engine
+(app.services.portfolio.value_portfolio with an as_of date), plus a benchmark series
+indexed to the same starting value, and deterministic summary stats.
 
-Honesty notes:
-- FX uses the *current* rate applied across history (a documented simplification;
-  per-date FX would need historical FX series we don't fetch).
-- Manual assets (cash/property/etc.) are held constant at their current value.
-- All values are computed deterministically; the AI layer never touches these.
+Honesty notes (▲-B / R-43 §9-7):
+- The performance series and TWR value each date at its OWN price + per-date FX (the R-8
+  store) — NOT the holding's currency at today's rate. This retired the forked valuation that
+  carried the W-1 currency bug + current-FX-across-history drift (they now consume one engine).
+- Manual assets (cash/property/etc.) have no market series; the net-worth view (include_manual)
+  holds them flat at their current base value — their per-date history is genuinely unknown,
+  never fabricated.
+- Realised P/L / income here stay at current FX (a distinct surface; the trade-date-FX realised
+  total is exposed alongside them). All values are deterministic; the AI layer never touches them.
 """
 
 from __future__ import annotations
 
+import logging
 import statistics
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -22,11 +27,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.money import ZERO, D, money, to_display
-from app.models import AssetClass, Holding, Instrument
 from app.models import Transaction as Txn
+from app.schemas.common import ValuationMethod
 from app.services import fx
 from app.services.portfolio import compute_fifo, entity_account_filter, value_portfolio
 from app.services.tax import fifo_report, resolve_mergers
+
+log = logging.getLogger("ledgerframe")
 
 
 async def key_stats(session: AsyncSession, base_currency: str, benchmark: str = "SPY",
@@ -191,28 +198,6 @@ async def key_stats(session: AsyncSession, base_currency: str, benchmark: str = 
     }
 
 
-def _carry_forward(dates: list[datetime], series: dict[datetime, Decimal]) -> list[Decimal]:
-    """Map each axis date to the most recent known value at or before it."""
-
-    def _naive(dt: datetime) -> datetime:
-        return dt.replace(tzinfo=None) if dt.tzinfo else dt
-
-    out: list[Decimal] = []
-    last = Decimal("0")
-    # Normalise both sides to naive before comparing: Candle.ts loads naive from
-    # SQLite while the axis is tz-aware (built from datetime.now(UTC)); mixing the
-    # two raised "can't compare offset-naive and offset-aware datetimes".
-    norm = {_naive(k): v for k, v in series.items()}
-    keys = sorted(norm)
-    j = 0
-    for d in dates:
-        dn = _naive(d)
-        while j < len(keys) and keys[j] <= dn:
-            last = norm[keys[j]]
-            j += 1
-        out.append(last)
-    return out
-
 async def performance_series(
     session: AsyncSession,
     base_currency: str,
@@ -225,15 +210,11 @@ async def performance_series(
     benchmark. Constant manual assets (cash/property) are excluded by default so
     the line reflects market movement; pass include_manual=True for a net-worth view.
     """
-    import time as _time
-
+    from app.services.fx_history import load_historical_fx, needed_currencies
     from app.services.market import get_history_cached
 
     end = datetime.now(UTC)
     start = end - timedelta(days=days)
-    # Overall time budget so a slow/rate-limited live provider can't make the page
-    # hang. Past the budget we use only already-cached history.
-    deadline = _time.monotonic() + 12.0
 
     # Time axis from the benchmark's daily candles (cached).
     bench_candles = await get_history_cached(session, benchmark, "1d", start, end)
@@ -241,45 +222,35 @@ async def performance_series(
     if len(axis) < 2:
         return {"series": [], "benchmark": [], "benchmark_symbol": benchmark, "stats": None}
 
-    ps_q = select(Holding).where(Holding.deleted_at.is_(None))  # §3.5 R7: exclude soft-deleted
-    ps_ef = entity_account_filter(Holding, entity_id)  # §4.1: no-op when entity_id is None
-    if ps_ef is not None:
-        ps_q = ps_q.where(ps_ef)
-    holdings = (await session.execute(ps_q)).scalars().all()
+    # ▲-B (§9-7): value the invested portfolio through the ONE date-aware engine at each axis date,
+    # so the line rides per-date price AND per-date FX. This retires the forked valuation that used
+    # the HOLDING's currency (the W-1 bug) at TODAY's rate across all history (the current-FX drift).
+    # Manual assets have no market series; for the net-worth view (include_manual) they ride flat at
+    # their current base value (their history is genuinely unknown — never fabricated per-date).
+    hist_fx = await load_historical_fx(session, list(await needed_currencies(session, base_currency)))
 
-    # Pre-fetch FX rates for distinct native currencies.
-    fx_cache: dict[str, Decimal] = {}
+    manual_base = ZERO
+    if include_manual:
+        live = await value_portfolio(session, base_currency, warm=False, entity_id=entity_id)
+        manual_base = sum((h.market_value_base for h in live.holdings
+                           if h.valuation_method == ValuationMethod.MANUAL_VALUATION.value), ZERO)
 
-    async def rate(ccy: str) -> Decimal:
-        if ccy not in fx_cache:
-            fx_cache[ccy] = await fx.get_rate(ccy, base_currency)
-        return fx_cache[ccy]
-
-    # Sum each holding's value across the axis.
+    # Bound the work for very long windows: value at most _MAX as-of points, carrying the last
+    # computed value forward across the skipped axis dates (a coarser sample of the same series,
+    # never a fabricated figure). Logged, never silent (the no-silent-caps rule). The default
+    # 365-day window is ~250 points → stride 1 (no downsample).
+    _MAX = 500
+    stride = max(1, (len(axis) + _MAX - 1) // _MAX)
+    if stride > 1:
+        log.info("performance_series: valuing every %dth of %d axis points (as-of budget)", stride, len(axis))
     portfolio_vals = [Decimal("0")] * len(axis)
-    for h in holdings:
-        instr = await session.get(Instrument, h.instrument_id) if h.instrument_id else None
-        native = h.currency or (instr.currency if instr else base_currency)
-        fx_rate = await rate(native)
-        sign = Decimal("-1") if h.asset_class == AssetClass.LIABILITY else Decimal("1")
-
-        if h.manual_value is not None or instr is None:
-            if not include_manual:
-                continue  # exclude constant manual assets from the performance line
-            contrib = D(h.manual_value if h.manual_value is not None else D(h.quantity) * D(h.avg_cost))
-            base_contrib = contrib * fx_rate * sign
-            for i in range(len(axis)):
-                portfolio_vals[i] += base_contrib
-            continue
-
-        candles = await get_history_cached(
-            session, instr.symbol, "1d", start, end, allow_fetch=_time.monotonic() < deadline
-        )
-        closes = {c.ts: D(c.close) for c in candles}
-        per_date = _carry_forward(axis, closes)
-        qty = D(h.quantity)
-        for i, close in enumerate(per_date):
-            portfolio_vals[i] += qty * close * fx_rate * sign
+    last = ZERO
+    for i in range(len(axis)):
+        if i % stride == 0 or i == len(axis) - 1:
+            v = await value_portfolio(session, base_currency, warm=False,
+                                      as_of=axis[i].date(), hist_fx=hist_fx, entity_id=entity_id)
+            last = v.total_value + manual_base
+        portfolio_vals[i] = last
 
     start_val = portfolio_vals[0] or Decimal("1")
 
@@ -334,12 +305,13 @@ async def time_weighted_return(session: AsyncSession, base_currency: str, days: 
     derivable. Reconstructs point-in-time holdings valued at cached historical prices
     and chain-links daily returns with each day's external (buy/sell) capital removed
     — so TWR reflects investment performance, not the timing of your contributions.
-    Manual/statement assets are excluded (no price history). Uses current FX (like the
-    performance series). Best-effort within a time budget; returns None on thin data."""
-    import time as _time
+    Manual/statement assets are excluded (no price history). Values through the ONE date-aware
+    engine (per-date price + FX — ▲-B §9-7), stride-capped so a long window stays responsive.
+    Returns None on thin data."""
+    from collections import defaultdict
 
     from app.core.twr import twr_from_flows
-    from app.services.market import get_history_cached
+    from app.services.fx_history import load_historical_fx, needed_currencies
 
     twr_q = (select(Txn).where(Txn.instrument_id.isnot(None)).where(Txn.deleted_at.is_(None))  # §3.5 R5
              .order_by(Txn.ts))
@@ -362,75 +334,44 @@ async def time_weighted_return(session: AsyncSession, base_currency: str, days: 
         return None
     axis = [start + timedelta(days=i) for i in range(n + 1)]
 
-    deadline = _time.monotonic() + 8.0
-    fx_cache: dict[str, Decimal] = {}
+    hist_fx = await load_historical_fx(session, list(await needed_currencies(session, base_currency)))
 
-    async def rate(ccy: str) -> Decimal:
-        if ccy not in fx_cache:
-            fx_cache[ccy] = await fx.get_rate(ccy, base_currency)
-        return fx_cache[ccy]
-
-    # Per-instrument carry-forward close on the daily axis + its base FX.
-    price_series: dict[int, list[Decimal]] = {}
-    instr_fx: dict[int, Decimal] = {}
-    for iid in {t.instrument_id for t in txns}:
-        if iid is None:  # cash rows carry no instrument; skip (get(None) would be None anyway)
-            continue
-        instr = await session.get(Instrument, iid)
-        if instr is None:
-            continue
-        candles = await get_history_cached(
-            session, instr.symbol, "1d", start, end, allow_fetch=_time.monotonic() < deadline
-        )
-        if not candles:
-            continue
-        closes = {c.ts.date(): D(c.close) for c in candles}
-        cdates = sorted(closes)
-        series: list[Decimal] = []
-        last: Decimal | None = None
-        j = 0
-        for d in axis:
-            dd = d.date()
-            while j < len(cdates) and cdates[j] <= dd:
-                last = closes[cdates[j]]
-                j += 1
-            series.append(last if last is not None else Decimal("0"))
-        price_series[iid] = series
-        instr_fx[iid] = await rate(instr.currency or base_currency)
-    if not price_series:
-        return None
-
-    # Pre-seed positions bought before the window (their capital is not an in-window flow).
-    cum_qty: dict[int, Decimal] = {iid: Decimal("0") for iid in price_series}
-    txns_by_day: dict[object, list] = {}
+    # ▲-B (§9-7): each day's IN-WINDOW external capital in base at that day's PER-DATE FX (buys +,
+    # sells −) — not the holding's currency at today's rate. Pre-window capital is already inside
+    # values[0] (the engine reconstructs the full as-of position), so only in-window flows are
+    # removed. A leg with no per-date rate is excluded (never valued at a fabricated rate).
+    flow_by_day: dict = defaultdict(float)
     for t in txns:
-        if t.ts.date() < start.date():
-            if t.instrument_id in cum_qty:
-                dq = D(t.quantity)
-                cum_qty[t.instrument_id] += dq if _is_buy(t) else -dq
-        else:
-            txns_by_day.setdefault(t.ts.date(), []).append(t)
+        d = _naive(t.ts).date()
+        if d < start.date() or d > end.date():
+            continue
+        r = hist_fx.rate(t.currency or base_currency, base_currency, d)
+        if r is None:
+            continue
+        gross = float(D(t.quantity) * D(t.price) * r)
+        if _is_buy(t):
+            flow_by_day[d] += gross
+        elif _is_sell(t):
+            flow_by_day[d] -= gross
 
-    values = [0.0] * len(axis)
-    flows = [0.0] * len(axis)
+    # Value through the ONE date-aware engine (per-date price + FX), stride-capped for long windows;
+    # flows are bucketed to the same strided steps so values and flows stay aligned (the forked
+    # per-instrument valuation is DELETED — no second engine).
+    _MAX = 500
+    stride = max(1, (len(axis) + _MAX - 1) // _MAX)
+    values: list[float] = []
+    flows: list[float] = []
+    bucket = 0.0
     for i, d in enumerate(axis):
-        for t in txns_by_day.get(d.date(), []):
-            iid = t.instrument_id
-            if iid not in cum_qty:
-                continue
-            dq = D(t.quantity)
-            gross = float(dq * D(t.price) * instr_fx[iid])
-            if _is_buy(t):
-                cum_qty[iid] += dq
-                flows[i] += gross          # capital in
-            elif _is_sell(t):
-                cum_qty[iid] -= dq
-                flows[i] -= gross          # capital out
-        v = Decimal("0")
-        for iid, series in price_series.items():
-            v += cum_qty[iid] * series[i] * instr_fx[iid]
-        values[i] = float(v)
-
+        bucket += flow_by_day.get(d.date(), 0.0)
+        if i % stride == 0 or i == len(axis) - 1:
+            v = await value_portfolio(session, base_currency, warm=False,
+                                      as_of=d.date(), hist_fx=hist_fx, entity_id=entity_id)
+            values.append(float(v.total_value))
+            flows.append(bucket)
+            bucket = 0.0
+    if len(values) < 2 or not any(v > 0 for v in values):
+        return None
     return twr_from_flows(values, flows)
 
 

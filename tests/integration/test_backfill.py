@@ -344,3 +344,106 @@ async def test_demo_fx_history_moves_over_the_span(app_client):
         r_then = fxh.rate("USD", "SGD", early)
         assert r_now is not None and r_then is not None
         assert r_now != r_then  # the drift the consolidation corrects
+
+
+# --------------------------------------------------------------------------- #
+# Step 4 (§9-7 / ▲-B) — analytics consolidation onto the date-aware engine
+# --------------------------------------------------------------------------- #
+class _RealStub:
+    """A non-mock ('real') provider so get_history_cached serves the PERSISTED price_history
+    (is_demo=False) instead of regenerating from the demo generator — lets the fixture pin exact
+    closes, isolating the FX drift."""
+
+    name = "alphavantage"
+    fetch_on_demand = False
+
+    async def get_history(self, *a, **k):
+        return []
+
+    async def get_fx_rate(self, *a, **k):
+        return None
+
+
+async def _seed_constant_price_moving_fx(session):
+    """A single USD holding on an SGD base, bought before the window, with a CONSTANT USD price
+    across the window and per-date FX that MOVES — so the only possible source of series movement
+    is the FX. Plus a benchmark (SPY) series for the axis. Returns the window (start, end)."""
+    from datetime import UTC, date, datetime, timedelta
+
+    from app.models import Account, AssetClass, EcbFxHistory, Instrument, PriceHistory, TxnType
+    from app.models import Transaction as Txn
+    from app.services.portfolio import rebuild_holdings_from_transactions
+
+    acc = Account(name="A", currency="SGD")
+    session.add(acc)
+    await session.flush()
+    foo = Instrument(symbol="FOO", currency="USD", pricing_currency="USD", asset_class=AssetClass.EQUITY)
+    session.add(foo)
+    await session.flush()
+    end = datetime.now(UTC)
+    session.add(Txn(account_id=acc.id, instrument_id=foo.id, type=TxnType.BUY,
+                    ts=end - timedelta(days=400), quantity=Decimal("100"), price=Decimal("10"),
+                    currency="USD"))
+    # Constant FOO close = 10 USD; a flat benchmark just to supply the axis; both weekdays.
+    start = (end - timedelta(days=300)).date()
+    d = start
+    while d <= end.date():
+        if d.weekday() < 5:
+            ts = datetime(d.year, d.month, d.day, tzinfo=UTC)
+            for sym_id, close in ((foo.id, "10"),):
+                session.add(PriceHistory(instrument_id=sym_id, interval="1d", ts=ts,
+                                         open=Decimal(close), high=Decimal(close), low=Decimal(close),
+                                         close=Decimal(close), source="alphavantage"))
+            # EUR->USD and EUR->SGD move differently → USD/SGD drifts across the window.
+            idx = (d - start).days
+            eur_usd = Decimal("1.05") + Decimal("0.0005") * idx
+            eur_sgd = Decimal("1.44") + Decimal("0.0001") * idx
+            for ccy, rate in (("EUR", Decimal("1")), ("USD", eur_usd), ("SGD", eur_sgd)):
+                session.add(EcbFxHistory(currency=ccy, as_of=d.isoformat(), rate=rate))
+        d += timedelta(days=1)
+    await session.flush()
+    await rebuild_holdings_from_transactions(session)
+    # Benchmark SPY: a persisted series so the axis exists under the real-provider stub.
+    spy = Instrument(symbol="SPY", currency="USD", pricing_currency="USD", asset_class=AssetClass.ETF)
+    session.add(spy)
+    await session.flush()
+    d = start
+    while d <= end.date():
+        if d.weekday() < 5:
+            ts = datetime(d.year, d.month, d.day, tzinfo=UTC)
+            session.add(PriceHistory(instrument_id=spy.id, interval="1d", ts=ts,
+                                     open=Decimal("500"), high=Decimal("500"), low=Decimal("500"),
+                                     close=Decimal("500"), source="alphavantage"))
+        d += timedelta(days=1)
+    await session.flush()
+    return start, end.date()
+
+
+async def test_performance_series_must_track_per_date_fx_not_todays(session, monkeypatch):
+    """▲-B RED (§9-7): with a CONSTANT USD price and MOVING per-date USD/SGD, the invested value
+    genuinely moves (the date-aware engine proves it) — but the current performance_series values
+    every historical point at TODAY's FX, so its line is FLAT. It must track per-date FX. FAILS
+    RED against the drifted analytics; PASSES once it consumes the date-aware engine."""
+    from datetime import UTC, datetime, timedelta
+
+    import app.services.market as market
+    from app.services.analytics import performance_series
+    from app.services.portfolio import value_portfolio
+
+    monkeypatch.setattr(market, "get_provider", lambda: _RealStub())
+    start, end = await _seed_constant_price_moving_fx(session)
+
+    # The TRUTH: the date-aware engine values the (constant-price) book differently across the
+    # window because the FX moved — so any faithful performance line must move too.
+    early = start + timedelta(days=20)
+    late = end - timedelta(days=5)
+    v_early = (await value_portfolio(session, "SGD", as_of=early)).total_value
+    v_late = (await value_portfolio(session, "SGD", as_of=late)).total_value
+    assert v_early != v_late, "sanity: per-date FX genuinely moves the constant-price valuation"
+
+    perf = await performance_series(session, "SGD", 200, benchmark="SPY")
+    vals = [p["value"] for p in perf["series"]]
+    assert len(vals) > 2
+    # The invested series MUST move with per-date FX. Drifted code holds today's FX constant →
+    # a flat line. This is the fail-first RED the consolidation resolves.
+    assert max(vals) != min(vals), "performance series must reflect per-date FX movement (▲-B W-1/current-FX drift)"
