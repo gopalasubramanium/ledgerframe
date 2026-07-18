@@ -160,9 +160,18 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
             elif ac == "crypto":
                 cid = await _identifier(session, instr.id, "coingecko_id")
                 if not cid:
-                    counts["skipped"] += 1
-                    log.info("acquire_prices: %s crypto has no coingecko_id — skipped (honest)", instr.symbol)
-                    continue
+                    # §17-R1/R2 (F-6): history acquisition routes by CLASS to CoinGecko — the
+                    # quotes-lane source_override (e.g. the owner's dr-27 AV override on BTC/XRP)
+                    # never blocks it. Auto-resolve the canonical id at acquisition time, reusing
+                    # the ONE linker (top-market-cap disambiguation, §17-R2); an unresolvable symbol
+                    # (no match / genuinely ambiguous) is skipped HONESTLY with the served reason.
+                    from app.services.market import _link_coingecko_by_symbol
+                    link_err = await _link_coingecko_by_symbol(session, instr)
+                    if link_err:
+                        counts["skipped"] += 1
+                        log.info("acquire_prices: %s crypto unmapped — %s", instr.symbol, link_err)
+                        continue
+                    cid = await _identifier(session, instr.id, "coingecko_id")
                 chart = await asyncio.wait_for(
                     fetch_market_chart_range(cid, "usd", start, end), timeout=PRICE_FETCH_TIMEOUT_S)
                 counts["crypto"] += await ingest_crypto_history(session, instr.id, chart, verify=True)

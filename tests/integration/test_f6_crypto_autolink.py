@@ -14,6 +14,7 @@ so the Build-history acquisition skipped them (coverage 4/6). Two rulings are ex
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import app.models  # noqa: F401 — register every table before the session fixture's create_all
@@ -107,3 +108,41 @@ async def test_genuinely_ambiguous_minor_symbol_serves_candidates(session, monke
     assert err is not None and "multiple" in err.lower()
     assert "dupcoin-a" in err and "dupcoin-b" in err
     assert await _has_id(session, dup.id) is None
+
+
+async def test_crypto_with_av_override_still_acquires_coingecko_history(session, monkeypatch):
+    """§17-R1/R2 (F-6, the owner's exact BTC state): a crypto instrument carrying an AV
+    quotes-override and NO coingecko_id still acquires CoinGecko history — acquisition routes by
+    CLASS, auto-resolves the canonical id, and the AV override never touches the history lane."""
+    from sqlalchemy import select
+
+    from app.models import Account, PriceHistory, TxnType
+    from app.models import Transaction as Txn
+    from app.services import acquire
+    from app.services.portfolio import rebuild_holdings_from_transactions
+
+    acc = Account(name="A", currency="SGD")
+    session.add(acc)
+    await session.flush()
+    await _coin(session, "bitcoin", "btc", "Bitcoin", cap="1275382680099")  # dominant stored cap
+    await _coin(session, "batcat", "btc", "batcat")
+    btc = await _crypto(session, "BTC", override="alphavantage")
+    session.add(Txn(account_id=acc.id, instrument_id=btc.id, type=TxnType.BUY,
+                    ts=datetime.now(UTC) - timedelta(days=200), quantity=Decimal("1"),
+                    price=Decimal("10"), currency="USD"))
+    await session.flush()
+    await rebuild_holdings_from_transactions(session)
+
+    d1 = int((datetime.now(UTC) - timedelta(days=3)).timestamp() * 1000)
+
+    async def _fake_cg(cid, vs, start, end, timeout=30.0):
+        assert cid == "bitcoin"  # routed to CoinGecko with the auto-resolved id, never AV
+        return {"prices": [[d1, 64024.63]], "total_volumes": []}
+    monkeypatch.setattr("app.services.acquire.fetch_market_chart_range", _fake_cg)
+
+    counts = await acquire.acquire_prices(session, "SGD")
+    assert counts["crypto"] == 1
+    rows = (await session.execute(
+        select(PriceHistory).where(PriceHistory.instrument_id == btc.id))).scalars().all()
+    assert rows and all(r.source == "coingecko" for r in rows)
+    assert await _has_id(session, btc.id) == "bitcoin"  # the id was auto-linked at acquisition
