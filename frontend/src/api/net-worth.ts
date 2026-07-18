@@ -1,20 +1,38 @@
-import { apiGet } from "./client";
+import { apiGet, apiSend } from "./client";
 
 // Net worth (overview) readers — page-net-worth §3a. All figures are SERVED display values;
 // the page performs no money math (P-1/D-031). Types mirror the verified payloads (§10/§11).
 
-// Net-worth trend — persisted snapshots (worker-written; may be empty/sparse on a fresh
-// instance → honest EmptyState, page-net-worth ND-1). No params; window is a frontend slice.
+// Net-worth trend — persisted snapshots. Each point carries served provenance (backfilled |
+// live | manual, R-43 §9-1) and a §9-5 carried-forward flag + served reason; a fresh instance
+// with no history shows the "Build history" trigger (ND-1 / R-43 §9-2).
 export interface NetWorthPoint {
   ts: string;
   assets: number;
   liabilities: number;
   net_worth: number;
   currency: string;
+  source?: "backfilled" | "live" | "manual";
+  carried_forward?: boolean;
+  reason?: string | null;
 }
 export interface NetWorthHistoryResp {
   history: NetWorthPoint[];
 }
+
+// R-43 §9-2/§9-6 — the backfill trigger, its served progress, and snapshot-now.
+export interface BackfillStatus {
+  running: boolean;
+  ok: boolean;
+  failed: boolean;
+  done: number;
+  total: number;
+  current: string | null;
+  message: string;
+}
+export const startBackfill = () => apiSend<{ ok: boolean; running: boolean; message: string }>("/net-worth/backfill", "POST");
+export const getBackfillStatus = () => apiGet<BackfillStatus>("/net-worth/backfill-status");
+export const takeSnapshot = () => apiSend<{ ok: boolean; ts: string; net_worth: number }>("/net-worth/snapshot", "POST");
 
 // Signed per-class STATEMENT (page-net-worth ND-4, D-033). Distinct from allocation:
 // assets positive, liabilities negative, `net_worth` reconciles to the headline.

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "./NetWorth.css";
 import {
+  Button,
   DataTable,
   EmptyState,
   PageHeader,
@@ -18,20 +19,24 @@ import {
 import type { Column, ReviewSection, Verdict } from "../components/ui";
 import type { PricePoint } from "../mocks/types";
 import { useLabelFor } from "../refdata/refdata-context";
-import { LineChart } from "../icons";
+import { LineChart, Plus } from "../icons";
 import { formatMoney, formatSignedMoney, formatSignedPercent, signOf } from "../format/number";
 import { metric, metricDisplay, metricTone } from "../format/metrics";
 import { getPerformance, getPortfolioStats, getPortfolioSummary } from "../api/portfolio";
 import type { PortfolioStats, PortfolioSummary, PerformanceResp } from "../api/portfolio";
 import {
+  getBackfillStatus,
   getInsurance,
   getLiquidity,
   getNetWorthHistory,
   getNetWorthStatement,
   getReview,
   getRunway,
+  startBackfill,
+  takeSnapshot,
 } from "../api/net-worth";
 import type {
+  BackfillStatus,
   InsuranceResp,
   LiquidityResp,
   NetWorthHistoryResp,
@@ -115,6 +120,44 @@ export function NetWorth() {
       .map((p) => ({ t: p.ts.slice(0, 10), open: p.net_worth, high: p.net_worth, low: p.net_worth, close: p.net_worth }));
   }, [history, window]);
 
+  // R-43 §9-2/§9-5/§9-6 — backfill trigger + served progress, provenance note, snapshot-now.
+  const [backfill, setBackfill] = useState<BackfillStatus | null>(null);
+  const [snapping, setSnapping] = useState(false);
+  const points = history?.history ?? [];
+  const hasHistory = points.length >= 2;
+  const hasBackfilled = points.some((p) => p.source === "backfilled");
+  const carriedReason = points.find((p) => p.carried_forward)?.reason ?? null;
+  const backfilling = !!backfill?.running;
+
+  const onBuildHistory = useCallback(async () => {
+    const r = await startBackfill();
+    if (r.ok) {
+      setBackfill({ running: true, ok: false, failed: false, done: 0, total: 0, current: null, message: r.data.message });
+    }
+  }, []);
+
+  const onSnapshot = useCallback(async () => {
+    setSnapping(true);
+    const r = await takeSnapshot();
+    setSnapping(false);
+    if (r.ok) getNetWorthHistory().then((h) => setHistory(h.ok ? h.data : null));
+  }, []);
+
+  // Poll served progress while a backfill runs; reload the trend when it finishes.
+  useEffect(() => {
+    if (!backfill?.running) return;
+    const id = setInterval(async () => {
+      const r = await getBackfillStatus();
+      if (!r.ok) return;
+      setBackfill(r.data);
+      if (!r.data.running) {
+        clearInterval(id);
+        getNetWorthHistory().then((h) => setHistory(h.ok ? h.data : null));
+      }
+    }, 1500);
+    return () => clearInterval(id);
+  }, [backfill?.running]);
+
   const statementColumns: Column<StatementRow>[] = [
     { key: "asset_class", label: "Class", render: (r) => labelFor("asset_class", r.asset_class) },
     { key: "value", label: "Value", align: "right", render: (r) => formatMoney(r.value) },
@@ -159,21 +202,58 @@ export function NetWorth() {
         )}
       </CardBody>
 
-      {/* Net-worth trend (D-032/D-086) — single series; honest EmptyState when history is thin (ND-1). */}
+      {/* Net-worth trend (D-032/D-086) — single series; honest EmptyState + Build-history trigger
+          when history is thin (ND-1 / R-43 §9-2). Provenance + carried-forward gaps are served. */}
       <section className="nw__card lf-card" data-card="trend">
         <div className="nw__cardhead">
           <h2 className="nw__h2">Net-worth trend</h2>
-          <Select value={window} onChange={setWindow} options={WINDOWS.map((w) => ({ value: w, label: w }))} aria-label="Time window" />
+          <div className="nw__trendactions">
+            {hasHistory && (
+              <Button icon={Plus} onClick={onSnapshot} loading={snapping}
+                disabled={backfilling}
+                title={backfilling ? "Backfill in progress — snapshot unavailable until it finishes." : "Record a net-worth snapshot now"}>
+                Snapshot
+              </Button>
+            )}
+            {hasHistory && (
+              <Button icon={LineChart} onClick={onBuildHistory} loading={backfilling}
+                title="Reconstruct the trend from price history + transactions">
+                Build history
+              </Button>
+            )}
+            <Select value={window} onChange={setWindow} options={WINDOWS.map((w) => ({ value: w, label: w }))} aria-label="Time window" />
+          </div>
         </div>
         <div className="lf-card__body">
           <CardBody data={history} block onRetry={reload}>
             {() =>
-              trendPoints.length >= 2 ? (
-                <PriceChart series={trendPoints} mode="line" interval={window}
-                  coverageNote={trendPoints.length < 8 ? "History is short — the trend fills in as the appliance runs." : undefined} />
+              backfilling ? (
+                <div className="nw__backfill" role="status" aria-live="polite">
+                  <Skeleton block />
+                  <p className="nw__backfill-msg">{backfill?.message || "Building history…"}</p>
+                  {backfill && backfill.total > 0 && (
+                    <p className="nw__backfill-sub">
+                      {backfill.done} of {backfill.total} days{backfill.current ? ` — ${backfill.current}` : ""}
+                    </p>
+                  )}
+                </div>
+              ) : trendPoints.length >= 2 ? (
+                <>
+                  <PriceChart series={trendPoints} mode="line" interval={window}
+                    coverageNote={carriedReason ?? (trendPoints.length < 8 ? "History is short — the trend fills in as the appliance runs." : undefined)} />
+                  {hasBackfilled && (
+                    <p className="nw__provenance">Includes reconstructed history (Backfill). Live and manual points are marked as they accumulate.</p>
+                  )}
+                </>
               ) : (
-                <EmptyState message="Not enough history yet"
-                  reason="Net-worth history accumulates as the appliance runs — the trend appears once at least two snapshots exist." />
+                <EmptyState message="No history yet"
+                  reason="Build the Net-worth trend from your price history, transactions, and per-date exchange rates — the trend appears once history exists."
+                  action={
+                    <Button icon={LineChart} variant="primary"
+                      onClick={onBuildHistory} loading={backfilling}>
+                      Build history
+                    </Button>
+                  } />
               )
             }
           </CardBody>

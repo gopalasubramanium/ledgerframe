@@ -149,11 +149,13 @@ test("runway shows the finite figure + the honest basis label (ND-9)", async () 
   });
 });
 
-test("fresh instance: empty net-worth history shows the honest EmptyState, never a fabricated curve (ND-1)", async () => {
+test("fresh instance: empty net-worth history shows the honest EmptyState + Build-history trigger, never a fabricated curve (ND-1 / R-43 §9-2)", async () => {
   vi.mocked(getNetWorthHistory).mockResolvedValueOnce({ ok: true, data: { history: [] } });
   renderPage();
-  expect(await screen.findByText("Not enough history yet")).toBeTruthy();
-  expect(await screen.findByText(/history accumulates as the appliance runs/i)).toBeTruthy();
+  expect(await screen.findByText("No history yet")).toBeTruthy();
+  expect(await screen.findByText(/Build the Net-worth trend from your price history/i)).toBeTruthy();
+  // The empty state carries the "Build history" backfill trigger (§9-2), not just a passive message.
+  expect(await screen.findByRole("button", { name: /Build history/i })).toBeTruthy();
 });
 
 test("insurance exclusion line is OMITTED with zero policies (ND-5)", async () => {
