@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db, require_auth
 from app.models import AuditEvent, Instrument
 from app.services import amfi as amfi_svc
-from app.services.identity import set_identifier
 
 router = APIRouter()
 
@@ -69,21 +68,14 @@ async def map_amfi(symbol: str, payload: MapAmfiIn,
     )).scalars().first()
     if instr is None:
         raise HTTPException(404, "unknown instrument")
-    from app.models import AssetClass
     from app.services.identity import DuplicateIdentifierError
+    from app.services.market import recognise_amfi_fund
+    # D1-a — ONE recognition derivation: full conversion + inline NAV publish, shared with
+    # the Add-flow linker (_link_amfi_by_symbol). No divergent partial logic here.
     try:
-        await set_identifier(session, instr.id, "amfi_code", payload.code.strip(), provider="amfi_nav", is_primary=True)
+        published = await recognise_amfi_fund(session, instr, payload.code.strip())
     except DuplicateIdentifierError as exc:
         raise HTTPException(409, str(exc)) from exc
-    # Broad + detailed classification (an AMFI-mapped fund is an official-NAV mutual fund).
-    instr.asset_class = AssetClass.MUTUAL_FUND
-    instr.asset_subclass = "mutual_fund"
-    instr.asset_category = "fund"
-    instr.liquidity_profile = "redeemable"
-    instr.valuation_method = "official_nav"
-    instr.pricing_currency = "INR"
-    instr.listing_country = "IN"
-    published = await amfi_svc.publish_navs_to_instruments(session)
     session.add(AuditEvent(category="mutation", action="map_amfi",
                            detail=f"{instr.symbol}->{payload.code}"))
     return {"ok": True, "symbol": instr.symbol, "code": payload.code.strip(), "published": published}

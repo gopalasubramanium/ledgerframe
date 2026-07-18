@@ -117,16 +117,52 @@ async def _link_coingecko_by_symbol(session: AsyncSession, instrument) -> str | 
     return None
 
 
+async def recognise_amfi_fund(session: AsyncSession, instrument, code: str) -> int:
+    """D1 (data-feed-routing POST-CLOSE DELTA) — the ONE India-MF recognition derivation.
+
+    Fully converts ``instrument`` to an AMFI official-NAV mutual fund (asset_class,
+    asset_subclass, asset_category, liquidity_profile, valuation_method, pricing_currency,
+    listing_country, and the ``amfi_code`` identifier) AND publishes the scheme's current
+    NAV inline via the existing publish path (``publish_navs_to_instruments``). This is the
+    single source of truth for BOTH the ``map_amfi`` route and ``_link_amfi_by_symbol``
+    (the Add-flow inference) — the two paths call it, so they cannot drift (the 145834
+    finding was exactly such a drift: the Add flow linked the code but left pricing_currency
+    USD / valuation_method market_quote and never published the known NAV).
+
+    Idempotent/convergent: ``set_identifier`` upserts the code, the field writes are
+    constants, and the NAV publish is an upsert on ``(instrument_id)`` — re-running changes
+    nothing. Preserves the cache-publish guarantee: the amfi-owned NAV is published from the
+    master (never matrix-overwritten). Raises ``DuplicateIdentifierError`` when the code is
+    already mapped to another instrument — the caller renders/raises per its surface (a
+    served string for the Add flow, a 409 for the route). Returns the NAV publish count."""
+    from app.models import AssetClass
+    from app.services.amfi import publish_navs_to_instruments
+    from app.services.identity import set_identifier
+
+    await set_identifier(session, instrument.id, "amfi_code", code,
+                         provider="amfi_nav", is_primary=True)
+    # Broad + detailed classification (an AMFI-mapped fund is an official-NAV mutual fund).
+    instrument.asset_class = AssetClass.MUTUAL_FUND
+    instrument.asset_subclass = "mutual_fund"
+    instrument.asset_category = "fund"
+    instrument.liquidity_profile = "redeemable"
+    instrument.valuation_method = "official_nav"
+    instrument.pricing_currency = "INR"
+    instrument.listing_country = "IN"
+    return await publish_navs_to_instruments(session)
+
+
 async def _link_amfi_by_symbol(session: AsyncSession, instrument) -> str | None:
     """§14dr-27(c/d): if a mutual fund's symbol is exactly a synced AMFI scheme code, attach
-    the ``amfi_code`` mapping and stamp the India listing (mirrors ``map_amfi`` — listing
-    country IN, pricing currency INR). This recovers the mapping the Add flow drops (it sends
-    the scheme code only as the symbol), so amfi_nav owns the NAV and the code persists for the
-    edit form. Returns ``None`` on success, or a served error string (D-105) when no synced
-    scheme matches — never fabricated. Unlike ``map_amfi`` (which trusts a user-entered code),
-    this INFERS from the symbol, so it verifies the code against the master first."""
+    the ``amfi_code`` mapping and recognise it as an India-listed official-NAV fund. This
+    recovers the mapping the Add flow drops (it sends the scheme code only as the symbol), so
+    amfi_nav owns the NAV and the code persists for the edit form. Returns ``None`` on success,
+    or a served error string (D-105) when no synced scheme matches — never fabricated. Unlike
+    ``map_amfi`` (which trusts a user-entered code), this INFERS from the symbol, so it verifies
+    the code against the master first, then defers to the shared :func:`recognise_amfi_fund`
+    (D1-a — one recognition derivation; no divergent partial logic here)."""
     from app.models import AmfiScheme
-    from app.services.identity import DuplicateIdentifierError, set_identifier
+    from app.services.identity import DuplicateIdentifierError
 
     code = (instrument.symbol or "").strip()
     scheme = await session.get(AmfiScheme, code)
@@ -134,13 +170,9 @@ async def _link_amfi_by_symbol(session: AsyncSession, instrument) -> str | None:
         return (f"no AMFI scheme has the code '{instrument.symbol}' — pick the scheme from the "
                 "instrument picker, or sync the AMFI master in Settings first")
     try:
-        await set_identifier(session, instrument.id, "amfi_code", code,
-                             provider="amfi_nav", is_primary=True)
+        await recognise_amfi_fund(session, instrument, code)
     except DuplicateIdentifierError as exc:
         return str(exc)
-    instrument.listing_country = "IN"
-    if not instrument.pricing_currency:
-        instrument.pricing_currency = "INR"
     return None
 
 
