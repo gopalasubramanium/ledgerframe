@@ -288,6 +288,13 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
     is_priced = True
 
     quote = None
+    # W-1 (R-42 3b): the currency a live-quoted VALUE is denominated in is the QUOTE's
+    # currency — the authoritative currency of the fetched price — not the holding's
+    # stored currency, which drifts (an AMFI scheme code has no exchange suffix, so the
+    # FIFO builder defaults holding.currency to the account/txn currency; the fund's NAV
+    # is INR while the holding reads SGD, and same-currency short-circuited to rate 1.0).
+    # cost_native/avg_cost stays in the holding's recorded currency (native_ccy).
+    price_ccy = native_ccy
     val_method = ValuationMethod.MARKET_QUOTE.value
     if h.manual_value is not None:
         mv_native = D(h.manual_value)
@@ -300,6 +307,7 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
         if quote.price is not None:
             price_native = D(quote.price)
             mv_native = D(h.quantity) * price_native
+            price_ccy = quote.currency or native_ccy  # the price's own currency (W-1)
             is_stale = quote.is_stale
             val_method = (ValuationMethod.OFFICIAL_NAV.value
                           if quote.source == "amfi_nav" else ValuationMethod.MARKET_QUOTE.value)
@@ -319,9 +327,11 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
     if price_native is not None and quote is not None and quote.previous_close:
         day_change_native = (price_native - D(quote.previous_close)) * D(h.quantity)
 
-    mv_base = await fx.convert(mv_native, native_ccy, base_currency)
+    # Market value + day change ride the price's currency (price_ccy); the recorded cost
+    # basis rides the holding's currency (native_ccy). Each is converted to base independently.
+    mv_base = await fx.convert(mv_native, price_ccy, base_currency)
     cost_base = await fx.convert(cost_native, native_ccy, base_currency)
-    day_base = await fx.convert(day_change_native, native_ccy, base_currency)
+    day_base = await fx.convert(day_change_native, price_ccy, base_currency)
 
     sign = Decimal("-1") if h.asset_class == AssetClass.LIABILITY else Decimal("1")
     mv_base *= sign
@@ -341,7 +351,7 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
         asset_class=h.asset_class.value if hasattr(h.asset_class, "value") else str(h.asset_class),
         sector=sector,
         quantity=D(h.quantity),
-        native_currency=native_ccy,
+        native_currency=price_ccy,  # the currency the price/value is denominated in (W-1)
         price=price_native,
         market_value_base=money(mv_base),
         cost_basis_base=money(cost_base),
