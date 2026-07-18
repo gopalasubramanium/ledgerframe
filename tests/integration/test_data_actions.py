@@ -149,7 +149,9 @@ async def test_new_mutual_fund_is_not_defaulted_to_us(app_client):
     ov = await app_client.patch("/api/v1/instruments/DR27MF", json={"source_override": "amfi_nav"})
     assert ov.status_code == 400
     detail = ov.json()["detail"].lower()
-    assert "amfi scheme mapping" in detail and "doesn't cover" not in detail
+    # Honest, scheme-mapping-shaped error (not the misleading "doesn't cover US"). §14dr-27(c)
+    # sharpens it further to "no AMFI scheme has the code …" — both mention the scheme.
+    assert "amfi scheme" in detail and "doesn't cover" not in detail
 
 
 async def test_new_crypto_is_not_defaulted_to_us(app_client):

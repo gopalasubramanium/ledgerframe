@@ -480,6 +480,14 @@ async def _ensure_instrument(
         )
         session.add(instr)
         await session.flush()
+        # §14dr-27(c/d): the listed Add flow sends an AMFI scheme code only as the symbol and
+        # never maps it. If this fund's symbol IS a synced scheme code, link it now (stamps IN)
+        # so amfi_nav owns the NAV immediately and the code persists for the edit form. A
+        # non-match is a no-op (the served string is only for the correction surface).
+        if ac == AssetClass.MUTUAL_FUND:
+            from app.services.market import _link_amfi_by_symbol
+
+            await _link_amfi_by_symbol(session, instr)
         return instr
     # Backfill missing metadata on an existing bare instrument (never overwrite).
     if name and (not instr.name or instr.name == instr.symbol):

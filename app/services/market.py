@@ -117,6 +117,33 @@ async def _link_coingecko_by_symbol(session: AsyncSession, instrument) -> str | 
     return None
 
 
+async def _link_amfi_by_symbol(session: AsyncSession, instrument) -> str | None:
+    """§14dr-27(c/d): if a mutual fund's symbol is exactly a synced AMFI scheme code, attach
+    the ``amfi_code`` mapping and stamp the India listing (mirrors ``map_amfi`` — listing
+    country IN, pricing currency INR). This recovers the mapping the Add flow drops (it sends
+    the scheme code only as the symbol), so amfi_nav owns the NAV and the code persists for the
+    edit form. Returns ``None`` on success, or a served error string (D-105) when no synced
+    scheme matches — never fabricated. Unlike ``map_amfi`` (which trusts a user-entered code),
+    this INFERS from the symbol, so it verifies the code against the master first."""
+    from app.models import AmfiScheme
+    from app.services.identity import DuplicateIdentifierError, set_identifier
+
+    code = (instrument.symbol or "").strip()
+    scheme = await session.get(AmfiScheme, code)
+    if scheme is None:
+        return (f"no AMFI scheme has the code '{instrument.symbol}' — pick the scheme from the "
+                "instrument picker, or sync the AMFI master in Settings first")
+    try:
+        await set_identifier(session, instrument.id, "amfi_code", code,
+                             provider="amfi_nav", is_primary=True)
+    except DuplicateIdentifierError as exc:
+        return str(exc)
+    instrument.listing_country = "IN"
+    if not instrument.pricing_currency:
+        instrument.pricing_currency = "INR"
+    return None
+
+
 async def validate_source_override(session: AsyncSession, instrument, value: str | None) -> tuple[str | None, str | None]:
     """Validate a per-instrument source override (§5). Returns ``(normalized, error)``:
     ``normalized=None, error=None`` clears it; a non-None error means reject and keep the
@@ -158,8 +185,15 @@ async def validate_source_override(session: AsyncSession, instrument, value: str
     ids = set((await session.execute(
         select(InstrumentIdentifier.id_type).where(InstrumentIdentifier.instrument_id == instrument.id)
     )).scalars().all())
-    if v == "amfi_nav" and (ac != "mutual_fund" or "amfi_code" not in ids):
-        return None, "amfi_nav needs an AMFI scheme mapping on a mutual fund"
+    if v == "amfi_nav" and ac == "mutual_fund" and "amfi_code" not in ids:
+        # §14dr-27(c/d): attach-at-correction, symmetric to coingecko. The Add flow sends the
+        # AMFI scheme code as the bare symbol and never maps it, so an India MF reaches here
+        # unmapped. Auto-link by exact scheme-code match against the synced master (also stamps
+        # the IN listing so the fund is owned by amfi_nav), or return a served string (D-105). A
+        # non-fund is already rejected by the asset_classes check above.
+        err = await _link_amfi_by_symbol(session, instrument)
+        if err:
+            return None, err
     if v == "coingecko" and ac == "crypto" and "coingecko_id" not in ids:
         # §14dr-27(a): attach-at-correction. The Add flow drops the picker's canonical id
         # (it is sent as the bare symbol), so an unmapped crypto reaches here. Auto-match the
