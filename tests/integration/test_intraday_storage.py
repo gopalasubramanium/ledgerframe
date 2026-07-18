@@ -128,6 +128,20 @@ async def test_intraday_refetch_is_idempotent_no_duplicate_bars(session, monkeyp
     assert await _row_count(session, instr.id, "1min") == 5   # additive-idempotent: no dupes
 
 
+async def test_demo_intraday_is_generated_but_never_cached(session, monkeypatch):
+    # §9-8 + dr-24: the mock/demo provider generates intraday ON DEMAND (1D/5D stay alive in
+    # demo — no dead control) and NEVER caches it. Caching would freeze the generator and
+    # could bleed demo bars into a real cache; the regeneration path never touches real caches.
+    from app.providers.market.mock import MockMarketDataProvider
+
+    monkeypatch.setattr(market, "get_provider", lambda: MockMarketDataProvider())
+    instr = await _mk_instrument(session)
+    end = datetime(2026, 7, 17, 20, 0, tzinfo=UTC)
+    served = await market.get_history_cached(session, "AAPL", "1min", end - timedelta(minutes=30), end)
+    assert len(served) > 0                                   # alive in demo
+    assert await _row_count(session, instr.id, "1min") == 0  # never persisted
+
+
 async def test_intraday_real_supersedes_demo_at_same_ts(session, monkeypatch):
     # §9-4 precedence extends per interval: a REAL intraday bar supersedes a demo bar
     # at the same exact ts (never a second row → never a comb).
