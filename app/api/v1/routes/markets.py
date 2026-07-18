@@ -480,15 +480,58 @@ async def instrument_history(
     symbol: str,
     interval: str = Query("1d"),
     days: int = Query(180, ge=1, le=3650),
+    range_: str | None = Query(None, alias="range"),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
-    from app.services.market import get_history_cached
+    """Instrument price history. Always carries the served intraday availability map (D-105)
+    so the range control renders its enabled/disabled + reason from a served truth, never a
+    frontend constant (dr-7 gap). When ``range`` is an intraday range (1D/5D), the server maps
+    it to an interval, applies the server-side gate, and — user-triggered — fetches it (or
+    refuses honestly with a served reason, never a fabricated series). §9-2/§9-3/§9-9."""
+    from app.services.feeds import no_egress_enabled
+    from app.services.market import (
+        INTRADAY_RANGES,
+        get_history_cached,
+        intraday_availability,
+        intraday_marker_fresh,
+    )
+
+    # Resolve the instrument for the availability decision (transient equity if unseen —
+    # get_history_cached persists it on fetch, mirroring the pre-R-42 behaviour).
+    instrument = (await session.execute(
+        select(Instrument).where(Instrument.symbol == symbol.upper())
+    )).scalars().first() or Instrument(symbol=symbol.upper(), asset_class="equity", currency="USD")
+
+    no_egress = await no_egress_enabled(session)
+    avail = await intraday_availability(session, instrument, no_egress=no_egress)
+
+    rng = (range_ or "").upper()
+    fetch_state: str | None = None
+    if rng in INTRADAY_RANGES:
+        spec = INTRADAY_RANGES[rng]
+        interval, days = spec["interval"], spec["days"]
+        slot = avail["ranges"][rng]
+        if not slot["enabled"]:
+            # User-triggered, but the server refuses honestly — NO fetch, NO fabrication.
+            return {
+                "symbol": symbol.upper(), "interval": interval, "candles": [],
+                "intraday": {**avail, "requested_range": rng, "fetch_state": slot["state"]},
+            }
+        marker_fresh = await intraday_marker_fresh(session, instrument.id, interval)
 
     end = datetime.now(UTC)
     start = end - timedelta(days=days)
     candles = await get_history_cached(session, symbol, interval, start, end)
+
+    if rng in INTRADAY_RANGES:
+        fetch_state = ("cached" if marker_fresh else "fetched") if candles else "pending"
     return {
         "symbol": symbol.upper(),
         "interval": interval,
         "candles": [c.model_dump(mode="json") for c in candles],
+        "intraday": {
+            **avail,
+            "requested_range": rng if rng in INTRADAY_RANGES else None,
+            "fetch_state": fetch_state,
+        },
     }

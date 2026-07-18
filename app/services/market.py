@@ -311,6 +311,29 @@ def _provider_label(name: str) -> str:
     return _PROVIDER_LABELS.get(name, name)
 
 
+async def intraday_marker_fresh(session: AsyncSession, instrument_id, interval: str,
+                                max_age_hours: int = 12) -> bool:
+    """True when the 12h ``hist_fetched:{id}:{interval}`` freshness marker is still fresh —
+    i.e. a re-trigger will be served from cache without re-spending budget (§9-3). Read-only;
+    the same marker get_history_cached writes."""
+    from app.models import Setting
+
+    if instrument_id is None:
+        return False
+    marker = (await session.execute(
+        select(Setting).where(Setting.key == f"hist_fetched:{instrument_id}:{interval}")
+    )).scalars().first()
+    if not marker:
+        return False
+    try:
+        ts = datetime.fromisoformat(marker.value)
+    except ValueError:
+        return False
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=UTC)
+    return (datetime.now(UTC) - ts).total_seconds() < max_age_hours * 3600
+
+
 async def intraday_availability(session: AsyncSession, instrument, *, no_egress: bool) -> dict:
     """Served per-range intraday availability (D-105): for each intraday range, the mapped
     interval + ``enabled`` + a served ``reason``/``state`` for every disabled case. Decides

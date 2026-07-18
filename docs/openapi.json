@@ -6591,6 +6591,7 @@
     },
     "/api/v1/instruments/{symbol}/history": {
       "get": {
+        "description": "Instrument price history. Always carries the served intraday availability map (D-105)\nso the range control renders its enabled/disabled + reason from a served truth, never a\nfrontend constant (dr-7 gap). When ``range`` is an intraday range (1D/5D), the server maps\nit to an interval, applies the server-side gate, and \u2014 user-triggered \u2014 fetches it (or\nrefuses honestly with a served reason, never a fabricated series). \u00a79-2/\u00a79-3/\u00a79-9.",
         "operationId": "instrument_history_api_v1_instruments__symbol__history_get",
         "parameters": [
           {
@@ -6622,6 +6623,22 @@
               "minimum": 1,
               "title": "Days",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Range"
             }
           },
           {
