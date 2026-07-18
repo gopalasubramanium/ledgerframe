@@ -142,6 +142,36 @@ async def test_demo_intraday_is_generated_but_never_cached(session, monkeypatch)
     assert await _row_count(session, instr.id, "1min") == 0  # never persisted
 
 
+async def test_intraday_first_fetch_spends_then_12h_marker_serves_cache_no_respend(session, monkeypatch):
+    # §9-3 trigger flow: the FIRST user-triggered fetch spends (the provider is called, the
+    # 12h `hist_fetched:{id}:{interval}` marker is written); a re-view WITHIN the marker serves
+    # the STORED series with NO second provider call — the budget lock the range button relies
+    # on so repeated clicks never re-spend. This is the "fetched → cached-fresh" transition.
+    base = datetime(2026, 7, 17, 15, 55, tzinfo=UTC)
+    candles = [_candle(base + timedelta(minutes=i), 195 + i) for i in range(5)]
+    calls = {"n": 0}
+
+    class _Counting(_IntradayStub):
+        async def get_history(self, *a, **k):
+            calls["n"] += 1
+            return self._candles
+
+    monkeypatch.setattr(market, "get_provider", lambda: _Counting(candles))
+    instr = await _mk_instrument(session)
+    win = (base - timedelta(hours=1), base + timedelta(hours=1))
+
+    # Before any fetch the 12h marker is not fresh.
+    assert await market.intraday_marker_fresh(session, instr.id, "1min") is False
+    first = await market.get_history_cached(session, "AAPL", "1min", *win)
+    assert len(first) == 5 and calls["n"] == 1            # spent once
+    # The marker is now fresh → a re-view serves the stored series without re-spending.
+    assert await market.intraday_marker_fresh(session, instr.id, "1min") is True
+    second = await market.get_history_cached(session, "AAPL", "1min", *win)
+    assert [c.close for c in second] == [c.close for c in first]
+    assert calls["n"] == 1                                # cached-fresh — NO re-spend
+    assert await _row_count(session, instr.id, "1min") == 5
+
+
 async def test_intraday_real_supersedes_demo_at_same_ts(session, monkeypatch):
     # §9-4 precedence extends per interval: a REAL intraday bar supersedes a demo bar
     # at the same exact ts (never a second row → never a comb).
