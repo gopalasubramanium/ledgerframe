@@ -148,6 +148,11 @@ async def recognise_amfi_fund(session: AsyncSession, instrument, code: str) -> i
     instrument.liquidity_profile = "redeemable"
     instrument.valuation_method = "official_nav"
     instrument.pricing_currency = "INR"
+    # W-2 (R-42 3b): reconcile the LEGACY currency field too — an India-fund recognition
+    # must leave no USD residue in any currency field the UI renders (the Identity card
+    # renders `currency_for_symbol(...) or instrument.currency`, markets.py:75/:408; an AMFI
+    # scheme code has no exchange suffix so it falls through to instrument.currency).
+    instrument.currency = "INR"
     instrument.listing_country = "IN"
     return await publish_navs_to_instruments(session)
 
@@ -172,6 +177,7 @@ async def recognise_unconverted_amfi_funds(session: AsyncSession) -> dict:
         if instr is None:
             continue
         needs_fields = (instr.pricing_currency != "INR"
+                        or instr.currency != "INR"  # W-2: heal the legacy currency residue too
                         or instr.valuation_method != "official_nav")
         has_amfi_quote = (await session.execute(
             select(QuoteRow.instrument_id).where(

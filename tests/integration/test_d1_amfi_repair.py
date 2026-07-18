@@ -67,12 +67,60 @@ async def test_repair_heals_unconverted_then_is_idempotent(app_client):
 
     instr, quote = await _read("145834")
     assert instr.pricing_currency == "INR"
+    assert instr.currency == "INR"  # W-2: no USD residue in any currency field the UI renders
     assert instr.valuation_method == "official_nav"
     assert instr.asset_category == "fund"
     assert instr.liquidity_profile == "redeemable"
     assert quote is not None and quote.source == "amfi_nav"
 
     # Second run: nothing left to convert -> zero changes (idempotent).
+    async with get_sessionmaker()() as s:
+        again = await recognise_unconverted_amfi_funds(s)
+        await s.commit()
+    assert again["repaired"] == 0
+
+
+async def _seed_currency_only_divergence(code: str, nav) -> int:
+    """The OWNER's exact state (instruments 25/26/28): a fund already recognised
+    (pricing_currency INR, valuation_method official_nav, amfi_nav quote present) but with
+    the legacy ``currency`` field left USD — the residue the Identity card renders (W-2)."""
+    from app.db.base import get_sessionmaker
+    from app.models import AmfiScheme, AssetClass, Instrument
+    from app.models import Quote as QuoteRow
+    from app.services.identity import set_identifier
+
+    async with get_sessionmaker()() as s:
+        s.add(AmfiScheme(code=code, name="Already Converted Fund", nav=nav, nav_date="2026-07-17"))
+        instr = Instrument(
+            symbol=code, name="Already Converted Fund", currency="USD",
+            asset_class=AssetClass.MUTUAL_FUND, asset_subclass="mutual_fund",
+            asset_category="fund", liquidity_profile="redeemable",
+            valuation_method="official_nav", pricing_currency="INR", listing_country="IN",
+        )
+        s.add(instr)
+        await s.flush()
+        s.add(QuoteRow(instrument_id=instr.id, price=nav, currency="INR",
+                       source="amfi_nav", entitlement="end-of-day"))
+        await set_identifier(s, instr.id, "amfi_code", code, provider="amfi_nav", is_primary=True)
+        await s.commit()
+        return instr.id
+
+
+async def test_repair_heals_currency_only_divergence(app_client):
+    # A fund already converted except for the legacy currency field (the owner's data).
+    await _seed_currency_only_divergence("102000", nav=1132.23)
+
+    from app.db.base import get_sessionmaker
+    from app.services.market import recognise_unconverted_amfi_funds
+
+    async with get_sessionmaker()() as s:
+        result = await recognise_unconverted_amfi_funds(s)
+        await s.commit()
+    assert result["repaired"] == 1  # the currency divergence alone must trigger the repair
+
+    instr, _ = await _read("102000")
+    assert instr.currency == "INR"
+
     async with get_sessionmaker()() as s:
         again = await recognise_unconverted_amfi_funds(s)
         await s.commit()
