@@ -52,6 +52,11 @@ def score_holding(hv, mapping_required: bool = False) -> dict:
     if (getattr(hv, "entitlement", None) or "") == "unavailable":
         score -= 15
         factors.append("no source could price it (−15)")
+    if getattr(hv, "fx_unavailable", False):
+        # W-1b: a native price exists but no FX rate to state it in base — the value is
+        # not converted (never a fabricated 1.0), so it is heavily penalised and named.
+        score -= 30
+        factors.append("FX rate unavailable — value not converted to base (−30)")
     score = max(0, min(100, score))
     return {"confidence": score, "confidence_band": band_of(score), "confidence_factors": factors}
 

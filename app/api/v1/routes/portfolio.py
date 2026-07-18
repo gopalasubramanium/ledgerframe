@@ -244,7 +244,11 @@ async def pricing_health(session: AsyncSession = Depends(get_db)) -> dict:
         label = valuation_label(method, entitlement=h.entitlement, is_stale=h.is_stale, price_available=True)
         status = _status(method, entitlement=h.entitlement, is_stale=h.is_stale, price_available=True)
         reason = None
-        if method is ValuationMethod.ESTIMATED_VALUE:
+        if getattr(h, "fx_unavailable", False):
+            # W-1b: a genuinely-unavailable FX rate — flagged honestly, distinct from a
+            # missing quote. The value has a native price but no rate to state it in base.
+            reason = f"FX rate unavailable — can't convert {h.native_currency} to {base}."
+        elif method is ValuationMethod.ESTIMATED_VALUE:
             reason = "No live quote from the source — showing cost as a fallback."
         elif method is ValuationMethod.UNAVAILABLE:
             reason = "No value available from any configured source."

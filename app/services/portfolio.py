@@ -156,6 +156,7 @@ class HoldingValue:
     is_stale: bool
     is_priced: bool
     valuation_method: str = ValuationMethod.MARKET_QUOTE.value
+    fx_unavailable: bool = False  # W-1b: rate genuinely unavailable — value not stated in base
     # Pricing-health provenance (populated from the quote where one was used).
     exchange: str | None = None
     source: str | None = None
@@ -329,9 +330,20 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
 
     # Market value + day change ride the price's currency (price_ccy); the recorded cost
     # basis rides the holding's currency (native_ccy). Each is converted to base independently.
-    mv_base = await fx.convert(mv_native, price_ccy, base_currency)
+    mv_base, fx_ok = await fx.convert_checked(mv_native, price_ccy, base_currency)
     cost_base = await fx.convert(cost_native, native_ccy, base_currency)
     day_base = await fx.convert(day_change_native, price_ccy, base_currency)
+
+    fx_unavailable = not fx_ok
+    if fx_unavailable:
+        # W-1b: the rate is genuinely unavailable (no provider, no ECB reference). A
+        # base-currency value cannot be honestly stated, so it contributes NOTHING to net
+        # worth and is flagged (served reason + confidence penalty) — never a fabricated
+        # 1.0 that would leak the raw native magnitude into the total.
+        mv_base = ZERO
+        day_base = ZERO
+        is_priced = False
+        val_method = ValuationMethod.ESTIMATED_VALUE.value
 
     sign = Decimal("-1") if h.asset_class == AssetClass.LIABILITY else Decimal("1")
     mv_base *= sign
@@ -360,6 +372,7 @@ async def _value_one_holding(session: AsyncSession, h, base_currency: str, warm:
         is_stale=is_stale,
         is_priced=is_priced,
         valuation_method=val_method,
+        fx_unavailable=fx_unavailable,
         exchange=instrument.exchange if instrument else None,
         source=quote.source if quote else None,
         entitlement=quote.entitlement.value if quote else None,

@@ -25,7 +25,12 @@ _CACHE: dict[tuple[str, str], tuple[Decimal, float]] = {}
 _TTL = 600.0  # 10 minutes; FX moves slowly enough for a desk display
 
 
-async def get_rate(base: str, quote: str) -> Decimal:
+async def get_rate_or_none(base: str, quote: str) -> Decimal | None:
+    """The real base→quote rate, or ``None`` when NO source can serve it — never a
+    fabricated 1.0. Same-currency is exactly 1. A USD pair asks the provider then falls
+    back to the ECB reference; a cross triangulates through USD. If any needed leg is
+    unavailable the whole rate is ``None`` so a caller can surface an honest state — a
+    fabricated 1.0 in a base-currency total is exactly the W-1 (R-42 3b) failure mode."""
     base, quote = base.upper(), quote.upper()
     if base == quote:
         return Decimal("1")
@@ -39,7 +44,7 @@ async def get_rate(base: str, quote: str) -> Decimal:
         # A USD pair — ask the provider directly. If the provider can't serve it,
         # fall back to the ECB reference rate (never the other way round — an entitled
         # provider rate always wins over a reference rate).
-        rate = None
+        rate: Decimal | None = None
         try:
             fx = await get_provider().get_fx_rate(base, quote)
             rate = fx.rate if fx and fx.rate and fx.rate > 0 else None
@@ -49,15 +54,26 @@ async def get_rate(base: str, quote: str) -> Decimal:
             from app.services import ecb_fx
 
             ref, _method = ecb_fx.reference_rate(base, quote)
-            rate = ref if ref is not None else Decimal("1")
+            rate = ref  # may be None → honestly unavailable (no fabricated 1.0)
     else:
         # Triangulate via USD using the (cached, reliable) USD legs.
-        usd_to_base = await get_rate("USD", base)
-        usd_to_quote = await get_rate("USD", quote)
-        rate = (usd_to_quote / usd_to_base) if usd_to_base else Decimal("1")
+        usd_to_base = await get_rate_or_none("USD", base)
+        usd_to_quote = await get_rate_or_none("USD", quote)
+        rate = ((usd_to_quote / usd_to_base)
+                if (usd_to_base and usd_to_quote is not None) else None)
 
-    _CACHE[key] = (rate, now)
+    if rate is not None:
+        _CACHE[key] = (rate, now)
     return rate
+
+
+async def get_rate(base: str, quote: str) -> Decimal:
+    """Back-compat rate: an unavailable pair degrades to exactly 1 — the historical
+    defence-in-depth stance for callers that cannot represent 'unavailable'. The
+    VALUATION path uses :func:`convert_checked` instead, so a missing rate is surfaced
+    as an honest flagged state and never silently fabricated into net worth (W-1b)."""
+    rate = await get_rate_or_none(base, quote)
+    return rate if rate is not None else Decimal("1")
 
 
 async def convert(amount: Decimal, base: str, quote: str) -> Decimal:
@@ -70,6 +86,20 @@ async def convert(amount: Decimal, base: str, quote: str) -> Decimal:
         return D(amount)
     rate = await get_rate(base, quote)
     return D(amount) * rate
+
+
+async def convert_checked(amount: Decimal, base: str, quote: str) -> tuple[Decimal, bool]:
+    """Convert ``amount`` from ``base``→``quote``, reporting whether the rate was
+    AVAILABLE. When it is unavailable, returns ``(D(amount), False)`` — the caller MUST
+    flag the value as unconverted and never treat it as a real base figure (W-1b: a
+    silent 1.0 in a base-currency total is the reported failure mode). A missing/empty
+    currency or a same-currency conversion is exact and always available."""
+    if not base or not quote or base.upper() == quote.upper():
+        return D(amount), True
+    rate = await get_rate_or_none(base, quote)
+    if rate is None:
+        return D(amount), False
+    return D(amount) * rate, True
 
 
 async def capture_rate(native: str, base: str, ts: datetime) -> tuple[Decimal | None, str | None]:
