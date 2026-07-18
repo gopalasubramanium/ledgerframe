@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime, time
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
@@ -117,14 +118,61 @@ async def _link_coingecko_by_symbol(session: AsyncSession, instrument) -> str | 
         return (f"no CoinGecko coin matches the symbol '{instrument.symbol}' — pick the exact "
                 "coin from the instrument picker (or sync the CoinGecko master in Settings first)")
     if len(coins) > 1:
-        cands = ", ".join(sorted(c.id for c in coins)[:8])
-        return (f"'{instrument.symbol}' matches multiple CoinGecko coins ({cands}) — pick the "
-                "exact one from the instrument picker")
+        # §17-R2 (F-6): resolve the ambiguity to the canonical TOP-MARKET-CAP primary (BTC →
+        # bitcoin, XRP → ripple) when one clearly dominates; else serve candidates (never a silent
+        # guess). The stored ``market_cap_usd`` is unreliable (the /coins/list sync carries no cap),
+        # so we enrich the candidates' caps from one budget-aware /simple/price call before ranking.
+        chosen = await _dominant_coin_by_market_cap(session, coins)
+        if chosen is None:
+            cands = ", ".join(sorted(c.id for c in coins)[:8])
+            return (f"'{instrument.symbol}' matches multiple CoinGecko coins ({cands}) — pick the "
+                    "exact one from the instrument picker")
+    else:
+        chosen = coins[0]
     try:
-        await set_identifier(session, instrument.id, "coingecko_id", coins[0].id,
+        await set_identifier(session, instrument.id, "coingecko_id", chosen.id,
                              provider="coingecko", is_primary=True)
     except DuplicateIdentifierError as exc:
         return str(exc)
+    return None
+
+
+# §17-R2: the market-cap dominance factor. The primary's cap must be at least this many times the
+# runner-up's (or the runner-up must have no cap at all) to be the "clear primary" — else the
+# symbol is genuinely ambiguous and we serve candidates rather than guess.
+_MCAP_DOMINANCE = 10
+
+
+async def _dominant_coin_by_market_cap(session: AsyncSession, coins: list):
+    """§17-R2 (F-6): pick the single canonical primary among symbol-collision candidates by
+    market cap, or ``None`` when none clearly dominates. Enriches the candidates' caps from ONE
+    live ``/simple/price?include_market_cap`` call (persisted to the master); on any fetch failure
+    (no-egress / network / rate-limit) it falls back to the stored caps — so a coin with a real
+    stored cap (e.g. bitcoin) still resolves offline. Never fabricates a cap."""
+    from app.providers.market.coingecko import fetch_prices, parse_simple_price
+
+    live: dict[str, Decimal] = {}
+    try:
+        parsed = parse_simple_price(await fetch_prices([c.id for c in coins]))
+        for cid, cp in parsed.items():
+            if cp.market_cap_usd is not None:
+                live[cid] = cp.market_cap_usd
+    except Exception as exc:  # noqa: BLE001 — degrade to stored caps; never crash the linker
+        log.info("coingecko market-cap disambiguation offline for '%s' — using stored caps: %s",
+                 coins[0].symbol if coins else "?", exc)
+    # Persist any freshly-learned caps to the master (enrichment; harmless if unchanged).
+    for c in coins:
+        if c.id in live:
+            c.market_cap_usd = live[c.id]
+
+    def _cap(c):
+        return live.get(c.id) if c.id in live else c.market_cap_usd
+
+    ranked = sorted(coins, key=lambda c: _cap(c) or Decimal(0), reverse=True)
+    top, runner = ranked[0], ranked[1]
+    top_cap, runner_cap = _cap(top) or Decimal(0), _cap(runner) or Decimal(0)
+    if top_cap > 0 and (runner_cap <= 0 or top_cap >= runner_cap * _MCAP_DOMINANCE):
+        return top
     return None
 
 
