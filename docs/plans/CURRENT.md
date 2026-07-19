@@ -84,6 +84,18 @@ natural owner of the AI streaming surface, NOT to R-43.
 **PLAN ONLY first — verify-first, STOP at §9** (the R-35/R-38/R-42/R-43/Help/Legal plan-file-first
 precedent). No code before the owner's §9 one-pass.
 
+**⊕ 2026-07-20 — `docs/plans/ai-surfaces.md` EXISTS, written to §9, BUILD NOT STARTED.** The survey
+(§0) is done and cited. Headline findings: the **backend pipeline is built and tested** (43 test
+functions; §0-A) while the **frontend AI surface is zero** (§0-B) — so this is a frontend +
+honesty-guard milestone, not a pipeline one. Three Commitments are **promised without a guard**:
+the "fixed" disclaimer is **13 literals with no shared constant** (§0-C, Commitment 2), *no stored
+AI conversations* has **no test at all** (§0-D, Commitment 6), and *never weakens* is mechanised by
+nothing (§9(d), Commitment 7). **D-070's ruled fallback signal has never shipped** (§0-G). The 451
+gate already covers AI **by inheritance**, untested at those paths (§0-F). **Seven ⚑ owner-call
+rows await the one-pass** — scope (b), the Pack (c), D-070 (d-ii), no-egress posture copy (f),
+the retired `"Portfolio total value"` label vs ROADMAP R-52 (h-ii), the missing AskPanel
+DS amendment (i), and two spec inconsistencies found en route (j).
+
 **Binding on this milestone:**
 
 - **THE HELP CURRENCY LAW applies from the first commit** — and with unusual force here, because

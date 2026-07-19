@@ -1,0 +1,453 @@
+# AI-surfaces — page build plan (D-067 / D-068)
+
+**STATUS: PLAN ONLY — WRITTEN TO §9, BUILD NOT STARTED.** Per `CURRENT.md` NEXT and the
+R-35/R-38/R-42/R-43/Help/Legal plan-file-first precedent: no code before the owner's §9 one-pass.
+Every claim below carries a `file:line` cite and was verified at HEAD (`b01eacc`). **A claim is not
+a change** (page-heatmap §13-2) — nothing in this file describes shipped behaviour unless it cites
+the line that ships it.
+
+**Milestone shape.** This is **not** a content page. It is a **cross-cutting surface milestone**:
+one existing backend pipeline (`app/ai/`, already built and tested) and **zero existing frontend**.
+The template is adapted the way `page-chrome.md` adapts it — §1/§2 describe **pipeline + UI-state**
+ownership rather than figure ownership, and the regression surface is **every page that gains an AI
+affordance**.
+
+---
+
+## 0. SURVEY — VERIFY-FIRST FINDINGS
+
+*Done before §9 was drafted, because §9's items are only worth what the survey underneath them is.
+Each finding is evidence for a §9 row, and the row names it.*
+
+### 0-A. The backend pipeline EXISTS, is tested, and is not what this milestone builds
+
+`app/ai/` is a complete grounded+validated pipeline, shipped and under test. The request path,
+verified end to end:
+
+`POST /ai/chat` (`app/api/v1/routes/ai.py:82-83`) → `answer_stream` (`app/ai/grounding.py:57`) →
+`gather_facts` (`app/ai/tools.py:404`) → emit `facts` event → `classify_intent`
+(`app/ai/intent.py:58`) → `build_messages` (`app/ai/prompt_builder.py:34`) → `provider.chat` →
+**buffer** → `strip_reasoning` (`app/ai/prompts.py:11`) → `validate_grounded_answer`
+(`app/ai/safety.py:112`) → emit, or discard and fall back.
+
+**Test coverage is real: 43 test functions across 7 files** directly targeting `app/ai`, plus
+`test_egress_guard.py`, `test_help.py`, and the two corpus-accuracy guards. Highlights:
+`tests/unit/test_ai_safety.py` (13), `tests/integration/test_ai_safe_streaming.py` (10),
+`tests/integration/test_ai_engine.py` (7), `tests/integration/test_ai_facts_routing.py` (4),
+`tests/integration/test_ai_grounding.py` (4).
+
+**Three routes exist**, all under the router-wide dependency (§0-F): `/ai/facts`
+(`ai.py:23`, fact pack + intent, **no model call** — `:26-27`), `/ai/grounding-status` (`ai.py:46`,
+mode/remote/privacy label, *"No secrets — only the base URL's host is considered, never the key"*
+`:49`), `/ai/chat` (`ai.py:82`, SSE, input bound `min_length=1, max_length=500` at `:19-20`).
+
+**Consequence for scope:** this milestone is overwhelmingly a **frontend + honesty-guard**
+milestone, not a pipeline milestone. §9(b) scopes it accordingly.
+
+### 0-B. There is NO frontend AI surface — none, anywhere
+
+- `frontend/src/api/` has **no `ai.ts`**. Nothing in `frontend/src` calls `/ai/chat`,
+  `/ai/facts`, or `/ai/grounding-status` (grep: zero hits).
+- The Ask-panel slot is **reserved and empty**: `TopBar.tsx:37-38`
+  (`/** Reserved slot for the Ask panel (D-067) — DEFERRED (C-2). */ askSlot?: ReactNode;`),
+  rendered at `:116`, and **no caller passes it**.
+- The **only** AI-adjacent frontend today is the Briefing, which is a **served deterministic
+  string**, explicitly not AI narration: `frontend/src/api/news.ts:3-4` —
+  *"The briefing is a SERVED display string (deterministic; AI narration is …)"*, consumed at
+  `News.tsx:7`.
+- The Settings **AI tab renders exactly two paragraphs** (`Settings.tsx:603-626`): a served config
+  line (`:613-621`) and a static deferral note (`:622`).
+
+So the D-067 Ask panel, the D-068 instrument explainer, and D-068's "richer narration" are **all
+unbuilt on the frontend**. The dead-affordance rule (page-settings §12 (d)) governs what ships.
+
+**⚠ Do not read `08-TECH-DEBT.md` as current state here.** Its AI rows (`AskPanel`, `AiConfigCard`,
+`streamChat`, `:71`; `AIConversation`/`AIMessage`, `:14`) describe the **v1** codebase — the same
+document claims *"no page/component tests"* in `frontend/src`, which v2 falsifies by ~40 files.
+Those rows are useful as a **record of the v1 surface D-067/D-068 rebuild**, and misleading as debt.
+
+### 0-C. THE DISCLAIMER IS NOT ONE SOURCE — IT IS 13 LITERALS
+
+Commitment 2 says *"Every AI answer ends with the fixed information-only disclaimer"*
+(`PRODUCT-SPEC.md:80-81`). **There is no shared constant.** The string
+`Information only, not financial advice.` is a repeated literal at **13 sites**:
+
+| file:line | site |
+|---|---|
+| `app/schemas/ai.py:74` | `disclaimer: str = "…"` — Pydantic default on `AIAnswer` |
+| `app/ai/prompts.py:63` | inside `SYSTEM_PROMPT`: *"End with **exactly**: …"* |
+| `app/ai/prompts.py:69` | tail of `REFUSAL_NO_FACTS` |
+| `app/ai/grounding.py:53` | appended by `_template_answer()` |
+| `app/ai/grounding.py:74, 80, 111, 119, 128` | **five** separate `done`-event literals |
+| `app/api/v1/routes/ai.py:36` | `/ai/facts` response |
+| `app/services/briefing.py:100` | deterministic briefing tail |
+| `app/services/briefing.py:157` | narration prompt: *"End with: …"* (**no "exactly"** — diverges from `prompts.py:63`) |
+| `app/services/briefing.py:175` | `if "not financial advice" not in text.lower(): text += …` |
+
+Two hard facts make this worse than cosmetic duplication:
+
+1. **`AIAnswer` is not used by the streaming path.** `answer_stream` yields **raw dicts**
+   (`grounding.py:64, 72-74, 110-111, 118-119, 125-128`), so `app/schemas/ai.py:74` — the site that
+   most *looks* canonical — governs nothing the user ever sees.
+2. **`briefing.py:175` is the only idempotent site, and it tests a different string** — the
+   substring `"not financial advice"`, not the full sentence. A future edit to the sentence leaves
+   this check silently matching the old one.
+
+**Nothing asserts the 13 agree.** They agree today by coincidence, not by construction — the exact
+shape of CLAUDE.md's *"a hard rule without a guard is a request"*, applied to a **Commitment**.
+→ §9(c).
+
+**Do NOT conflate with the scoped caveats.** `IA:425-440` rules **D-106, the two-kind split**:
+*(a)* scoped caveats served per reader at the point of use (`reports_pack.py:52`
+`_REPORTING_CAPTION = "Reporting only, not advice."`, `review.py:259/:347`, `insurance.py:260`,
+`analytics.py:423`) are **PART OF THE FIGURE** — *"Legal does not own, absorb, shorten, or
+centralise them"*, and removing one is an **honesty regression** enforced at diff level (AC-L6);
+*(b)* the product-level position, which Legal owns. **This milestone may consolidate the 13 copies
+of (b). It must not touch (a).**
+
+### 0-D. COMMITMENT 6 HAS NO GUARD
+
+`legal.py:90` serves *"**No stored AI conversations.** AI questions and answers are never
+persisted."* The enforcement today is **absence**, twice over:
+
+- The tables were **dropped**: `app/db/migrations/versions/f9e1a2b3c4d5_drop_retired_tables.py:6`
+  — *"ai_conversations, ai_messages (D-016 — AI chat is ephemeral, never persisted)"*, dropped at
+  `:32-33`, **re-created by the downgrade** at `:113-131`.
+- Nothing writes them: `ai_chat` (`ai.py:82-92`) writes nothing; `answer_stream`
+  (`grounding.py:57-128`) uses the session for **reads only**.
+
+**But no test keeps it that way.** Grep across `tests/` for `ai_conversations|ai_messages|never
+persisted` returns only unrelated hits. This sits directly against `help.py:650`, which tells the
+user each Commitment *has a test behind it*. → §9(e).
+
+*One adjacent write exists and is correctly not a conversation:* `refresh_briefing`
+(`briefing.py:182-186`) persists the **derived briefing string** to settings (`:184`). That is
+stored *output*, not a stored *conversation* — §9(e) must say so explicitly so the guard does not
+red on it.
+
+### 0-E. EGRESS IS THE STRONGEST THING HERE — with one typed-refusal gap
+
+`app/core/egress.py` is a genuine single choke point: `egress_client` (`:73`) is
+*"The ONLY way to get an HTTP client in this codebase"* (`:74`); it gates **before** constructing
+(`:82-83`). Both AI providers go through it (`hailo_ollama.py:52`, `openai_compatible.py:99, 159,
+197`); `DisabledAIProvider` never touches the network (`disabled.py:26-27`).
+
+**It is structurally guarded**, which is rare and worth preserving:
+`tests/integration/test_egress_guard.py:39`
+`test_no_module_may_construct_an_http_client_outside_the_egress_gate` — a **source scan** for
+`httpx.(AsyncClient|Client)(` outside the gate (`:50`). Plus behavioural
+`test_ai_provider_makes_no_call` (`:120`) and `test_ai_chat_makes_no_call` (`:137`).
+
+Briefing short-circuits before the provider under no-egress (`briefing.py:123-128`).
+
+**The gap:** `openai_compatible.py:184-188` deliberately re-raises `EgressBlocked` **before** its
+generic retry, with the reason written out — *"No-egress is a REFUSAL, not a transient failure. …
+retrying it would be the very thing Guarantee 5 forbids."* **`hailo_ollama.py` has no such case**:
+its `except Exception` (`:141`) swallows `EgressBlocked` into `log.warning` (`:142`) and re-raises
+as `RuntimeError(str(exc))` (`:145`). Functionally still a refusal — no client was built — but the
+**type is lost**, so the caller cannot distinguish *"you turned this off"* from *"it broke"*, which
+is exactly the honesty distinction Commitment 3 turns on. → §9(f).
+
+### 0-F. THE 451 GATE ALREADY COVERS AI — verified, not assumed
+
+`app/main.py:211` mounts the whole v1 router behind it:
+`app.include_router(api_router, dependencies=[Depends(require_read_auth)])`, and `ai.router` is in
+that router (`app/api/v1/router.py:47`). The gate runs **before the PIN check** inside
+`require_read_auth` (`deps.py:224-231`).
+
+The exempt set (`deps.py:113-117`) is `/api/v1/auth/`, `/api/v1/legal`, `/api/v1/system/status`.
+**No AI path matches any prefix** → every AI endpoint answers **451 until the terms are accepted**,
+including for **API-token callers** (`deps.py:222-223`: *"a token is not a second party who can be
+exempt from them"*). `/reports/pack` is likewise gated (`main.py:233`).
+
+**So (g) is satisfied by construction rather than by new work** — but by *inheritance*, and nothing
+tests it at the AI paths specifically. → §9(g), which is a guard row, not a build row.
+
+### 0-G. D-070's VISIBLE FALLBACK SIGNAL IS UNIMPLEMENTED
+
+D-070 (`DECISIONS.md:349-353`) and `SECURITY-BASELINE.md:165-168` both mandate a **visible signal**
+on fallback, with a ruled string: *"AI answer didn't pass grounding checks — showing facts
+directly."*
+
+**That string exists nowhere** — grep across `app/`, `frontend/src/`, `tests/`: **zero hits.**
+
+What actually happens on validation failure (`grounding.py:114-120`): the model text is correctly
+discarded, the deterministic template is emitted — and **no signal accompanies it**. The reason
+travels only as `"validation": reason` in the `done` **event metadata** (`:118`), which no frontend
+reads because no frontend exists (§0-B).
+
+The *model-error* path does emit a visible line (`:106-108`, *"The AI model didn't return an answer
+(…). Showing the underlying data instead."*) — so the product has **one of the two** signals, in
+different wording from the ruled one.
+
+This is a **ruled, normative, user-visible behaviour that has never shipped**, and this milestone
+builds the surface that would show it. → §9(d).
+
+### 0-H. A RETIRED TERM IS IN THE AI's MOUTH
+
+`app/ai/tools.py:33` emits `GroundingFact(label="Portfolio total value", …)`.
+
+**"Total value" is D-021-retired.** It is in the deprecated-terms table the accuracy guard reads
+(`tests/unit/test_help_content_accuracy.py:215`: `"Total value": r"\btotal value\b"`). The guard
+does not fire because **its corpus is Help content and frontend copy — not AI fact labels.**
+
+This matters more than an ordinary copy defect for three reasons: the fact pack is **shown to the
+user before the answer** (D-067, `IA:472`); the labels are **fed to the model as grounded fact**;
+and `page-help.md:745-750` already filed the *same term* on the *Portfolio* page as **ROADMAP R-52
+with an owner ruling owed** — so this milestone must not resolve it unilaterally on a second
+surface. → §9(h).
+
+Confirmed by `tests/integration/test_ai_facts_routing.py:42`, which **asserts** the label:
+`assert any("Portfolio total value" in label for label in labels)` — a test **pinning** the stale
+term, the §9-5 *"three tests were PINNING the stale content"* pattern (`page-help.md:752-755`)
+recurring.
+
+### 0-I. THE GROUNDING CORPUS — one source, no cache, no regeneration step
+
+The standing cross-note (`CURRENT.md:63-76`, `page-help.md:541` §9-9 ruling) requires the grounding
+review to read **post-redesign, post-rename** content. Verified:
+
+- **The corpus is a Python literal, not a generated artifact**: `app/services/help.py:14`
+  `HELP: list[dict] = [` (~90 entries). Read by `search_help` (`:1321`), which iterates `for e in
+  HELP:` (`:1328`) with **no `lru_cache`, no index, no build step**, scoring per call.
+- **One source serves both consumers** — `help.py:4-6`: *"A single structured source of truth used
+  by BOTH the Help page (`GET /help`) and the AI."*
+- The AI reads it at `app/ai/tools.py:145` (`from app.services.help import search_help`), called
+  `:148` with `limit=3`, prepended to the fact pack at `:466-474`.
+- Markup is stripped **in the projection** (`help.py:1358`), with the reason stated at `:1352-1357`
+  — *"`help_facts()`, which hands `body` to the model as a grounding fact."*
+
+**This is the good news, and it should be stated plainly: there is no grounding cache, so there is
+no cache to drift.** The §9(a) question is therefore *not* "how do we regenerate" — it is **"what
+keeps the corpus itself true, and does anything bind the AI's view of it?"**
+
+What already binds it: `test_help_content_accuracy.py:111, 127, 142, 384, 418` and
+`test_glossary_parity.py:106, 157`, plus `test_help.py:147` `test_ai_facts_grounded_in_help`.
+
+**And the corpus has already bitten the AI once, in a way the page never saw** —
+`help.py:1311-1315`: adding *"What LedgerFrame is"* made `search_help("what is xirr")` return it
+first, so *"the AI would have answered a question about XIRR with the platform blurb"*; fixed with
+`_STOPWORDS` (`:1316`). `page-help.md:1084-1086` records the same event as
+**"a ranking regression reached the AI before it reached the page."** That is the §9(a) risk in one
+sentence: **the AI consumes the corpus through the *ranker*, so ranker changes are grounding
+changes**, and the two rankers (server + client, `page-help.md:1071-1078`) *"could drift"* by the
+Help milestone's own admission.
+
+### 0-J. ⚠ A NUMBERING CORRECTION TO THE KICKOFF BRIEF
+
+The kickoff named Commitments **"5.2 / 5.3 / 5.5 / 5.6 / 5.7"**. **That numbering does not exist.**
+`PRODUCT-SPEC.md:58` §3 numbers the Commitments **1–7** in a single blockquote (`:76-92`); `## 5.`
+in that file is `Review signal thresholds (D-059)` (`:156`), unrelated. Read as Commitments
+**2, 3, 5, 6, 7**, which is how this plan cites them throughout — recorded rather than silently
+fixed, per §11-H (*a claim of completeness is checked before it ships*).
+
+### 0-K. TWO LIVE SPEC INCONSISTENCIES FOUND EN ROUTE (neither owned by this milestone)
+
+1. **Settings tab count.** `DECISIONS.md:359` + `:762-776` say **SIX** tabs; `IA:84` + `:375-379`
+   say **SEVEN** (amendment #3, About); `Settings.tsx:83-84` **ships seven**. D-069 was never
+   amended for #3. *The product and IA agree; DECISIONS.md is the stale one.*
+2. **GLOSSARY block subtitle.** `GLOSSARY.md:12` still reads
+   `## Product Commitments (verbatim from DECISIONS.md)` — the exact relationship
+   `PRODUCT-SPEC.md:67-74` records as **no longer holding** (§3 is now the rendering source;
+   DECISIONS.md is the ratifying record only).
+3. Minor: the shipped AI-tab deferral note (`Settings.tsx:622`, *"Model management lives with the
+   AI surfaces …"*) is **worded differently** from the ruled copy (`page-settings.md:828`,
+   *"Model management lands with the AI surfaces milestone."*). This milestone **deletes or
+   replaces that note anyway** (§9(b)), so it is noted, not fixed separately.
+
+**Filed, not fixed here** — items 1 and 2 are spec-hygiene on documents this milestone does not
+own. They are listed in §9 as ⚑ owner-call so they are not silently absorbed.
+*(This is the §14-A discipline: a milestone that touches another surface records it there.)*
+
+---
+
+## 1. IDENTITY
+
+| Field | Value |
+|---|---|
+| **Milestone** | AI-surfaces (D-067 / D-068) |
+| **Routes** | **No new route.** Surfaces mount into existing ones: global chrome (`askSlot`, `TopBar.tsx:38`), `/instrument/:symbol`, `/news`, `/settings` → AI tab |
+| **Nature** | Cross-cutting surface + honesty-guard milestone; the backend pipeline is built (§0-A) |
+| **Canonical homes touched** | News owns the Briefing (`IA:277-282`); Settings→AI owns the served AI-config line (`IA:375-379`); Privacy owns the "AI never persists" statement (`DECISIONS.md:359`) |
+| **Principles binding** | **P-6** one AI pipeline, no direct model calls (`DECISIONS.md:53-54`) · **P-8** one path in, one out (`:58-60`) · **P-1** one canonical home |
+
+---
+
+## 2. OWNERSHIP — UI-state, not figures
+
+*Adapted per the chrome/gate precedent: this milestone owns no financial figure. It owns the
+**presentation of an answer** and the **state of an AI request**.*
+
+| Owned | Where it lives | Canonical source |
+|---|---|---|
+| Ask-panel open/closed, question text, stream state | Client, **ephemeral** (D-067 *"ephemeral (D-016)"*, `DECISIONS.md:357`) | Nothing persisted — §0-D |
+| The fact pack shown **before** the answer | Server (`/ai/facts`, `ai.py:23`) | `gather_facts` (`tools.py:404`) |
+| Privacy-mode label "always visible" (D-067) | Server (`/ai/grounding-status`, `ai.py:46`) | `no_egress_enabled` (`egress.py:51`) |
+| The disclaimer | **Server-served** — must become one source (§9(c)) | §9(c) resolves |
+| Briefing narration on/off | Server (`briefing.py`) | News is canonical (`IA:281-282`) |
+
+**The frontend computes nothing and stores nothing.** It renders served strings and served facts.
+
+---
+
+## 3. API SURFACE
+
+### 3a. Endpoints consumed (already in the frozen contract)
+
+| Endpoint | file:line | Note |
+|---|---|---|
+| `POST /api/v1/ai/chat` | `ai.py:82-83` | SSE; `ChatIn` bounded 1–500 chars (`:19-20`) |
+| `GET /api/v1/ai/facts` | `ai.py:23-24` | Fact pack + intent, **no model call** |
+| `GET /api/v1/ai/grounding-status` | `ai.py:46-47` | Mode/remote/privacy label; **no secrets** (`:49`) |
+| `GET /api/v1/briefing` | `news.py:182-184` | Served briefing string |
+| `POST /api/v1/briefing/refresh` | `news.py:187-191` | `require_auth` — a write |
+| `GET /api/v1/system/ai-config` | consumed today by `Settings.tsx` via `systemConfig.ts` | Read-only served line |
+
+### 3b. Contract deltas — **PROPOSED, pending §9**
+
+**Likely none for chat/facts/status.** The three AI routes already return what a panel needs.
+Two candidates, both dependent on §9 rulings and therefore **not asserted here**:
+
+1. If §9(d) rules the fallback signal must be **served** (not composed client-side), the `done`
+   event gains a served string field — a **schema** change to a streaming payload that
+   `app/schemas/ai.py` does not currently govern (§0-C item 1).
+2. If §9(b) admits the instrument explainer, it rides P-6 — **no new endpoint** (`/ai/chat` with an
+   instrument-scoped question), or a scoped route. **P-6 forbids a second model path either way.**
+
+*Backend-first, regenerated in the same commit (`make api-contract-check`) if either lands.*
+
+---
+
+## 4. COMPONENTS
+
+**The ratified inventory has no AskPanel.** DS §5.5 (`DESIGN-SYSTEM.md:555-559`) describes the Ask
+panel's *behaviour* — *"SSE streaming, fact-pack before answer, validated-before-display,
+ephemeral, privacy-mode label always visible — D-067"* — but the **Chrome component inventory
+below it lists no such component**, and `frontend/src/components/ui/` has none.
+
+Per CLAUDE.md and the template: **a new component is forbidden without a DESIGN-SYSTEM amendment.**
+→ §9(i).
+
+Composable today, if the panel is scoped in: `Dialog`/`overlay.css`, `TextInput`, `Button`,
+`Skeleton`, `EmptyState`, `StatusChip`, `ProvenanceBadge`, `StalenessChip`, `GlossaryTerm`,
+`MetaStrip`. **The fact pack is a provenance surface** (source · timestamp · staleness,
+`SECURITY-BASELINE.md:161-163`) — `ProvenanceBadge` + `StalenessChip` may cover it without a new
+primitive. **To be settled at §9(i), not assumed.**
+
+**And it is `check:primitives`-governed** (`scripts/check-ui-primitives.mjs`, the §11-J guard): a
+hand-rolled question box would be the Legal milestone's own lesson 6 repeating in the milestone
+after it.
+
+---
+
+## 5. VOCABULARIES
+
+**GLOSSARY's AI vocabulary is thin — effectively two rows.** `GLOSSARY.md:177` **Briefing**
+(carrying the forward reference *"Richer AI narration is a future addition (AI-surfaces milestone,
+D-068) and is not shown until then"*) and `:178` **Headlines**. Plus `:324` Product Commitments
+(a pointer, *"never a second copy"*) and `:325` Legal.
+
+**No entry exists for:** *Ask panel*, *fact pack*, *grounding*, *validation contract*,
+*instrument explainer*, *fallback*, *privacy mode*. Every one of those is a term this milestone may
+**show a user**. → §9(h).
+
+**Ruled precedent that limits the ask:** `page-settings.md:831-832` — *"**"AI" is a plain tab
+label** — the §9-4 logic: **no GLOSSARY entry** for the label itself."* So plain labels do not
+automatically owe entries; **shown domain terms do**.
+
+Guard: `tests/unit/test_glossary_parity.py` (three-store parity + Tier-3 counter) — and the
+`GLOSSARY.md`-first rule (page-heatmap §13-1) applies: **the spec first, the popover mock second.**
+
+---
+
+## 6. DECISIONS IN FORCE — quoted, not paraphrased
+
+| ID | Text (verbatim) | Cite |
+|---|---|---|
+| **P-6** | *"All AI surfaces ride the single grounded+validated pipeline; no feature may ever add a direct model call."* | `DECISIONS.md:53-54` |
+| **P-8** | *"One sanitised path in (sanitise-at-ingest, D-075) and one validated path out (P-6); no feature may bypass either."* | `:58-60` |
+| **D-067** | *"Ask panel \| KEEP \| SSE streaming; fact-pack shown before answer (trust UX); validated-before-display; ephemeral (D-016); privacy-mode label always visible; P-6."* | `:357` |
+| **D-068** | *"Briefing + instrument explainers \| KEEP \| Deterministic template + optional validated narration (**model may add no numbers**); stored + worker-refreshed; canonical on News. Instrument explainer rides P-6."* | `:358` |
+| **D-070** | validator strictness kept; adds the visible fallback signal *"AI answer didn't pass grounding checks — showing facts directly."* | `:349-353` |
+| **D-071** | *"Validation contract is normative spec … **Implementation may improve; the contract may not weaken.**"* | `:354-374` |
+| **D-106** | the two-kind disclaimer split; scoped caveats are **part of the figure**, removing one is an **honesty regression** (AC-L6) | `IA:425-440` |
+
+### The Commitments that bind — as BUILD CONSTRAINTS
+
+*Verbatim from `PRODUCT-SPEC.md:76-92`, the **rendering source of record** (`:60-65`), kept
+string-equal to `app/services/legal.py:78-93` by `test_legal_content.py` (AC-L3). Numbering
+corrected per §0-J.*
+
+| # | Verbatim | What it forbids this milestone |
+|---|---|---|
+| **2** | *"**No advice.** Never gives buy/sell/hold, tax, or financial advice. Every AI answer ends with the fixed information-only disclaimer."* | Shipping any answer path whose disclaimer is not **provably** the fixed one → §9(c) |
+| **3** | *"**No fabrication.** Never fabricates a price, headline, or figure. Insufficient inputs produce "—"/None with a reason, never a made-up number."* | Narration that **adds** a number; D-068's own *"model may add no numbers"* → §9(d) |
+| **5** | *"**No egress (opt-in).** With the no-egress toggle enabled the device makes **zero outbound network calls** — version check, feeds, and banner included."* | A remote AI call under no-egress; a **retry** of a blocked call → §9(f) |
+| **6** | *"**No stored AI conversations.** AI questions and answers are never persisted."* | Any persistence of question or answer → §9(e) |
+| **7** | *"**The validation contract never weakens.** Implementation may improve; the contract that every AI answer is checked against may not be loosened."* | Relaxing any of the 7 contract clauses → §9(d) |
+
+**The 7-clause contract itself is normative in `SECURITY-BASELINE.md:140-168`** — buffered never
+streamed raw · every significant number traces to a fact · unknown tickers rejected · recommendation
+/ real-time / secret content rejected · quoted 25+ char strings verbatim · failure → deterministic
+template · facts are the only source of numbers, shown **before** the answer.
+
+---
+
+## 7. ACCEPTANCE CRITERIA — PROPOSED, to be completed after the §9 one-pass
+
+*Deliberately not enumerated in full: §9(b) decides what ships, and acceptance criteria for a
+deferred surface are noise. The criteria that hold **regardless** of §9's outcome:*
+
+- **AC-1** Every AI answer path ends with the fixed disclaimer, and the disclaimer's **identity
+  across paths is asserted**, not observed (§9(c)).
+- **AC-2** No AI surface renders a raw `<input>`/`<select>` — `npm run check:primitives` green.
+- **AC-3** Under no-egress: **zero** outbound calls from every AI surface; the refusal is stated as
+  a refusal, not as a failure (§9(f)).
+- **AC-4** Nothing persists a question or an answer (§9(e)).
+- **AC-5** Every AI endpoint answers **451** pre-acceptance (§9(g)).
+- **AC-6** Every term shown exists in `GLOSSARY.md` with identical spelling (§9(h)).
+- **AC-7** The HELP CURRENCY SUITE is green **and can see** the new surfaces (Currency Law).
+- **AC-8** Fail-first evidence for every new guard — *seen RED* before it is trusted.
+
+---
+
+## 8. BUILD PHASES
+
+Standard template phases. Two milestone-specific notes:
+
+- **Phase 0 owns the intake defect.** `test_performance_question_pulls_risk_metrics`
+  (`tests/integration/test_ai_facts_routing.py:34`) is **contention-fragile** — it fails only when
+  the suite shares the machine with other pytest processes and passes solo
+  (`r43-historical-backfill.md` §18-F7d; `CURRENT.md:78-82`). **The robustness fix belongs to this
+  milestone** as the natural owner of the AI streaming surface, not to R-43.
+- **Phase 3a must drive the browser under BOTH egress states and BOTH acceptance states.** The
+  Legal milestone's lesson 8 (the matrix gap): an AI surface has **at least three axes** —
+  no-egress on/off, provider available/unavailable, answer validated/fallen-back. A suite thorough
+  along one axis and blind along the others is the shape that reads as coverage. The pre-pass
+  derives its target from `frontend/e2e/smoke/smoke-target.mjs` (fail-closed; never the owner's
+  live stack).
+
+---
+
+## 9. NEEDS DECISION — PROPOSED, for the owner's one-pass
+
+**⚑ = owner call. Nothing below is decided. No build starts on an open row.**
+
+| # | Item | Evidence | PROPOSED resolution |
+|---|---|---|---|
+| **(a)** | **GROUNDING — what keeps the corpus true** | Corpus is a Python literal, `help.py:14`; no cache, no build step (`:1321-1328`); one source for page + AI (`:4-6`); AI reads via `tools.py:145-148`. Already post-redesign **and** post-Legal (`CURRENT.md:63-76`) | **Reframe the question: there is no cache, so there is no drift to regenerate.** The real exposure is the **ranker** — `help.py:1311-1315` records a ranking change that *"reached the AI before it reached the page"*, and two rankers now exist and *"could drift"* (`page-help.md:1071-1078`). **PROPOSE:** a guard pinning **what the AI actually retrieves** for a fixed question set (not what the page ranks), so a ranker edit reds the AI path explicitly. Extends `test_help.py:147`. |
+| **(b) ⚑** | **SURFACE SCOPE — what ships vs defers** | Backend built (§0-A); **frontend zero** (§0-B); `askSlot` reserved+empty (`TopBar.tsx:37-38`); D-067 Ask panel `:357`; D-068 explainer + narration `:358` | **⚑ OWNER RULES THE LINE.** Recommendation: **Ask panel IN** (it is the milestone's name and the backend is complete); **instrument explainer IN** (rides P-6, no new pipeline); **D-068 "richer narration" of the Briefing ⚑ owner call** — it is the one item that *changes an accepted page's* output (News), triggering the standing delta-note + pre-pass-re-run rule. **Whatever defers must leave NO affordance** (dead-affordance rule, page-settings §12 (d)) — including deleting `Settings.tsx:622`'s deferral note if AI management lands, or keeping it exact if not. |
+| **(c) ⚑** | **THE DISCLAIMER — 13 literals, one Commitment** | §0-C: 13 sites; `AIAnswer` (`schemas/ai.py:74`) governs **nothing streamed**; `briefing.py:175` idempotence tests a **different substring**; `prompts.py:63` vs `briefing.py:157` say *"exactly"* vs not | **PROPOSE: one served constant + a guard.** Define `DISCLAIMER` once, reference it at all 13 sites, and add a guard asserting **no other literal of that sentence exists in `app/`** (the closure-is-tested pattern, §11-F lesson 11) **and** that every terminal `done` event carries it. **⚑ Owner call on the Pack:** `legal.py:261` records the Commitments *"deliberately DO NOT go into the Pack"*, and `reports_pack.py:52` already serves its own `"Reporting only, not advice."` **If AI text can ever reach print, the two-disclaimer interaction needs a ruling** — and D-106 forbids consolidating the scoped one. **Recommendation: AI text does NOT enter the Pack this milestone**, which makes the question moot by scope rather than by argument. |
+| **(d) ⚑** | **VALIDATION CONTRACT — and D-070's missing signal** | Contract normative `SECURITY-BASELINE.md:140-168`; implemented `safety.py:112-155`; 13+10 tests. **But D-070's ruled string exists NOWHERE** (§0-G); failure path (`grounding.py:114-120`) shows the template with **no signal**; reason travels only as `done` metadata (`:118`) | **Two separable things, and the plan says so rather than blurring them.** **(i) "Never weakens" (Commitment 7) is currently mechanised by nothing** — the tests assert the contract *holds*, not that it has not been *loosened*. **PROPOSE:** pin the contract's **clause count and identity** to `SECURITY-BASELINE.md` (spec↔code parity, the AC-L3 pattern already proven for the Commitments), so deleting a clause reds. **(ii) ⚑ D-070's signal is a ruled, user-visible behaviour that never shipped.** This milestone builds the surface that would show it. **Owner call:** ship it with the ruled wording, or amend D-070. **Recommendation: ship it, served** — a client-composed signal would be a second source of a legal-adjacent string, the §0-C mistake repeated. |
+| **(e)** | **NO STORED CONVERSATIONS — the enforcement point** | Tables dropped `f9e1a2b3c4d5:6, :32-33` (**downgrade re-creates**, `:113-131`); nothing writes; **no test** (§0-D); yet `help.py:650` tells users each Commitment has a test | **PROPOSE: the guard Commitment 6 never had.** (1) A schema assertion that `ai_conversations`/`ai_messages` are **absent** from the live metadata; (2) a behavioural test that a full `/ai/chat` round-trip leaves **row counts unchanged** across all tables. **It must be pinned against going blind** (CLAUDE.md): if the tables are absent the test must still *mean* something, hence (2). **Must explicitly permit** `briefing.py:184` — stored derived **output**, not a stored conversation. |
+| **(f) ⚑** | **EGRESS — refusal vs failure** | Choke point `egress.py:73-83`, structurally guarded `test_egress_guard.py:39`; `openai_compatible.py:184-188` preserves `EgressBlocked` **with the reason written out**; `hailo_ollama.py:141-145` **loses the type** into `RuntimeError` | **PROPOSE:** mirror the OpenAI provider's typed re-raise in `hailo_ollama.py` so a refusal is a refusal on both providers, and extend the egress guard to assert **both** providers propagate `EgressBlocked` un-retried. **⚑ Owner call on POSTURE COPY** (as the kickoff anticipated): Commitment 5 promises *"zero outbound network calls"*, so under no-egress a **remote** AI is off and a **local** one still works — R-22 (`DECISIONS.md:891`) says *"under no-egress AI is local-only"*. **What the user is told** in that state is unwritten copy, and D-067 requires the *"privacy-mode label always visible"*. **This is the milestone's main copy ruling.** |
+| **(g)** | **THE 451 GATE** | Verified §0-F: `main.py:211` + `router.py:47` + exempt set `deps.py:113-117` → AI is gated, tokens included (`deps.py:222-223`) | **No build work — a guard row.** The posture is correct **by inheritance**, and nothing tests it *at the AI paths*. **PROPOSE:** add AI paths to the acceptance-gate test matrix so a future exemption widening reds. *(Cheap, and exactly the "pinned against going blind" clause.)* |
+| **(h) ⚑** | **HELP + GLOSSARY — the Currency Law debt, and a retired term** | GLOSSARY has **no** entry for Ask panel / fact pack / grounding / validation contract / explainer (§5); `help.py` has **no** Ask/chat entry, and **one clause** on the AI tab (`:544-546`); **`tools.py:33` serves the D-021-retired `"Portfolio total value"`** and `test_ai_facts_routing.py:42` **pins it** (§0-H) | **Two parts.** **(i) Currency Law:** every surface (b) admits owes its Help entry **in-milestone, in the same commit** — plus GLOSSARY entries for shown terms, **spec-first** (page-heatmap §13-1). Precedent for a deviation is `page-help.md:718-725` (§9-5 Tier 2, Legal): a deviation is **recorded as one and mechanised**, never left to intent. **(ii) ⚑ the retired term is an owner call, not mine:** the identical term on Portfolio is **ROADMAP R-52 with a ruling owed** (`page-help.md:745-750`). Fixing it here would resolve half of an open owner question on a second surface. **PROPOSE: surface it to the R-52 ruling** and, if fixed, fix **both** call sites (label-changes-are-app-wide, page-chrome §11-4) — and extend the deprecated-term guard's corpus to **AI fact labels**, which is the real gap either way. |
+| **(i) ⚑** | **DESIGN SYSTEM — no AskPanel exists** | DS §5.5 (`DESIGN-SYSTEM.md:555-559`) describes the behaviour; the **inventory lists no component**; `components/ui/` has none | **⚑ A DESIGN-SYSTEM amendment is required before build** (CLAUDE.md: new components forbidden without one). **PROPOSE:** attempt composition from ratified primitives first — `Dialog`, `TextInput`, `Button`, `Skeleton`, `EmptyState`, `ProvenanceBadge`, `StalenessChip` — and bring an amendment **only for what composition cannot express**, ratified at `/kitchen-sink` as a Phase-0a step (the chrome precedent). `check:primitives` governs regardless. |
+| **(j) ⚑** | **TWO SPEC INCONSISTENCIES FOUND EN ROUTE** | §0-K: `DECISIONS.md:359` says **six** Settings tabs, `IA:84`/`:375-379` and `Settings.tsx:83-84` say **seven**; `GLOSSARY.md:12` still reads *"(verbatim from DECISIONS.md)"* against `PRODUCT-SPEC.md:67-74` | **Neither is owned by this milestone; both are recorded rather than absorbed.** **⚑ Owner call:** fix here as spec hygiene, or file. **Recommendation: file both**, so this milestone does not quietly edit two documents it has no mandate over — the §14-A discipline. |
+
+**⚑ OWNER-CALL ROWS: (b), (c)-Pack, (d)-ii, (f)-copy, (h)-ii, (i), (j).**
+
+---
+
+**STOP — §9 ENDS THE PLAN. The one-pass happens in chat; build starts only after it.**
