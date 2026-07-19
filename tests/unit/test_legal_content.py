@@ -193,7 +193,7 @@ _RED_SPECIMENS = (
 )
 
 
-@pytest.mark.parametrize("letter,specimen", _RED_SPECIMENS, ids=[l for l, _ in _RED_SPECIMENS])
+@pytest.mark.parametrize("letter,specimen", _RED_SPECIMENS, ids=[letter for letter, _ in _RED_SPECIMENS])
 def test_the_never_guard_BITES_its_red_specimen(letter: str, specimen: str):
     """Fail-first, kept: proof each bite catches the copy it exists to catch.
 

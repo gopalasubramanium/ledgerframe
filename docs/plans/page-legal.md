@@ -1472,3 +1472,37 @@ Backend **1822 / 15 skipped** solo, **ordered and randomized** · `npm run check
 
 **MILESTONE CLOSED — Legal, 2026-07-20.** Walk ledger CLOSED (0 findings); §15 strike-check
 complete; `RATIFICATION.md §6` row appended.
+
+---
+
+### 14-D. ⊕ DATED DELTA — the lint gate was left RED at the close (found 2026-07-20, AI-surfaces Phase 0)
+
+**`make lint` (`ruff check .`) failed at `06dbe15`** — the AI-surfaces milestone's own starting
+point — with one error, in this milestone's file:
+
+```
+E741 Ambiguous variable name: `l`
+  tests/unit/test_legal_content.py:196
+  ids=[l for l, _ in _RED_SPECIMENS]
+```
+
+Introduced by §11-F's `_RED_SPECIMENS` parametrisation. Fixed by renaming the comprehension
+variable to `letter`, matching the parameter it produces ids for. **23 legal tests green;
+`ruff check .` clean.**
+
+**Why it is recorded here rather than absorbed silently.** This is the standing rule in CLAUDE.md —
+*a new guard that reds an accepted surface is a delta on that surface, not a footnote* — applied to
+its mirror image: an **existing** gate left red **by** an accepted surface. §14-C's close report
+listed the backend suite, `npm run check`, the currency suite, the licence guards, the contract and
+the pre-pass. **It did not list `make lint`,** so a gate that was already failing was reported as a
+clean close by omission rather than by claim. That is worth one line in the record.
+
+**No pre-pass re-run, and the reason:** the change is a comprehension variable inside a test's
+`ids=` argument. It renders nothing, serves nothing and alters no assertion — the rule's trigger is
+*an accepted page whose behaviour changed*, and no surface moved. Stated explicitly so the omission
+is a judgement on the record rather than a step skipped.
+
+**Lesson for §15 (the gate-set lesson, not a copy lesson):** a close ritual enumerates the gates it
+ran, and **the enumeration is itself a claim of completeness** (§11-H). `make lint` is a standing
+gate in the `Makefile` and was absent from the list. The AI-surfaces close reports `make lint`
+explicitly for this reason.
