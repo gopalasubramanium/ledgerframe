@@ -462,10 +462,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* 36px of target. Icon-only links are the easiest thing on a page to miss with a thumb, and the
-     glyph itself is 18px. */
-  width: 36px;
-  height: 36px;
+  /* `--control-height`, the platform's tap target — not a hand-picked 36px. Icon-only links are the
+     easiest thing on a page to miss with a thumb, and borrowing the control token means the row
+     also tracks DENSITY (36px comfortable → 30px compact) instead of staying frozen. */
+  width: var(--control-height);
+  height: var(--control-height);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
 }
@@ -479,8 +480,9 @@
   color: var(--text-primary);
 }
 .set__social svg {
-  width: 18px;
-  height: 18px;
+  /* The platform icon size (icons.ts: size comes from `--icon-size`), not a local 18px. */
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 /* The URL caption. `min-height` reserves the line whether or not it has text, so pointing at an

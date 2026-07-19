@@ -15,6 +15,27 @@
  *   - px inside an @media (...) breakpoint prelude
  *   - unitless 0, and non-px units (rem/em/%/vh/vw/fr/ch/ms/s/deg)
  *   - hex inside comments (stripped before scanning)
+ *
+ * CHECK 2 — EVERY REFERENCED TOKEN MUST EXIST (page-help §9-bis-14 delta 2).
+ *
+ * Check 1 above enforces "resolve through a custom property, never a raw value". It says nothing
+ * about whether the property you named is REAL — `var(--text-muted)` satisfies it perfectly, and
+ * `--text-muted` does not exist. That is how 23 undefined-token references shipped across
+ * Help.css and Settings.css: --text-muted, --text-sm, --text-xl, --text, --focus, --text-md,
+ * --text-xs.
+ *
+ * A `var()` with no fallback and no definition is INVALID AT COMPUTED-VALUE TIME. The declaration
+ * is DROPPED and the property inherits — silently:
+ *   - `color: var(--text-muted)`  → prose meant to be muted rendered at full primary contrast.
+ *   - `font-size: var(--text-sm)` → text rendered at its parent's size.
+ *   - `outline: var(--focus-width) solid var(--focus)` → the WHOLE shorthand is invalid, so Help's
+ *     accordion toggle, topic link and jump link had NO keyboard focus ring at all. An
+ *     accessibility defect, which is what proves the class is not cosmetic.
+ *
+ * Nothing caught it for weeks: unit suites assert text and structure (jsdom does not even load
+ * these stylesheets), and the Playwright pre-passes assert containment and console errors — a
+ * dropped declaration overflows nothing and logs nothing. `var(--x, fallback)` is deliberate and
+ * is NOT flagged.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -87,6 +108,50 @@ for (const file of walk(SRC)) {
   });
 }
 
+// --- CHECK 2: every var(--x) referenced without a fallback is actually defined ----------------
+// Custom properties supplied at runtime from TSX (`style={{ "--tx": … }}`) are legitimately absent
+// from the CSS. They are ENUMERATED rather than pattern-matched, so adding one is a deliberate act
+// a reviewer sees — not something a regex quietly starts forgiving.
+const RUNTIME_SET = new Set([
+  "--tx", "--ty", "--tw", "--th", // Treemap tile geometry (Treemap.tsx)
+  "--bar", "--swatch",            // KitchenSink specimen boards
+  "--toast-ms",                   // Toast countdown duration (Toast.tsx)
+]);
+
+const cssFiles = walk(SRC).filter((f) => f.endsWith(".css"));
+const defined = new Set();
+for (const f of cssFiles) {
+  for (const m of readFileSync(f, "utf8").matchAll(/^\s*(--[A-Za-z0-9-]+)\s*:/gm)) defined.add(m[1]);
+}
+// If the token layer ever stops being parsed this check would "pass" by finding nothing to
+// complain about. Pin a token that must exist so a blind guard fails loudly instead of quietly.
+if (!defined.has("--text-primary")) {
+  console.error("\n✗ Token check is BLIND: the token layer was not parsed (no --text-primary).\n");
+  process.exit(1);
+}
+
+const undef = [];
+for (const f of cssFiles) {
+  const src = readFileSync(f, "utf8");
+  for (const m of src.matchAll(/var\(\s*(--[A-Za-z0-9-]+)\s*\)/g)) {
+    if (defined.has(m[1]) || RUNTIME_SET.has(m[1])) continue;
+    undef.push({ rel: relative(root, f), line: src.slice(0, m.index).split("\n").length, name: m[1] });
+  }
+}
+
+if (undef.length > 0) {
+  console.error(
+    `\n✗ Undefined design tokens: ${undef.length} reference(s) to a custom property that does not exist.\n` +
+      `  Each is INVALID AT COMPUTED-VALUE TIME — the declaration is dropped and the property\n` +
+      `  inherits, silently. Inside an outline/border/font shorthand it kills the WHOLE\n` +
+      `  declaration (this is how Help shipped with no focus ring).\n` +
+      `  Use a real token from src/theme/tokens.css, or give the var an explicit fallback.\n`,
+  );
+  for (const u of undef) console.error(`  ${u.rel}:${u.line}  var(${u.name})`);
+  console.error("");
+  process.exit(1);
+}
+
 if (findings.length > 0) {
   console.error(
     `\n✗ Design-token drift: ${findings.length} raw value(s) outside the token layer.\n` +
@@ -100,4 +165,7 @@ if (findings.length > 0) {
   process.exit(1);
 }
 
-console.log("✓ Design-token check: no raw hex/px outside the token layer.");
+console.log(
+  `✓ Design-token check: no raw hex/px outside the token layer; ` +
+    `all ${defined.size} referenced tokens defined.`,
+);
