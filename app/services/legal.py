@@ -96,7 +96,8 @@ GUARANTEES: tuple[str, ...] = (
 _POSITION = (
     "LedgerFrame reports; **it does not act**.\n"
     "\n"
-    "- It never places or executes trades, and has no way to: no order endpoints exist.\n"
+    "- It never places or executes trades, and has no mechanism for doing so — the capability was "
+    "never built into the product.\n"
     "- It never gives buy/sell/hold, tax, or financial advice. Nothing it shows you is a "
     "recommendation, and nothing it shows you is a forecast.\n"
     "- It never fabricates a price, headline, or figure. Where a value cannot be established it "
