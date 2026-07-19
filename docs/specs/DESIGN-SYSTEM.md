@@ -1086,3 +1086,54 @@ the meaning was always doing the real work. Two links to the same service are di
 (`Code` = the repository, `GitBranch` = the author's profile). **`Heart` stands on the support link**
 (`Coffee` was considered and rejected: a tip-jar idiom reads as a joke about the price, directly
 under a sentence written in earnest). **True brand marks re-enter only via a future ADR.**
+
+---
+
+## §5 AMENDMENT — the three LEGAL-milestone entries (PROPOSED 2026-07-20, page-legal §11-J; ratify at the owner's look)
+
+Three things the Legal milestone needed. **One is a primitive and enters §5.1; two are
+page-scoped and enter the library only as a REGISTERED EXCEPTION** — the distinction is the
+entry's whole content, because an unregistered page-scoped style is indistinguishable from drift.
+
+### (1) Checkbox — the boolean CONSENT control (§5.1 inventory addition)
+
+| Component | Props (surface) | Usage rules |
+|-----------|-----------------|-------------|
+| **Checkbox** *(PROPOSED)* | `checked`, `onChange`, `label?` (ReactNode), `disabled?`, `aria-label?`, `aria-describedby?` | The **only** sanctioned checkbox. Wraps the **native** `<input type="checkbox">` internally (§6 — no raw checkbox anywhere else, mechanised by `npm run check:primitives`). Label association, Space-key operation, `:focus-visible` ring on the drawn box, and a disabled state that dims the label too. **Authors no copy** — `label` is the caller's string, and on a consent surface that string is **served**. |
+
+**Why a checkbox when §5.5 already has a Switch:** a Switch is a **setting you change** and takes
+effect as you leave it; a checkbox is a **statement you affirm** and takes effect when you submit.
+The inventory had only the first, which is how the Acceptance Gate came to hand-roll a raw input.
+
+**Why the native element is kept, when `Switch` is a `<button role="switch">`:** `role="switch"` has
+**no** native element, so Switch had to build one. A checkbox **has** one, and everything a consent
+control is operated by — assistive-tech announcement, the Space key, autofill, form submission — is
+got right **by construction** only by using it. Borrowing the native element is here both the
+cheaper and the more correct choice, and reimplementing it would have been neither.
+
+### (2) Legal formal-document typography — PAGE-SCOPED, and registered as such
+
+The clause-numbering rhythm of `Legal.css` (hanging markers in their own column, tabular article
+numbers, nested clause/sub-clause indent) is **DRESS on ratified `lf-card` sections — not a
+component, not a template, and deliberately not promoted to the library**: one page in this product
+is a formal agreement, and a library pattern with exactly one legitimate caller is a pattern the
+next page will misuse. It is registered **here** so that its page-scoping is a **recorded decision**
+rather than an undeclared local style — the only difference between an exception and drift is
+whether it was written down. **The numbers are rendered from POSITION, never authored** (`Legal.tsx`
+derives *"2.1.a"* from three indices), and they are **real elements, not `::before` counters**,
+because a counter lives in CSS and a copy-paste of a numbered clause must carry its number.
+
+### (3) Reading-return bar — the way back from a document opened FROM a gate
+
+A fixed bottom bar shown **only** while a blocking gate has been stood down so its own document can
+be read. It is **deliberately not a scrim and dims nothing**: the entire point of the state is that
+the text is fully readable, and a gate that obscured the document it demands agreement to would be
+asking for consent it had made impossible to inform. It carries **a statement of the state**
+(*nothing has been accepted yet*) **and one primary action back**, so the state cannot become a
+trap — without it, a person who left a gate to read its terms would face a document with no visible
+way to answer the question that sent them there.
+
+**⚑ OPEN, raised not decided (page-legal §11-J):** the bar's two strings are **authored in
+`AppShell.tsx`**, not served, unlike every string in the gate itself (§9-3/§9-8). They state UI
+state rather than terms, which is why it was not caught — but they sit **on the consent path**. For
+the owner.
