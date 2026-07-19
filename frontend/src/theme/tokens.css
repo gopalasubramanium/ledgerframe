@@ -188,7 +188,11 @@
      desktop heights with NO scrollbar — accordion/collapsible groups were DECLINED
      (hiding destinations costs a click + orientation). Sized for the FULL nav, not
      today's, so it isn't redone as pages ship. Below the ~640px floor the items region
-     scrolls with brand + footer pinned (graceful, never hidden groups). */
+     scrolls with brand + footer pinned (graceful, never hidden groups).
+     CROSS-NOTE (2026-07-19, page-help §9-bis-8): nav-collapse remains DECLINED and this record is
+     untouched — R-39's sidebar refresh must not reintroduce it. The Help Section-2 content
+     Accordion is a DISTINCT pattern — content disclosure, not navigation: the entry title stays
+     visible when collapsed and nothing navigable is hidden. It is NOT a reversal of this record. */
   --nav-item-pad-y: var(--space-1);   /* link vertical padding → 24px row on 14/20 text */
   --nav-group-gap: var(--space-3);    /* between the six D-043 groups */
   --nav-label-pad-y: 0;               /* group label caption hugs its list; group-gap separates above */

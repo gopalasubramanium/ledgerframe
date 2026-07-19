@@ -1045,6 +1045,23 @@ why this is being fixed now rather than filed.*
 > *That is why the health check asserts both sides are non-empty and the report itself never
 > fails: a non-blocking counter's only real failure mode is reading zero for the wrong reason.*
 
+### §9-bis-8 — RULING (architect, under standing delegation, 2026-07-19) — the accordion vs the nav-collapse DECLINED
+
+> *Resolves the ⚠ raised at **§9-bis-8(b)** above. Cited elsewhere — including the cross-note now
+> standing beside the declination in `tokens.css` — as **page-help §9-bis-8**.*
+
+The **DECLINED** at `frontend/src/theme/tokens.css:186-191` is **SCOPED TO SIDEBAR NAVIGATION**: its
+stated concern is hiding navigation **DESTINATIONS** behind a collapse. It **STANDS, untouched** —
+and the **R-39 chrome-sidebar-refresh must not reintroduce nav collapse**.
+
+A Section-2 help entry is **CONTENT DISCLOSURE**, not navigation: the **entry title stays visible
+when collapsed**, and **nothing navigable is hidden**. The concern the declination protects is
+therefore **not triggered**, and **§9-bis-1 orders the pattern explicitly**.
+
+**Ruling: proceed.** The **content Accordion**, the **topic CardGrid**, and the **type-ahead results
+list** are **three PROPOSED DS patterns**, built from **ratified primitives where possible**, each
+**listed explicitly in the 0a report** for **owner ratification by looking**. **Reversible.**
+
 ---
 
 ## SCOPE-NOTES *(preserved verbatim — owner rulings recorded ahead of the draft; inputs to §9)*
