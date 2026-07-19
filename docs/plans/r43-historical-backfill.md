@@ -1655,3 +1655,91 @@ Both verified at close and **written where they belong** (neither existed outsid
   earn a pre-release milestone.
 - **§20-P** — the weak `LEDGERFRAME_SECRET_KEY` boot warning → a **Gate-C blocker-before-exposure**
   item on `pre-release-walk.md`.
+
+---
+
+## 23. §15 STRIKE-CHECK RETROSPECTIVE (2026-07-19)
+
+A lesson without a mechanism is a wish. Each row below names the mechanism that makes the lesson
+**unable to be forgotten**, and each mechanism was **verified present in the repo at close** with a
+`file:line` cite — not asserted from memory.
+
+**1. Value-currency derives from the QUOTE, not the holding.** (W-1/F-1 class.) A holding's recorded
+currency can drift from what its price is actually quoted in; the conversion source must be the
+quote. *Mechanism:* `tests/integration/test_fx_quote_currency.py` — the INR NAV must read ~S$23.70,
+never the raw INR magnitude labelled SGD (`:74`), plus the mixed-currency cases.
+
+**2. ONE derivation.** The date-aware engine consolidation **deleted** the drifted valuation forks
+rather than adding a fifth. *Mechanism:* `test_backfill.py:185`
+— `test_value_portfolio_accepts_as_of_and_is_byte_identical_when_none`: the new `as_of` parameter is
+proved to change **nothing** on the live path, so consolidation cannot smuggle in a behaviour change.
+
+**3. Provider DEFAULTS are part of the contract.** A param you do not send is a param the provider
+chooses for you — and its default is rarely yours. *Mechanism:* exact-param pins on every value we
+depend on: `test_intraday_provider.py:92` (`extended_hours == "false"`, against AV's `true`
+default), `test_ingest_integrity.py:113-114` (`entitlement == "delayed"`, `outputsize == "full"`).
+
+**4. Silent fallbacks are findings.** *Mechanism:* the fabricated `fx = 1.0` is dead and pinned dead
+(`test_fx_quote_currency.py:144` — a rate-less holding shows the flagged state, "never a silent 1.0
+that leaks"); **refuse-until-coverage** (`tests/integration/test_coverage.py`); cost exclusions are
+**loud** rather than serialized nowhere (F-3).
+
+**5. Provenance is not integrity.** The **genuine, authoritative** source served bad data **twice** —
+ECB's own edge (stale-corrupt legacy CSV) and AMFI's own portal (an HTML page as `text/plain`). A
+trusted host is not a validated payload. *Mechanism:* `app/services/ingest_guard.py:36,44` —
+`assert_not_truncated` + `assert_fresh`, applied on **every** ingest, writing **nothing** on refusal;
+both **real captured payloads** are permanent RED specimens (`test_ingest_integrity.py:18-21`, the
+2010 counting-pattern row; `test_f9_amfi_report_unavailable.py:32-40`, the 13,694-byte portal page).
+*Recorded precisely:* both specimens live **inline in their tests**, not in `tests/fixtures/`.
+
+**6. A limit written in a comment is not a limit.** *Mechanism:*
+`app/providers/market/coingecko.py:35,127` — `CRYPTO_HISTORY_FREE_TIER_DAYS` + `clamp_to_free_tier`
+enforce the 365-day window in code, and `acquire.py` passes the **clamped** start so the window
+requested and the window described cannot drift.
+
+**7. Never let a logger die silently.** F-8a ran unseen for weeks because alembic's `fileConfig`
+defaults to `disable_existing_loggers=True`. *Mechanism:* `app/db/migrations/env.py:17-24` (the
+explicit `False` + the reason), `app/db/migrate.py:118`, pinned in
+`tests/integration/test_f8_crypto_acquisition.py`.
+
+**8. Guards fail per-UNIT, not per-LOOP.** One refused window must not cancel the remaining work.
+*Mechanism:* the F-9 chunk-loop fix (`app/services/acquire.py:337-356`) + its pin
+(`test_f9_amfi_report_unavailable.py:158` — "the loop stopped at the first bad window").
+**⚠ Honest caveat recorded at close:** this holds for `AmfiReportUnavailable` only; **§21-3** records
+that a `TimeoutError` still escapes the loop. The lesson is learned; its coverage is not yet total.
+
+**9. Refresh reports are per-instrument honest.** Counting cache reads as refreshes is a lie with a
+progress bar. *Mechanism:* `tests/integration/test_refresh_report_honesty.py` —
+attempted/succeeded/skipped/stale counted truthfully (F-7b).
+
+**10. Acquisition routes by CLASS CAPABILITY, never the quotes-lane override**, and ids resolve
+through the ONE linker. *Mechanism:* `tests/integration/test_history_capability.py`;
+`acquire.py:233` `_identifier` as the single id resolution point (F-6/F-7).
+
+**11. Evidence before hypothesis.** Multiple plausible causes — phantom providers, hosts poisoning,
+marker-on-attempt — were **refuted by dumps before any fix was written** (§18 F-7b #1 voided its own
+ruling on the evidence). Investigation-first is the standing order, and it paid: the ECB
+"interception" theory dissolved into a stale CDN object, and every interception-related order was
+dropped rather than acted on.
+
+**12. Windows derive from the INSTRUMENT's earliest transaction, not the BOOK's.** *Mechanism:*
+`acquire.py:216,334` `_instrument_start` + the pin
+`test_f9_amfi_report_unavailable.py:230` — a fund bought 2026-05-01 must never request a 2019 window.
+
+### 23-1 — CHANGED-FILE TABLE (from the ACTUAL diff)
+
+Milestone base: **`f2fad25`** (*"R-42 close STEP 5 — CURRENT.md → DONE; NEXT R-43"*) — the commit
+immediately preceding **`7241374`**, the R-43 plan file's first commit (recovered via
+`git log --reverse -- docs/plans/r43-historical-backfill.md`). Command:
+`git diff --stat f2fad25..HEAD`.
+
+**70 files changed, 8,289 insertions(+), 308 deletions(-)** at the §22 commit. Shape of the diff:
+
+| Area | Files | Notes |
+|------|-------|-------|
+| **Backend services** | `acquire.py` (+419, new) · `backfill.py` (+222, new) · `coverage.py` (+187, new) · `fx_history.py` (+224, new) · `ingest_guard.py` (+56, new) · `portfolio.py` (+290) · `analytics.py` (+289/−) · `market.py` (+259) · `amfi.py` · `coingecko.py` | The five NEW services are the milestone's spine: acquisition, orchestration, coverage, the per-date FX store, and the integrity guard. `analytics.py` is the **▲-B consolidation** — the only large *deletion* site, which is the point. |
+| **Providers** | `amfi.py` (+160) · `coingecko.py` (+84) · `ecb.py` (+73) · `router.py` (+113) · `external.py` | ECB zip + integrity; CoinGecko range + clamp; AMFI archive + report classification. |
+| **Migrations** | 4 new (`instrument_acquisitions` · snapshot provenance · `ecb_fx_history` · snapshot flags) + `env.py` (F-8c) | Additive; `models/__init__.py` +58. |
+| **Tests** | 15 new files (~2,700 lines) incl. `test_backfill.py` (+835), the F-6/F-7c/F-8/F-9 cause pins, `test_ingest_integrity.py`, `test_coverage.py`, `test_history_capability.py` | Every finding left a pin behind. |
+| **Frontend** | `NetWorth.tsx` (+124) · `PricingHealth.tsx` · `Holdings.tsx` · `Portfolio.tsx` · `StatusChip.tsx` (muted prop) + CSS/tests | Trend, Build-history trigger, provenance/gap, basis labels. |
+| **Specs / contract** | `API-CONTRACT.json` + `openapi.json` (+299 each) · `GLOSSARY.md` (+12) · `DESIGN-SYSTEM.md` · plan files | Contract shape settled at **Phase 0** and did not move again. |
