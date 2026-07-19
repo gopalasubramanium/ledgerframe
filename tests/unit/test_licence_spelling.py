@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""THE §9-7 SPELLING GUARD — user-facing prose says "licence" (page-legal §9-7).
+r"""THE §9-7 SPELLING GUARD — user-facing prose says "licence" (page-legal §9-7).
 
 WHY THIS EXISTS, AND WHY IT EXISTS *LATE*. §9-7 ruled the split in as many words — **user-facing
 prose takes the British "licence"; filenames and SPDX identifiers keep "License"**, because those
@@ -24,13 +24,21 @@ WHAT IT READS, AND WHY BOTH:
 
 THE FOUR EXEMPT CONTEXTS, each earning its place rather than listed for convenience:
 
-  1. **PROPER NAMES.** `GNU Affero General Public License` is the actual title of an actual
-     document. ⚑ **This is a real refinement of §9-7 and is raised as PROPOSED at the re-look**
-     (page-legal §11-E3): the ruling as written says *user-facing prose = "licence"*, and applied
-     literally it would force the product to **misname the licence it ships under** — on the page
-     whose purpose is to state that licence correctly. Renaming someone else's document to suit
-     our house style is not a spelling convention, it is an inaccuracy. The exemption is narrow: it
-     matches known licence titles, not the bare word.
+  1. **OFFICIAL NAMES AND QUOTED TITLES.** `GNU Affero General Public License` is the actual title
+     of an actual document. **§9-7 IS AMENDED TO SAY SO** (owner-confirmed 2026-07-20, page-legal
+     §11-F): *official names and quoted titles keep their official spelling; our own prose stays
+     "licence".* The ruling as originally written said only *user-facing prose = "licence"*, and
+     applied literally it would have forced the product to **misname the licence it ships under**
+     — on the page whose purpose is to state that licence correctly. Renaming someone else's
+     document to suit our house style is not a spelling convention, it is an inaccuracy.
+
+     **THE AMENDMENT IS IMPLEMENTED AS A NAMED ALLOW-LIST, NEVER FREE-FORM** — this is the binding
+     half of the ruling, not a note on it. `_OFFICIAL_TITLES` enumerates each title **in full**, so
+     admitting a new one is a deliberate act with a name attached. A free-form reading of the same
+     amendment — "anything that looks like a title", `\w+ Licen[cs]e`, "anything in quotes" — would
+     spare `under this Public License` and every other phrase a careless author could shape like a
+     name, which is the exact defect the guard exists to catch. The list is closed, and
+     `_MUST_BITE` pins that closure with a title-shaped string nobody listed.
   2. **URLs.** `https://www.gnu.org/licenses/agpl-3.0.html` is an address. It is not spelled, it is
      resolved, and "correcting" it breaks it.
   3. **Filenames and SPDX identifiers** — `LICENSE`, `LICENSES.md`, `SPDX-License-Identifier`.
@@ -65,14 +73,36 @@ SRC = REPO / "frontend" / "src"
 #: `licenseUrl` and `license_key` exempt without an explicit rule (see the module docstring).
 _AMERICAN = re.compile(r"\b[Ll]icens(?:e|es|ed|ing)\b")
 
+#: THE OFFICIAL-TITLE ALLOW-LIST — §9-7 as amended (owner-confirmed 2026-07-20, page-legal §11-F).
+#:
+#: EVERY ENTRY IS A WHOLE TITLE, WRITTEN OUT. That is the ruling's own constraint and not a
+#: stylistic choice: the amendment says official names keep their official spelling, and it says
+#: **named allow-list, never free-form**. A pattern that generalised — `\w+ Licen[cs]e`, or
+#: "capitalised words before the word" — would admit `this Public License` and hand any author a
+#: way to spell it the American way by capitalising a noun in front of it. Enumeration is what
+#: keeps the exemption an act of naming rather than an act of shaping.
+#:
+#: TO ADD A TITLE: put the full official title here. Do not reach for the regex.
+_OFFICIAL_TITLES: tuple[str, ...] = (
+    # The licence the Platform itself ships under — the one that made this exemption necessary.
+    "GNU Affero General Public License",
+    "GNU General Public License",
+    "GNU Lesser General Public License",
+    # Titles that appear in the dependency-licence record (scripts/license_audit.py, LICENSES.md).
+    "Apache License",
+    "MIT License",
+    "BSD License",
+    "Mozilla Public License",
+    "Eclipse Public License",
+)
+
 #: Spans in which the American spelling is CORRECT and must be left alone. Each is a span-producing
 #: pattern: a hit inside any matched span is exempt.
 _EXEMPT_SPANS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    # 1. Proper names of real licence documents. Narrow by construction — it matches titles, never
-    #    the bare word, so "under this License" is still a defect.
-    ("proper name of a licence document", re.compile(
-        r"(?:GNU (?:Affero |Lesser )?General Public|Apache|MIT|BSD|Mozilla Public|Eclipse Public)"
-        r" Licen[cs]e"
+    # 1. Official document titles — the amended §9-7 carve-out, built from the NAMED list above and
+    #    from nothing else, so "under this License" is still a defect.
+    ("an official document title", re.compile(
+        "|".join(re.escape(t) for t in _OFFICIAL_TITLES)
     )),
     # 2. URLs — addresses, not prose.
     ("a URL", re.compile(r"https?://\S+")),
@@ -133,9 +163,11 @@ def test_the_served_payload_never_spells_it_the_american_way():
     assert not offenders, (
         "§9-7: user-facing prose takes the British \"licence\". Found the American spelling in "
         "SERVED content:\n  - " + "\n  - ".join(offenders) +
-        "\n\nIf this is a proper name, a URL, a filename or an SPDX identifier, it belongs in an "
-        "exempt span rather than being reworded. If it is the British VERB, add the exact string "
-        "to _VERB_EXEMPTIONS with a reason. Do not widen the pattern."
+        "\n\nIf this is an official document title, add the FULL TITLE to _OFFICIAL_TITLES — §9-7 "
+        "as amended exempts named titles, never title-shaped prose. If it is a URL, a filename or "
+        "an SPDX identifier, it belongs in an exempt span rather than being reworded. If it is the "
+        "British VERB, add the exact string to _VERB_EXEMPTIONS with a reason. Do not widen the "
+        "pattern."
     )
 
 
@@ -238,12 +270,19 @@ _MUST_BITE = (
     ("the IA §5 defect", "the licence it ships under — License, disclaimer, product position"),
     ("plural", "The Licenses that apply to your dependencies."),
     ("past participle", "This software is licensed to you at no cost."),
+    # THE AMENDMENT'S OWN RED SPECIMEN. §9-7 as amended exempts NAMED titles; this is title-SHAPED
+    # and on no list. A free-form implementation of the same ruling would spare it, and with it
+    # every "…this Public License" an author cared to capitalise. Its red is the closure proof.
+    ("a title-shaped string nobody listed", "Released under the Widget Foundation Public License."),
+    ("a bare capitalised word in prose", "Your rights are the rights the License grants."),
 )
 
 #: Strings that MUST survive. A guard that cannot tell these from the ones above would force the
 #: product to misname the AGPL, break a URL, or rename a file that cannot be renamed.
 _MUST_SPARE = (
     ("the AGPL's real title", "The full text of the GNU Affero General Public License, version 3."),
+    ("a dependency title on the list", "Bundled under the Apache License, version 2.0."),
+    ("an official title inside quotes", 'The document titled "GNU General Public License" applies.'),
     ("an SPDX identifier", "SPDX-License-Identifier: AGPL-3.0-or-later"),
     ("a shipped filename", "The full record ships as LICENSES.md alongside the source."),
     ("a URL", "See https://www.gnu.org/licenses/agpl-3.0.html for the text."),

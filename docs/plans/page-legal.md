@@ -775,3 +775,47 @@ decoration.
 text, and the acceptance sentence is the most consequential string in the product); the **reset
 confirmation copy**; and a **DS item** — the checkbox-with-prose construct is the first of its kind
 in the chrome layer, and whether it becomes a design-system primitive is the owner's call.
+
+---
+
+### 11-F. §9-7 AMENDED — official titles keep their official spelling (2026-07-20)
+
+**Ruled by the architect under delegation, owner-confirmed in chat 2026-07-20. No ruling was typed
+in this CLI.** §11-E3 raised the refinement as PROPOSED; it is now **the ruling**.
+
+**§9-7 as amended:** *user-facing prose takes the British **"licence"**; **official names and
+quoted titles keep their official spelling**; filenames and SPDX identifiers keep "License".* Our
+own prose is unchanged — it stays *licence*, everywhere, without exception.
+
+**THE AMENDMENT IS A NAMED ALLOW-LIST, NEVER FREE-FORM — and that half is binding.** The exemption
+is `_OFFICIAL_TITLES` in `tests/unit/test_licence_spelling.py`: **eight titles, each written out in
+full**, from which the exempt-span pattern is built and from nothing else. Adding a title is an act
+of **naming**, with a name attached in a diff. The alternative reading — exempt anything
+*title-shaped*, or anything in quotes — was rejected because it hands every author a way to spell
+it the American way by capitalising a noun in front of it.
+
+**That is not a hypothetical, it is measured.** The same amendment implemented free-form
+(`(?:[A-Z]\w+ )+Licen[cs]e`) was run against the specimens:
+
+| Specimen | Named list | Free-form |
+|---|---|---|
+| `You may use the Platform under this License.` | **RED** | RED |
+| `Released under the Widget Foundation Public License.` | **RED** | **green — ESCAPES** |
+| `Your rights are the rights the License grants.` | **RED** | RED |
+| `The full text of the GNU Affero General Public License, version 3.` | green | green |
+
+The middle row is the whole reason the ruling says *never free-form*, and it is now pinned as a
+permanent RED specimen (*"a title-shaped string nobody listed"*) so the closure of the list is
+tested rather than trusted.
+
+**Fail-first, as the ruling required, observed:** RED on a free-form `License` in prose; **green**
+on `GNU Affero General Public License`. Two more spare-specimens were added with it — a dependency
+title on the list (`Apache License`) and **an official title inside quotes**, which is the *quoted
+titles* half of the amendment made executable rather than asserted.
+
+**Guard:** `tests/unit/test_licence_spelling.py` — **104 passed** (was 94; +10 specimens). The four
+exempt contexts are now **official titles · URLs · filenames and SPDX identifiers · code
+identifiers**, the last being a mechanical consequence of requiring a word boundary on both sides.
+
+**Scope unchanged, and still stated:** the guard reads **served content and authored frontend
+copy**. It does **not** read `docs/specs/`. That remains a measurement, not a guard.
