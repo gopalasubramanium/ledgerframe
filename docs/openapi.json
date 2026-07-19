@@ -1615,6 +1615,115 @@
         "title": "InstrumentPatch",
         "type": "object"
       },
+      "LegalGuarantees": {
+        "description": "The seven Product Guarantees, reproduced VERBATIM.\n\n`items` are byte-equal to `docs/specs/PRODUCT-SPEC.md` \u00a73 (whitespace-normalised), asserted by\n`tests/unit/test_legal_content.py` (AC-L3) \u2014 string equality, never by eye. The page renders\nthem; it does not paraphrase, summarise, reorder or number them itself.",
+        "properties": {
+          "intro": {
+            "title": "Intro",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "intro",
+          "items"
+        ],
+        "title": "LegalGuarantees",
+        "type": "object"
+      },
+      "LegalPointer": {
+        "description": "A file that ships with the source.\n\nDeliberately carries NO url field, and the omission is the contract (page-legal \u00a79-5): a\nlocal-first product cannot link to a hosted licence page, so a pointer NAMES A FILE. There is\nnowhere here to put a URL, which is how the rule is kept rather than remembered.",
+        "properties": {
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "what": {
+            "title": "What",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "what"
+        ],
+        "title": "LegalPointer",
+        "type": "object"
+      },
+      "LegalResponse": {
+        "description": "`GET /legal` \u2014 the whole page.\n\nCarries `markup` for the same reason `HelpResponse` does: the dialect is DECLARED, so a\nfuture change to the sanctioned subset is a visible contract change rather than a silent\nreinterpretation of the same strings.\n\n`pack_footer` is served here because Legal OWNS the string and the Reports Pack RENDERS it \u2014\none source, two renderers (page-legal \u00a79-4, D-038 lane). It is on this response so the two\nrenderers are provably reading the same bytes.",
+        "properties": {
+          "guarantees": {
+            "$ref": "#/components/schemas/LegalGuarantees"
+          },
+          "markup": {
+            "title": "Markup",
+            "type": "string"
+          },
+          "pack_footer": {
+            "title": "Pack Footer",
+            "type": "string"
+          },
+          "pointers": {
+            "items": {
+              "$ref": "#/components/schemas/LegalPointer"
+            },
+            "title": "Pointers",
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/LegalSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "markup",
+          "sections",
+          "guarantees",
+          "pointers",
+          "pack_footer"
+        ],
+        "title": "LegalResponse",
+        "type": "object"
+      },
+      "LegalSection": {
+        "description": "One prose section of the Legal page. Rendered as a `Card` (page-legal \u00a79-1).",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body"
+        ],
+        "title": "LegalSection",
+        "type": "object"
+      },
       "ManualHoldingIn": {
         "properties": {
           "account_id": {
@@ -7961,6 +8070,72 @@
         "summary": "Kite Status",
         "tags": [
           "kite"
+        ]
+      }
+    },
+    "/api/v1/legal": {
+      "get": {
+        "description": "The Legal page's copy \u2014 the product-level position, the Guarantees, the licence, the\nno-jurisdiction-tax stance. Read-only, no secrets, no database, never personalised.",
+        "operationId": "legal_content_api_v1_legal_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "lf_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lf Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Legal Content",
+        "tags": [
+          "system"
         ]
       }
     },

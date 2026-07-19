@@ -832,3 +832,69 @@ async def help_content(q: str | None = None) -> dict:
     if q:
         return {"query": q, "entries": search_help(q, limit=6)}
     return all_help()
+
+
+# ---------------------------------------------------------------------------------------------
+# LEGAL (page-legal §9-3, owner 2026-07-19 — SERVED, not client-rendered).
+#
+# Sits beside `/help` deliberately: they are the same KIND of surface — static, read-only,
+# markup-carrying prose whose value is that it is TRUE, and whose truth is held by server-side
+# accuracy guards. The ruling's deciding rationale was that guard bar, not the transport.
+# ---------------------------------------------------------------------------------------------
+
+
+class LegalSection(BaseModel):
+    """One prose section of the Legal page. Rendered as a `Card` (page-legal §9-1)."""
+    id: str
+    title: str
+    body: str
+
+
+class LegalGuarantees(BaseModel):
+    """The seven Product Guarantees, reproduced VERBATIM.
+
+    `items` are byte-equal to `docs/specs/PRODUCT-SPEC.md` §3 (whitespace-normalised), asserted by
+    `tests/unit/test_legal_content.py` (AC-L3) — string equality, never by eye. The page renders
+    them; it does not paraphrase, summarise, reorder or number them itself.
+    """
+    title: str
+    intro: str
+    items: list[str]
+
+
+class LegalPointer(BaseModel):
+    """A file that ships with the source.
+
+    Deliberately carries NO url field, and the omission is the contract (page-legal §9-5): a
+    local-first product cannot link to a hosted licence page, so a pointer NAMES A FILE. There is
+    nowhere here to put a URL, which is how the rule is kept rather than remembered.
+    """
+    file: str
+    what: str
+
+
+class LegalResponse(BaseModel):
+    """`GET /legal` — the whole page.
+
+    Carries `markup` for the same reason `HelpResponse` does: the dialect is DECLARED, so a
+    future change to the sanctioned subset is a visible contract change rather than a silent
+    reinterpretation of the same strings.
+
+    `pack_footer` is served here because Legal OWNS the string and the Reports Pack RENDERS it —
+    one source, two renderers (page-legal §9-4, D-038 lane). It is on this response so the two
+    renderers are provably reading the same bytes.
+    """
+    markup: str
+    sections: list[LegalSection]
+    guarantees: LegalGuarantees
+    pointers: list[LegalPointer]
+    pack_footer: str
+
+
+@router.get("/legal", response_model=LegalResponse)
+async def legal_content() -> dict:
+    """The Legal page's copy — the product-level position, the Guarantees, the licence, the
+    no-jurisdiction-tax stance. Read-only, no secrets, no database, never personalised."""
+    from app.services.legal import all_legal
+
+    return all_legal()
