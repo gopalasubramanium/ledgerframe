@@ -38,15 +38,33 @@ would be silently erased on the next regeneration. So vendored assets are record
   public repository as a side effect of showing a photograph. The vendored file has **zero** EXIF
   entries.
 
-> ### ⚠ NEEDS DECISION — the owner's, not this file's
-> **Under what terms is the photograph licensed?** The repository ships under
-> **AGPL-3.0-or-later**, and every source file carries that SPDX header — but a **photograph of a
-> person is not source code**, and the owner may well not intend to place his own likeness under a
-> licence that grants everyone the right to redistribute and modify it.
->
-> **This file deliberately does not answer that.** Stating a licence for the owner's likeness on
-> his behalf would be fabricating a legal position, which is exactly the kind of claim the
-> adjudication convention exists to prevent (*"whether a flagged licence is compatible … is an
-> **owner/counsel** decision, not a script's"* — `LICENSES.md`). Recorded in `CURRENT.md` under
-> **Needs decision**. What IS established: the owner supplied the file, from his own repository,
-> for this use.
+### ✅ RESOLVED — the licence terms, ruled by the owner 2026-07-19
+
+**The owner's ruling, verbatim:**
+
+> © Gopala Subramanium, all rights reserved; included in this repository by the author; not covered
+> by the AGPL licence of the code.
+
+**This is the licence line for `author-gs.jpg`.** It is reproduced exactly as the owner gave it and
+is not to be paraphrased, softened, or "tidied" — a licence statement that has been reworded is a
+different licence statement.
+
+**What it means in practice, and the reason the question was worth asking:** the photograph is
+**carved out of the AGPL grant that covers the code**. A downstream recipient of this repository
+receives the AGPL rights to the *source* and **no right to redistribute or modify the author's
+likeness**. The two licences sit in the same tree deliberately, and that is exactly why the file has
+to say so out loud — a reader who assumes the repository LICENSE covers every byte in it would
+assume wrongly.
+
+**The reasoning for the deferral is preserved, because it was correct.** This file previously
+recorded the question as ⚠ **NEEDS DECISION** and declined to answer it: stating a licence for the
+owner's likeness on his behalf would have been **fabricating a legal position**, exactly the kind of
+claim the adjudication convention exists to prevent (*"whether a flagged licence is compatible … is
+an **owner/counsel** decision, not a script's"* — `LICENSES.md`). The right move for a machine
+holding an unanswerable legal question was to **hold it open and name whose question it was**, and
+that is how it came to be answered. What was already established, and remains: the owner supplied
+the file, from his own repository, for this use.
+
+**Note for the generated files.** `LICENSES.md` and `NOTICE` are rewritten wholesale by
+`scripts/license_audit.py` and cannot carry this line — a hand-edit there would be erased on the
+next regeneration. **`ASSETS.md` is its only home**, which is why this register exists.

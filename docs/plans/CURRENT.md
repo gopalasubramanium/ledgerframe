@@ -90,18 +90,12 @@ owed · **R-40** (Alpha Vantage premium feed expansion) — parked, definition o
 
 ## Needs decision
 
-1. **The author photograph's licence terms — owner/counsel, 2026-07-19 (page-help
-   §9-bis-11, `docs/audit/ASSETS.md`).** `frontend/src/assets/author-gs.jpg` is the
-   repository's **first vendored, redistributed asset** — every third-party artifact
-   before it was a dependency fetched at install time, which is why neither the generated
-   `LICENSES.md` nor the generated `NOTICE` has anywhere to record it (both are rewritten
-   wholesale by `scripts/license_audit.py`; a hand-edit would be erased). The register
-   `docs/audit/ASSETS.md` was created for it.
-   **The open question:** the repository ships **AGPL-3.0-or-later**, but a **photograph of
-   a person is not source code**, and the owner may not intend to place his own likeness
-   under a licence granting everyone the right to redistribute and modify it.
-   **Deliberately unanswered here** — stating a licence for the owner's likeness on his
-   behalf would be fabricating a legal position, which is precisely what the adjudication
-   convention exists to prevent (*"an owner/counsel decision, not a script's"*).
-   **Established:** the owner supplied the file, from his own repository, for this use;
-   it is vendored, EXIF-stripped, and **never fetched at runtime**.
+- (none open). **RESOLVED 2026-07-19 — the author photograph's licence terms**
+   (page-help §9-bis-14, `docs/audit/ASSETS.md`). The owner ruled:
+   *"© Gopala Subramanium, all rights reserved; included in this repository by the
+   author; not covered by the AGPL licence of the code."* The photograph is
+   **carved out of the AGPL grant covering the code** — downstream recipients get
+   the AGPL rights to the source and **no right to redistribute or modify the
+   author's likeness**. The full line and its consequences live in
+   `docs/audit/ASSETS.md`, which is its only home: `LICENSES.md` and `NOTICE` are
+   regenerated wholesale and would erase a hand-edit.
