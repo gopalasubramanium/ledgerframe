@@ -1,0 +1,85 @@
+/* Legal — System group. page-legal §9-1 (architect under delegation, 2026-07-19).
+
+   NO NEW COMPONENTS AND NO NEW TEMPLATE. This file styles a stack of ratified `lf-card` sections
+   and nothing else: there is no primitive here, only spacing and list shape for prose that the
+   Help renderer already draws.
+
+   FULL-WIDTH PROSE, per the standing DESIGN-SYSTEM §3 rule ruled at page-help §9-bis-14 — REUSED,
+   not re-minted. Help's own 78ch measure was RETIRED there in favour of typographic structure
+   carrying the eye's return points, and Legal's prose is served in the same markup subset through
+   the same renderer, so it inherits that ruling rather than re-arguing it.
+
+   Semantic colour tokens only; no palette, no raw hex, no raw px (check:tokens). */
+
+.legal__section + .legal__section {
+  margin-top: var(--space-4);
+}
+
+/* --- The Product Guarantees ------------------------------------------------------------------
+
+   An ORDERED list, and the numbering is load-bearing rather than decorative: the guarantees are
+   cited by number across the specs and in the AI's grounding ("Guarantee 5"), so the list renders
+   the number the prose would otherwise have to repeat. `HelpProse` emits a paragraph per item, so
+   the marker is aligned to the first line rather than centred on the block. */
+.legal__guarantees {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.legal__guarantee {
+  padding-left: var(--space-1);
+}
+/* The renderer wraps each block in its own element; collapse its outer margin so the list's own
+   `gap` is the single source of rhythm and the spacing does not double. */
+.legal__guarantee > .help__prose > :first-child {
+  margin-top: 0;
+}
+.legal__guarantee > .help__prose > :last-child {
+  margin-bottom: 0;
+}
+
+/* --- The file pointers -----------------------------------------------------------------------
+
+   A description list: a file NAME and what it holds. Deliberately NOT links (§9-5) — a local-first
+   product cannot link to a hosted licence page, and an anchor here would be the one element on the
+   page that stops working offline. The name is set in the mono face because it is a path the
+   reader will look for on disk, not a title. */
+.legal__pointers {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.legal__pointer {
+  display: grid;
+  gap: var(--space-1);
+}
+.legal__file {
+  margin: 0;
+  /* `monospace`, not a token: there is no mono token in tokens.css, and inventing one for a single
+     surface would be a DS amendment by the back door. Follows the one existing precedent
+     (Settings.css, the API-token value). If a third surface needs it, that is when it gets a
+     token. */
+  font-family: monospace;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere; /* `docs/audit/LICENSES.md` must not push the card wide at 320px */
+}
+.legal__what {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-13);
+}
+
+/* At comfortable widths the name and its description read better side by side; below that they
+   stack, so a long path never competes with its own explanation for the same line. */
+@media (min-width: 40rem) {
+  .legal__pointer {
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+}

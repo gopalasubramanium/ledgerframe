@@ -343,9 +343,18 @@ test("the routed page renders inside the shell with chrome around it — `/` is 
 });
 
 test("an unbuilt route lands on the honest NotBuilt fallback inside the shell", async () => {
-  // Repointed to /legal: Help is BUILT as of page-help Phase 1, so it is no longer an example
-  // of an unbuilt route. Legal is the remaining one (its milestone is next).
-  renderRoutesAt("/legal");
+  // REPOINTED A SECOND TIME, and this time there is no successor in the nav to point at.
+  //
+  // The history is the point: this test used /help until page-help Phase 1 built it, then /legal
+  // because that was "the remaining one". page-legal Phase 1 builds Legal, and with it EVERY nav
+  // item now carries `built: true` — the dead-affordance backlog is empty.
+  //
+  // So the example moves off the nav model entirely, to a path that was never in it. That is the
+  // honest specimen from here on: the fallback exists for a URL the user typed, pasted, or
+  // followed from a stale bookmark — not for a page the product advertises and has not built. If
+  // a future milestone adds an unbuilt nav item, THAT is the regression, and `chrome.test.tsx`'s
+  // progressive-reveal assertions are where it would show.
+  renderRoutesAt("/not-a-real-page");
   expect(document.querySelector(".lf-topbar")).not.toBeNull();
   expect(await screen.findByText(/isn't built yet/)).toBeTruthy();
 });

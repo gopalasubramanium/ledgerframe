@@ -19,6 +19,7 @@ import { Reports } from "./routes/Reports";
 import { InstrumentDetail } from "./routes/InstrumentDetail";
 import { Settings } from "./routes/Settings";
 import { Help } from "./routes/Help";
+import { Legal } from "./routes/Legal";
 import { Home } from "./routes/Home";
 import { NotBuilt } from "./routes/NotBuilt";
 
@@ -59,6 +60,11 @@ export function AppRoutes() {
               <Route path="/settings" element={<Settings />} />
               {/* Help (System nav group) — the served knowledge base; ?q= search + ?topic= deep link. */}
               <Route path="/help" element={<Help />} />
+              {/* Legal (System nav group) — the served prose document: the product-level
+                * position, the Guarantees verbatim, the licence, the no-jurisdiction-tax
+                * stance (page-legal §9). This route was the repo's canonical example of an
+                * UNBUILT one; it is now built, and `nav.ts` carries `built: true` to match. */}
+              <Route path="/legal" element={<Legal />} />
               {/* Route redirects (D-042/D-022/D-056). */}
               <Route path="/snapshot" element={<Navigate to="/net-worth" replace />} />
               <Route path="/planning" element={<Navigate to="/cash-flow" replace />} />
