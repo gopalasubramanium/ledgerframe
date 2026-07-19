@@ -995,3 +995,85 @@ A chip marking a figure as illustrative. **The marking must ALREADY be in the se
 not a lighter-weight version of this pattern: an AI surface quoting the entry reads the served
 string and not the styling, so invented figures would travel out of the page with nothing marking
 them invented. *(page-help §9-bis-9(b) — this failure mode was found in the flesh, not theorised.)*
+
+---
+
+## §3 STANDING RULE — prose in content surfaces is FULL-WIDTH RESPONSIVE BY DEFAULT (RATIFIED 2026-07-19 by the owner; page-help §9-bis-14)
+
+**Prose in a content surface fills its content box.** A **fixed reading measure** (`max-width: NNch`,
+a centred column, any cap that stops prose short of its container) exists **only where it has been
+explicitly ratified, per surface**. There is no global measure, and *"prose reads better narrow"* is
+not a licence to introduce one — it is a proposal, and it goes to the owner like any other.
+
+**This is the SECOND time the same drift was ruled against, which is why it is now a standing rule
+rather than a per-surface finding.** The prior instance is **§9-bis-9(b)**: expanded Help entry
+bodies were capped at **78ch**, the cap was measured green at the Phase 1-bis walk (689px ≈ 78ch,
+§9-bis-10) — *measured, recorded, and green* — and the owner **retired it** in favour of the full
+responsive entry width. The Settings → About rebuild then reintroduced the identical pattern at
+**62ch**, independently, in a different file, three days later.
+
+**The lesson the rule encodes:** a measure cap is invisible to every guard the project runs. It
+overflows nothing, throws nothing, and renders beautifully in a screenshot — so it survives
+containment suites, console-error gates and pre-passes untouched, and it is caught **only by an
+owner looking at a wide viewport and noticing the empty half of the page**. A defect class that only
+a human can see must be closed by a **rule**, not by remembering.
+
+**The guard obligation** (page-help §9-bis-14, and the reason this rule is enforceable rather than
+merely stated): a surface asserting full-width prose carries a **geometry assertion measuring the
+REAL rendered box** — the prose container's width against its parent's content box, at a **wide**
+viewport, where a cap is visible. Asserting the absence of a CSS property is not the same test:
+`max-width` is one of many ways to be narrow, and the guard must measure the outcome, not the
+mechanism.
+
+---
+
+## §5 AMENDMENT — the five SETTINGS → ABOUT patterns (RATIFIED 2026-07-19 by the owner, by looking; proposed as page-help §9-bis-13, ratified at page-help §9-bis-14)
+
+The About rebuild onto the four-beat narrative template needed five things the library did not have.
+As with the five Help patterns above, **each ships with its implementation note, and the note is
+PART of the ratification.**
+
+### (1) Pull-quote — bold italic, centred, NO terminal full stop
+
+A restatement of the surrounding prose in the product's own voice. **`<blockquote>`, not a styled
+`<p>`** — the element that says "this is a quotation of the surface itself" is the one to use.
+Serif (`--font-serif`), `text-wrap: balance`, **no border and no background**: the emphasis is space
+and weight. **The missing full stop is deliberate and ratified** — the punctuation rule is *prose
+sentences take full stops; pull-quotes and headings are exempt*.
+
+### (2) Social-icon row — icon-only links, meaning in the ACCESSIBLE NAME
+
+Icon-only external links. **Every link carries an `aria-label`** (icon-only links otherwise announce
+as a bare URL or as nothing), **and `rel="noreferrer noopener"` is not optional** on `target="_blank"`.
+The destination URL is shown to sighted users in a **reserved caption line** below the row, revealed
+on **hover AND focus**. **A `title` attribute is FORBIDDEN for this** — it never appears for keyboard
+focus, which would show the URL to a mouse and hide it from a Tab key. The caption line **holds its
+height when empty** so pointing at an icon does not shift the content below it.
+
+### (3) Brand-lockup size variant — scaled, never rebuilt
+
+A larger, prose-integrated rendering of the **ratified `BrandLockup`** (§5.6, the one-lockup rule):
+the host surface sets `font-size` and the mark follows, because `BrandLockup` sizes the mark to the
+wordmark's cap height. **A surface never hand-builds its own lockup** — the last one that did shipped
+the mobile header without the mark.
+
+### (4) Beat heading + ✦ ornament — decorative, and deliberately NOT a sparkle icon
+
+A narrative-beat heading preceded by the **typographic ornament ✦**, `aria-hidden` (it carries no
+meaning a non-sighted reader is missing), coloured `--text-tertiary`. **A lucide sparkle was
+considered and rejected**: the sparkle is this product's **AI-affordance vocabulary** (D-088), and
+borrowing it to decorate hand-written prose would imply those paragraphs were machine-written — on
+the one surface whose entire subject is who wrote the thing and what it promises. `--text-tertiary`
+and **not an accent**, because colour on this surface is semantic only and a coloured ornament would
+signal something it does not mean.
+
+### (5) Semantic-icon treatment — the RATIFIED substitute for brand marks
+
+**Semantic lucide glyphs are the ratified treatment for links to third-party services.** `lucide`
+**removed its brand icons** (no `Github`, no `Linkedin` in the pinned 1.24.0, verified against the
+installed package), and a brand-icon package is a **new dependency requiring an ADR**. So the glyph
+carries the *kind* of destination and the **accessible name carries the service by name** — where
+the meaning was always doing the real work. Two links to the same service are distinguished by glyph
+(`Code` = the repository, `GitBranch` = the author's profile). **`Heart` stands on the support link**
+(`Coffee` was considered and rejected: a tip-jar idiom reads as a joke about the price, directly
+under a sentence written in earnest). **True brand marks re-enter only via a future ADR.**

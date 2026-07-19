@@ -1450,6 +1450,61 @@ renderer-wired-to-half-its-fields defect: the rule was correct, and it was never
 
 ---
 
+### §9-bis-14 — ABOUT SIGNED OFF; the full-width standing rule; the Help.css ruling (owner, 2026-07-19)
+
+**About is SIGNED OFF**, conditional on the full-width change below, and **no further re-look is
+required — the owner waived it.** The re-look gate set at §9-bis-13 is discharged.
+
+#### (a) The five About DS items — RATIFIED BY LOOKING
+
+All five PROPOSED items are **RATIFIED**, entered in `DESIGN-SYSTEM.md` dated 2026-07-19:
+**pull-quote · social-icon row · brand-lockup size variant · beat heading + ✦ ornament ·
+semantic-icon treatment.**
+
+On the last of these the owner ruled explicitly: **semantic lucide glyphs are the ratified
+treatment**, not a stopgap tolerated until something better arrives. **True brand marks re-enter
+only via a future ADR**, and **`Heart` stands** on the support link.
+
+#### (b) ⚑ DS STANDING RULE (owner) — prose is FULL-WIDTH RESPONSIVE BY DEFAULT
+
+> **Prose in content surfaces is full-width responsive by default; a fixed reading measure exists
+> only where explicitly ratified, per surface.**
+
+Written into `DESIGN-SYSTEM.md` as a **§3 standing rule**, dated, citing this ruling.
+
+**§9-bis-9(b) is the prior instance of the same law, and the reason this is now standing rather than
+a finding.** There, expanded Help entry bodies were capped at **78ch**; the cap was **measured green
+at the Phase 1-bis walk** (689px ≈ 78ch, §9-bis-10) and the owner **retired it** in favour of the
+full responsive entry width. The About rebuild then reintroduced the identical pattern at **62ch** —
+independently, in a different file, three days later, by an architect who had read that ruling.
+
+**⚠ THE PROPERTY THAT MAKES THIS CLASS DANGEROUS: a measure cap is invisible to every guard the
+project runs.** It overflows nothing, throws nothing, and photographs beautifully. It passed the
+320/375/768/1366 containment sweep, the 0-console-error gate and the isolated pre-pass **without a
+single complaint**, because each of those asks *"does anything break?"* and a cap breaks nothing —
+it simply refuses half the page. **It is caught only by an owner looking at a wide viewport.** *A
+defect class that only a human can see is closed by a rule, not by remembering* — and the rule is
+enforceable only because §9-bis-14's delta 1 attaches a **geometry assertion that measures the real
+rendered box**.
+
+#### (c) Help.css undefined tokens — RULED IN, applied without a further re-look (owner, option b)
+
+§9-bis-13 recorded the fix as **written-and-reverted** and put it to the owner, because Help 3b was
+ACCEPTED against the broken rendering and correcting it would change an accepted surface. **The
+owner rules the fix IN, and waives the re-look.**
+
+**The reasoning, recorded because it generalises:** *the acceptance covered **content, structure and
+voice** — it did not cover a **rendering defect**.* A surface accepted with a stylesheet bug in it
+was not thereby a ratification of the bug. Correcting it restores what the ratified design already
+said, so it is **not** an unratified change smuggled past the owner; it is the accepted design
+finally taking effect. **This is an accepted surface corrected by explicit owner ruling** — which is
+what makes it legitimate, and the reason §9-bis-13 was right to stop and ask rather than fix it
+quietly.
+
+**All three rulings are dated 2026-07-19. The milestone proceeds to its final deltas and close.**
+
+---
+
 ## SCOPE-NOTES *(preserved verbatim — owner rulings recorded ahead of the draft; inputs to §9)*
 
 ### SN-1 — `[Help]` retrofit to the pre-affordance pages *(owner, 2026-07-14)*
