@@ -7,6 +7,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.core.disclaimer import DISCLAIMER
+
 
 class HealthStatus(BaseModel):
     available: bool
@@ -71,4 +73,4 @@ class AIAnswer(BaseModel):
     provider: str
     model: str | None = None
     grounded: bool = True
-    disclaimer: str = "Information only, not financial advice."
+    disclaimer: str = DISCLAIMER

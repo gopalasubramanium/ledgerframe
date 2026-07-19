@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.grounding import answer_stream
 from app.api.deps import get_db
+from app.core.disclaimer import DISCLAIMER
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def ai_facts(q: str = Query(min_length=1, max_length=500),
         "intent": classify_intent(q).value,
         "facts": [f.model_dump(mode="json") for f in facts],
         "count": len(facts),
-        "disclaimer": "Information only, not financial advice.",
+        "disclaimer": DISCLAIMER,
     }
 
 

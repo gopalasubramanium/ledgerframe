@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 
+from app.core.disclaimer import DISCLAIMER
 from app.schemas.ai import GroundingFact
 
 
@@ -60,13 +61,13 @@ HARD RULES:
 - If a figure is marked STALE, note it may be out of date.
 
 Output ONLY the final answer — no reasoning or <think> tags.
-End with exactly: Information only, not financial advice.
+End with exactly: """ + DISCLAIMER + """
 """
 
 REFUSAL_NO_FACTS = (
     "I don't have the data needed to answer that right now. "
     "Try refreshing market data or check that the relevant holdings exist. "
-    "Information only, not financial advice."
+    + DISCLAIMER
 )
 
 

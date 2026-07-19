@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.core.disclaimer import DISCLAIMER
 from app.models import Setting
 from app.services.portfolio import top_movers, value_portfolio
 
@@ -97,7 +98,7 @@ async def _deterministic_briefing(session: AsyncSession) -> tuple[str, list[str]
         parts.append(dq_line)
     if val.has_stale:
         parts.append("Some prices may be out of date.")
-    parts.append("Information only, not financial advice.")
+    parts.append(DISCLAIMER)
     return " ".join(parts), facts
 
 
@@ -154,7 +155,7 @@ async def generate_briefing(session: AsyncSession) -> str:
                     "plain prose, no markdown. Structure it: (1) how the broader/global markets moved today "
                     "(name a couple of indices and direction), (2) how that ties to your portfolio's move today "
                     "and its standout gainers/detractors, (3) one relevant headline if any. Use ONLY the FACTS; "
-                    "quote their numbers; no reasoning or <think> tags. End with: Information only, not financial advice.")),
+                    "quote their numbers; no reasoning or <think> tags. End with exactly: " + DISCLAIMER)),
             ]
             text = ""
             async for chunk in provider.chat(AIRequest(messages=messages, max_tokens=2500)):
@@ -171,8 +172,8 @@ async def generate_briefing(session: AsyncSession) -> str:
 
             ok, _reason = validate_grounded_answer(text, facts) if len(text) >= 25 else (False, "too short")
             if ok:
-                if "not financial advice" not in text.lower():
-                    text += "\n\nInformation only, not financial advice."
+                if DISCLAIMER.lower() not in text.lower():
+                    text += "\n\n" + DISCLAIMER
                 return text
     except Exception:  # noqa: BLE001 — narration is best-effort
         pass

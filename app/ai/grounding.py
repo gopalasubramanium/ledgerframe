@@ -20,6 +20,7 @@ from app.ai.prompts import REFUSAL_NO_FACTS, strip_reasoning
 from app.ai.safety import validate_grounded_answer
 from app.ai.tools import gather_facts
 from app.core.config import get_settings
+from app.core.disclaimer import DISCLAIMER
 from app.providers.ai import get_ai_provider
 from app.schemas.ai import AIRequest, GroundingFact
 
@@ -50,7 +51,7 @@ def _template_answer(question: str, facts: list[GroundingFact]) -> str:
         suffix = " (may be out of date)" if f.is_stale else ""
         lines.append(f"• {f.label}: {f.value}{suffix}")
     lines.append("")
-    lines.append("Information only, not financial advice.")
+    lines.append(DISCLAIMER)
     return "\n".join(lines)
 
 
@@ -71,13 +72,13 @@ async def answer_stream(
         text = _template_answer(question, facts)
         yield {"type": "delta", "delta": text}
         yield {"type": "done", "grounded": True, "provider": "fallback",
-               "disclaimer": "Information only, not financial advice."}
+               "disclaimer": DISCLAIMER}
         return
 
     if not facts:
         yield {"type": "delta", "delta": REFUSAL_NO_FACTS}
         yield {"type": "done", "grounded": True, "provider": provider.name,
-               "disclaimer": "Information only, not financial advice."}
+               "disclaimer": DISCLAIMER}
         return
 
     intent = classify_intent(question)
@@ -108,7 +109,7 @@ async def answer_stream(
                             "Showing the underlying data instead._\n\n"}
         yield {"type": "delta", "delta": _template_answer(question, facts)}
         yield {"type": "done", "grounded": True, "provider": "fallback",
-               "error": error, "disclaimer": "Information only, not financial advice."}
+               "error": error, "disclaimer": DISCLAIMER}
         return
 
     ok, reason = validate_grounded_answer(answer, facts, question)
@@ -116,7 +117,7 @@ async def answer_stream(
         # Unsafe/ungrounded — the model text is discarded, never shown.
         yield {"type": "delta", "delta": _template_answer(question, facts)}
         yield {"type": "done", "grounded": True, "provider": "fallback", "validation": reason,
-               "disclaimer": "Information only, not financial advice."}
+               "disclaimer": DISCLAIMER}
         return
 
     # Validated → now safe to emit, chunked by sentence for a mild streaming feel.
@@ -125,4 +126,4 @@ async def answer_stream(
     yield {"type": "done", "grounded": True, "provider": provider.name,
            "intent": intent.value,
            "model": health.models[0] if health.models else None,
-           "disclaimer": "Information only, not financial advice."}
+           "disclaimer": DISCLAIMER}
