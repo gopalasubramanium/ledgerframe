@@ -250,8 +250,13 @@ export function PricingHealth() {
           </button>
         }
       />
+      {/* "(Guarantee 5)" -> "(Commitment 5)" — the §11-1 rename applied to this page as its own
+          dated regularization (page-pricing-health, 2026-07-20). It was the ONE user-facing
+          instance of the retired term outside Legal, and it sat on an ACCEPTED page, so it took a
+          delta of its own with a plan note and a pre-pass re-run rather than being swept into the
+          rename commit. */}
       {noEgress && (
-        <p className="ph__egress" role="status">Refresh unavailable — no-egress is on; prices degrade to honest stale (Guarantee 5).</p>
+        <p className="ph__egress" role="status">Refresh unavailable — no-egress is on; prices degrade to honest stale (Commitment 5).</p>
       )}
       {/* §14dr-17 — the button's scope is stated honestly so the masters exclusion is visible. */}
       <p className="ph__refreshscope" role="note">

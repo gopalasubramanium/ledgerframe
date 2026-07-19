@@ -539,3 +539,50 @@ non-reproduction reported plainly, not dressed up) was owner-accepted as the rig
   the served note; a keyed pill is neither) — both RED before.
 - **ACCEPTED-page rule honoured:** scripted pre-pass re-run on touch — see the run recorded
   in this note's batch (isolated stack, owner's 5173/8321/`~/.ledgerframe-data` untouched).
+
+---
+
+## DELTA NOTE — 2026-07-20 (R-LEGAL §11-1 rename, regularization)
+
+**One served string changed. Nothing else on this page moved.**
+
+`PricingHealth.tsx` served, in the no-egress banner:
+
+> Refresh unavailable — no-egress is on; prices degrade to honest stale **(Guarantee 5)**.
+
+The owner's §11-1 ruling retired *"Product Guarantees"* / *"Guarantee n"* in favour of **Product
+Commitments** / **Commitment n** — *"guarantee" is warranty-family vocabulary and the licence's
+position is NO WARRANTY (AGPL section 15)*. **The claims are unchanged; this is a rename.** The
+banner now reads **(Commitment 5)**.
+
+**WHY THIS TOOK ITS OWN DELTA INSTEAD OF RIDING THE RENAME COMMIT.** The rename's grep found
+exactly **one** user-facing instance of the retired term outside Legal, and it was this one — on a
+page **already accepted**. The standing CLAUDE.md rule is that a change to an accepted surface
+ships **with a dated delta note in that page's plan file and that page's pre-pass re-run, in the
+same delta**; flagging it in a close report is explicitly not sufficient. So it was carried out of
+`fc506c5` deliberately and landed here. (The ~25 `Guarantee 3/5` **code comments** across the
+frontend are internal decision-lineage, not UI copy, and stay — §11-B.)
+
+**PRE-PASS RE-RUN — isolated stack, 2026-07-20.** Backend `:8399` on a temp data dir with demo
+seed; Vite dev `:5199` proxying to it. **The owner's `:8321` / `:5173` / `~/.ledgerframe-data` were
+not touched**, and `.env` was snapshotted before and restored after.
+
+| Check | Result |
+|---|---|
+| Page renders, `h1` = "Pricing Health" | ✅ |
+| The changed banner rendered (no-egress ON) | ✅ *"…degrade to honest stale **(Commitment 5)**."* |
+| `"Guarantee"` anywhere in the rendered page | ✅ **absent** |
+| Console errors (light + dark, 1440×900) | ✅ **0** |
+| Portfolio confidence · per-holding diagnostics · staleness line | ✅ unchanged |
+
+⚠ **The gate was pre-accepted over the API for this run.** The acceptance gate (§11-5) is
+server-side and live, and the *frontend* gate had not shipped at this point — so an un-accepted
+isolated instance answers **451** to every data read and the page would have rendered empty. This
+is stated because a pre-pass whose setup silently differs from a user's first run is not the same
+walk the user gets.
+
+**A REAL DEFECT THE PRE-PASS CAUGHT, recorded because it is the argument for driving the browser.**
+The first attempt rendered **no `h1` at all** and logged a 500. The cause was in this very delta:
+the explanatory JSX comment had been placed **inside** `{noEgress && ( … )}`, and a parenthesised
+JSX expression admits exactly one child — so the file did not parse and the whole route was dead.
+A diff review reads that comment as obviously inert. **It broke the page.**
