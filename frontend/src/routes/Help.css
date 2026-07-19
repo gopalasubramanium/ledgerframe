@@ -1,50 +1,262 @@
-/* Help — System group, Settings template. page-help §9-3 / §9-13.
-   Composition of ratified primitives only; no new component (§9-13 ruling). */
+/* Help — System group. page-help §9-3 / §9-13, REBUILT to §9-bis after the 0a rejection.
+   Composition of ratified primitives plus THREE PROPOSED DS patterns, listed for owner
+   ratification by looking at 0a: the content Accordion (§9-bis-8), the topic CardGrid, and the
+   type-ahead results list. Semantic colour only; no new palette. */
 
 .help__search {
   display: flex;
   gap: var(--space-2);
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
-/* The search field is the page's one input; let it take the room and wrap the buttons under it
+/* The search field is the page's one input; let it take the room and wrap the button under it
    at narrow widths rather than shrinking to unusability. */
 .help__search > :first-child {
   flex: 1 1 22rem;
   min-width: 0;
 }
 
-.help__filter {
-  margin-bottom: var(--space-3);
+.help__section + .help__section {
+  margin-top: var(--space-4);
+}
+.lf-card__lead {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  max-width: 78ch;
 }
 
-.help__entry + .help__entry {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: var(--border-width) solid var(--border);
+/* --- PROPOSED DS PATTERN: topic CardGrid -----------------------------------------------------
+   The §9-bis-0 ruling in one rule. The landing is a CATALOGUE the user SCANS, so the collapsed
+   titles lay out ACROSS the full width instead of down a narrow column — 19 pages read as a
+   register, not as a list you scroll. `auto-fit` + `minmax` is the same shape the six existing
+   page-local card grids already use; naming it here is the step toward one shared class.
+   Containment: `minmax(0, …)` so a long title cannot push the track wider than the shell. */
+.help__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: var(--space-2);
+  align-items: start;
+}
+/* An OPEN entry takes the full row: its body is prose to be read, and reading it in one narrow
+   grid cell beside two collapsed neighbours is the capped-column mistake in miniature. */
+.help__grid > .help__entry.is-open {
+  grid-column: 1 / -1;
+}
+
+/* Orientation and search results stack — they are narrative and ranked respectively, and both
+   have an ORDER that a grid would scramble across columns. */
+.help__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* --- PROPOSED DS PATTERN: content Accordion (§9-bis-8) ---------------------------------------
+   Ruled distinct from the tokens.css nav-collapse DECLINED: that record is scoped to sidebar
+   NAVIGATION and its concern is hiding DESTINATIONS. Here the title stays visible when collapsed
+   and nothing navigable is hidden — this is content disclosure. */
+.help__entry {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  min-width: 0;
+}
+.help__entry.is-open {
+  border-color: var(--border-strong, var(--border));
+}
+
+.help__entryhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.help__entrytoggle {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+.help__entrytoggle:hover {
+  background: var(--surface-hover, transparent);
+}
+.help__entrytoggle:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: calc(var(--focus-offset) * -1);
 }
 
 .help__entrytitle {
   font-size: var(--text-md);
   font-weight: 600;
-  margin: 0 0 var(--space-1);
-  color: var(--text);
+  overflow-wrap: anywhere;
 }
 
-/* DESIGN-SYSTEM §3.1 sanctions capping an inner content MEASURE (a reading column inside a card).
-   This is that — component-local, never a page-root max-width. Prose set the full width of a
-   1728px card is unreadable; ~78ch is the reading measure. */
-.help__body,
-.help__triad dd {
+/* The disclosure marker. A CSS triangle rather than an icon import: it is the one glyph whose
+   whole job is to rotate, and lucide's chevron would need a wrapper to do it. */
+.help__chevron {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 0.375rem solid currentColor;
+  border-top: 0.3125rem solid transparent;
+  border-bottom: 0.3125rem solid transparent;
+  color: var(--text-muted);
+  transition: transform 120ms ease;
+}
+.help__entry.is-open .help__chevron {
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .help__chevron { transition: none; }
+}
+
+/* Basics / Core / Advanced. A quiet caption, not a status: it orders the reading, it does not
+   grade the reader. Semantic muted text only — no colour is assigned to a level. */
+.help__level {
+  flex: none;
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- §9-bis-7 option (b): "Link to this topic", quiet until wanted -----------------------------
+   Revealed on hover or focus WITHIN the entry, never `display:none` — a keyboard user must not be
+   shown a shorter page than a mouse user. Opacity + a reserved slot, so nothing reflows when it
+   appears. */
+.help__topiclink {
+  flex: none;
+  margin-right: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  background: none;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+.help__entry:hover .help__topiclink,
+.help__topiclink:focus-visible {
+  max-width: 12rem;
+  opacity: 1;
+}
+.help__topiclink:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+  .help__topiclink { transition: none; }
+}
+/* Coarse pointers have no hover: there is nothing to reveal, so show it outright rather than
+   leaving a control that can never appear. */
+@media (hover: none) {
+  .help__topiclink { max-width: 12rem; opacity: 1; }
+}
+
+.help__panel {
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+  margin-top: var(--space-2);
+}
+.help__panel[hidden] { display: none; }
+
+/* §9-bis-0 — THE MEASURE MOVED HERE. It was a page-level column and was rejected for it; inside an
+   expanded body the user genuinely IS reading prose, and DESIGN-SYSTEM §3.1 sanctions capping an
+   inner content measure. The page root stays uncapped, as the 1728px shell-inset guard requires. */
+.help__measure {
   max-width: 78ch;
+  padding-top: var(--space-3);
+}
+
+.help__body,
+.help__triad dd,
+.help__list {
   color: var(--text-muted);
   line-height: 1.6;
   margin: 0;
 }
 
+.help__block {
+  margin-top: var(--space-3);
+}
+.help__blocktitle {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.help__list {
+  padding-left: var(--space-4);
+}
+.help__list li + li {
+  margin-top: var(--space-1);
+}
+
+/* Pointers OUT of Orientation into a Section-2 entry (§9-bis-1). They carry a topic id, never a
+   figure — there is nowhere in a link to put a number. */
+.help__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+}
+.help__jump {
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.help__jump:hover { border-color: var(--accent); }
+.help__jump:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* §9-bis-3 — the sample marker. It is ALREADY in the served string ("Sample — …"); this chip
+   repeats it visually so a reader skimming the block cannot miss that the figures are invented.
+   Deliberately NOT a status colour: an illustrative example is not a warning. */
+.help__example {
+  border-left: var(--nav-rail-width) solid var(--border);
+  padding-left: var(--space-3);
+}
+.help__samplechip {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-2);
+}
+
 .help__triad {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-3) 0 0;
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: var(--space-1) var(--space-3);
@@ -68,8 +280,11 @@
   }
 }
 
-.help__link {
-  margin: var(--space-2) 0 0;
+/* --- PROPOSED DS PATTERN: type-ahead results list --------------------------------------------- */
+.help__resultcount {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 /* A deep-linked topic is marked so the reader can SEE which entry the link meant — landing
@@ -78,6 +293,4 @@
   /* Same weight as the sidebar's active rail — a "this is the one you asked for" marker
      reads at the same strength wherever the app uses it. */
   border-left: var(--nav-rail-width) solid var(--accent);
-  padding-left: var(--space-3);
-  margin-left: calc(var(--space-3) * -1);
 }

@@ -704,7 +704,76 @@ function SystemPanel() {
           <ResetDataControl pinSet={pinSet} onDone={reload} />
         </div>
       </section>
+
+      <AboutCard />
     </div>
+  );
+}
+
+// About — MOVED HERE FROM HELP (page-help §9-bis-6, owner ruling 2026-07-19). It was a third tab on
+// Help; Help is now a three-section journey (Orientation · Pages · Glossary) and About is none of
+// those. It is a card in the EXISTING System tab, explicitly NOT a seventh Settings tab.
+//
+// What belongs here is what About actually is: who made this, where it lives, and under what
+// licence. What does NOT come with it is the product guarantee ("what LedgerFrame will never do") —
+// that is orientation of the first order and stays in Help, Section 1.
+//
+// CREDITS RECONCILED WITH THE LICENCE RECORD, as §9-bis-6 requires. docs/audit/LICENSES.md is a
+// GENERATED dependency audit ("Regenerate, never hand-edit"), not a credits file — so this card
+// does not restate it. Restating it would be a second home for a list that is regenerated on a
+// schedule, and it would be stale the first time a dependency moved. The card names the licence
+// this product ships under (AGPL-3.0-or-later, the same SPDX header every source file carries) and
+// credits the open-source stack in the general, which is the claim that stays true.
+//
+// PROPOSED COPY — every string here is ratified by the owner at the 0a look, like all user-facing
+// copy. The six links are the owner's, given verbatim at §9-bis-6.
+function AboutCard() {
+  const links: { label: string; href: string; note: string }[] = [
+    { label: "ledgerframe.org", href: "https://ledgerframe.org", note: "Project home" },
+    {
+      label: "github.com/gopalasubramanium/ledgerframe",
+      href: "https://github.com/gopalasubramanium/ledgerframe",
+      note: "Source code",
+    },
+    { label: "me.sgopala.com", href: "https://me.sgopala.com/", note: "Author" },
+    {
+      label: "github.com/gopalasubramanium",
+      href: "https://github.com/gopalasubramanium",
+      note: "Author on GitHub",
+    },
+    {
+      label: "linkedin.com/in/gopalasubramanium",
+      href: "https://www.linkedin.com/in/gopalasubramanium/",
+      note: "Author on LinkedIn",
+    },
+    { label: "paypal.me/sgopala", href: "https://paypal.me/sgopala", note: "Support the project" },
+  ];
+  return (
+    <section className="lf-card set__section" data-card="about">
+      <header className="set__cardhead"><h2 className="lf-card__title">About</h2></header>
+      <div className="lf-card__body set__stack">
+        <p className="set__fieldhelp">
+          LedgerFrame is a single-user, local-first wealth-reporting appliance. It consolidates what
+          you own and owe into one private picture, on your own machine. It reports; it does not act
+          — it never places trades, never advises, and never fabricates a number.
+        </p>
+        <p className="set__fieldhelp">
+          Built by Gopala Subramanium. Released under the AGPL-3.0-or-later licence, and built on
+          open-source software — the full dependency and licence record ships with the source.
+        </p>
+        <ul className="set__aboutlinks">
+          {links.map((l) => (
+            <li key={l.href}>
+              {/* External, so `rel` is not optional: `noopener` denies the opened page a handle
+                  back to this one. Nothing here is fetched — these are links, and a local-first
+                  appliance under no-egress stays local until the user chooses to leave. */}
+              <a href={l.href} target="_blank" rel="noreferrer noopener">{l.label}</a>
+              <span className="set__aboutnote">{l.note}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 
