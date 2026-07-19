@@ -83,7 +83,7 @@ and order are fixed and match §3.
 | **Pricing Health** | `/pricing-health` | Reports | Canonical home for provenance, confidence, and routing diagnostics. |
 | **Settings** | `/settings` | System | Configuration across ~~4~~ ~~5~~ ~~6~~ **7** tabs *(General · Appearance · Privacy · **Data feeds** · **AI** · System · **About** — D-069 amended 2026-07-18 §14st-1 Data feeds + §14st-2 AI; **amendment #3 2026-07-19** — About, page-help §9-bis-11(c))*, incl. Privacy and API-token cards. **Also the canonical home of About** (platform description · author · credits · links) — ~~a card inside System, no 7th tab~~ **a DEDICATED 7th tab** *(2026-07-19, page-help §9-bis-11(c) REVERSES §9-bis-6's card ruling)*. |
 | **Help** | `/help` | System | **Three-section help: Orientation · Pages (per-page usage detail) · Glossary; type-ahead search over help content.** *(Rewritten 2026-07-19, page-help §9-bis-1 — supersedes "pages + terms + guarantees".)* **About lives in Settings → System** (§9-bis-6). Help carries **pointers, never figures** — it is never a second home for any number. |
-| **Legal** | `/legal` | System | License, disclaimer, Product Guarantees, no-jurisdiction-tax stance. |
+| **Legal** | `/legal` | System | Licence, disclaimer, Product Commitments, no-jurisdiction-tax stance. |
 
 **Not in the sidebar (reachable by link only):**
 
@@ -412,7 +412,7 @@ summary reuses the canonical page's reader, never a second code path.
 ### Legal (`/legal`) — D-077, D-106; page-legal §9 (owner, 2026-07-19)
 
 - **Owns:** the **product-level position** — no advice / no execution / reporting
-  only, stated **once, canonically, here**; the **seven Product Guarantees**,
+  only, stated **once, canonically, here**; the **seven Product Commitments**,
   rendered **verbatim** from their ratified source (`PRODUCT-SPEC.md` §3); the
   **no-jurisdiction-tax stance** (D-077) as a stated position; the **licence
   position** for LedgerFrame itself (AGPL-3.0-or-later).

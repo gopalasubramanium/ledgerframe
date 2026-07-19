@@ -210,12 +210,12 @@ async def test_the_reporting_only_fallback_caption_is_unchanged(app_client):
     assert _REPORTING_CAPTION in (await app_client.get("/reports/pack")).text
 
 
-async def test_the_seven_guarantees_stay_OFF_the_print_artifact(app_client):
-    """§9-4 ruled the Guarantees do NOT go into the Pack — a page, not a report footer, and they
+async def test_the_seven_commitments_stay_OFF_the_print_artifact(app_client):
+    """§9-4 ruled the Commitments do NOT go into the Pack — a page, not a report footer, and they
     would bloat every print artifact. Guarded so a future "make the Pack more complete" change has
     to argue with the ruling instead of quietly reversing it."""
-    from app.services.legal import GUARANTEES
+    from app.services.legal import COMMITMENTS
 
     html = (await app_client.get("/reports/pack")).text
-    for g in GUARANTEES:
+    for g in COMMITMENTS:
         assert g not in html, f"a Product Guarantee reached the print artifact: {g[:48]!r}…"

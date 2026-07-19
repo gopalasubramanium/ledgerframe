@@ -31,7 +31,7 @@ it ships under, so this page names them and stops; (c) calls itself "secure", "c
 "audited" in the abstract; (d) implies review by counsel.
 
 ⚠ EVERY PROSE STRING BELOW IS **PROPOSED**, not ratified. §9-8 bars this CLI from drafting legal
-text; what is here is composed from **already-ratified primitives** (the Guarantees, the Help
+text; what is here is composed from **already-ratified primitives** (the Commitments, the Help
 orientation entries, the per-reader disclaimers, D-060's "for your accountant"). The owner
 ratifies each string by looking, at the 0a.
 """
@@ -41,10 +41,14 @@ from __future__ import annotations
 from app.services.help_markup import MARKUP_DIALECT
 
 # ---------------------------------------------------------------------------------------------
-# THE SEVEN PRODUCT GUARANTEES — VERBATIM.
+# THE SEVEN PRODUCT COMMITMENTS — VERBATIM.
+#
+# RENAMED 2026-07-20 (owner, page-legal §11-1) from "Product Guarantees": "guarantee" is
+# warranty-family vocabulary, and the licence section below states NO WARRANTY. These seven are
+# self-enforced behavioural commitments, each one tested. The CLAIMS ARE UNCHANGED.
 #
 # Ratified source: `docs/specs/PRODUCT-SPEC.md` §3 (lines 62-77), itself verbatim from DECISIONS.md,
-# and already destined for this page by name: *"Destined verbatim for the glossary guarantee block,
+# and already destined for this page by name: *"Destined verbatim for the commitments block,
 # THE LEGAL PAGE, and README"* (PRODUCT-SPEC.md:60).
 #
 # VERBATIM IS ENFORCED, NOT INTENDED: `tests/unit/test_legal_content.py` parses the spec and asserts
@@ -58,15 +62,15 @@ from app.services.help_markup import MARKUP_DIALECT
 #
 # ⚠ TWO ARTEFACTS OF VERBATIM-NESS, FLAGGED FOR THE OWNER AT THE 0a rather than silently edited
 # (editing them here would be this CLI overriding a ruling):
-#   1. Guarantee 7 ends "the contract (below, §8) may not be loosened" — "below, §8" is a
+#   1. Commitment 7 ends "the contract (below, §8) may not be loosened" — "below, §8" is a
 #      PRODUCT-SPEC-internal cross-reference that points at nothing on the Legal page.
-#   2. Guarantee 4 contains `long_term_days` in backticks. The served markup subset has no
+#   2. Commitment 4 contains `long_term_days` in backticks. The served markup subset has no
 #      code-span construct, so the backticks render LITERALLY.
 # Both are consequences of the verbatim ruling meeting a new surface. The owner decides at the 0a
 # whether to amend PRODUCT-SPEC.md (which the guard would then carry here automatically) or to
 # accept them as they read.
 # ---------------------------------------------------------------------------------------------
-GUARANTEES: tuple[str, ...] = (
+COMMITMENTS: tuple[str, ...] = (
     "**No trades.** LedgerFrame never places or executes trades. No order endpoints exist "
     "(Kite is market-data read-only).",
     "**No advice.** Never gives buy/sell/hold, tax, or financial advice. Every AI answer ends "
@@ -88,7 +92,7 @@ GUARANTEES: tuple[str, ...] = (
 #
 # Composed from ratified primitives, not authored fresh:
 #   * "It reports; it does not act."      — help.py `orientation-what`, a ratified voice specimen
-#   * the three no-* clauses              — Guarantees 1, 2, 3
+#   * the three no-* clauses              — Commitments 1, 2, 3
 #   * "a dash and a reason"               — help.py `orientation-how`
 #   * "reporting only" / "organisation"   — accounts.py:103 / tax.py:424, the scoped caveats' own
 #                                            wording, generalised to the product level
@@ -169,7 +173,7 @@ _POINTERS: tuple[tuple[str, str], ...] = (
 # renderers; `test_reports_pack_footer.py` asserts byte-for-byte equality with what Legal serves
 # (AC-L8), so the two can never drift.
 #
-# The seven Guarantees deliberately DO NOT go into the Pack: they are a page, not a report footer,
+# The seven Commitments deliberately DO NOT go into the Pack: they are a page, not a report footer,
 # and would bloat every print artifact. The Pack's per-reader disclaimers and its reporting-only
 # fallback caption are UNCHANGED by this — the footer is an addition, never a replacement.
 # ---------------------------------------------------------------------------------------------
@@ -186,8 +190,8 @@ _SECTIONS: tuple[dict, ...] = (
     {"id": "jurisdiction", "title": "No jurisdiction tax logic", "body": _JURISDICTION},
 )
 
-GUARANTEES_TITLE = "Product Guarantees"
-GUARANTEES_INTRO = (
+COMMITMENTS_TITLE = "Product Commitments"
+COMMITMENTS_INTRO = (
     "These seven are what the product will never do. They are not aspirations and not a policy "
     "that could be revised for convenience — each one is a decision on the record, and the "
     "wording below is reproduced **verbatim** from the specification that fixes it."
@@ -205,10 +209,10 @@ def all_legal() -> dict:
     return {
         "markup": MARKUP_DIALECT,
         "sections": [dict(s) for s in _SECTIONS],
-        "guarantees": {
-            "title": GUARANTEES_TITLE,
-            "intro": GUARANTEES_INTRO,
-            "items": list(GUARANTEES),
+        "commitments": {
+            "title": COMMITMENTS_TITLE,
+            "intro": COMMITMENTS_INTRO,
+            "items": list(COMMITMENTS),
         },
         "pointers": [{"file": f, "what": w} for f, w in _POINTERS],
         "pack_footer": PACK_FOOTER,

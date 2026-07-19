@@ -594,7 +594,7 @@ def _parse_ver(tag: str) -> tuple:
 async def _no_egress_enabled(session: AsyncSession) -> bool:
     """True when the no-egress toggle (``privacy_mode``) is on. Under no-egress the
     device must make ZERO outbound network calls — version check included
-    (SECURITY-BASELINE §7, Product Guarantee 5, D-075/D-060)."""
+    (SECURITY-BASELINE §7, Product Commitment 5, D-075/D-060)."""
     from app.models import Setting
 
     row = (
@@ -850,8 +850,8 @@ class LegalSection(BaseModel):
     body: str
 
 
-class LegalGuarantees(BaseModel):
-    """The seven Product Guarantees, reproduced VERBATIM.
+class LegalCommitments(BaseModel):
+    """The seven Product Commitments, reproduced VERBATIM.
 
     `items` are byte-equal to `docs/specs/PRODUCT-SPEC.md` §3 (whitespace-normalised), asserted by
     `tests/unit/test_legal_content.py` (AC-L3) — string equality, never by eye. The page renders
@@ -886,14 +886,14 @@ class LegalResponse(BaseModel):
     """
     markup: str
     sections: list[LegalSection]
-    guarantees: LegalGuarantees
+    commitments: LegalCommitments
     pointers: list[LegalPointer]
     pack_footer: str
 
 
 @router.get("/legal", response_model=LegalResponse)
 async def legal_content() -> dict:
-    """The Legal page's copy — the product-level position, the Guarantees, the licence, the
+    """The Legal page's copy — the product-level position, the Commitments, the licence, the
     no-jurisdiction-tax stance. Read-only, no secrets, no database, never personalised."""
     from app.services.legal import all_legal
 

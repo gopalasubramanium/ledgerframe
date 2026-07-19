@@ -14,7 +14,7 @@ import { Legal } from "./Legal";
 // page's truth in a test that only knows what the fixture told it.
 //
 // So what is asserted here is what only the page can be wrong about: that it renders every served
-// section, renders the Guarantees VERBATIM and in order, distinguishes loading from failure, and
+// section, renders the Commitments VERBATIM and in order, distinguishes loading from failure, and
 // never turns a file pointer into a link.
 
 const PAGE = {
@@ -33,8 +33,8 @@ const PAGE = {
       body: "LedgerFrame contains **no tax logic for any country**.",
     },
   ],
-  guarantees: {
-    title: "Product Guarantees",
+  commitments: {
+    title: "Product Commitments",
     intro: "These seven are what the product will never do.",
     items: [
       "**No trades.** LedgerFrame never places or executes trades.",
@@ -99,15 +99,15 @@ test("renders every SERVED section, in the served order — the page picks nothi
     "The limits on each figure",
     "Licence",
     "No jurisdiction tax logic",
-    "Product Guarantees",
+    "Product Commitments",
     "Where to find the full record",
   ]);
 });
 
-test("AC-L3 — the Guarantees render VERBATIM, all seven, in the served order", async () => {
+test("AC-L3 — the Commitments render VERBATIM, all seven, in the served order", async () => {
   renderAt();
-  await screen.findByRole("heading", { name: "Product Guarantees" });
-  const items = Array.from(document.querySelectorAll(".legal__guarantee"));
+  await screen.findByRole("heading", { name: "Product Commitments" });
+  const items = Array.from(document.querySelectorAll(".legal__commitment"));
   expect(items).toHaveLength(7);
   // Markup markers are RENDERED (bold), not shown, so the text compare strips them the same way
   // the server-side guard does. What is asserted is that the page neither reorders, renumbers,
@@ -115,15 +115,15 @@ test("AC-L3 — the Guarantees render VERBATIM, all seven, in the served order",
   const texts = items.map((li) => li.textContent);
   expect(texts[0]).toContain("No trades.");
   expect(texts[6]).toContain("The validation contract never weakens");
-  PAGE.guarantees.items.forEach((g, i) => {
+  PAGE.commitments.items.forEach((g, i) => {
     expect(texts[i]).toBe(g.replace(/\*\*/g, ""));
   });
 });
 
-test("the Guarantees are an ORDERED list — the numbering is part of what they are", async () => {
+test("the Commitments are an ORDERED list — the numbering is part of what they are", async () => {
   renderAt();
-  await screen.findByRole("heading", { name: "Product Guarantees" });
-  expect(document.querySelector("ol.legal__guarantees")).not.toBeNull();
+  await screen.findByRole("heading", { name: "Product Commitments" });
+  expect(document.querySelector("ol.legal__commitments")).not.toBeNull();
 });
 
 test("§9-5 — a file pointer is a NAME, never a link (a local-first page must work offline)", async () => {
@@ -141,7 +141,7 @@ test("the LOAD-FAILURE state names the failure, offers retry, and does NOT reass
   // The one thing still true with the server unreachable: the licence ships in the source tree.
   expect(screen.getByText(/ships with the source, in the LICENSE file/)).toBeTruthy();
   // A Legal page that cannot load its terms must never imply the terms are fine.
-  expect(screen.queryByRole("heading", { name: "Product Guarantees" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Product Commitments" })).toBeNull();
   expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
 });
 
@@ -150,7 +150,7 @@ test("Retry re-reads, and a page that failed once can still come good", async ()
   mockFetch(() => (attempt++ === 0 ? { status: 500, body: {} } : { body: PAGE }));
   renderAt();
   await userEvent.click(await screen.findByRole("button", { name: "Retry" }));
-  expect(await screen.findByRole("heading", { name: "Product Guarantees" })).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: "Product Commitments" })).toBeTruthy();
   expect(screen.queryByText("Legal is unavailable")).toBeNull();
 });
 

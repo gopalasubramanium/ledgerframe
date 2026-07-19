@@ -1,7 +1,7 @@
 # SECURITY-BASELINE.md — LedgerFrame v2
 
 **Normative.** The security posture, threat model, and privacy guarantees for v2
-core. Protected items (the AI validation contract, the Product Guarantees) may
+core. Protected items (the AI validation contract, the Product Commitments) may
 not be weakened. Terms match GLOSSARY.md.
 
 ---
@@ -272,7 +272,7 @@ rebuild must preserve, not regress, these:
 `docs/audit/05-PROVIDERS-AND-ROUTING.md`, and `docs/audit/DECISIONS.md`
 Batches 1 and 10. Decision IDs applied: D-001, D-002, D-003, D-004, D-016, D-050,
 D-060, D-066, D-068, D-069, D-070, D-071, D-074, D-075, plus P-1, P-5, P-6, P-8
-and Product Guarantees 5–7. Gap severities and current-measure detail are from
+and Product Commitments 5–7. Gap severities and current-measure detail are from
 the audits; dispositions are from D-004. §4 sudo allow-list extracted verbatim
 from the legacy v1 source `app/api/v1/routes/system.py:24-36` (read-only) in the
 DEF backfill.

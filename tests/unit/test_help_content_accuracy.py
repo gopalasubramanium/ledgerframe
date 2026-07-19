@@ -196,6 +196,20 @@ def test_page_names_in_PROSE_use_the_canonical_casing(entry: dict):
 # module until someone decides how (or whether) it can be checked. That is the point: the coverage
 # claim is mechanical even though each pattern is a judgment.
 _DEPRECATED_CHECKS: dict[str, str | None] = {
+    # page-legal §11-1 (owner, 2026-07-20). The pattern catches the TERM in its three shipped
+    # shapes — "Product Guarantee(s)", the bare plural "the Guarantees", and the numbered citation
+    # "Guarantee 5" — and never the ordinary English SINGULAR, which the glossary row explicitly
+    # preserves. Help serves *"indicative, not a guarantee of sale price or timing"* on two
+    # Liquidity entries: a plain-English caveat, and a guard that swept it would force a false
+    # rename onto honest copy.
+    #
+    # FAIL-FIRST, MEASURED (not asserted): run against the PRE-rename catalogue at `f7e70c0` this
+    # pattern bites 4 lines — the Legal entry's body, keywords, outputs and interpret — and bites
+    # 0 of the two Liquidity strings. An earlier, narrower draft of this pattern caught only 2 of
+    # the 4 and is recorded here because the miss is the instructive part: it had no plural arm,
+    # so *"The Guarantees are reproduced word for word"* sailed through green.
+    "**Product Guarantees** / **Guarantee *n***":
+        r"\bproduct guarantees?\b|\bguarantees\b|\bguarantee\s+\d\b",
     "Detail level: Simple/**Expert**": r"\bsimple\s*/\s*expert\b|\bexpert\s+(?:mode|view)\b",
     "Home layout: Simple / **Full**": r"\bsimple\s*/\s*full\b|\bhome layout\b",
     "Total value": r"\btotal value\b",
@@ -223,6 +237,14 @@ _DEPRECATED_CHECKS: dict[str, str | None] = {
 # The deprecated table carves out its own exceptions, and this guard must honour them rather than
 # override them. Each is by (entry id, row) with the reason — never a blanket relaxation.
 _DEPRECATED_EXEMPT: dict[tuple[str, str], str] = {
+    ("page-legal", "**Product Guarantees** / **Guarantee *n***"):
+        "KEYWORDS ONLY, and keywords are a SEARCH INDEX rather than displayed copy — no user "
+        "reads this field, they only match against it. A rename that deletes the old word from "
+        "the index strands every user who learned the product under the old name: they search "
+        "the only word they know and the catalogue tells them it has nothing. The entry's four "
+        "PROSE fields (body, outputs, interpret, title) carry the new term exclusively, and the "
+        "guard still holds them — verified by removing this exemption, which reds on keywords "
+        "alone and on nothing else.",
     ("term-unrealised-pl", "Paper gain"):
         'GLOSSARY.md permits this row explicitly: "colloquialism may be EXPLAINED, not shown". '
         "The entry explains it; it is never used as a label.",

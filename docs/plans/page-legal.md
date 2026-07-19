@@ -449,3 +449,50 @@ against them below; the fourth is carried forward unchanged.*
    having agreed to.
 
 **§11 OPEN. The build resumes at 11-B and STOPS AT THE RE-LOOK.**
+
+---
+
+### 11-B. THE RENAME — shipped (2026-07-20)
+
+**GLOSSARY-first, as ruled.** `GLOSSARY.md` leads: the block is retitled **Product Commitments**
+with the dated rename note and its *why*; a **Product Commitments** term row is added that
+**points at that block rather than copying it** (the one-canonical-home rule applied to the
+glossary's own page); the **Legal** row is redefined; and a **Deprecated terms** row retires
+*Product Guarantees* / *Guarantee n*. Then the served strings, then the corpora.
+
+**THE GREP — reported, as ordered.** `"Guarantee"` across the tree, triaged by whether a **user
+can read it**:
+
+| Where | Hits | Disposition |
+|---|---|---|
+| `app/services/legal.py` — served title, symbols, API key | 6 | **renamed** (`COMMITMENTS`, `COMMITMENTS_TITLE`, response key `commitments`) |
+| `app/services/help.py` — the Legal entry's body · outputs · interpret | 3 | **renamed** (served prose) |
+| `app/services/help.py` — the Legal entry's `keywords` | 1 | **old word KEPT, exempted by name** — keywords are a search index, not displayed copy; deleting it strands every user who knows only the old name |
+| `app/services/help.py` — Orientation entry `id: "guarantee"` | 1 | **KEPT.** It is a live deep-link target (`#/help?topic=guarantee`); renaming it breaks every existing link for no reader-visible gain |
+| `app/api/v1/routes/system.py` — response models | 4 | **renamed**; contract regenerated |
+| `frontend/` Legal surface — page, api types, CSS classes, tests | ~20 | **renamed** |
+| `docs/specs/` — PRODUCT-SPEC · IA · SECURITY-BASELINE · README headings/prose | 8 | **renamed** (living specs) |
+| **`frontend/src/routes/PricingHealth.tsx:254`** | **1** | ⚑ **THE ONE USER-FACING STRING OUTSIDE LEGAL** — *"prices degrade to honest stale (Guarantee 5)"*, rendered on an **accepted page**. Handled as its **own regularization delta** with a dated note in `page-pricing-health.md` **and that page's pre-pass re-run**, per the standing CLAUDE.md rule — **not** swept into this one |
+| `frontend/` + `app/` **code comments** citing "Guarantee 3/5" | ~25 | **DELIBERATELY UNTOUCHED.** They are internal decision-lineage citations, not UI copy; the deprecated table binds *"UI copy"*. Renaming them would touch a dozen accepted surfaces for zero reader-visible gain |
+| `DECISIONS.md`, `RATIFICATION.md`, closed plan files | many | **HISTORY. Untouched**, as ruled |
+
+**Two ordinary-English uses were protected, not swept.** Help's Liquidity entries serve
+*"indicative, **not a guarantee** of sale price or timing"*. That is the plain English word, not
+the retired term, and the deprecated row says so explicitly. The guard's pattern was **built to
+spare it and measured against it** — an earlier draft of that pattern caught only 2 of the 4 real
+hits, and the miss is recorded in the guard rather than quietly fixed.
+
+**Guards.** The `test_every_deprecated_row_is_triaged_here` guard did its job unprompted: adding
+the deprecated row **broke the suite** until the new term was given a pattern, which is the
+mechanical-coverage property that module was built for. Backend **FULL solo: 1681 passed / 1
+failed → fixed → green** (the failure was real — `test_reports_pack.py` imported the old symbol,
+caught by the suite rather than by reading). Frontend `npm run check` **exit 0**. Contract
+regenerated; **counts unchanged at 139 paths / 67 schemas** — a field rename is not a surface
+change.
+
+**A second live defect, found by the grep and fixed here.** `Legal.tsx`'s `PageHeader` subtitle
+read *"**License**, disclaimer, …"* — **American spelling in user-facing prose**, which §9-7 ruled
+against in as many words (*user-facing prose = British "licence"*; filenames and SPDX identifiers
+keep "License"). The same wrong spelling was in **IA §5's page table**. Both corrected. It shipped
+in the 0a and no guard caught it — **§9-7's ruling has no guard**, and that gap is now on the
+record as a PROPOSED item for the re-look.

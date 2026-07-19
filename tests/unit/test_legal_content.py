@@ -8,7 +8,7 @@ the only page in the product nothing checks.
 
 WHAT IS GUARDED HERE
 --------------------
-* **AC-L3** — the seven Product Guarantees are VERBATIM. Asserted by string equality against
+* **AC-L3** — the seven Product Commitments are VERBATIM. Asserted by string equality against
   ``docs/specs/PRODUCT-SPEC.md`` §3, parsed at test time. Not by eye, and not by a copy of the
   spec text living in the test (which would only prove the test agrees with itself).
 * **AC-L5** — the §9-8 NEVER list, as four independent bites with named RED specimens.
@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from app.services.help_markup import strip_markup
-from app.services.legal import GUARANTEES, PACK_FOOTER, all_legal
+from app.services.legal import COMMITMENTS, PACK_FOOTER, all_legal
 
 REPO = Path(__file__).resolve().parents[2]
 PRODUCT_SPEC = REPO / "docs" / "specs" / "PRODUCT-SPEC.md"
@@ -35,18 +35,18 @@ PRODUCT_SPEC = REPO / "docs" / "specs" / "PRODUCT-SPEC.md"
 # ---------------------------------------------------------------------------------------------
 # AC-L3 — VERBATIM, ENFORCED
 # ---------------------------------------------------------------------------------------------
-def _spec_guarantees() -> list[str]:
-    """Parse the seven guarantees out of PRODUCT-SPEC.md §3.
+def _spec_commitments() -> list[str]:
+    """Parse the seven commitments out of PRODUCT-SPEC.md §3.
 
     Whitespace-normalised on BOTH sides: the spec hard-wraps inside a blockquote at 76 columns,
     which is a rendering of the sentence rather than the sentence. "Verbatim" means the same words
     in the same order — never the same line breaks. Every other difference is a failure.
     """
     text = PRODUCT_SPEC.read_text(encoding="utf-8")
-    section = text.split("## 3. Product Guarantees")[1].split("\n---")[0]
+    section = text.split("## 3. Product Commitments")[1].split("\n---")[0]
     # BLOCKQUOTE LINES ONLY. Seen RED writing this: §3 ends with an unquoted parenthetical —
     # "(The validation contract itself is normative in SECURITY-BASELINE.md.)" — which a
-    # strip-the-markers parser silently appends to Guarantee 7. The guarantees are exactly what
+    # strip-the-markers parser silently appends to Commitment 7. The commitments are exactly what
     # the blockquote contains; the prose around it is the spec talking ABOUT them.
     body = "\n".join(line[2:] if line.startswith("> ") else ""
                      for line in section.splitlines() if line.startswith(">"))
@@ -54,43 +54,43 @@ def _spec_guarantees() -> list[str]:
     return [" ".join(i.split()) for i in items]
 
 
-def test_the_spec_parser_can_still_see_the_guarantees():
+def test_the_spec_parser_can_still_see_the_commitments():
     """The parser's OWN health check — the part that is allowed to fail.
 
     A parser that drifts (the heading is renamed, the blockquote is dropped, the list is
-    restyled) returns ZERO guarantees, and a zero-length comparison passes vacuously against a
+    restyled) returns ZERO commitments, and a zero-length comparison passes vacuously against a
     zero-length slice. That silent-success mode is the whole risk of parsing a spec, so the count
     is asserted here and nowhere else. Seven is not incidental: PRODUCT-SPEC.md:60 names this
     block as destined for the Legal page, and the page's own copy calls them "these seven".
     """
-    parsed = _spec_guarantees()
+    parsed = _spec_commitments()
     assert len(parsed) == 7, (
-        f"parsed {len(parsed)} guarantees from PRODUCT-SPEC.md §3, expected 7 — the spec's heading, "
+        f"parsed {len(parsed)} commitments from PRODUCT-SPEC.md §3, expected 7 — the spec's heading, "
         f"blockquote or list format has drifted and this file's verbatim check has gone blind."
     )
 
 
 @pytest.mark.parametrize("n", range(7))
-def test_each_guarantee_is_served_VERBATIM_from_the_spec(n: int):
-    """AC-L3. String equality, per guarantee, so a failure names WHICH one drifted.
+def test_each_commitment_is_served_VERBATIM_from_the_spec(n: int):
+    """AC-L3. String equality, per commitment, so a failure names WHICH one drifted.
 
     Editing either side alone goes RED — which is the point. The wording is not the Legal page's
     to improve: it is ratified in DECISIONS.md, mirrored into PRODUCT-SPEC.md, and *"destined
     verbatim for … the Legal page"* (PRODUCT-SPEC.md:60). Amend the spec and this guard carries
     the change across.
     """
-    spec = _spec_guarantees()
-    assert GUARANTEES[n] == spec[n], (
-        f"Guarantee {n + 1} is NOT verbatim.\n"
+    spec = _spec_commitments()
+    assert COMMITMENTS[n] == spec[n], (
+        f"Commitment {n + 1} is NOT verbatim.\n"
         f"  spec  : {spec[n]!r}\n"
-        f"  served: {GUARANTEES[n]!r}\n"
+        f"  served: {COMMITMENTS[n]!r}\n"
         f"Fix the SPEC (docs/specs/PRODUCT-SPEC.md §3) — never app/services/legal.py alone."
     )
 
 
 def test_the_page_serves_all_seven_and_in_the_spec_order():
-    served = all_legal()["guarantees"]["items"]
-    assert served == list(_spec_guarantees())
+    served = all_legal()["commitments"]["items"]
+    assert served == list(_spec_commitments())
 
 
 # ---------------------------------------------------------------------------------------------
@@ -108,16 +108,16 @@ def _all_prose() -> list[tuple[str, str]]:
     d = all_legal()
     out = [(f"section:{s['id']}", strip_markup(s["body"])) for s in d["sections"]]
     out += [(f"section-title:{s['id']}", s["title"]) for s in d["sections"]]
-    out.append(("guarantees:intro", strip_markup(d["guarantees"]["intro"])))
-    out += [(f"guarantee:{i}", strip_markup(g)) for i, g in enumerate(d["guarantees"]["items"], 1)]
+    out.append(("commitments:intro", strip_markup(d["commitments"]["intro"])))
+    out += [(f"commitment:{i}", strip_markup(g)) for i, g in enumerate(d["commitments"]["items"], 1)]
     out += [(f"pointer:{p['file']}", strip_markup(p["what"])) for p in d["pointers"]]
     out.append(("pack_footer", strip_markup(d["pack_footer"])))
     return out
 
 
 # (a) No jurisdiction-compliance claim. The product has NO jurisdiction logic at all (D-077,
-#     Guarantee 4), so naming a regulator, statute or tax code as something it complies with is
-#     not an overstatement — it is a FABRICATION, against Guarantee 3.
+#     Commitment 4), so naming a regulator, statute or tax code as something it complies with is
+#     not an overstatement — it is a FABRICATION, against Commitment 3.
 _JURISDICTION_CLAIMS = re.compile(
     r"\b(complies?\s+with|compliant\s+with|in\s+compliance\s+with|conforms?\s+to|"
     r"approved\s+by|registered\s+with|regulated\s+by|licen[cs]ed\s+by)\b",
@@ -208,13 +208,13 @@ def test_the_never_guard_BITES_its_red_specimen(letter: str, specimen: str):
 # ---------------------------------------------------------------------------------------------
 def test_the_page_carries_the_four_contents_the_IA_says_it_owns():
     """INFORMATION-ARCHITECTURE.md:86 fixes Legal's scope: *"License, disclaimer, Product
-    Guarantees, no-jurisdiction-tax stance."* Four owned contents, ratified by the IA — this
+    Commitments, no-jurisdiction-tax stance."* Four owned contents, ratified by the IA — this
     milestone may not drop one, and may not add a fifth without an IA amendment.
     """
     d = all_legal()
     ids = {s["id"] for s in d["sections"]}
     assert {"position", "licence", "jurisdiction"} <= ids, ids
-    assert d["guarantees"]["items"], "the Guarantees block is empty"
+    assert d["commitments"]["items"], "the Commitments block is empty"
 
 
 def test_pointers_name_files_and_never_urls():
@@ -234,7 +234,7 @@ def test_pointers_name_files_and_never_urls():
 
 
 def test_the_pack_footer_is_one_line_and_states_the_product_level_position():
-    """§9-4: ONE line, not the Guarantees block. The Pack is a print artifact; seven paragraphs
+    """§9-4: ONE line, not the Commitments block. The Pack is a print artifact; seven paragraphs
     of guarantee on every page of every export is why this was ruled a single line."""
     assert "\n" not in PACK_FOOTER, "the Pack footer is ONE line (page-legal §9-4)"
     plain = strip_markup(PACK_FOOTER).lower()

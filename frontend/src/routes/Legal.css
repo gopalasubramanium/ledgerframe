@@ -15,28 +15,28 @@
   margin-top: var(--space-4);
 }
 
-/* --- The Product Guarantees ------------------------------------------------------------------
+/* --- The Product Commitments ------------------------------------------------------------------
 
-   An ORDERED list, and the numbering is load-bearing rather than decorative: the guarantees are
-   cited by number across the specs and in the AI's grounding ("Guarantee 5"), so the list renders
+   An ORDERED list, and the numbering is load-bearing rather than decorative: the commitments are
+   cited by number across the specs and in the AI's grounding ("Commitment 5"), so the list renders
    the number the prose would otherwise have to repeat. `HelpProse` emits a paragraph per item, so
    the marker is aligned to the first line rather than centred on the block. */
-.legal__guarantees {
+.legal__commitments {
   margin: var(--space-3) 0 0;
   padding-left: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
-.legal__guarantee {
+.legal__commitment {
   padding-left: var(--space-1);
 }
 /* The renderer wraps each block in its own element; collapse its outer margin so the list's own
    `gap` is the single source of rhythm and the spacing does not double. */
-.legal__guarantee > .help__prose > :first-child {
+.legal__commitment > .help__prose > :first-child {
   margin-top: 0;
 }
-.legal__guarantee > .help__prose > :last-child {
+.legal__commitment > .help__prose > :last-child {
   margin-bottom: 0;
 }
 

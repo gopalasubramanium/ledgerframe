@@ -220,6 +220,6 @@ make migrate                       # alembic upgrade head
 python scripts/license_audit.py    # dependency-licence audit (full transitive graph)
 ```
 
-The specifications in `docs/specs/` are normative: `PRODUCT-SPEC.md` (the seven Product Guarantees),
+The specifications in `docs/specs/` are normative: `PRODUCT-SPEC.md` (the seven Product Commitments),
 `GLOSSARY.md`, `INFORMATION-ARCHITECTURE.md`, `DESIGN-SYSTEM.md`, `MASTER-DATA.md`, `API-CONTRACT.md`,
 `SECURITY-BASELINE.md`.

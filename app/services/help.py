@@ -68,11 +68,13 @@ HELP: list[dict] = [
                {"topic": "page-portfolio", "label": "Portfolio"},
                {"topic": "page-review", "label": "Review"},
                {"topic": "page-reports", "label": "Reports"}]},
-    # The guarantee entry (was `category: "About"`). About LEAVES Help for Settings (9-bis-6), where
-    # it is now the SEVENTH TAB — 9-bis-11(c) reversed the "card inside System" placement this
-    # comment used to name — but the guarantee is not About-the-project: it is what the product WILL NEVER DO,
-    # which is orientation of the first order. It stays in Help, in Section 1, and is one of the
-    # three ratified voice specimens.
+    # The commitments entry (was `category: "About"`; the `id` stays `guarantee` — it is a live
+    # deep-link target, #/help?topic=guarantee, and renaming it would break every existing link).
+    # About LEAVES Help for Settings (9-bis-6), where it is now the SEVENTH TAB — 9-bis-11(c)
+    # reversed the "card inside System" placement this comment used to name — but the commitments
+    # are not About-the-project: they are what the product WILL NEVER DO, which is orientation of
+    # the first order. This entry stays in Help, in Section 1, and is one of the three ratified
+    # voice specimens.
     {"id": "guarantee", "category": "Orientation", "title": "What LedgerFrame will never do",
      "body": "It never places trades, gives buy/sell/hold or tax/financial advice, or "
              "fabricates a price, headline or figure.\n"
@@ -80,7 +82,7 @@ HELP: list[dict] = [
              "- Unavailable data shows '—' with a reason.\n"
              "- The AI explains verified facts; it never invents a number.\n"
              "- Your data is local-first with no telemetry.",
-     "keywords": "guarantee no advice no trading honest local private telemetry"},
+     "keywords": "commitment commitments guarantee no advice no trading honest local private telemetry"},
     # --- Pages -------------------------------------------------------------- #
     # Titles ARE the nav labels, exactly (nav label = H1 = route). Casing traps: "Net worth",
     # "Cash flow", "Pricing Health". Every body describes what the page IS and what it is FOR;
@@ -611,22 +613,22 @@ HELP: list[dict] = [
     {"id": "page-legal", "category": "Pages", "title": "Legal",
      "body": "The terms you have LedgerFrame under, and what it will never do. Four things live "
              "here: the product's position — it reports, it does not give advice and does not "
-             "act; the seven Product Guarantees, reproduced word for word from the specification "
+             "act; the seven Product Commitments, reproduced word for word from the specification "
              "that fixes them; the licence the product is released under, with the files that "
              "hold the full record; and its stance on tax rules, which is that it has none for "
              "any country. The limits on individual figures are NOT here — each figure states "
              "its own, in the place you read it.",
-     "keywords": "legal terms disclaimer licence agpl guarantees warranty liability jurisdiction "
+     "keywords": "legal terms disclaimer licence agpl commitments guarantees warranty liability jurisdiction accept acceptance "
                  "tax advice reporting only rights redistribute",
      "inputs": ["Nothing to fill in — Legal is a page you read"],
      "outputs": ["The product's position — it reports, it does not act",
-                 "The seven Product Guarantees, word for word",
+                 "The seven Product Commitments, word for word",
                  "The licence, and the files that hold the full dependency and asset record",
                  "Its stance on tax rules for any country"],
      "interpret": "Read this page for what the product will never do, not for what your figures "
                   "mean.\n"
                   "\n"
-                  "- The Guarantees are reproduced **word for word** from the specification that "
+                  "- The Commitments are reproduced **word for word** from the specification that "
                   "fixes them, so what you read here and what the product is held to are the same "
                   "sentence.\n"
                   "- The licence text, the third-party notices and the dependency record are not "

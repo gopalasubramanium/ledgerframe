@@ -16,10 +16,10 @@ export interface LegalSection {
   body: string;
 }
 
-export interface LegalGuarantees {
+export interface LegalCommitments {
   title: string;
   intro: string;
-  /** The seven Product Guarantees, VERBATIM from PRODUCT-SPEC.md §3 — string equality is asserted
+  /** The seven Product Commitments, VERBATIM from PRODUCT-SPEC.md §3 — string equality is asserted
    *  server-side (AC-L3). The page renders them in the served order and never renumbers,
    *  reorders, paraphrases or truncates them. */
   items: string[];
@@ -41,7 +41,7 @@ export interface LegalResponse {
    *  subset is a visible contract change rather than a silent reinterpretation. */
   markup: string;
   sections: LegalSection[];
-  guarantees: LegalGuarantees;
+  commitments: LegalCommitments;
   pointers: LegalPointer[];
   /** The single product-level line the Reports Pack renders (§9-4). Served here because Legal
    *  OWNS the string and the Pack RENDERS it — one source, two renderers, asserted byte-for-byte

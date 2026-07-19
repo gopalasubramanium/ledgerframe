@@ -1615,8 +1615,8 @@
         "title": "InstrumentPatch",
         "type": "object"
       },
-      "LegalGuarantees": {
-        "description": "The seven Product Guarantees, reproduced VERBATIM.\n\n`items` are byte-equal to `docs/specs/PRODUCT-SPEC.md` \u00a73 (whitespace-normalised), asserted by\n`tests/unit/test_legal_content.py` (AC-L3) \u2014 string equality, never by eye. The page renders\nthem; it does not paraphrase, summarise, reorder or number them itself.",
+      "LegalCommitments": {
+        "description": "The seven Product Commitments, reproduced VERBATIM.\n\n`items` are byte-equal to `docs/specs/PRODUCT-SPEC.md` \u00a73 (whitespace-normalised), asserted by\n`tests/unit/test_legal_content.py` (AC-L3) \u2014 string equality, never by eye. The page renders\nthem; it does not paraphrase, summarise, reorder or number them itself.",
         "properties": {
           "intro": {
             "title": "Intro",
@@ -1639,7 +1639,7 @@
           "intro",
           "items"
         ],
-        "title": "LegalGuarantees",
+        "title": "LegalCommitments",
         "type": "object"
       },
       "LegalPointer": {
@@ -1664,8 +1664,8 @@
       "LegalResponse": {
         "description": "`GET /legal` \u2014 the whole page.\n\nCarries `markup` for the same reason `HelpResponse` does: the dialect is DECLARED, so a\nfuture change to the sanctioned subset is a visible contract change rather than a silent\nreinterpretation of the same strings.\n\n`pack_footer` is served here because Legal OWNS the string and the Reports Pack RENDERS it \u2014\none source, two renderers (page-legal \u00a79-4, D-038 lane). It is on this response so the two\nrenderers are provably reading the same bytes.",
         "properties": {
-          "guarantees": {
-            "$ref": "#/components/schemas/LegalGuarantees"
+          "commitments": {
+            "$ref": "#/components/schemas/LegalCommitments"
           },
           "markup": {
             "title": "Markup",
@@ -1693,7 +1693,7 @@
         "required": [
           "markup",
           "sections",
-          "guarantees",
+          "commitments",
           "pointers",
           "pack_footer"
         ],
@@ -8075,7 +8075,7 @@
     },
     "/api/v1/legal": {
       "get": {
-        "description": "The Legal page's copy \u2014 the product-level position, the Guarantees, the licence, the\nno-jurisdiction-tax stance. Read-only, no secrets, no database, never personalised.",
+        "description": "The Legal page's copy \u2014 the product-level position, the Commitments, the licence, the\nno-jurisdiction-tax stance. Read-only, no secrets, no database, never personalised.",
         "operationId": "legal_content_api_v1_legal_get",
         "parameters": [
           {

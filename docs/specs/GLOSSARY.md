@@ -9,9 +9,18 @@ full what/why/improves entry in the in-app Help catalogue.
 
 ---
 
-## Product Guarantees (verbatim from DECISIONS.md)
+## Product Commitments (verbatim from DECISIONS.md)
 
-> Destined verbatim for the glossary guarantee block, the Legal page, and README:
+**RENAMED 2026-07-20 (owner, page-legal §11-1): "Product Guarantees" → "Product Commitments".**
+*Why:* **"guarantee" is warranty-family vocabulary**, and the product's warranty position — stated
+in the licence it actually ships under, AGPL-3.0-or-later section 15 — is **NO WARRANTY**. A page
+that headed these seven as *guarantees* and then disclaimed all warranty two sections later
+contradicted itself **in its own vocabulary**. The seven are what they always were: **self-enforced
+behavioural commitments, each one tested**. The name now says that. The **claims are unchanged** —
+this is a rename, not a weakening, and nothing the product promised before it promises less of now.
+*Deprecated synonym:* **Product Guarantees** (see [Deprecated terms](#deprecated-terms)).
+
+> Destined verbatim for the commitments block, the Legal page, and README:
 >
 > 1. **No trades.** LedgerFrame never places or executes trades. No order
 >    endpoints exist (Kite is market-data read-only).
@@ -167,7 +176,7 @@ Home shows one summary of each, linked to its canonical page.
 | Term | Canonical definition |
 |------|----------------------|
 | **Briefing** | A short, **factual** daily summary of your portfolio and the market, built **deterministically from your own served figures** — never a fabricated number. **Information only, not advice.** Canonical on **News** (Home shows a summary). Richer AI narration is a future addition (AI-surfaces milestone, D-068) and is not shown until then. **[Help]** |
-| **Headlines** | **Grouped news headlines** retrieved from your configured sources (RSS + provider), **deduplicated** and grouped by area (My holdings · India · Singapore · US · Global · Macro / FX); "My holdings" ranked by relevance. **Retrieved, never invented** — the app never fabricates a headline (Guarantee 3). Under **no-egress**, none are fetched (honest empty). Canonical on **News**. **[Help]** |
+| **Headlines** | **Grouped news headlines** retrieved from your configured sources (RSS + provider), **deduplicated** and grouped by area (My holdings · India · Singapore · US · Global · Macro / FX); "My holdings" ranked by relevance. **Retrieved, never invented** — the app never fabricates a headline (Commitment 3). Under **no-egress**, none are fetched (honest empty). Canonical on **News**. **[Help]** |
 
 ---
 
@@ -211,7 +220,7 @@ Home shows one summary of each, linked to its canonical page.
 | **Monthly equivalent** | A recurring amount expressed as a per-month rate (quarterly ÷ 3, annual ÷ 12). A **`once`** item has **no** monthly equivalent — it shows "—", never 0: excluded from the burn is not the same as free. *(PROPOSED 2026-07-15 — ratify at the walk.)* **[Help]** |
 | **Next 12 months** | The total of your recorded **outflows** falling due in the next twelve months, including one-offs. Income is not netted off it. *(PROPOSED 2026-07-15 — ratify at the walk.)* **[Help]** |
 | **Planned cash out** | Recurring expenses **plus** planned contributions, per month — a fuller picture of money leaving your accounts. It **does not change the Cash runway** (a contribution builds wealth; it isn't consumption — D-057). *(PROPOSED 2026-07-15 — ratify at the walk.)* **[Help]** |
-| **Progress (goal)** | How far the goal's **basis** (net worth or liquid assets) has come against its target. A goal with **no basis** has **no progress** — it shows "—", never 0%. A fact against your target, **never a forecast** (Guarantee 3). *(PROPOSED 2026-07-15 — ratify at the walk.)* **[Help]** |
+| **Progress (goal)** | How far the goal's **basis** (net worth or liquid assets) has come against its target. A goal with **no basis** has **no progress** — it shows "—", never 0%. A fact against your target, **never a forecast** (Commitment 3). *(PROPOSED 2026-07-15 — ratify at the walk.)* **[Help]** |
 | **Scenario** | A deterministic "what-if" shock on today's values — a **scenario, never a forecast** (protected copy, D-058). |
 | **Shock** | A single hypothetical move applied to an exposure — e.g. *equities fall 20%*. Deterministic arithmetic on today's values, **never a forecast** (D-058). *(Ratified 2026-07-15, page-scenarios §9-6.)* **[Help]**
 | **Exposure** | The base-currency amount a shock is applied to — your holdings grouped by what would move together (equities, crypto, property, foreign currencies). A share of **gross** assets; liabilities are not exposures. *(Ratified 2026-07-15, page-scenarios §9-6.)* **[Help]**
@@ -299,8 +308,8 @@ values ride their parent term's entry (no per-value rows). **RATIFIED 2026-07-16
 
 | Term | Canonical definition |
 |------|----------------------|
-| **No-egress toggle** | The privacy switch that makes the device make zero outbound network calls when enabled — feeds, version check, and banner included (Product Guarantee 5). |
-| **Privacy mode** | The device's egress posture, set by the **No-egress toggle**: when on, the app makes **zero outbound network calls** and prices/news go stale honestly rather than reaching out (Product Guarantee 5). The Settings → Privacy state statement — *"This device makes no network calls."* — is **derived from this one state**, never a separate metric (P-1/D-031). **[Help]** *(page-settings §9-4, ruled 2026-07-18.)* |
+| **No-egress toggle** | The privacy switch that makes the device make zero outbound network calls when enabled — feeds, version check, and banner included (Product Commitment 5). |
+| **Privacy mode** | The device's egress posture, set by the **No-egress toggle**: when on, the app makes **zero outbound network calls** and prices/news go stale honestly rather than reaching out (Product Commitment 5). The Settings → Privacy state statement — *"This device makes no network calls."* — is **derived from this one state**, never a separate metric (P-1/D-031). **[Help]** *(page-settings §9-4, ruled 2026-07-18.)* |
 | **API token** | A **scoped, read-only** token that lets a LAN widget (Home Assistant, a wall display) read your summary over your local network. Created with a name, the **raw value is shown once** and never retrievable after; **revocable** any time. Managing tokens needs your session ([S]-gated) — an API token can neither mint nor revoke tokens. **[Help]** *(page-settings §9-4, ruled 2026-07-18.)* |
 | **Data provider** | The Settings label for the market-price **Provider** (the adapter/config that supplies quotes: `mock`/`csv`/`yahoo`/`alphavantage`/`eodhd`/`kite`). One concept with **Provider** (the D-028 split) — *Data provider* is the user-facing Settings wording. Its API key is **write-only** (set, never read back, D-003). **[Help]** *(page-settings §9-4, ruled 2026-07-18.)* |
 | **Density** | A **per-device** display preference — **comfortable** (roomier) or **compact** (more rows per screen). Saved on this device only (localStorage, D-078); it describes the display, not your data. **[Help]** *(page-settings §9-4, ruled 2026-07-18.)* |
@@ -312,7 +321,8 @@ values ride their parent term's entry (no per-value rows). **RATIFIED 2026-07-16
 | **Per-entity** | Scoped to one ownership **Entity** — figures filtered to the accounts that entity owns. The Reports Pack renders a **Per-entity** section for each entity (net worth, drift, realised P/L, risk + attribution), composed server-side from the same canonical readers as the whole-household view (reports-pack Pack-2/Pack-7; §9-2 — the entity axis stays UI-dormant, no switcher). |
 | **Home** | The summary dashboard (`/`). It **owns nothing** — every figure on it is a **linked summary** of the page that owns it, read from that page's canonical reader (P-1/D-038). Composition is **fixed** (D-046) and there is **ONE layout** — the ratified grid (D-046 AMENDMENT; page-home §12ho1-5/§12ho1-6). **[Help]** *(PROPOSED 2026-07-13, page-home §9-13 — ratify at the walk.)* |
 | **Heatmap** | A treemap visualisation of your holdings — tile size is position value, colour is **Today's change**. It owns no figure; every number comes from the canonical readers. Priced holdings only; assets only (liabilities excluded), with an honest coverage note. **[Help]** *(RATIFIED 2026-07-13, page-heatmap ND-11.)* |
-| **Legal** | The page (`/legal`) stating the terms you have LedgerFrame under: the product-level position (it reports, it does not advise or act), the seven **Product Guarantees** rendered verbatim, the **licence**, and the no-jurisdiction-tax stance (D-077). It owns the **product-level position only** — the scoped caveat on each figure stays with the figure (D-106). **[Help]** *(PROPOSED 2026-07-19, page-legal §9-7 — ratify at the 0a.)* |
+| **Product Commitments** | The seven things LedgerFrame **will never do** — no trades · no advice · no fabrication · no jurisdiction tax logic · no egress when you switch it off · no stored AI conversations · a validation contract that never weakens. **Self-enforced behavioural commitments, each one tested** — deliberately **not** called *guarantees*, because the licence's warranty position is **no warranty** and the product will not borrow warranty vocabulary it cannot honour. **Defined once, in full, in the [Product Commitments](#product-commitments-verbatim-from-decisionsmd) block above** — this row is a pointer, never a second copy. Rendered verbatim on **Legal**. *(RENAMED 2026-07-20, page-legal §11-1 — ratify at the re-look.)* |
+| **Legal** | The page (`/legal`) stating the terms you have LedgerFrame under: the product-level position (it reports, it does not advise or act), the seven **Product Commitments** rendered verbatim, the **licence**, and the no-jurisdiction-tax stance (D-077). It owns the **product-level position only** — the scoped caveat on each figure stays with the figure (D-106). **[Help]** *(PROPOSED 2026-07-19, page-legal §9-7 — ratify at the 0a.)* |
 | **Disclaimer** | A stated limit on what a figure or the product means. **Two kinds, deliberately (D-106):** a **scoped caveat** is served by the reader that owns a figure, sits at the point of use, and is **part of the figure** (*"Open lots by FIFO. Organisation only — not tax advice."*); the **product-level position** is stated once, on **Legal**. Removing a scoped caveat is an **honesty regression**, never a de-duplication. *(PROPOSED 2026-07-19, page-legal §9-2/§9-7 — ratify at the 0a.)* |
 | **Licence** | The terms LedgerFrame itself is released under — **AGPL-3.0-or-later**. **Spelling is deliberate and split (page-legal §9-7):** user-facing prose says British **"licence"**; **filenames and SPDX identifiers say "License"** (`LICENSE`, `AGPL-3.0-or-later`), because those are fixed by convention and not freely changeable. The full dependency and licence record is **generated** and **ships with the source** (`NOTICE`, `docs/audit/LICENSES.md`); no page reproduces it. *(PROPOSED 2026-07-19, page-legal §9-5/§9-7 — ratify at the 0a.)* |
 
@@ -325,6 +335,7 @@ copy.
 
 | Retired term | Use instead | Decision |
 |--------------|-------------|----------|
+| **Product Guarantees** / **Guarantee *n*** | **Product Commitments** / **Commitment *n*** — *"guarantee" is warranty-family vocabulary and the licence's position is **NO WARRANTY** (AGPL section 15); these seven are self-enforced behavioural commitments, tested.* **Claims unchanged — a rename, not a weakening.** ⚠ **The ordinary English word is NOT retired:** *"indicative, not a guarantee of sale price or timing"* (Liquidity) is a plain-English caveat, not this term, and must not be swept | owner 2026-07-20, page-legal §11-1 |
 | Detail level: Simple/**Expert** | *(nothing — the control it named is gone)* Retired first in favour of "Home layout: Simple / Full" (page-home §9-1), which is **itself now retired** — see the row below | D-030 / D-040 / page-home §9-1 → §12ho1-6 |
 | Home layout: Simple / **Full** | *(nothing — Home has ONE layout)* The **Simple** layout was REMOVED (owner, 2026-07-13): Home ships a single composition, the ratified grid. There is no layout control, no `home_layout` setting, and no user-facing choice to label | D-046 AMENDMENT / page-home §12ho1-6 |
 | Total value | Net worth (with liabilities) / Gross assets (positive holdings), per context | D-021 |
@@ -353,7 +364,7 @@ copy.
 (sections b, c), and `docs/audit/DECISIONS.md`. Decision IDs applied: D-010,
 D-019, D-020, D-021, D-022, D-023, D-024, D-025, D-026, D-027, D-028, D-029,
 D-030, D-039, D-040, D-046, D-047, D-054, D-055, D-056, D-057, D-058, D-061,
-D-062, D-073, D-074, D-076, D-077 (Product Guarantees block verbatim), plus
+D-062, D-073, D-074, D-076, D-077 (Product Commitments block verbatim), plus
 **Batch 12: D-081 (insurance valued line), D-082 (non-equity sector bucket),
 D-083 (six-bucket region), D-085 (class=exposure / subclass=wrapper), D-086
 (no annualized return below minimum history)**. Where the

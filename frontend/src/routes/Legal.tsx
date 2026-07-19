@@ -56,7 +56,7 @@ export function Legal() {
     <div className="lf-page legal">
       <PageHeader
         title="Legal"
-        subtitle="License, disclaimer, Product Guarantees, no-jurisdiction-tax stance."
+        subtitle="Licence, disclaimer, Product Commitments, no-jurisdiction-tax stance."
       />
 
       {content === undefined && (
@@ -92,18 +92,18 @@ export function Legal() {
             </section>
           ))}
 
-          {/* THE GUARANTEES. Rendered from the served array in the served order, as an ORDERED
-              list: their numbering is part of what they are ("Guarantee 5" is cited by name across
+          {/* THE COMMITMENTS. Rendered from the served array in the served order, as an ORDERED
+              list: their numbering is part of what they are ("Commitment 5" is cited by name across
               the specs), so the list carries it rather than the prose repeating it. */}
-          <section className="lf-card legal__section" aria-labelledby="legal-guarantees">
-            <h2 className="lf-card__title" id="legal-guarantees">
-              {content.guarantees.title}
+          <section className="lf-card legal__section" aria-labelledby="legal-commitments">
+            <h2 className="lf-card__title" id="legal-commitments">
+              {content.commitments.title}
             </h2>
             <div className="lf-card__body">
-              <HelpProse text={content.guarantees.intro} />
-              <ol className="legal__guarantees">
-                {content.guarantees.items.map((g, i) => (
-                  <li className="legal__guarantee" key={i}>
+              <HelpProse text={content.commitments.intro} />
+              <ol className="legal__commitments">
+                {content.commitments.items.map((g, i) => (
+                  <li className="legal__commitment" key={i}>
                     <HelpProse text={g} />
                   </li>
                 ))}

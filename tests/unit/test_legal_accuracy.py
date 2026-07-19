@@ -16,15 +16,15 @@ Same bar means the same three things, and the FIRST is not optional:
 
 THE ONE EXEMPTION, AND WHY IT IS NAMED RATHER THAN QUIET
 --------------------------------------------------------
-The seven Product Guarantees **fail the Help bar on two counts, inherently**:
+The seven Product Commitments **fail the Help bar on two counts, inherently**:
 
 * four of them cite a decision ID — `(D-077)`, `(D-004)`, `(D-016)`, `(D-071)`;
-* Guarantee 1 contains the word "endpoints".
+* Commitment 1 contains the word "endpoints".
 
 This is a **genuine collision between two live rules**, not an oversight, and it was found by
 running the bar rather than by reasoning about it:
 
-* AC-L3 / §9-8 ruled the Guarantees are rendered **VERBATIM** from `PRODUCT-SPEC.md` §3, which is
+* AC-L3 / §9-8 ruled the Commitments are rendered **VERBATIM** from `PRODUCT-SPEC.md` §3, which is
   itself verbatim from DECISIONS.md. Their wording is **not this milestone's to change**;
 * page-chrome §11-8 bars decision IDs and implementation notes from served prose.
 
@@ -39,7 +39,7 @@ grow quietly to cover new copy.
 **FLAGGED FOR THE OWNER AT THE 0a** (page-legal §9-8 bars this CLI from deciding it): either
 PRODUCT-SPEC.md §3 is amended to drop the parenthetical IDs — in which case AC-L3's guard carries
 the change here automatically and this exemption is deleted — or the collision is accepted and the
-Guarantees show their decision IDs to users on this one page. It is a real choice with a real
+Commitments show their decision IDs to users on this one page. It is a real choice with a real
 cost either way.
 """
 
@@ -62,17 +62,17 @@ def _authored() -> list[tuple[str, str]]:
     d = all_legal()
     out = [(f"section:{s['id']}", strip_markup(s["body"])) for s in d["sections"]]
     out += [(f"section-title:{s['id']}", s["title"]) for s in d["sections"]]
-    out.append(("guarantees:title", d["guarantees"]["title"]))
-    out.append(("guarantees:intro", strip_markup(d["guarantees"]["intro"])))
+    out.append(("commitments:title", d["commitments"]["title"]))
+    out.append(("commitments:intro", strip_markup(d["commitments"]["intro"])))
     out += [(f"pointer:{p['file']}", strip_markup(p["what"])) for p in d["pointers"]]
     out.append(("pack_footer", strip_markup(d["pack_footer"])))
     return out
 
 
 def _verbatim() -> list[tuple[str, str]]:
-    """The seven Guarantees — ratified elsewhere, reproduced here, not editable by this build."""
-    return [(f"guarantee:{i}", strip_markup(g))
-            for i, g in enumerate(all_legal()["guarantees"]["items"], 1)]
+    """The seven Commitments — ratified elsewhere, reproduced here, not editable by this build."""
+    return [(f"commitment:{i}", strip_markup(g))
+            for i, g in enumerate(all_legal()["commitments"]["items"], 1)]
 
 
 # The Help bar, copied deliberately rather than imported: importing would couple Legal's floor to
@@ -91,7 +91,7 @@ def test_authored_legal_copy_meets_the_full_help_bar(where: str, text: str):
 
     Seen RED writing it, on this build's own prose: the position section read *"has no way to: no
     order endpoints exist"* — an honest sentence that leaked an implementation term straight out
-    of Guarantee 1. Rewritten to *"has no mechanism for doing so"*. The guard caught the author,
+    of Commitment 1. Rewritten to *"has no mechanism for doing so"*. The guard caught the author,
     which is the only kind of catch worth having.
     """
     low = text.lower()
@@ -104,11 +104,11 @@ def test_authored_legal_copy_meets_the_full_help_bar(where: str, text: str):
 
 
 @pytest.mark.parametrize("where,text", _verbatim(), ids=[w for w, _ in _verbatim()])
-def test_verbatim_guarantees_are_advice_free(where: str, text: str):
+def test_verbatim_commitments_are_advice_free(where: str, text: str):
     """The part of the bar the verbatim block IS held to — and it is the part that matters most.
 
     The exemption covers decision IDs and implementation notes. It does NOT cover advice: the
-    Guarantees are the product's no-advice promise, and a promise that advised would be
+    Commitments are the product's no-advice promise, and a promise that advised would be
     self-refuting.
     """
     low = text.lower()
@@ -120,8 +120,8 @@ def test_verbatim_guarantees_are_advice_free(where: str, text: str):
 # An exemption nobody measures is a hole. These two tests pin its EXACT extent, so the day the
 # collision is resolved — or the day it grows — the suite says so instead of staying quiet.
 
-_EXEMPT_IDS = {"guarantee:4", "guarantee:5", "guarantee:6", "guarantee:7"}
-_EXEMPT_IMPL = {"guarantee:1"}
+_EXEMPT_IDS = {"commitment:4", "commitment:5", "commitment:6", "commitment:7"}
+_EXEMPT_IMPL = {"commitment:1"}
 
 
 def test_the_verbatim_exemption_is_exactly_as_wide_as_recorded():
@@ -137,7 +137,7 @@ def test_the_verbatim_exemption_is_exactly_as_wide_as_recorded():
     impl = {w for w, t in _verbatim()
             if any(leak in t.lower() for leak in _IMPLEMENTATION)}
     assert ids == _EXEMPT_IDS, (
-        f"the decision-ID exemption no longer matches the shipped Guarantees.\n"
+        f"the decision-ID exemption no longer matches the shipped Commitments.\n"
         f"  recorded: {sorted(_EXEMPT_IDS)}\n  actual  : {sorted(ids)}\n"
         f"See this module's docstring — this is the owner's 0a call, not a test to update."
     )

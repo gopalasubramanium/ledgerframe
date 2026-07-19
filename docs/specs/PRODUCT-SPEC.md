@@ -18,7 +18,7 @@ runway, realised/unrealised P/L for an accountant, insurance and estate
 readiness, and a grounded AI briefing.
 
 **It reports; it does not act.** The platform **never executes trades, never
-advises, and never fabricates a number** (CLAUDE.md; Product Guarantees §3).
+advises, and never fabricates a number** (CLAUDE.md; Product Commitments §3).
 There are no order endpoints — market-data access (incl. Kite) is read-only.
 
 **Who it's for.** The single owner of a personal or household wealth ledger who
@@ -55,7 +55,7 @@ layer, but must not build for it either.
 
 ---
 
-## 3. Product Guarantees (verbatim from DECISIONS.md)
+## 3. Product Commitments (verbatim from DECISIONS.md)
 
 > Destined verbatim for the glossary guarantee block, the Legal page, and README:
 >
@@ -232,7 +232,7 @@ D-045, D-051, D-055, D-057, D-059, D-063, D-065 (P-7), D-066, D-069, D-070,
 D-071, D-075, D-076, D-077, D-080, plus **Batch 12: D-081 (insurance valued
 line, amends D-039, §4a), D-084 (owner-set review defaults, §5), D-086 (no
 annualized return below minimum history, §4c), D-087 (`other` over-use signal,
-§5)**, plus the Product Guarantees block (D-077 + accumulated) verbatim. §5
+§5)**, plus the Product Commitments block (D-077 + accumulated) verbatim. §5
 Review threshold **names** are reconciled against the legacy v1 source
 `app/services/review.py:25-30` (read-only); two **values** (`_RUNWAY_LOW_MONTHS`,
 `_GOAL_SOON_DAYS`) are owner-set overrides per D-084.
