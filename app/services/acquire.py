@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.egress import egress_allowed
 from app.providers.market.amfi import (
+    NAV_HISTORY_ATTEMPTS,
     AmfiReportUnavailable,
     chunk_date_ranges,
     fetch_nav_history,
@@ -49,6 +50,14 @@ ECB_FETCH_TIMEOUT_S = 90
 FX_MAX_STALENESS_DAYS = 7
 # Hard per-instrument fetch wall for the price-acquisition stages (crypto/fund history).
 PRICE_FETCH_TIMEOUT_S = 60
+# F-9c: AMFI's history report is a WHOLE-MARKET payload — the owner measured ~70 MB for a single
+# window, and a slow AMFI server cannot push that through a 60 s wall, so every window died as a
+# ReadTimeout. This stage gets its own, larger read timeout; the F-4 discipline (no stage may spin
+# indefinitely) stands everywhere else, and a timeout here still degrades honestly by name.
+AMFI_HISTORY_TIMEOUT_S = 180
+# The fetcher retries a transient portal-page response internally, so the outer wall must cover the
+# whole attempt budget — otherwise the wall cancels the provider's own retry mid-flight.
+AMFI_HISTORY_WALL_S = AMFI_HISTORY_TIMEOUT_S * NAV_HISTORY_ATTEMPTS + 60
 
 # The served refusal shown when no-egress blocks the exchange-rate download (D-105).
 NO_EGRESS_MESSAGE = (
@@ -330,7 +339,8 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
                     # aborted the whole loop, so one transient response cost every remaining chunk.
                     try:
                         text = await asyncio.wait_for(
-                            fetch_nav_history(a, b), timeout=PRICE_FETCH_TIMEOUT_S)
+                            fetch_nav_history(a, b, timeout=AMFI_HISTORY_TIMEOUT_S),
+                            timeout=AMFI_HISTORY_WALL_S)
                         rows += await ingest_nav_history(
                             session, instr.id, str(code), text, verify=True)
                     except AmfiReportUnavailable as exc:
@@ -353,10 +363,14 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
                 continue
         except Exception as exc:  # noqa: BLE001 — one instrument's failure never aborts the build
             counts["skipped"] += 1
+            # F-9c: log the SERVED reason, not str(exc). A bare asyncio TimeoutError stringifies to
+            # "", so the log line read "degrading honestly:" with nothing after it while the DB row
+            # carried the named reason — the two sources of truth have to say the same thing.
+            served = _served_failure(instr.symbol, source, exc)
             log.warning("acquire_prices: %s (%s) history unavailable — degrading honestly: %s",
-                        instr.symbol, ac, exc)
+                        instr.symbol, ac, served)
             await _record_outcome(session, instr.id, ok=False, rows=0, source=source,
-                                  reason=_served_failure(instr.symbol, source, exc))
+                                  reason=served)
             continue
 
         # A run that fetched nothing is a FAILURE with a reason, never a quiet success (F-8).

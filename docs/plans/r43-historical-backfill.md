@@ -1540,3 +1540,52 @@ The tolerance is correct for the current loopback-only dev bind, and the warning
 **Pre-release blocker: a strong `LEDGERFRAME_SECRET_KEY` must be set before ANY LAN or remote
 exposure** (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Filed here so it is
 not discovered at exposure time.
+
+---
+
+## 21. F-9c (2026-07-19) — TWO TUNING-CLASS DEFECTS FROM THE OWNER'S LIVE RE-RUN
+
+Both ruled in chat (2026-07-19) as **tuning**, not new findings: the F-9 machinery behaved
+correctly — it named the failures, the run survived, and the backfill completed. What the live
+re-run exposed is that one wall was set too low for the real payload, and one log line said less
+than the database row beside it.
+
+### 21-1 — THE AMFI HISTORY WALL WAS SET FOR A SMALL PAYLOAD
+
+AMFI's history report is a **whole-market** download; the owner measured **~70 MB per window**
+(§20-1: 70,458,459 bytes for a single 2019 window). A slow AMFI server cannot push that through the
+general 60 s price-fetch wall, so windows died as `ReadTimeout` — a *tuning* failure wearing the
+costume of a provider fault.
+
+**Fix.** An AMFI-specific read timeout, passed to the fetcher rather than merely declared
+(`app/services/acquire.py:53-60` — `AMFI_HISTORY_TIMEOUT_S = 180`), with an outer wall
+(`AMFI_HISTORY_WALL_S`) sized to cover the fetcher's **full retry budget** so the F-4 hard wall can
+never cancel a live retry mid-flight (`acquire.py:341-343`). The general
+`PRICE_FETCH_TIMEOUT_S = 60` is **unchanged** — the F-4 discipline stands everywhere else.
+
+**Pins** (`tests/integration/test_f9_amfi_report_unavailable.py`): the value is asserted; the wall
+covers `NAV_HISTORY_ATTEMPTS`; the general wall is asserted untouched; and — because a constant
+nobody passes is not a timeout — a live-path test asserts the value the **fetcher actually
+receives**. All RED before the fix.
+
+### 21-2 — "degrading honestly:" DEGRADED SILENTLY
+
+Owner evidence (13:33:30 / 13:34:01): the log line printed with an **empty reason** while the
+`instrument_acquisitions` row carried the named one. Cause: the handler logged `str(exc)`, and a
+bare `asyncio` `TimeoutError` **stringifies to the empty string** — so the exact failure the raised
+wall was meant to make legible was the one the log could not name.
+
+**Fix.** The served reason is computed once and used in **both** places
+(`app/services/acquire.py:366-373`). The pin reproduces the live case (`raise TimeoutError()`),
+asserts the line does not end at `"degrading honestly:"`, and asserts the row's reason is a
+**substring of the log line** — one reason, two places, unable to drift apart.
+
+### 21-3 — RECORDED, NOT FIXED (ruling owed): a TIMEOUT still costs the fund its remaining windows
+
+Surfaced while pinning 21-1. The chunk loop degrades per-window for `AmfiReportUnavailable` only
+(`acquire.py:346`); a `TimeoutError` propagates to the per-instrument handler, so the fund keeps the
+windows already stored but **loses every window after the first timeout** — §15 lesson 8's exact
+shape (*guards fail per-unit, not per-loop*), in the one branch R12 did not cover. The raised wall
+makes it rarer, not impossible. Filed here rather than folded into a tuning commit, per the
+standing file-the-finding-first order. **Ruling owed** — the natural fix is to widen the per-window
+`except` and add the timeout to the honest partial note.

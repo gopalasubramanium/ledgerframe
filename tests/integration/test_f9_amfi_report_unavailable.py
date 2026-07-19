@@ -268,3 +268,71 @@ async def test_history_windows_start_at_the_instruments_own_first_transaction(se
     assert min(windows) >= date(2026, 5, 1), (
         f"windows began {min(windows)} — before the fund was ever held")
     assert fund is not None
+
+
+# ---------------------------------------------------------------------------------------------
+# F-9c (R-43 §21) — two tuning-class defects found on the owner's live re-run.
+# ---------------------------------------------------------------------------------------------
+
+
+def test_the_amfi_history_stage_gets_its_own_larger_read_timeout():
+    """RED: the whole-market history payload is ~70 MB; on a slow AMFI server it cannot clear a
+    60 s wall, so every window died as a ReadTimeout. The AMFI stage carries its own timeout —
+    and the outer wall covers the fetcher's full retry budget, so it never cancels a live retry."""
+    from app.providers.market.amfi import NAV_HISTORY_ATTEMPTS
+    from app.services import acquire
+
+    assert acquire.AMFI_HISTORY_TIMEOUT_S == 180
+    assert acquire.AMFI_HISTORY_TIMEOUT_S > acquire.PRICE_FETCH_TIMEOUT_S, (
+        "the AMFI-specific timeout must exceed the general price-fetch wall")
+    assert acquire.AMFI_HISTORY_WALL_S >= acquire.AMFI_HISTORY_TIMEOUT_S * NAV_HISTORY_ATTEMPTS, (
+        "the outer wall would cancel the fetcher's own retry mid-flight")
+    # F-4 discipline stands elsewhere: the general wall is unchanged.
+    assert acquire.PRICE_FETCH_TIMEOUT_S == 60
+
+
+async def test_the_amfi_history_timeout_is_the_one_actually_sent(session, monkeypatch):
+    """A constant nobody passes is not a timeout. The fetcher must receive it."""
+    from app.services import acquire
+
+    await _seed_fund(session, bought=date(2026, 5, 1))
+    sent: list = []
+
+    async def _fetch(a, b, mf=None, tp=None, timeout=30.0):
+        sent.append(timeout)
+        return _report()
+    monkeypatch.setattr("app.services.acquire.fetch_nav_history", _fetch)
+
+    await acquire.acquire_prices(session, "INR")
+
+    assert sent, "the fund was never fetched"
+    assert set(sent) == {acquire.AMFI_HISTORY_TIMEOUT_S}
+
+
+async def test_a_timed_out_fetch_degrades_honestly_by_name(session, monkeypatch, caplog):
+    """RED (owner evidence, 13:33:30/13:34:01): the log line read "degrading honestly:" with an
+    EMPTY reason, because a bare asyncio TimeoutError stringifies to "". The DB row carried the
+    named reason; the log did not. Both must name it — and the run must survive to retry later."""
+    import logging
+
+    from app.models import InstrumentAcquisition
+    from app.services import acquire
+
+    fund = await _seed_fund(session, bought=date(2026, 5, 1))
+
+    async def _fetch(a, b, mf=None, tp=None, timeout=30.0):
+        raise TimeoutError()                      # str() == "" — exactly the live case
+    monkeypatch.setattr("app.services.acquire.fetch_nav_history", _fetch)
+
+    with caplog.at_level(logging.WARNING, logger="ledgerframe"):
+        await acquire.acquire_prices(session, "INR")
+
+    line = next(r.getMessage() for r in caplog.records if "degrading honestly" in r.getMessage())
+    assert not line.rstrip().endswith("degrading honestly:"), "the reason is still empty"
+    assert "timed out" in line
+
+    outcome = await session.get(InstrumentAcquisition, fund.id)
+    assert outcome is not None and outcome.ok is False
+    assert outcome.reason and "timed out" in outcome.reason
+    # The log and the row say the SAME thing — one reason, two places.
+    assert outcome.reason in line
