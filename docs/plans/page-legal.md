@@ -819,3 +819,33 @@ identifiers**, the last being a mechanical consequence of requiring a word bound
 
 **Scope unchanged, and still stated:** the guard reads **served content and authored frontend
 copy**. It does **not** read `docs/specs/`. That remains a measurement, not a guard.
+
+---
+
+### 11-G. NO SWEEP — internal specs keep "Guarantee" as historical vocabulary (owner, 2026-07-20)
+
+**Ruled by the owner in chat 2026-07-20. No ruling was typed in this CLI.**
+
+**The ruling:** `SECURITY-BASELINE.md` and the other internal specs **keep "Guarantee"**. There is
+**no sweep**, now or later.
+
+**The rationale, which is the load-bearing part:** the **deprecated-terms row binds UI copy — by
+design**. `GLOSSARY.md`'s row retires *Product Guarantees* / *Guarantee n* **as terminology shown
+to users**, and every instance a user can actually read was renamed in §11-B (served strings) and
+§11-1 (the one remaining `PricingHealth.tsx` string). What survives in the specs is **decision
+lineage**: an internal document citing *"(Product Guarantee 5)"* is naming **the thing that was
+ruled, under the name it was ruled under**. Rewriting those citations would make the specs disagree
+with `DECISIONS.md`, `RATIFICATION.md` and the closed plan files, which are **history and are not
+rewritten** — the same principle §11-B already applied to the ~25 code comments and to the closed
+plans, now stated as a ruling rather than a judgement call.
+
+**The state, measured today (not asserted):** 24 instances across six specs —
+`SECURITY-BASELINE.md` 9 (including the `## Guarantee 5 — the OUTBOUND-CALL INVENTORY` section
+heading, a named enforcement record), `DESIGN-SYSTEM.md` 4, `PRODUCT-SPEC.md` 3, `API-CONTRACT.md`
+3, `GLOSSARY.md` 3 (the rename note, the deprecated-synonym pointer, and the deprecated row itself
+— all three of which **must** keep the old word to do their job), `INFORMATION-ARCHITECTURE.md` 2.
+**All 24 are citations or the retirement record. None is user-facing copy.**
+
+**What this ruling closes:** the §9-7 guard's stated scope gap — *"it does not read `docs/specs/`"*
+— is **no longer an open question about whether to widen it**. The specs are deliberately outside
+the bar, so a guard over them would be a guard over history. The scope stays as §11-E3 states it.
