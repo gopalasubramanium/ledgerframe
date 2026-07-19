@@ -896,6 +896,36 @@ contradicts itself and a reader who believes whichever section they read first.
 
 ---
 
+### 11-I. CONTRACT DRIFT FROM §11-E2a — found at the re-look, fixed here (2026-07-20)
+
+**Found by running `scripts/check_api_contract.py` for the Step-2 gate refresh — RED.** Not caused
+by Step 1, which touched one test module and this plan file and cannot move an HTTP contract.
+
+**The cause.** §11-E2a (`c18b847`) added the erasure paragraph to `POST /api/v1/system/reset-data`'s
+docstring — *"ALSO ERASES YOUR ACCEPTANCE OF THE LEGAL TERMS (page-legal §11-D3) …"* — and **did not
+regenerate the contract**. FastAPI serves that docstring as the operation `description`, so it is
+**contract surface**, not a comment. The committed contract has been describing that endpoint
+without the erasure since `c18b847`.
+
+**What it is, and what it is not.** Description-only: **141 paths / 71 schemas, unchanged** on both
+sides of the regeneration. No path, parameter, schema or status code moved. The defect is that a
+generated artifact stopped matching its generator — the class of drift the check exists for.
+
+**Why it is worth its own delta rather than a line in a report.** The one place a reader looks to
+learn what `reset-data` does is the contract, and the contract said the reset kept an acceptance it
+erases. §11-D3's whole point is that the erasure is **never silent**; a stale contract is one more
+surface saying otherwise. The confirmation copy stated it, the docstring stated it, and the
+published contract did not.
+
+**Fixed:** `python scripts/check_api_contract.py --write` → `docs/specs/API-CONTRACT.json` +
+`docs/openapi.json` regenerated; check now exits **0**.
+
+**Lesson, carried to §15:** a docstring on a routed handler is **served text**, and the contract
+regeneration belongs in the same commit that edits it — the same same-commit discipline §11-B
+already applied when it renamed the response models.
+
+---
+
 ## 15. LESSONS — carried to the close
 
 *Seeded here at the re-look so the close inherits them rather than re-deriving them. The close
@@ -926,33 +956,3 @@ ritual arrives as its own instruction; this list is its input.*
    missed that a PIN-protected install showed the PIN prompt instead of the consent panel, because
    every test in the gate's module ran on a PIN-less install. The defect was on the installs most
    likely to have a real user behind them.
-
----
-
-### 11-I. CONTRACT DRIFT FROM §11-E2a — found at the re-look, fixed here (2026-07-20)
-
-**Found by running `scripts/check_api_contract.py` for the Step-2 gate refresh — RED.** Not caused
-by Step 1, which touched one test module and this plan file and cannot move an HTTP contract.
-
-**The cause.** §11-E2a (`c18b847`) added the erasure paragraph to `POST /api/v1/system/reset-data`'s
-docstring — *"ALSO ERASES YOUR ACCEPTANCE OF THE LEGAL TERMS (page-legal §11-D3) …"* — and **did not
-regenerate the contract**. FastAPI serves that docstring as the operation `description`, so it is
-**contract surface**, not a comment. The committed contract has been describing that endpoint
-without the erasure since `c18b847`.
-
-**What it is, and what it is not.** Description-only: **141 paths / 71 schemas, unchanged** on both
-sides of the regeneration. No path, parameter, schema or status code moved. The defect is that a
-generated artifact stopped matching its generator — the class of drift the check exists for.
-
-**Why it is worth its own delta rather than a line in a report.** The one place a reader looks to
-learn what `reset-data` does is the contract, and the contract said the reset kept an acceptance it
-erases. §11-D3's whole point is that the erasure is **never silent**; a stale contract is one more
-surface saying otherwise. The confirmation copy stated it, the docstring stated it, and the
-published contract did not.
-
-**Fixed:** `python scripts/check_api_contract.py --write` → `docs/specs/API-CONTRACT.json` +
-`docs/openapi.json` regenerated; check now exits **0**.
-
-**Lesson, carried to §15:** a docstring on a routed handler is **served text**, and the contract
-regeneration belongs in the same commit that edits it — the same same-commit discipline §11-B
-already applied when it renamed the response models.
