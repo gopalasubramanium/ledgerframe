@@ -1,5 +1,16 @@
 # 08 — Tech Debt
 
+> **⚠ DATED CURRENCY NOTE — 2026-07-20 (AI-surfaces Phase 0.7).** **This document describes the
+> v1 codebase and is NOT a description of current state.** Its own text falsifies itself against
+> v2: it claims *"no page/component tests"* in `frontend/src`, which ~40 test files contradict.
+> Read it as a **record of the v1 surface** — useful, and misleading if mistaken for debt.
+>
+> The **AI rows have been reconciled to v2 below** and are marked `✅ RESOLVED (v2)` /
+> `⚠ v1-ONLY` inline with the commit that settled each. **No other section has been re-verified**,
+> and no reader should infer that an unmarked row is current. *(AI-surfaces §9(a); the plan's
+> §0-B carried the same warning and this makes it standing rather than per-reader.)*
+
+
 No `TODO`/`FIXME`/`HACK`/`XXX` markers exist in `app/` or `frontend/src/` (verified by grep) —
 the codebase is unusually clean and heavily commented. The debt below is structural: dead
 code/tables, duplication between frontend and backend, unfinished "schema-only" features, and
@@ -11,7 +22,7 @@ inconsistent patterns.
 |------|----------|----------------|
 | `ProviderConfig` table | No reads/writes anywhere outside `models/__init__.py` (provider selection lives in `.env`) | Drop or wire up |
 | `Note` table | Defined only; no route reads/writes notes | Drop or build the feature |
-| `AIConversation` / `AIMessage` tables | Only referenced in `system.py` reset-data deletion; AI chat is SSE and **never persists** conversations | Drop, or persist chat history if a "history" feature is intended |
+| ~~`AIConversation` / `AIMessage` tables~~ **✅ RESOLVED (v2)** | **Dropped** by migration `f9e1a2b3c4d5` (D-016). The recommendation's second option — *"persist chat history"* — is now **forbidden**, not merely unchosen: Commitment 6 promises AI questions and answers are never persisted. **2026-07-20:** the migration's `downgrade()` was re-creating both tables and no longer does, and the promise is guarded in three layers by `tests/integration/test_commitment_6_no_stored_conversations.py` (`7c4b0f0`) | **None. Do not re-add.** A "history" feature would need a Commitment amendment first |
 | `DashboardConfig` / `DashboardRotationItem` tables | Created only by `seed/demo.py`; rotation is driven client-side + `settings` rows (`focus_page`, `rotation_pages`) | Consolidate rotation storage into one mechanism (settings rows) and drop these, or wire them |
 | `verify_token()` (`core/security.py:66`) | "kept for callers without a DB session" — no callers found | Remove if truly unused |
 | Commented-out `_carry_forward` (`analytics.py:194-205`) | A dead duplicate above the live version | Delete |
@@ -51,7 +62,7 @@ Per model comments (02) and code:
   to record a merger** (TxnForm omits the type), so it's unreachable from the app.
 - `transactions.fx_to_base`/`fx_base` — captured on new same-day trades; historical rows are NULL;
   surfaced only as a secondary realised total. Backfill impossible (honest).
-- `ProviderConfig.config_json`, `AIMessage.facts_json` — defined, unused.
+- `ProviderConfig.config_json`, ~~`AIMessage.facts_json`~~ **(AIMessage: ✅ table dropped in v2 — see §1)** — defined, unused.
 
 ## 5. Inconsistent / fragile patterns
 
@@ -70,6 +81,11 @@ Per model comments (02) and code:
   overview, quotes) — side effects in GET handlers.
 - **Reports page AI helper** streams via `streamChat` (direct fetch) — inconsistent with the
   centralized `api` client; also InstrumentDetail, AskPanel, AiConfigCard use direct fetch.
+  **⚠ v1-ONLY (2026-07-20).** `streamChat`, `AskPanel` and `AiConfigCard` **do not exist in v2** —
+  `frontend/src` has no `ai.ts` and nothing calls `/ai/chat` (AI-surfaces §0-B; grep: zero hits).
+  This row is a **record of the v1 surface that D-067/D-068 rebuild**, not outstanding debt. The
+  pattern lesson it carries is still live and binds the rebuild: the Ask panel goes through the
+  centralised client, not a direct `fetch`.
 
 ## 6. Test coverage (observed from `tests/`)
 
@@ -79,7 +95,11 @@ checking:
 - No obvious tests for the **frontend** beyond `format.test.ts` / `persona.test.ts` (2 files);
   no page/component tests, no Playwright specs committed under `frontend/src` (playwright.config
   exists — e2e likely elsewhere / memory notes e2e gotchas).
-- Dead tables (Note/ProviderConfig/AIConversation) have no behavioural tests (nothing to test).
+- Dead tables (Note/ProviderConfig/~~AIConversation~~) have no behavioural tests (nothing to test).
+  **⚠ CORRECTED 2026-07-20:** *"nothing to test"* was wrong for the AI tables, and the reasoning
+  is worth keeping. Their **absence is a user-facing promise** (Commitment 6), so the thing to
+  test was never the table — it was that no table, and no write path, exists. That test now
+  exists (`7c4b0f0`). *A dead table backing a promise is the one dead table that needs a guard.*
 - `cost_basis_method="average"` engine branch is tested (`test_average_cost.py`) but has no UI/API
   to select it — a tested-but-unreachable path.
 
