@@ -332,3 +332,46 @@ it is attributed to a change.
 (the fixtures currently share seeded state and mutate it), or make the mutating purges idempotent /
 scoped. Reproducing ref: `pytest tests/unit/test_reports_pack.py tests/integration/test_performance.py`
 run in that order.
+
+## The "isolated" pre-pass protocol is NOT enforced — 18 smoke specs hardcode the owner's backend port (found 2026-07-19, page-help §9-bis-11 Step F) — **OPEN**
+
+**The protocol says** every walk/re-run happens on an **isolated instance** (spare ports, temp data
+dir, owner's live stack never touched). **`SMOKE_BASE` redirects only the BROWSER.**
+
+**Every `page.request.*` call in a smoke spec talks to the API DIRECTLY**, bypassing the frontend
+proxy — and **18 specs hardcode `const API = "http://127.0.0.1:8321/api/v1"`**, the owner's
+backend. So an "isolated" pre-pass drives the spare-port instance in the browser **while sending
+its writes to the owner's live database.**
+
+**This is not hypothetical. It happened during this milestone's Policy re-run.**
+`policy-smoke.spec.ts` issued `PUT /policy/targets`, `PUT /policy` and `PUT /settings` against
+**`:8321`** while the browser drove `:5199`.
+
+> **NOTHING WAS WRITTEN — and the reason is luck, not design.** The owner's instance was
+> **PIN-locked** and answered **401** to every request (verified read-only afterwards:
+> `GET /api/v1/policy` → `401 {"detail":"Locked. Unlock with your PIN."}`). Had the instance been
+> unlocked — which is its normal state while the owner is using it — the pre-pass would have
+> **wiped his policy targets and rewritten his concentration limit**, silently, as a side effect of
+> a test claiming to be isolated.
+
+**Detected because the spec FAILED** (`expect(put.ok())` on a 401), not because anything checked
+isolation. **A pre-pass has no way to notice it is talking to the wrong machine.**
+
+**Fixed here (2 of 20):** `policy-smoke.spec.ts` and `settings-smoke.spec.ts` now use
+`(process.env.SMOKE_API ?? "http://127.0.0.1:8321") + "/api/v1"` — the pattern
+**`reports-smoke.spec.ts:12` already had**, which is why this was a propagation failure rather than
+an unknown. Isolated runs use:
+
+```
+SMOKE_BASE=http://127.0.0.1:5199 SMOKE_API=http://127.0.0.1:8399 \
+  npx playwright test --config e2e/smoke/playwright.smoke.config.ts <spec>
+```
+
+**Still OPEN — the remaining 18 specs**, and the deeper problem: *the environment variable is
+opt-in, so forgetting it silently re-targets the owner's machine.* The real fix is to make the
+harness **fail closed** — e.g. the smoke config refuses to run when `SMOKE_BASE` is set but
+`SMOKE_API` is not, so a half-isolated run is impossible to express rather than merely
+discouraged. Remaining specs: `accounts-journey`, `accounts`, `news`, `markets`, `heatmap`,
+`cash-flow`, `cash-flow-editor`, `insurance`, `net-worth` (3 inline URLs), `estate`,
+`reports-pack-journey`, `review`, `first-run`, `pricing-health`, `portfolio`, `scenarios`,
+`reports-artifact`.

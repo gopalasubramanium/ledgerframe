@@ -12,7 +12,15 @@ import { test, expect } from "@playwright/test";
 
 const WIDTHS = [320, 375, 900, 1366];
 const THEMES = ["light", "dark"] as const;
-const API = "http://127.0.0.1:8321/api/v1";
+const API = (process.env.SMOKE_API ?? "http://127.0.0.1:8321") + "/api/v1";
+
+// ⚠ SMOKE_API IS NOT OPTIONAL WHEN RUNNING ISOLATED (page-help §9-bis-11, Step F).
+// `SMOKE_BASE` redirects only the BROWSER. Every `page.request.*` call below talks to the API
+// DIRECTLY, bypassing the frontend proxy — so with the port hardcoded, an "isolated" pre-pass
+// sends its writes to the OWNER'S LIVE BACKEND while the browser drives the spare-port instance.
+// That happened during this milestone's re-run. Nothing was written, because the owner's instance
+// was PIN-locked and answered 401 to everything — the isolation held by LUCK, not by design.
+// Run isolated as:  SMOKE_BASE=http://127.0.0.1:5199 SMOKE_API=http://127.0.0.1:8399 npx playwright …
 const consoleErrors: string[] = [];
 
 // The 13 AssetClass values — REAL-SHAPED data. page-home's lesson: a mockup fed 5 classes while the

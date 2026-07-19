@@ -205,3 +205,36 @@ def test_the_catalogue_declares_its_markup_dialect():
     reinterpretation of the same strings."""
     assert all_help()["markup"] == MARKUP_DIALECT
     assert MARKUP_DIALECT == "lf-help-markup-1"
+
+
+# --- The WIRING, not the renderer -------------------------------------------------------------- #
+# Found by the 3a pre-pass, not by review, and not by any unit test: the served strings carried
+# emphasis on 54 affordance labels while `inputs`/`options`/`outputs` still rendered as raw text,
+# so the page showed a literal `**Quote source**` to the user. Every markup test was green — they
+# tested the RENDERER, and the renderer was fine. What was wrong was which fields it was wired to.
+#
+# A correct component wired to half its fields is a whole class of defect that component tests
+# cannot see, which is why this reads the page instead.
+
+
+def test_every_served_prose_field_is_rendered_THROUGH_the_markup_renderer():
+    src = _HELP_PAGE.read_text(encoding="utf-8")
+
+    # The three list-valued fields render inline markup.
+    for field in ("entry.inputs", "entry.options", "entry.outputs"):
+        line = next((ln for ln in src.splitlines() if f"{field}.map" in ln), None)
+        assert line, f"{field} is not rendered on the Help page at all"
+        assert "HelpInline" in line, (
+            f"{field} renders RAW — its served `**` markers will show to the user as literal "
+            f"asterisks. Wrap the item in <HelpInline>."
+        )
+
+    # The prose fields go through the block renderer.
+    for field in ("entry.body", "entry.interpret", "entry.example"):
+        assert f"<HelpProse text={{{field}}}" in src, \
+            f"{field} does not go through HelpProse — it will render raw markup"
+
+    # The glossary triad, which renders inside <dd>.
+    for field in ("entry.what", "entry.why", "entry.improves"):
+        assert f"<HelpProse text={{{field}" in src, \
+            f"{field} does not go through HelpProse — it will render raw markup"

@@ -126,3 +126,16 @@ export function HelpProse({ text, className }: { text: string; className?: strin
     </div>
   );
 }
+
+/**
+ * Inline-only served markup, for text that ALREADY sits in its own element.
+ *
+ * `inputs` / `options` / `outputs` render as `<li>` rows the page owns; they carry emphasis on the
+ * affordance label but no block structure, so wrapping them in {@link HelpProse} would nest a
+ * paragraph inside a list item and add block spacing to a one-line row. Caught by the 3a pre-pass,
+ * which found those 54 labels rendering as literal `**Quote source**` — the strings were formatted
+ * and the renderer was only wired to the prose fields.
+ */
+export function HelpInline({ text }: { text: string }) {
+  return <>{renderInline(text)}</>;
+}

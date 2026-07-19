@@ -4,7 +4,7 @@ import "./Help.css";
 import { Button, EmptyState, PageHeader, Skeleton, TextInput } from "../components/ui";
 import { helpContent } from "../api/help";
 import type { HelpEntry, HelpResponse } from "../api/help";
-import { HelpProse } from "./helpMarkup";
+import { HelpProse, HelpInline } from "./helpMarkup";
 
 // Help (System group). page-help §9-3, REBUILT to §9-bis after the 0a rejection.
 //
@@ -198,7 +198,7 @@ function Entry({
             <section className="help__block">
               <h4 className="help__blocktitle">What you fill in</h4>
               <ul className="help__list">
-                {entry.inputs.map((s) => <li key={s}>{s}</li>)}
+                {entry.inputs.map((s) => <li key={s}><HelpInline text={s} /></li>)}
               </ul>
             </section>
           )}
@@ -206,7 +206,7 @@ function Entry({
             <section className="help__block">
               <h4 className="help__blocktitle">What you can choose</h4>
               <ul className="help__list">
-                {entry.options.map((s) => <li key={s}>{s}</li>)}
+                {entry.options.map((s) => <li key={s}><HelpInline text={s} /></li>)}
               </ul>
             </section>
           )}
@@ -214,7 +214,7 @@ function Entry({
             <section className="help__block">
               <h4 className="help__blocktitle">What you see</h4>
               <ul className="help__list">
-                {entry.outputs.map((s) => <li key={s}>{s}</li>)}
+                {entry.outputs.map((s) => <li key={s}><HelpInline text={s} /></li>)}
               </ul>
             </section>
           )}
