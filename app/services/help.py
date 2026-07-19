@@ -68,8 +68,9 @@ HELP: list[dict] = [
                {"topic": "page-portfolio", "label": "Portfolio"},
                {"topic": "page-review", "label": "Review"},
                {"topic": "page-reports", "label": "Reports"}]},
-    # The guarantee entry (was `category: "About"`). About LEAVES Help for Settings > System
-    # (9-bis-6) — but the guarantee is not About-the-project: it is what the product WILL NEVER DO,
+    # The guarantee entry (was `category: "About"`). About LEAVES Help for Settings (9-bis-6), where
+    # it is now the SEVENTH TAB — 9-bis-11(c) reversed the "card inside System" placement this
+    # comment used to name — but the guarantee is not About-the-project: it is what the product WILL NEVER DO,
     # which is orientation of the first order. It stays in Help, in Section 1, and is one of the
     # three ratified voice specimens.
     {"id": "guarantee", "category": "Orientation", "title": "What LedgerFrame will never do",
@@ -1150,8 +1151,10 @@ HELP: list[dict] = [
 
 # The three sections of the Help journey (9-bis-1), in the order the reader meets them:
 # Orientation (why + how + the mental model) > Pages (what each page does) > Glossary (what the
-# words mean). NOTHING outside these three. "About" is gone from Help entirely — it is a card in
-# Settings > System now (9-bis-6); the guarantee that used to sit under it moved to Orientation.
+# words mean). NOTHING outside these three. "About" is gone from Help entirely — it is the SEVENTH
+# SETTINGS TAB now (9-bis-6 moved it out of Help; 9-bis-11(c) then reversed the "card inside System"
+# placement, and 9-bis-13 rebuilt its content on the four-beat template). The guarantee that used to
+# sit under it moved to Orientation.
 _CATEGORIES = ["Orientation", "Pages", "Glossary"]
 
 # Section 3 reads BASICS > EXPERT (9-bis-1), which is not the order the entries are authored in and
