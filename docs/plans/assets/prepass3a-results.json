@@ -1,0 +1,272 @@
+[
+  {
+    "name": "gate-copy serves all six strings incl. the reading bar (§11-K)",
+    "pass": true,
+    "detail": "prompt,explainer,stale_note,declined_note,reading_note,reading_return"
+  },
+  {
+    "name": "PIN-less unaccepted: the consent panel is the entry",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "the gate renders the SERVED prompt verbatim",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "the gate renders the SERVED explainer verbatim",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "reading bar shows the SERVED note verbatim",
+    "pass": true,
+    "detail": "You are reading the Legal page. Nothing has been accepted yet."
+  },
+  {
+    "name": "reading bar's return carries the SERVED label",
+    "pass": true,
+    "detail": "Return to accept"
+  },
+  {
+    "name": "the gate stood down so the document is readable",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "six articles render",
+    "pass": true,
+    "detail": "count=6"
+  },
+  {
+    "name": "article numbers are 1..6, derived from position",
+    "pass": true,
+    "detail": "1. 2. 3. 4. 5. 6."
+  },
+  {
+    "name": "anchor #legal-position",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-scoped-caveats",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-licence",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-jurisdiction",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-preamble",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-commitments",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "anchor #legal-pointers",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "seven Commitments render",
+    "pass": true,
+    "detail": "count=7"
+  },
+  {
+    "name": "containment · light · 320px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · light · 375px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · light · 768px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · light · 1366px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · light · 1440px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · dark · 320px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · dark · 375px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · dark · 768px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · dark · 1366px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "containment · dark · 1440px",
+    "pass": true,
+    "detail": "overflow=0px"
+  },
+  {
+    "name": "the reading bar returns to the gate",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "DECLINE: the install stays locked",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "DECLINE: the served declined note is shown",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "DECLINE: nothing is accepted server-side",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "ACCEPT: the gate closes and the app is entered",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "ACCEPT: recorded server-side against the current hash",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "ACCEPT: no PIN is invented to stand in for consent",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "the Reports Pack generates on an accepted install",
+    "pass": true,
+    "detail": "http=200 bytes=17053"
+  },
+  {
+    "name": "the generated Pack carries Legal's footer line, byte-for-byte (AC-L8)",
+    "pass": true,
+    "detail": "Reporting only. LedgerFrame does not give financial, tax or …"
+  },
+  {
+    "name": "Help is reachable and carries a Legal entry",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "STALE: the API reports the third state, not a boolean",
+    "pass": true,
+    "detail": "status=stale"
+  },
+  {
+    "name": "STALE: the gate re-asks",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "STALE: the returning user is told the document CHANGED, not greeted as a stranger",
+    "pass": true,
+    "detail": "The Legal page has changed since you last accept"
+  },
+  {
+    "name": "STALE: re-accepting binds to the CURRENT hash and clears the state",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "a PIN can be set on the isolated install",
+    "pass": true,
+    "detail": "http=200"
+  },
+  {
+    "name": "precondition: the install is unaccepted again",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "PIN-PROTECTED unaccepted: the CONSENT panel is shown, not the PIN prompt",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "PIN-PROTECTED: the lock screen is behind the gate, not in front of it",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "PIN-PROTECTED: after consent, the PIN lock is what remains",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "unlocked the isolated install to authorise the reset",
+    "pass": true,
+    "detail": "http=200"
+  },
+  {
+    "name": "reset-data accepted",
+    "pass": true,
+    "detail": "http=200"
+  },
+  {
+    "name": "RESET ERASES ACCEPTANCE: the record returns to `none`",
+    "pass": true,
+    "detail": "status=none"
+  },
+  {
+    "name": "after a reset the gate RE-FIRES",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "and it re-fires as NONE, not stale — the next holder is not shown someone else's consent",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Legal serves pack_footer",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "the Pack is REFUSED (451) while the install is unaccepted — the gate contains it too",
+    "pass": true,
+    "detail": "http=451"
+  },
+  {
+    "name": "console: 116 × 451 (acceptance gate) + 18 × 401 (PIN lock) — both the product refusing, and 0 others",
+    "pass": true,
+    "detail": ""
+  }
+]

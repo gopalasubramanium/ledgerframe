@@ -1197,7 +1197,91 @@ pre-pass.
 
 | # | Finding | Disposition |
 |---|---|---|
-| *(filled by the Phase 2/3a re-drive — §13)* | | |
+| — | **None.** The §13 re-drive raised **no product finding**: 54/54 green. Its three initial reds were all **probe defects**, diagnosed and recorded in §13 rather than filed here — a defect in the instrument is not a defect in the product, and filing it as one would corrupt the count. | **LEDGER CLOSED — 0 findings.** |
+
+---
+
+## 13. PHASE 2 + 3a — TESTS GREEN + SCRIPTED PRE-PASS, ISOLATED INSTANCE (2026-07-20)
+
+Driven on the **isolated stack** — Vite dev **5199** → backend **8399** → a **temp data dir**
+(`/tmp/lf-prepass-*`). The owner's `5173`/`8321`/`~/.ledgerframe-data` were **never touched**;
+`.env` was snapshotted and **verified byte-identical after** (`460a2da0…7afae6`), the throwaway
+`vite.prepass.config.ts` was deleted before anything was staged (the `fe0d68b` lesson, mechanised
+into the harness's exit trap), and the isolated ports were confirmed clear at the end. Vite dev
+rather than the prod build, deliberately: the prod CSP blocks `index.html`'s theme-flash inline
+script and would have cost one benign console error against a **0-others** claim.
+
+### 13-A. The pre-pass — **54 / 54 PASSED**
+
+| Area | Checks | Result |
+|---|---|---|
+| **Served copy** | gate-copy carries all **six** strings incl. `reading_note` / `reading_return` | ✓ |
+| **The reading bar (§11-K)** | note + button label render **verbatim from the payload**, gate stood down | ✓ |
+| **The formal Legal page** | **six articles**; numbers `1.` – `6.` **derived from position**; all 7 anchors (`#legal-preamble`, the four sections, `#legal-commitments`, `#legal-pointers`); **seven Commitments** | ✓ |
+| **Containment** | both themes × **320 / 375 / 768 / 1366 / 1440** — `scrollWidth − clientWidth ≤ 0` at every one | ✓ 10/10 |
+| **Gate — PIN-less** | consent panel is the entry; served prompt + explainer verbatim | ✓ |
+| **Gate — decline** | stays locked · served declined note · **nothing recorded as accepted** | ✓ |
+| **Gate — accept** | gate closes, app entered, recorded against the current hash, **no PIN invented** | ✓ |
+| **Gate — stale** | API reports the **third state**; the returning user is told the document *changed*; re-accepting rebinds to the current hash | ✓ |
+| **Gate — PIN-protected** | **consent panel, not the PIN prompt**; lock is *behind* the gate; after consent the PIN is what remains | ✓ |
+| **Reset erasure (§11-D3/§11-E2a)** | reset → acceptance `none` → gate **re-fires**, and re-fires as **none, not stale** | ✓ |
+| **Help** | reachable, carries Legal's entry | ✓ |
+| **Pack footer (AC-L8)** | a **really generated** Pack (`/reports/pack`, 17 053 bytes, HTTP 200) carries Legal's footer **byte-for-byte** | ✓ |
+| **Pack containment** | the same Pack is **REFUSED 451** while unaccepted — the gate contains the one data-bearing artifact outside `/api/v1` | ✓ |
+| **Console** | **116 × 451** (acceptance gate) + **18 × 401** (PIN lock) — *both the product refusing, by design* — and **0 others** | ✓ |
+
+### 13-B. THE THREE GATE STATES ARE BYTE-IDENTICAL, AND THAT IS THE RESULT
+
+`prepass3a-01-gate-pinless.png`, `prepass3a-08-gate-pin-protected.png` and
+`prepass3a-10-reset-refires-none.png` share one sha256 (`107d9925…`). A PIN-less unaccepted
+install, a **PIN-protected** unaccepted install, and an install **freshly reset** all present the
+**same consent panel** — §11-E2's fix (consent before PIN) and §11-D3's ruling (a reset returns the
+install to first-run posture) holding **simultaneously**, and *driven rather than assumed*, which is
+§15 lesson 5. The §11-J re-render found the same equality across two states; this extends it to
+three.
+
+### 13-C. THREE REDS, ALL THREE THE INSTRUMENT — the fourth occurrence this milestone
+
+The first run was **50/53**. Every red was in the probe:
+
+1. **`/reports/pack` → 451.** The probe fetched the Pack *after* the reset, i.e. on an
+   **unaccepted** install, where the read gate refuses it **by design**. Verified against
+   `deps.py` before touching anything — the endpoint carries `require_read_auth`, the same gate.
+   The Pack generation moved to the accepted posture; **and the 451 was kept as its own assertion**,
+   because the refusal is worth pinning too.
+2. **The byte-for-byte footer**, downstream of (1).
+3. **18 console 401s.** They appear only after the PIN is set and the reset relocks the install:
+   the **PIN lock refusing reads**. The filter excluded 451 and nothing else, so a second legitimate
+   refusal read as noise. Now counted **separately by cause** rather than lumped into one
+   "expected" bucket — a filter that hides two different refusals behind one number cannot tell you
+   which one stopped working.
+
+**This is the FOURTH instrument-at-fault this milestone** (§11-D's `AGPL-3.0-or-later` match,
+§11-J's line-number defect, §11-J's mid-transition `getComputedStyle`, and now this). Recorded with
+the others in §15, because the pattern is now the milestone's most reliable finding: *when a probe
+goes red against code that three other gates call green, suspect the probe first — and then
+**check**, because "suspect the probe" is exactly how a real defect gets waved through.* Each of the
+three above was confirmed against the source before being reclassified.
+
+### 13-D. GATES — the full set, solo (2026-07-20)
+
+Run **solo**: no other pytest process shared the machine (the void-verdict rule), and the pre-pass
+was held until both backend runs had finished.
+
+| Gate | Result |
+|---|---|
+| **Backend FULL, solo, ORDERED** (`-p no:randomly`) | **1822 passed, 15 skipped** (12:26) |
+| **Backend FULL, solo, RANDOMIZED** (the order-pair) | **1822 passed, 15 skipped** (09:58) |
+| `npm run check` — **the gate, not the parts** (lesson 10) | **exit 0** |
+| ├ lint · typecheck · `check:copy` · `check:smoke-isolation` | clean |
+| ├ `check:tokens` | ✓ **89** tokens all defined |
+| ├ **`check:primitives`** | ✓ no raw checkbox in **137** source files |
+| ├ vitest | **40 files / 379 passed** |
+| └ Playwright | **361 passed** |
+| **HELP CURRENCY SUITE** (`test_help_content_accuracy` + `test_glossary_parity`) | **313 passed, 15 skipped** |
+| **Licence + Legal guards** (`test_licence_spelling`, `test_legal_accuracy`, `test_legal_content`, `test_legal_acceptance`) | **181 passed** |
+| `scripts/check_api_contract.py` | **exit 0** — **141 paths · 71 schemas** |
+| **Scripted pre-pass, isolated** | **54 / 54** |
 
 ---
 
