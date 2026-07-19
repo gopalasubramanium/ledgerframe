@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for the Net worth
 // page — drives the LIVE app + real backend on the seeded demo data (incl. the ND-1 synthetic
@@ -20,7 +21,7 @@ test.describe.serial("net worth pre-pass (live)", () => {
     page.on("pageerror", (e) => consoleErrors.push(`[pageerror] ${e.message}`));
 
     // PART 0: clear the first-run gate SERVER-SIDE so the page (not the overlay) is tested.
-    await page.request.put("http://127.0.0.1:8321/api/v1/settings", { data: { values: { first_run_complete: "1" } } });
+    await page.request.put(`${API}/settings`, { data: { values: { first_run_complete: "1" } } });
 
     // PART 1: KPI strip populated (the four D-054 figures) --------------------------------------
     await page.goto("/#/net-worth");
@@ -150,7 +151,7 @@ test.describe.serial("net worth pre-pass (live)", () => {
     // (page-insurance §12in-1), so the line is PRESENT and renders the SERVED display total verbatim
     // (page-insurance §9-4 migrated it to total_cash_value_display). When ≥1 active policy has cash
     // value, count>0 → the line shows; the served string must equal what /insurance serves.
-    const ins = await (await page.request.get("http://127.0.0.1:8321/api/v1/insurance")).json();
+    const ins = await (await page.request.get(`${API}/insurance`)).json();
     if (ins.count > 0 && ins.total_cash_value > 0) {
       const line = page.locator(".nw__exclusion");
       await expect(line, "the exclusion line renders when there is active cash value").toHaveCount(1);
@@ -182,7 +183,7 @@ test.describe.serial("net worth pre-pass (live)", () => {
     }
 
     // §14in-7 — each of the four money KPI tiles carries the served base-currency affix (muted slot).
-    const sumAffix = await (await page.request.get("http://127.0.0.1:8321/api/v1/portfolio/summary")).json();
+    const sumAffix = await (await page.request.get(`${API}/portfolio/summary`)).json();
     await page.setViewportSize({ width: 1366, height: 900 });
     await page.waitForTimeout(120);
     for (const label of ["Net worth", "Gross assets", "Liabilities", "Cash & deposits"]) {

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { BASE } from "./smoke-target.mjs";
 
 // PHASE 3a SCRIPTED PRE-PASS — page-help §9-bis-11 (Steps B/C/D).
 // DEV-ONLY, isolated instance (spare ports, temp data dir). Never in `npm run check` / CI.
@@ -15,7 +16,6 @@ import { test, expect, type Page } from "@playwright/test";
 // Screenshots land in artifacts/ for the owner's 3b look.
 
 const OUT = "e2e/smoke/artifacts";
-const BASE = process.env.SMOKE_BASE ?? "http://127.0.0.1:5199";
 
 /**
  * Dismiss the first-run checklist and WAIT FOR IT TO GO.

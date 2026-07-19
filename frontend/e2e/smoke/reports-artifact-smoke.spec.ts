@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke. page-reports §13 (Phase 2) — the ARTIFACT-LEVEL JOURNEY guards that mechanise the
 // §12rp-4 subtitle promise ("Every export carries the same disclaimers you see here"). For EACH Export
@@ -9,7 +10,6 @@ import { readFileSync } from "node:fs";
 // the assertion is proven to read the file (absent when stripped, present when real).
 //   npx playwright test --config e2e/smoke/playwright.smoke.config.ts reports-artifact-smoke
 
-const API = "http://127.0.0.1:8321/api/v1";
 
 // The served disclaimers (D-105) — the exact substrings the on-screen page shows AND the file must carry.
 const STATEMENTS_DISCLAIMER = "not tax or financial advice";

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for Review — drives the
 // LIVE app + real backend on seeded demo, checks the POPULATED page (summary rail · attention list with
@@ -8,7 +9,6 @@ import { test, expect } from "@playwright/test";
 //   npx playwright test --config e2e/smoke/playwright.smoke.config.ts review-smoke
 
 const WIDTHS = [320, 375, 900, 1366];
-const API = "http://127.0.0.1:8321/api/v1";
 const consoleErrors: string[] = [];
 
 test.describe.serial("review pre-pass (live)", () => {

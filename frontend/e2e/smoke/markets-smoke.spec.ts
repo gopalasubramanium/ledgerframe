@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for Markets — drives
 // the LIVE app + real backend on seeded demo, checks the POPULATED page (market status + Global tab
@@ -9,7 +10,6 @@ import { test, expect } from "@playwright/test";
 
 const WIDTHS = [320, 375, 900, 1366];
 const consoleErrors: string[] = [];
-const API = "http://127.0.0.1:8321/api/v1";
 
 test.describe.serial("markets pre-pass (live)", () => {
   test("drive the populated /markets + assert every section, R-17, overflow, 0 errors", async ({ page }) => {

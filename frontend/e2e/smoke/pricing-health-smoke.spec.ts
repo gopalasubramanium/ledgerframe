@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for Pricing Health —
 // drives the LIVE app + real backend on seeded demo, checks the POPULATED page (diagnostics +
@@ -15,7 +16,7 @@ test.describe.serial("pricing health pre-pass (live)", () => {
     page.on("pageerror", (e) => consoleErrors.push(`[pageerror] ${e.message}`));
 
     // PART 0: clear the first-run gate SERVER-SIDE so the page (not the overlay) is tested.
-    await page.request.put("http://127.0.0.1:8321/api/v1/settings", { data: { values: { first_run_complete: "1" } } });
+    await page.request.put(`${API}/settings`, { data: { values: { first_run_complete: "1" } } });
 
     // PART 1: diagnostics populated + confidence card ------------------------------------------
     await page.goto("/#/pricing-health");
@@ -49,7 +50,7 @@ test.describe.serial("pricing health pre-pass (live)", () => {
       return m ? Number(m[1]) : 0;
     };
     const readFootnote = async (): Promise<number> => Number((await page.getByTestId("ph-stale-count").textContent()) ?? "-1");
-    const summary0 = await (await page.request.get("http://127.0.0.1:8321/api/v1/portfolio/summary")).json();
+    const summary0 = await (await page.request.get(`${API}/portfolio/summary`)).json();
     const b0 = await readBanner();
     const f0 = await readFootnote();
     console.log("PART 2 — banner:", b0, "footnote:", f0, "summary.stale_count:", summary0.stale_count);
@@ -119,7 +120,7 @@ test.describe.serial("pricing health pre-pass (live)", () => {
     await page.keyboard.press("Escape");
 
     // PART 5: identifier-duplicate banner — honest (shown only when count > 0) -------------------
-    const dupCount = (await (await page.request.get("http://127.0.0.1:8321/api/v1/system/identifier-duplicates")).json()).count;
+    const dupCount = (await (await page.request.get(`${API}/system/identifier-duplicates`)).json()).count;
     const dupBannerCount = await page.locator(".ph__dupbanner").count();
     console.log("PART 5 — identifier duplicates:", dupCount, "· banner shown:", dupBannerCount);
     expect(dupBannerCount, "dup banner present iff duplicates exist").toBe(dupCount > 0 ? 1 : 0);

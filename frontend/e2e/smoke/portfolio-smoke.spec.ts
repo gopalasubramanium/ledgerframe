@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for the
 // Portfolio page — drives the LIVE app + real backend on the seeded demo data, checks the
@@ -15,7 +16,7 @@ test.describe.serial("portfolio pre-pass (live)", () => {
     page.on("pageerror", (e) => consoleErrors.push(`[pageerror] ${e.message}`));
 
     // --- PART 0: clear the first-run gate SERVER-SIDE so the page (not the overlay) is tested.
-    await page.request.put("http://127.0.0.1:8321/api/v1/settings", {
+    await page.request.put(`${API}/settings`, {
       data: { values: { first_run_complete: "1" } },
     });
 

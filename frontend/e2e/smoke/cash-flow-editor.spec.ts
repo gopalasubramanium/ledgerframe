@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke. §12cf1-3 — THE EDITOR DIALOGS ARE COMPACT: no dead bands.
 //
@@ -6,7 +7,6 @@ import { test, expect } from "@playwright/test";
 // STRETCHED vertically — the Name field was 160px tall to hold a label and a 40px input, and the
 // dialog was full of empty space. A field is a label + ONE control (+ an optional hint); it may not
 // be taller than that.
-const API = "http://127.0.0.1:8321/api/v1";
 
 for (const theme of ["light", "dark"] as const) {
   for (const width of [1366, 1440]) {

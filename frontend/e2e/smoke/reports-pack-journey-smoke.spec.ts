@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke. reports-pack §7a Phase 2 — the ARTIFACT JOURNEY guard for the Reports Pack.
 // It clicks the REAL Reports-page entry point, follows the popup to the backend-served artifact, and
@@ -14,11 +15,10 @@ import { join } from "node:path";
 // Plus a print-emulation assertion on RENDERED PIXELS (never computed styles): §12pk-2 — page 1 has
 // no running header (masked by the header block); page 2+ does.
 //
-// Prereqs: dev frontend (127.0.0.1:5173, which now proxies /reports/pack → backend) + dev backend
-// (127.0.0.1:8321) on a RESET demo seed (the canonical three entities); `pdftoppm` on PATH.
+// Prereqs: the SMOKE_BASE dev frontend (which proxies /reports/pack → backend) + the SMOKE_API dev
+// backend on a RESET demo seed (the canonical three entities); `pdftoppm` on PATH.
 //   npx playwright test --config e2e/smoke/playwright.smoke.config.ts reports-pack-journey-smoke
 
-const API = "http://127.0.0.1:8321/api/v1";
 const SEEDED_ENTITIES = ["Household", "Meera Iyer", "Rajan Family Trust"]; // §12pk-4: exactly three.
 const REVIEW_DISCLAIMER = "reporting only, not advice or a required action."; // review.py:259, verbatim.
 

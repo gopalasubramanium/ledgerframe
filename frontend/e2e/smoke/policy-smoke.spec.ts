@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for POLICY — drives the
 // LIVE app + real backend on the seeded demo, both themes × every breakpoint, and captures console
@@ -12,7 +13,6 @@ import { test, expect } from "@playwright/test";
 
 const WIDTHS = [320, 375, 900, 1366];
 const THEMES = ["light", "dark"] as const;
-const API = (process.env.SMOKE_API ?? "http://127.0.0.1:8321") + "/api/v1";
 
 // ⚠ SMOKE_API IS NOT OPTIONAL WHEN RUNNING ISOLATED (page-help §9-bis-11, Step F).
 // `SMOKE_BASE` redirects only the BROWSER. Every `page.request.*` call below talks to the API

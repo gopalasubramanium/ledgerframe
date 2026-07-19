@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke. §14ac-2 JOURNEY guards — click the REAL controls on a seeded account and assert the
 // scoped ARRIVAL (chip + both tables scoped), not just the destination. RED on the pre-fix build (the
@@ -7,7 +8,6 @@ import { test, expect } from "@playwright/test";
 // fetches). This is the guard Phase-2 lacked: a destination-only test was green while the link was broken.
 //   npx playwright test --config e2e/smoke/playwright.smoke.config.ts accounts-journey-smoke
 
-const API = "http://127.0.0.1:8321/api/v1";
 
 async function seededAccount(page: import("@playwright/test").Page) {
   // pick an account that has BOTH holdings and transactions, so both tables can be proven scoped.

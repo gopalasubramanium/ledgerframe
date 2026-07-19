@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for INSURANCE —
 // drives the LIVE app + real backend (demo-seeded, incl. the non-SGD + lapsed policies), both themes
@@ -12,7 +13,6 @@ import { test, expect } from "@playwright/test";
 
 const WIDTHS = [320, 375, 900, 1366];
 const THEMES = ["light", "dark"] as const;
-const API = "http://127.0.0.1:8321/api/v1";
 const consoleErrors: string[] = [];
 
 test.describe.serial("insurance pre-pass (live)", () => {

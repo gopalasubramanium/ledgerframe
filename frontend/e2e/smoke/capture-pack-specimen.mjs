@@ -5,13 +5,14 @@
 // PRINT-GEOMETRY specimen (reports-pack §7a): on-screen at 1440, and a REAL paginated print
 // PDF via Chromium's page.pdf() (which honours @media print + break-before + the running header).
 //
-// Prereq: the backend must be serving http://127.0.0.1:8321/reports/pack against the 3-entity
+// Prereq: the SMOKE_API backend must be serving /reports/pack against the 3-entity
 // demo seed. Run from repo root:
 //   node frontend/e2e/smoke/capture-pack-specimen.mjs
 import { chromium } from "@playwright/test";
 import { mkdirSync } from "node:fs";
+import { API, API_ORIGIN } from "./smoke-target.mjs";
 
-const URL = "http://127.0.0.1:8321/reports/pack";
+const URL = `${API_ORIGIN}/reports/pack`;
 const OUT = "frontend/e2e/smoke/artifacts";
 mkdirSync(OUT, { recursive: true });
 

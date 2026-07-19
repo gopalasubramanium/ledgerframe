@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for News — drives the
 // LIVE app + real backend on seeded demo, checks the POPULATED page (deterministic briefing with NO AI
@@ -8,7 +9,6 @@ import { test, expect } from "@playwright/test";
 //   npx playwright test --config e2e/smoke/playwright.smoke.config.ts news-smoke
 
 const WIDTHS = [320, 375, 900, 1366];
-const API = "http://127.0.0.1:8321/api/v1";
 const consoleErrors: string[] = [];
 
 test.describe.serial("news pre-pass (live)", () => {

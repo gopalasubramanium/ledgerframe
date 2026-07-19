@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY pre-pass (page-reports §13, Phase 3a). Drives /reports on the LIVE app + real backend on
 // a reset, demo-seeded instance — both themes × the four breakpoints: containment (no horizontal
@@ -9,7 +10,6 @@ import { test, expect } from "@playwright/test";
 
 // Isolated-instance override (§14dr-28 / rule #6): point the harness at a spare-port
 // isolated demo backend via SMOKE_API — never mutate the owner's live 8321 instance.
-const API = (process.env.SMOKE_API ?? "http://127.0.0.1:8321") + "/api/v1";
 const WIDTHS = [320, 375, 900, 1366];
 const THEMES = ["light", "dark"] as const;
 

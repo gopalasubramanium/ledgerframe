@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { API } from "./smoke-target.mjs";
 
 // ⚠ DEV-ONLY smoke (see playwright.smoke.config.ts). Phase-3a scripted pre-pass for the Settings
-// page — drives the LIVE app + real backend (127.0.0.1:8321) on the demo-seeded instance across all
+// page — drives the app + real backend named by smoke-target.mjs on the demo-seeded instance across all
 // four D-069 tabs, both themes, all breakpoints: containment (no horizontal overflow), 0 console
 // errors, and captures the §12st ratification-condition screenshots + the danger Reset control. NOT
 // wired into `npm run check`/CI. Run (from frontend/):
@@ -20,7 +21,6 @@ import { test, expect } from "@playwright/test";
 // Privacy · Data feeds · AI · System · About. System keeps the access/appliance controls (root helper, PIN, auto-lock, Allow LAN,
 // Reset data); the "AI never persists" statement stays in Privacy.
 
-const API = (process.env.SMOKE_API ?? "http://127.0.0.1:8321") + "/api/v1";
 
 // ⚠ SMOKE_API IS NOT OPTIONAL WHEN RUNNING ISOLATED (page-help §9-bis-11, Step F).
 // `SMOKE_BASE` redirects only the BROWSER. Every `page.request.*` call below talks to the API
