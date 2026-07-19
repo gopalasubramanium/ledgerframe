@@ -37,10 +37,18 @@ export interface HelpEntry {
 }
 
 export interface HelpResponse {
+  /** The served markup dialect the prose fields are written in (`lf-help-markup-1`).
+   *  page-help §9-bis-11(b); the subset is defined in `app/services/help_markup.py` and rendered
+   *  by `routes/helpMarkup.tsx`. Versioned, so a future change to the subset is a visible
+   *  contract change rather than a silent reinterpretation of unchanged strings. */
+  markup: string;
   categories: string[];
   entries: HelpEntry[];
 }
 
+/** NOTE the asymmetry with `HelpResponse`, which is deliberate: the search projection is served
+ *  MARKUP-STRIPPED (its consumers are the ranker and the AI grounding pack, neither of which
+ *  renders markup), so it carries no dialect field. */
 export interface HelpSearchResponse {
   query: string;
   entries: HelpEntry[];

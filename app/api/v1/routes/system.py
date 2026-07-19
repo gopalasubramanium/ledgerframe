@@ -797,13 +797,28 @@ class HelpSearchEntry(BaseModel):
 
 
 class HelpResponse(BaseModel):
-    """`GET /help` — the whole catalogue."""
+    """`GET /help` — the whole catalogue.
+
+    `markup` declares the CONSTRAINED SERVED MARKUP DIALECT the prose fields are written in
+    (page-help §9-bis-11(b), `app/services/help_markup.py`). It is on the response rather than
+    per-entry because the dialect is a property of the catalogue, not of any one entry, and
+    versioning it (`lf-help-markup-1`) makes a future change to the sanctioned subset a VISIBLE
+    contract change rather than a silent reinterpretation of unchanged strings.
+    """
+    markup: str
     categories: list[str]
     entries: list[HelpEntry]
 
 
 class HelpSearchResponse(BaseModel):
-    """`GET /help?q=` — ranked hits for a query."""
+    """`GET /help?q=` — ranked hits for a query.
+
+    Deliberately carries NO `markup` field: this projection is served MARKUP-STRIPPED. Its
+    consumers are the server-side ranker and `app/ai/tools.py` `help_facts()`, which passes
+    `body` to the model as a grounding fact — neither renders markup, and markers reaching the
+    AI would surface as `**` in answers the user reads. The asymmetry between the two responses
+    IS the contract: full catalogue = formatted, search projection = plain.
+    """
     query: str
     entries: list[HelpSearchEntry]
 

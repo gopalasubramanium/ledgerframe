@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from app.services.help import HELP
+from app.services.help_markup import strip_markup
 
 REPO = Path(__file__).resolve().parents[2]
 NAV = REPO / "frontend" / "src" / "components" / "ui" / "nav.ts"
@@ -50,7 +51,18 @@ def _prose_fields(entry: dict) -> list[str]:
 
 
 def _prose(entry: dict, fields: list[str] | None = None) -> str:
-    """Every authored string in an entry, flattened — list-valued fields included."""
+    """Every authored string in an entry, flattened — list-valued fields included, MARKUP STRIPPED.
+
+    THE STRIP IS THE GUARD, not a tidy-up (§9-bis-11(b)). Every check below matches phrases —
+    substrings and word-boundary regexes — against shipped product strings. A marker sitting
+    INSIDE a phrase separates its words and defeats the match: `you **should**` does not contain
+    "you should", so the platform's central no-advice guarantee would be broken *in bold* by a
+    green suite. That is the silent-success mode in its purest form, and formatting must never be
+    a way to smuggle a claim past the guard that exists to catch it.
+
+    Proven by fail-first specimens in `tests/unit/test_help_markup.py`, which also fails if this
+    strip is ever removed — so the wiring cannot rot quietly.
+    """
     out: list[str] = []
     for k in fields if fields is not None else _prose_fields(entry):
         v = entry.get(k)
@@ -58,7 +70,7 @@ def _prose(entry: dict, fields: list[str] | None = None) -> str:
             out.append(v)
         elif isinstance(v, list):
             out.extend(x for x in v if isinstance(x, str))
-    return " ".join(out)
+    return strip_markup(" ".join(out))
 
 
 def test_the_prose_field_set_is_derived_and_covers_the_new_redesign_fields():
@@ -352,7 +364,11 @@ def test_every_named_affordance_exists_in_the_shipped_product(entry: dict):
     staleness threshold — described for a whole release, never built."""
     dead = []
     for claim in entry["inputs"]:
-        label = _LABEL_SPLIT.split(claim, 1)[0].strip()
+        # STRIPPED first — this guard reads the field directly, not through `_prose()`, so it
+        # needs the strip in its own right. `**Retry** — …` would otherwise look up the literal
+        # `**Retry**`, find nothing, and report a REAL control as dead: a false alarm that teaches
+        # the next reader to relax the guard rather than trust it.
+        label = _LABEL_SPLIT.split(strip_markup(claim), 1)[0].strip()
         if label in _AFFORDANCE_EXEMPT:
             continue
         # A claim may name several controls ("Edit, Rename, Merge… and Delete on a row").
@@ -387,7 +403,7 @@ def test_every_enumerated_option_value_exists_in_the_shipped_product(entry: dict
     case-insensitive: the source carries `expense` where the user is shown `Expense`."""
     invented = []
     for item in entry["options"]:
-        m = _ENUM.match(item)
+        m = _ENUM.match(strip_markup(item))  # direct field read — strip in its own right
         if not m:
             continue
         for value in m.group("values").split("·"):

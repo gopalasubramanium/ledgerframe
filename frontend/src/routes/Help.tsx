@@ -4,6 +4,7 @@ import "./Help.css";
 import { Button, EmptyState, PageHeader, Skeleton, TextInput } from "../components/ui";
 import { helpContent } from "../api/help";
 import type { HelpEntry, HelpResponse } from "../api/help";
+import { HelpProse } from "./helpMarkup";
 
 // Help (System group). page-help §9-3, REBUILT to §9-bis after the 0a rejection.
 //
@@ -21,6 +22,13 @@ import type { HelpEntry, HelpResponse } from "../api/help";
 // So the measure MOVED rather than being repealed (§9-bis-0): the page is full-width, and the 78ch
 // reading cap now applies INSIDE an expanded entry body, where the user genuinely is reading prose.
 // Scanning and reading are different jobs and the layout serves whichever is happening.
+//
+// ⚠ SUPERSEDED 2026-07-19 (§9-bis-11(b), owner). The 78ch cap is now RETIRED ENTIRELY: entry
+// bodies use the FULL responsive width and carry TYPOGRAPHIC STRUCTURE instead — headings, bold,
+// italic, lists, spacing — served in a CONSTRAINED MARKUP SUBSET (`app/services/help_markup.py`,
+// rendered by `./helpMarkup`). Structure gives the eye its return points, which is the job the
+// measure was doing, without stranding a narrow column inside a wide entry. The two paragraphs
+// above are kept as the record of what was tried first.
 //
 // THREE SECTIONS, AND ONLY THREE (§9-bis-1): Orientation · Pages · Glossary. About is GONE from
 // Help — it is a card in Settings → System now (§9-bis-6).
@@ -161,10 +169,12 @@ function Entry({
       </div>
 
       <div className="help__panel" id={panelId} role="region" hidden={!open}>
-        {/* The 78ch measure lives HERE (§9-bis-0) — inside a body the user is reading, not around
-            a catalogue they are scanning. */}
+        {/* §9-bis-11(b) — the body now uses the FULL responsive entry width; the 78ch cap of
+            §9-bis-0 is retired (see Help.css). Structure, not a narrow column, is what makes a
+            long entry readable — and the structure is SERVED, in a constrained subset the
+            accuracy guards strip before checking, so formatting can never hide a claim. */}
         <div className="help__measure">
-          <p className="help__body">{entry.body}</p>
+          <HelpProse text={entry.body} />
 
           {entry.links && (
             <p className="help__links">
@@ -211,7 +221,7 @@ function Entry({
           {entry.interpret && (
             <section className="help__block">
               <h4 className="help__blocktitle">How to read it</h4>
-              <p className="help__body">{entry.interpret}</p>
+              <HelpProse text={entry.interpret} />
             </section>
           )}
 
@@ -219,11 +229,11 @@ function Entry({
           {"what" in entry && (
             <dl className="help__triad">
               <dt>What it is</dt>
-              <dd>{entry.what}</dd>
+              <dd><HelpProse text={entry.what ?? ''} /></dd>
               <dt>Why it matters</dt>
-              <dd>{entry.why}</dd>
+              <dd><HelpProse text={entry.why ?? ''} /></dd>
               <dt>What improves it</dt>
-              <dd>{entry.improves}</dd>
+              <dd><HelpProse text={entry.improves ?? ''} /></dd>
             </dl>
           )}
 
@@ -234,7 +244,7 @@ function Entry({
               <h4 className="help__blocktitle">
                 Worked example <span className="help__samplechip">Illustrative sample</span>
               </h4>
-              <p className="help__body">{entry.example}</p>
+              <HelpProse text={entry.example} />
             </section>
           )}
         </div>

@@ -178,20 +178,63 @@
 }
 .help__panel[hidden] { display: none; }
 
-/* §9-bis-0 — THE MEASURE MOVED HERE. It was a page-level column and was rejected for it; inside an
-   expanded body the user genuinely IS reading prose, and DESIGN-SYSTEM §3.1 sanctions capping an
-   inner content measure. The page root stays uncapped, as the 1728px shell-inset guard requires. */
+/* §9-bis-11(b) — THE 78ch CAP IS RETIRED HERE, by the owner's ruling, which SUPERSEDES the
+   §9-bis-0 relocation recorded in the struck comment below. The measure was the right answer for
+   an UNSTRUCTURED wall of prose: with nothing but paragraph after paragraph, a long line is hard
+   to track back to the next line's start. Structure solves that problem better than a cap does —
+   headings, lists and spacing give the eye its return points — and the cap's cost (a narrow
+   column stranded inside a wide entry, with the rest of the row empty) no longer buys anything.
+   The page root stays uncapped either way, as the 1728px shell-inset guard requires.
+
+   ~~.help__measure { max-width: 78ch }~~ — retired 2026-07-19. */
 .help__measure {
-  max-width: 78ch;
   padding-top: var(--space-3);
 }
 
 .help__body,
+.help__prose,
 .help__triad dd,
 .help__list {
   color: var(--text-muted);
   line-height: 1.6;
   margin: 0;
+}
+
+/* --- Served-markup typography (§9-bis-11(b)) --------------------------------------------------
+   Every value is a DS token — the ruling says "render through DS typography tokens", and a
+   renderer that invented its own type scale would put a second typography system in the product
+   on the one surface whose job is explaining the first. */
+.help__prose > * + * {
+  margin-top: var(--space-3);
+}
+.help__prosepara {
+  margin: 0;
+}
+.help__prosehead {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+/* A heading following prose needs more air above it than below it, or it reads as belonging to
+   the paragraph it follows rather than the one it introduces. */
+.help__prose > * + .help__prosehead {
+  margin-top: var(--space-4);
+}
+.help__proselist {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+.help__proselist > li + li {
+  margin-top: var(--space-2);
+}
+.help__prose strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.help__prose em {
+  font-style: italic;
 }
 
 .help__block {

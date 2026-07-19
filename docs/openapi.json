@@ -876,7 +876,7 @@
         "type": "object"
       },
       "HelpResponse": {
-        "description": "`GET /help` \u2014 the whole catalogue.",
+        "description": "`GET /help` \u2014 the whole catalogue.\n\n`markup` declares the CONSTRAINED SERVED MARKUP DIALECT the prose fields are written in\n(page-help \u00a79-bis-11(b), `app/services/help_markup.py`). It is on the response rather than\nper-entry because the dialect is a property of the catalogue, not of any one entry, and\nversioning it (`lf-help-markup-1`) makes a future change to the sanctioned subset a VISIBLE\ncontract change rather than a silent reinterpretation of unchanged strings.",
         "properties": {
           "categories": {
             "items": {
@@ -891,9 +891,14 @@
             },
             "title": "Entries",
             "type": "array"
+          },
+          "markup": {
+            "title": "Markup",
+            "type": "string"
           }
         },
         "required": [
+          "markup",
           "categories",
           "entries"
         ],
@@ -930,7 +935,7 @@
         "type": "object"
       },
       "HelpSearchResponse": {
-        "description": "`GET /help?q=` \u2014 ranked hits for a query.",
+        "description": "`GET /help?q=` \u2014 ranked hits for a query.\n\nDeliberately carries NO `markup` field: this projection is served MARKUP-STRIPPED. Its\nconsumers are the server-side ranker and `app/ai/tools.py` `help_facts()`, which passes\n`body` to the model as a grounding fact \u2014 neither renders markup, and markers reaching the\nAI would surface as `**` in answers the user reads. The asymmetry between the two responses\nIS the contract: full catalogue = formatted, search projection = plain.",
         "properties": {
           "entries": {
             "items": {

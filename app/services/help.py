@@ -9,6 +9,8 @@ never advice.
 
 from __future__ import annotations
 
+from app.services.help_markup import MARKUP_DIALECT, strip_markup
+
 HELP: list[dict] = [
     # --- Orientation -------------------------------------------------------- #
     # Section 1 of the three-section journey (page-help 9-bis-1): why the platform exists, what
@@ -16,38 +18,49 @@ HELP: list[dict] = [
     # `links` carry the reader from this narrative into a Section-2 page entry — pointers only.
     # IA law binds here hardest: orientation names where a figure LIVES, and never states one.
     {"id": "orientation-what", "category": "Orientation", "title": "What LedgerFrame is",
-     "body": "A private, local-first record of everything you own and owe, in one place. Wealth "
-             "usually ends up scattered across brokers, banks, funds, insurers and currencies, and "
-             "no single one of them can show you the whole picture — so the whole picture either "
-             "gets rebuilt by hand in a spreadsheet or it does not exist. LedgerFrame is that whole "
-             "picture, kept on your own machine: your holdings, accounts, entities and currencies "
-             "consolidated into one honest set of figures you can look at without sending your "
-             "financial life to anyone else. It reports; it does not act.",
+     "body": "A private, local-first record of everything you own and owe, in one place.\n"
+             "\n"
+             "- Wealth usually ends up scattered across brokers, banks, funds, insurers and "
+             "currencies, and no single one of them can show you the whole picture — so the "
+             "whole picture either gets rebuilt by hand in a spreadsheet or it does not "
+             "exist.\n"
+             "- LedgerFrame is that whole picture, kept on your own machine: your holdings, "
+             "accounts, entities and currencies consolidated into one honest set of figures "
+             "you can look at without sending your financial life to anyone else.\n"
+             "- **It reports; it does not act.**",
      "keywords": "what is ledgerframe purpose problem why exists local private consolidate overview",
      "links": [{"topic": "page-home", "label": "Home"},
                {"topic": "page-net-worth", "label": "Net worth"}]},
     {"id": "orientation-how", "category": "Orientation", "title": "How it works",
-     "body": "You tell it what you hold; it values, consolidates and explains. Positions and "
-             "transactions are recorded on Holdings, and the accounts and entities that own them on "
-             "Accounts. From that one record every figure in the product is derived — once, in one "
-             "place, by the calculation engine — so a number means the same thing on every page "
-             "that shows it. Prices are retrieved from the sources you configure, never invented: "
-             "where a value cannot be established, the product shows a dash and a reason rather "
-             "than a guess. Everything stays on your machine, and there is no telemetry.",
+     "body": "You tell it what you hold; it values, consolidates and explains.\n"
+             "\n"
+             "- Positions and transactions are recorded on Holdings, and the accounts and "
+             "entities that own them on Accounts.\n"
+             "- From that one record every figure in the product is derived — once, in one "
+             "place, by the calculation engine — so a number means the same thing on every "
+             "page that shows it.\n"
+             "- Prices are retrieved from the sources you configure, never invented: where a "
+             "value cannot be established, the product shows a dash and a reason rather than "
+             "a guess.\n"
+             "- Everything stays on your machine, and **there is no telemetry**.",
      "keywords": "how it works derive engine one place prices sources local machine no telemetry",
      "links": [{"topic": "page-holdings", "label": "Holdings"},
                {"topic": "page-accounts", "label": "Accounts"},
                {"topic": "page-pricing-health", "label": "Pricing Health"}]},
     {"id": "orientation-pages", "category": "Orientation", "title": "How the pages fit together",
-     "body": "The pages are layers over one record, and they read in an order. You RECORD on "
-             "Holdings and Accounts. You SEE the result on Home, which summarises everything and "
-             "links to whichever page owns each figure, on Net worth for the headline and your "
-             "liquidity, and on Portfolio for investment analytics. You WATCH the market on "
-             "Markets, Heatmap and News. You PLAN against your own intentions on Policy, Cash flow, "
-             "Scenarios, Insurance and Estate, and Review gathers what needs a look across all of "
-             "them. You EXPORT on Reports, and check how well-sourced your figures are on Pricing "
-             "Health. Each figure has exactly one page that owns it; every other page that shows it "
-             "is summarising and links you back to the owner.",
+     "body": "The pages are layers over one record, and they read in an order.\n"
+             "\n"
+             "- You RECORD on Holdings and Accounts.\n"
+             "- You SEE the result on Home, which summarises everything and links to "
+             "whichever page owns each figure, on Net worth for the headline and your "
+             "liquidity, and on Portfolio for investment analytics.\n"
+             "- You WATCH the market on Markets, Heatmap and News.\n"
+             "- You PLAN against your own intentions on Policy, Cash flow, Scenarios, "
+             "Insurance and Estate, and Review gathers what needs a look across all of them.\n"
+             "- You EXPORT on Reports, and check how well-sourced your figures are on "
+             "Pricing Health.\n"
+             "- Each figure has exactly one page that owns it; every other page that shows "
+             "it is summarising and links you back to the owner.",
      "keywords": "pages together mental model journey record see watch plan export owner links flow",
      "links": [{"topic": "page-holdings", "label": "Holdings"},
                {"topic": "page-home", "label": "Home"},
@@ -61,9 +74,11 @@ HELP: list[dict] = [
     # three ratified voice specimens.
     {"id": "guarantee", "category": "Orientation", "title": "What LedgerFrame will never do",
      "body": "It never places trades, gives buy/sell/hold or tax/financial advice, or "
-             "fabricates a price, headline or figure. Unavailable data shows '—' with a "
-             "reason. The AI explains verified facts; it never invents a number. Your data is "
-             "local-first with no telemetry.",
+             "fabricates a price, headline or figure.\n"
+             "\n"
+             "- Unavailable data shows '—' with a reason.\n"
+             "- The AI explains verified facts; it never invents a number.\n"
+             "- Your data is local-first with no telemetry.",
      "keywords": "guarantee no advice no trading honest local private telemetry"},
     # --- Pages -------------------------------------------------------------- #
     # Titles ARE the nav labels, exactly (nav label = H1 = route). Casing traps: "Net worth",
@@ -75,8 +90,8 @@ HELP: list[dict] = [
              "and the news briefing with top headlines. Every card summarises a page that owns the "
              "figure, and the arrow on the card opens it. Home computes nothing of its own.",
      "keywords": "home summary overview dashboard today briefing cards",
-     "inputs": ["Quote source — which set of symbols the quote row shows",
-                "Retry — re-reads a card whose source could not be reached"],
+     "inputs": ["**Quote source** — which set of symbols the quote row shows",
+                "**Retry** — re-reads a card whose source could not be reached"],
      "options": ["Quote source: Markets · Holdings · Global · Watchlist"],
      "outputs": ["Net worth, with Gross assets and Liabilities beside it",
                  "Performance and Today's change, each with a trend line",
@@ -85,12 +100,15 @@ HELP: list[dict] = [
                  "Contributors / Detractors and Gainers / Losers",
                  "News — the briefing and top headlines",
                  "Quotes"],
-     "interpret": "Read Home as a table of contents, not a source. Every tile is a summary of a "
-                  "page that owns the figure, and the arrow opens that page — Home derives nothing "
-                  "of its own, so a number here and a number there can never disagree. The two "
-                  "mover pairs are deliberately different questions: Contributors / Detractors ask "
-                  "which holdings moved YOUR portfolio, weighted by how much you hold; Gainers / "
-                  "Losers ask which prices moved most, whatever the size of your position."},
+     "interpret": "Read Home as **a table of contents, not a source**.\n"
+                  "\n"
+                  "- Every tile is a summary of a page that owns the figure, and the arrow opens "
+                  "that page — Home derives nothing of its own, so a number here and a number "
+                  "there can never disagree.\n"
+                  "- The two mover pairs are deliberately different questions: Contributors / "
+                  "Detractors ask which holdings moved YOUR portfolio, weighted by how much you "
+                  "hold; Gainers / Losers ask which prices moved most, whatever the size of your "
+                  "position."},
     {"id": "page-net-worth", "category": "Pages", "title": "Net worth",
      "body": "Your headline and liquidity. Four figures lead: Net worth, Gross assets, Liabilities, "
              "and Cash & deposits. Below them sit the net-worth trend, composition by class, the "
@@ -98,9 +116,9 @@ HELP: list[dict] = [
              "exclusion — it is deliberately not counted in the headline. Investment analytics live "
              "on Portfolio.",
      "keywords": "net worth headline liabilities cash deposits trend liquidity runway snapshot",
-     "inputs": ["Time window — how much of the trend to show",
-                "Snapshot — record where your net worth stands right now",
-                "Build history — reconstruct the trend from price history and transactions"],
+     "inputs": ["**Time window** — how much of the trend to show",
+                "**Snapshot** — record where your net worth stands right now",
+                "**Build history** — reconstruct the trend from price history and transactions"],
      "options": ["Time window: 1M · 3M · 6M · YTD · 1Y · 5Y · Max"],
      "outputs": ["Net worth, Gross assets, Liabilities and Cash & deposits",
                  "Net-worth trend, with how much of your history it covers",
@@ -108,11 +126,13 @@ HELP: list[dict] = [
                  "Liquidity ladder",
                  "Cash runway",
                  "Insurance cash value, shown as a named exclusion"],
-     "interpret": "Net worth is Gross assets minus Liabilities, and nothing else — insurance cash "
+     "interpret": "Net worth is **Gross assets minus Liabilities**, and nothing else — insurance cash "
                   "value is deliberately outside it and is shown separately so the exclusion is "
-                  "visible rather than silent. Composition by class is a balance statement, not an "
-                  "allocation weight: allocation is a share of gross assets and lives on Portfolio. "
-                  "The trend only covers dates it has prices and rates for, which is what Build "
+                  "visible rather than silent.\n"
+                  "\n"
+                  "- Composition by class is a balance statement, not an allocation weight: "
+                  "allocation is a share of gross assets and lives on Portfolio.\n"
+                  "- The trend only covers dates it has prices and rates for, which is what Build "
                   "history fills in; a short trend means short history, not a small portfolio."},
     {"id": "page-portfolio", "category": "Pages", "title": "Portfolio",
      "body": "Investment analytics. Performance against a benchmark over a window you choose; "
@@ -122,11 +142,11 @@ HELP: list[dict] = [
              "those two figures — it is not a Sharpe ratio and subtracts no risk-free rate. "
              "Positions are managed on Holdings.",
      "keywords": "portfolio analytics performance benchmark allocation concentration attribution costs",
-     "inputs": ["Benchmark — what to compare your performance against",
-                "Time window — the period the analytics cover",
-                "Include manual assets — whether assets you value yourself join the line",
-                "Filter attribution — narrow the attribution table",
-                "Export CSV — the attribution table, produced by the server"],
+     "inputs": ["**Benchmark** — what to compare your performance against",
+                "**Time window** — the period the analytics cover",
+                "**Include manual assets** — whether assets you value yourself join the line",
+                "**Filter attribution** — narrow the attribution table",
+                "**Export CSV** — the attribution table, produced by the server"],
      "options": ["Time window: 1M · 3M · 6M · YTD · 1Y · 5Y · Max",
                  "Benchmark: S&P 500 · Nasdaq 100 · Dow 30 · Singapore · Gold · Bitcoin"],
      "outputs": ["Today's change, Unrealised P/L, Realised P/L, Cost basis, Total return and "
@@ -140,12 +160,14 @@ HELP: list[dict] = [
                  "Costs — recorded fees and ongoing cost, kept apart"],
      "interpret": "The benchmark line is a price return through a liquid proxy, so it excludes "
                   "dividends — it answers 'how did the market move', not 'what would I have "
-                  "earned'. Return / volatility is exactly what its name says, a ratio of the two "
-                  "figures beside it; it is not a Sharpe ratio and subtracts no risk-free rate. "
-                  "The two cost figures are never added together: one is fees you actually paid, "
-                  "the other an estimate of what your funds charge, and blending them would invent "
-                  "a total nobody can verify. Allocation is a share of gross assets, so "
-                  "liabilities sit outside it."},
+                  "earned'.\n"
+                  "\n"
+                  "- Return / volatility is exactly what its name says, a ratio of the two "
+                  "figures beside it; it is not a Sharpe ratio and subtracts no risk-free rate.\n"
+                  "- The two cost figures are never added together: one is fees you actually "
+                  "paid, the other an estimate of what your funds charge, and blending them would "
+                  "invent a total nobody can verify.\n"
+                  "- Allocation is a share of gross assets, so liabilities sit outside it."},
     {"id": "page-holdings", "category": "Pages", "title": "Holdings",
      "body": "The one place to add, edit and delete positions. The header carries Import, Export CSV "
              "and Add. Add branches once: a listed instrument you search for, or a manual asset you "
@@ -155,12 +177,12 @@ HELP: list[dict] = [
              "your PIN. Exports are produced by the server over your whole dataset, not the rows on "
              "screen.",
      "keywords": "holdings add edit delete import export csv transactions positions purge undo",
-     "inputs": ["Add — a listed instrument you search for, or a manual asset you describe",
-                "Import — a broker CSV, reviewed row by row before anything is written",
-                "Export CSV — your holdings, or your transactions",
+     "inputs": ["**Add** — a listed instrument you search for, or a manual asset you describe",
+                "**Import** — a broker CSV, reviewed row by row before anything is written",
+                "**Export CSV** — your holdings, or your transactions",
                 "Filter holdings and Filter transactions",
-                "Tags — label a holding so allocation can group by it",
-                "PIN to permanently delete — empties the trash for good"],
+                "**Tags** — label a holding so allocation can group by it",
+                "**PIN to permanently delete** — empties the trash for good"],
      "options": ["What you are adding: Stocks & ETFs · Mutual fund · Crypto · Cash & deposits · "
                  "Fixed deposit · Bond · Property · Retirement · Private asset · Liability · Other",
                  "Transaction types offered are the ones that make sense for that asset — a split "
@@ -168,14 +190,17 @@ HELP: list[dict] = [
      "outputs": ["Holdings — position, value, Unrealised P/L, Today's change and Source per row",
                  "Transactions — the ledger behind those positions",
                  "A linked summary of Net worth in the header"],
-     "interpret": "This is the one place positions change; every figure elsewhere is downstream of "
-                  "what you record here. Import writes nothing until you have seen every row — "
-                  "anything it could not resolve is queued for you rather than guessed. Deleting a "
-                  "holding that came from trades is refused on purpose: the ledger is the truth, so "
-                  "you remove the transactions and the position follows. Deleted rows stay "
-                  "recoverable for a while, and emptying the trash asks for your PIN because that "
-                  "step cannot be undone. Exports are produced by the server over your whole "
-                  "dataset, not over the rows currently on screen."},
+     "interpret": "This is the one place positions change; every figure elsewhere is downstream "
+                  "of what you record here.\n"
+                  "\n"
+                  "- Import writes nothing until you have seen every row — anything it could not "
+                  "resolve is queued for you rather than guessed.\n"
+                  "- Deleting a holding that came from trades is refused on purpose: the ledger "
+                  "is the truth, so you remove the transactions and the position follows.\n"
+                  "- Deleted rows stay recoverable for a while, and emptying the trash asks for "
+                  "your PIN because that step cannot be undone.\n"
+                  "- Exports are produced by the server over your whole dataset, not over the "
+                  "rows currently on screen."},
     {"id": "page-accounts", "category": "Pages", "title": "Accounts",
      "body": "Your accounts, the entities that hold them, and the institution master. An account "
              "carries its institution, kind, currency, cost-basis method and entity. Entities are "
@@ -185,8 +210,8 @@ HELP: list[dict] = [
              "holdings, never a second figure.",
      "keywords": "accounts entity institution master merge cost basis currency kind",
      "inputs": ["Add account, Add entity, Add institution",
-                "Edit, Rename, Merge… and Delete — on any row",
-                "View holdings — opens Holdings scoped to that account"],
+                "**Edit, Rename, Merge… and Delete** — on any row",
+                "**View holdings** — opens Holdings scoped to that account"],
      "options": ["Kind: Brokerage · Bank · Retirement · Wallet · Property · Manual · Other",
                  "Cost-basis method: FIFO · Average",
                  "Entity kind: Self · Spouse · Trust · Company · Other",
@@ -194,36 +219,42 @@ HELP: list[dict] = [
      "outputs": ["Accounts — institution, kind, currency, cost basis, entity and a value rollup",
                  "Entities, and how many accounts each holds",
                  "Institution master, with the accounts and policies referencing each"],
-     "interpret": "An account's value is a rollup of the holdings inside it, never a second figure "
-                  "you maintain. Changing a cost-basis method restates that account, so the figures "
-                  "that depend on it move — you are asked to confirm before that happens. Something "
-                  "still referenced cannot be deleted: an entity with accounts, or an institution "
-                  "used by accounts or policies, has to be reassigned, renamed or merged instead. "
-                  "The institution master is shared with Insurance, so a broker and an insurer come "
-                  "from the same list and duplicates can be merged into one."},
+     "interpret": "An account's value is a rollup of the holdings inside it, never a second "
+                  "figure you maintain.\n"
+                  "\n"
+                  "- Changing a cost-basis method restates that account, so the figures that "
+                  "depend on it move — you are asked to confirm before that happens.\n"
+                  "- Something still referenced cannot be deleted: an entity with accounts, or an "
+                  "institution used by accounts or policies, has to be reassigned, renamed or "
+                  "merged instead.\n"
+                  "- The institution master is shared with Insurance, so a broker and an insurer "
+                  "come from the same list and duplicates can be merged into one."},
     {"id": "page-markets", "category": "Pages", "title": "Markets",
      "body": "Quotes, indices, market status, gainers and losers, the instrument grid and your "
              "watchlists. World indices are grouped into Americas, Europe, Asia-Pacific, Commodities "
              "and Crypto. Where a provider does not serve a real index level, the figure comes from "
              "an ETF proxy and says so. Watchlists are created and edited here and nowhere else.",
      "keywords": "markets indices quotes gainers losers watchlist search proxy status",
-     "inputs": ["Search markets — find any symbol, whether or not you hold it",
-                "Region — which part of the world-index board to show",
-                "Search instruments — narrow the grid already on screen",
-                "New watchlist, Open and Remove — on a symbol"],
+     "inputs": ["**Search markets** — find any symbol, whether or not you hold it",
+                "**Region** — which part of the world-index board to show",
+                "**Search instruments** — narrow the grid already on screen",
+                "**New watchlist, Open and Remove** — on a symbol"],
      "options": ["Region: Americas · Europe · Asia-Pacific · Commodities · Crypto"],
      "outputs": ["Market status",
                  "Global — world indices",
                  "Gainers / Losers — today's price moves",
                  "Instruments",
                  "Watchlists"],
-     "interpret": "Where a provider does not serve a real index level, the row is shown through an "
-                  "ETF that tracks it and says so on the row — a proxy is labelled, never passed "
-                  "off as the index. Gainers / Losers rank price moves across the market and are "
-                  "not the Contributors / Detractors pair on Portfolio, which weighs moves by how "
-                  "much you hold. The two search boxes differ: the one in the header reaches every "
-                  "symbol the provider knows, the one over the grid filters what is already listed. "
-                  "Watchlists are created and edited here and nowhere else."},
+     "interpret": "Where a provider does not serve a real index level, the row is shown through "
+                  "an ETF that tracks it and says so on the row — a proxy is labelled, never "
+                  "passed off as the index.\n"
+                  "\n"
+                  "- Gainers / Losers rank price moves across the market and are not the "
+                  "Contributors / Detractors pair on Portfolio, which weighs moves by how much "
+                  "you hold.\n"
+                  "- The two search boxes differ: the one in the header reaches every symbol the "
+                  "provider knows, the one over the grid filters what is already listed.\n"
+                  "- Watchlists are created and edited here and nowhere else."},
     {"id": "page-heatmap", "category": "Pages", "title": "Heatmap",
      "body": "One view of your holdings: tile size is position value, tile colour is Today's change, "
              "and the strength of the colour tracks how large the move was. Filter by asset class or "
@@ -236,13 +267,16 @@ HELP: list[dict] = [
      "outputs": ["The tile map of your holdings",
                  "A legend reading Size = value · Colour = Today's change",
                  "How many holdings are shown, and how many were left out"],
-     "interpret": "Size and colour answer different questions: a tile is as big as the position is "
-                  "worth, and as coloured as the day moved it. Colour shows direction and how far, "
-                  "never value. Two things are left out and the page says so rather than shrinking "
-                  "them to nothing — holdings with no price, which have no size to draw, and "
-                  "liabilities, which are not assets to lay out. Stale prices ARE included; the "
-                  "staleness banner carries that honesty, not the map. Every tile opens its "
-                  "instrument."},
+     "interpret": "Size and colour answer different questions: a tile is as big as the position "
+                  "is worth, and as coloured as the day moved it.\n"
+                  "\n"
+                  "- Colour shows direction and how far, never value.\n"
+                  "- Two things are left out and the page says so rather than shrinking them to "
+                  "nothing — holdings with no price, which have no size to draw, and liabilities, "
+                  "which are not assets to lay out.\n"
+                  "- Stale prices ARE included; the staleness banner carries that honesty, not "
+                  "the map.\n"
+                  "- Every tile opens its instrument."},
     {"id": "page-news", "category": "Pages", "title": "News",
      "body": "The market briefing and grouped headlines. Headlines are grouped into My holdings, "
              "India, Singapore, US, Global and Macro / FX; the My holdings group is ranked by how "
@@ -251,21 +285,24 @@ HELP: list[dict] = [
              "than producing any of its own. Refresh is unavailable while no-egress is on. News about "
              "a single instrument lives on that instrument's page.",
      "keywords": "news headlines briefing feeds groups relevance refresh macro fx",
-     "inputs": ["Refresh briefing — rebuild the summary from current figures",
-                "Refresh headlines — fetch again from your feeds",
-                "News area — which group of headlines to read"],
+     "inputs": ["**Refresh briefing** — rebuild the summary from current figures",
+                "**Refresh headlines** — fetch again from your feeds",
+                "**News area** — which group of headlines to read"],
      "options": ["News area: My holdings · India · Singapore · US · Global · Macro / FX",
                  "A group with nothing in it is not shown at all"],
      "outputs": ["Briefing, and when it was last updated",
                  "Headlines, grouped, with a count on each group"],
      "interpret": "Headlines are retrieved, never invented, and the briefing states figures that "
                   "were computed elsewhere rather than producing any of its own — it is assembled "
-                  "from your served figures, not written by the AI. My holdings is ranked by how "
-                  "much of your portfolio a story touches and how recent it is. The two refresh "
-                  "actions are not the same: one rebuilds the briefing, the other re-reads the "
-                  "feeds. Both are unavailable while no-egress is on, because both need the "
-                  "network — the page says so instead of failing quietly. News about a single "
-                  "instrument lives on that instrument's page."},
+                  "from your served figures, not written by the AI.\n"
+                  "\n"
+                  "- My holdings is ranked by how much of your portfolio a story touches and how "
+                  "recent it is.\n"
+                  "- The two refresh actions are not the same: one rebuilds the briefing, the "
+                  "other re-reads the feeds.\n"
+                  "- Both are unavailable while no-egress is on, because both need the network — "
+                  "the page says so instead of failing quietly.\n"
+                  "- News about a single instrument lives on that instrument's page."},
     {"id": "page-review", "category": "Pages", "title": "Review",
      "body": "What needs a look. A rail carries Net worth, Today's change, data confidence, the "
              "attention count and when you last reviewed. Every signal names the page that owns it "
@@ -273,20 +310,23 @@ HELP: list[dict] = [
              "note, and an optional next review date — and the history keeps your recent runs. "
              "Reporting only: a signal is something to look at, not an instruction.",
      "keywords": "review attention signals mark reviewed history confidence next review",
-     "inputs": ["Mark reviewed — record where things stood when you looked",
-                "Note — what you did or decided, if you want it kept",
-                "Next review date — when to come back"],
-     "options": ["Both fields in Mark reviewed are optional — a review can be the moment alone"],
+     "inputs": ["**Mark reviewed** — record where things stood when you looked",
+                "**Note** — what you did or decided, if you want it kept",
+                "**Next review date** — when to come back"],
+     "options": ["**Both fields in Mark reviewed are optional** — a review can be the moment alone"],
      "outputs": ["A rail carrying Net worth, Today's change, Data confidence, Attention and "
                  "Last reviewed",
                  "Review — what needs a look, each item naming the page that owns it",
                  "Review history — your recent runs"],
-     "interpret": "A signal is something to look at, not an instruction — nothing here tells you to "
-                  "act, and clearing the list is not a goal. The word Attention appears twice and "
-                  "counts two different things: the tile counts only the items flagged for review, "
-                  "while the list below also shows the ones that are merely informative, so the two "
-                  "will not match whenever an informative item is present. Every figure on the rail "
-                  "is the same one its owning page serves, not a second calculation."},
+     "interpret": "A signal is something to look at, not an instruction — nothing here tells you "
+                  "to act, and clearing the list is not a goal.\n"
+                  "\n"
+                  "- The word Attention appears twice and counts two different things: the tile "
+                  "counts only the items flagged for review, while the list below also shows the "
+                  "ones that are merely informative, so the two will not match whenever an "
+                  "informative item is present.\n"
+                  "- Every figure on the rail is the same one its owning page serves, not a "
+                  "second calculation."},
     {"id": "page-policy", "category": "Pages", "title": "Policy",
      "body": "Your investment policy: targets, bands and drift. Set a target weight and a tolerance "
              "band for asset class, currency and region, plus an optional limit on any single "
@@ -294,11 +334,11 @@ HELP: list[dict] = [
              "outside their band. Drift is worked out when you look at it and is never stored. "
              "Reporting, never a trade instruction.",
      "keywords": "policy target allocation band drift concentration limit rebalance",
-     "inputs": ["Set policy / Edit policy — opens the editor",
-                "Default band — the tolerance applied to a target that sets none of its own",
-                "Concentration limit — how large you are willing to let one position get",
+     "inputs": ["**Set policy / Edit policy** — opens the editor",
+                "**Default band** — the tolerance applied to a target that sets none of its own",
+                "**Concentration limit** — how large you are willing to let one position get",
                 "A target weight and an optional band per bucket",
-                "Policy dimension — which axis to read drift on"],
+                "**Policy dimension** — which axis to read drift on"],
      "options": ["Policy dimension: Asset class · Currency · Region",
                  "Buckets come from the same vocabularies the rest of the product uses, so a "
                  "target can only name something that exists"],
@@ -306,15 +346,19 @@ HELP: list[dict] = [
                  "Coverage — how much of your policy the targets account for",
                  "Untargeted — held, but your policy does not mention it",
                  "Concentration"],
-     "interpret": "This is distance from YOUR OWN targets, and nothing here is a trade instruction. "
-                  "Over and under are drawn in the same tone on purpose: colouring one of them as "
-                  "good or bad would be a judgment the product does not make. A blank band is not "
-                  "no band — it inherits the default one, which is worth knowing before you read "
-                  "your own tolerance. Coverage below the whole is legitimate, not an error: a "
-                  "policy may deliberately speak to only part of your holdings, and whatever it "
-                  "does not mention is listed as untargeted rather than hidden. Weights are a "
-                  "share of gross assets, so liabilities sit outside them. Saving replaces your "
-                  "whole policy, every dimension at once, not only the one on screen."},
+     "interpret": "This is distance from YOUR OWN targets, and nothing here is a trade "
+                  "instruction.\n"
+                  "\n"
+                  "- Over and under are drawn in the same tone on purpose: colouring one of them "
+                  "as good or bad would be a judgment the product does not make.\n"
+                  "- A blank band is not no band — it inherits the default one, which is worth "
+                  "knowing before you read your own tolerance.\n"
+                  "- Coverage below the whole is legitimate, not an error: a policy may "
+                  "deliberately speak to only part of your holdings, and whatever it does not "
+                  "mention is listed as untargeted rather than hidden.\n"
+                  "- Weights are a share of gross assets, so liabilities sit outside them.\n"
+                  "- Saving replaces your whole policy, every dimension at once, not only the one "
+                  "on screen."},
     {"id": "page-cash-flow", "category": "Pages", "title": "Cash flow",
      "body": "What you owe, what you're putting away, and what you're aiming at. Three registers: "
              "income and expenses, contributions, and goals. An obligation can recur or fall once, "
@@ -322,9 +366,9 @@ HELP: list[dict] = [
              "cash runway — they move money rather than spend it. The runway itself belongs to Net "
              "worth; this page shows that figure and links to it.",
      "keywords": "cash flow goals obligations contributions income expense recurring runway planning",
-     "inputs": ["Add income or expense — what comes in and goes out, and how often",
-                "Add contribution — what you plan to invest, withdraw or prepay",
-                "Add goal — a target amount, and what it is measured against"],
+     "inputs": ["**Add income or expense** — what comes in and goes out, and how often",
+                "**Add contribution** — what you plan to invest, withdraw or prepay",
+                "**Add goal** — a target amount, and what it is measured against"],
      "options": ["Kind: Expense · Income",
                  "Recurrence: Once · Monthly · Quarterly · Annual",
                  "Contribution kind: Invest · Withdraw · Prepay",
@@ -335,13 +379,16 @@ HELP: list[dict] = [
                  "Contributions",
                  "Goals — target, progress and what remains"],
      "interpret": "The runway is arithmetic on what you have recorded — liquid assets divided by "
-                  "your recurring net burn — not a forecast of your income. A one-off is not a "
-                  "recurring burn, so it shows no monthly equivalent and does not move the runway; "
-                  "that is deliberate, not a gap. Contributions build wealth, so they never shorten "
-                  "the runway either — they are recorded plans, not projections. Monthly expenses "
-                  "and net monthly burn are different figures: burn is what is left after income. "
-                  "A goal measured against nothing tracks no progress and shows a dash rather than "
-                  "zero, because no progress is not the same as none made."},
+                  "your recurring net burn — not a forecast of your income.\n"
+                  "\n"
+                  "- A one-off is not a recurring burn, so it shows no monthly equivalent and "
+                  "does not move the runway; that is deliberate, not a gap.\n"
+                  "- Contributions build wealth, so they never shorten the runway either — they "
+                  "are recorded plans, not projections.\n"
+                  "- Monthly expenses and net monthly burn are different figures: burn is what is "
+                  "left after income.\n"
+                  "- A goal measured against nothing tracks no progress and shows a dash rather "
+                  "than zero, because no progress is not the same as none made."},
     {"id": "page-scenarios", "category": "Pages", "title": "Scenarios",
      "body": "What today's values would look like under a hypothetical shock. A scenario, never a "
              "forecast. Exposures cover equities, crypto, property, and holdings in currencies other "
@@ -349,19 +396,22 @@ HELP: list[dict] = [
              "liquidity what-ifs ask what happens if income stops or a large obligation is drawn now. "
              "Nothing here is a prediction, and nothing is saved.",
      "keywords": "scenarios shock stress exposure liquidity downside hypothetical simulation",
-     "inputs": ["Nothing to fill in — the page reads your holdings and reports",
+     "inputs": ["**Nothing to fill in** — the page reads your holdings and reports",
                 "Sort the table by any column"],
      "options": ["The shock set is fixed and product-defined; you do not compose a scenario"],
      "outputs": ["Exposures — equities, crypto, property and foreign currency",
                  "Stress scenarios — exposure, impact and where net worth would land",
                  "Liquidity what-ifs — if income stopped, and if a year of expenses fell due now"],
-     "interpret": "A scenario is arithmetic on today's values, not a prediction: it says what your "
-                  "figures would read if a given move happened, and says nothing about whether it "
-                  "will. There is no probability here and no recommendation. Impact is always shown "
-                  "as a loss because every scenario in the set is a fall — the page models downside "
-                  "and does not claim to model your upside. If your net worth sits near zero the "
-                  "percentage column is withheld and only the amount is shown, because a percentage "
-                  "of almost nothing is a number that misleads."},
+     "interpret": "A scenario is **arithmetic on today's values, not a prediction**: it says what "
+                  "your figures would read if a given move happened, and says nothing about "
+                  "whether it will.\n"
+                  "\n"
+                  "- There is no probability here and no recommendation.\n"
+                  "- Impact is always shown as a loss because every scenario in the set is a fall "
+                  "— the page models downside and does not claim to model your upside.\n"
+                  "- If your net worth sits near zero the percentage column is withheld and only "
+                  "the amount is shown, because a percentage of almost nothing is a number that "
+                  "misleads."},
     {"id": "page-insurance", "category": "Pages", "title": "Insurance",
      "body": "Your protection register — policies, cover and renewals. A register, never an adequacy "
              "judgment. Each policy carries its insurer, type, cover amount, premium and frequency, "
@@ -370,9 +420,9 @@ HELP: list[dict] = [
              "here and is excluded from your net worth; Net worth names that exclusion and links "
              "back.",
      "keywords": "insurance policy cover premium renewal nominee insured cash value documents",
-     "inputs": ["Add policy — insurer, cover, premium, renewal and who is insured",
-                "Documents checklist — tick off what you actually hold, and add your own rows",
-                "Edit and Delete — on a policy"],
+     "inputs": ["**Add policy** — insurer, cover, premium, renewal and who is insured",
+                "**Documents checklist** — tick off what you actually hold, and add your own rows",
+                "**Edit and Delete** — on a policy"],
      "options": ["Type: Term life · Whole life · Health · Critical illness · Disability · "
                  "Personal accident · Property · Motor · Travel · Other",
                  "Status: Active · Lapsed · Expired",
@@ -382,14 +432,16 @@ HELP: list[dict] = [
                  "Policies",
                  "Upcoming renewals",
                  "Cover by type"],
-     "interpret": "This is a register of what you hold, never a judgment of whether it is enough — "
-                  "the product records your cover and reminds you of renewals, and stops there. "
-                  "Lapsed and expired policies stay listed but are kept out of the totals and the "
-                  "active count, so the table and the tiles will legitimately disagree on how many "
-                  "policies there are. The premium column is an annual equivalent whatever your "
-                  "payment frequency, and a policy with no recurring premium shows a dash rather "
-                  "than zero. Insurance cash value is excluded from Net worth, which is why it has "
-                  "its own tile saying so."},
+     "interpret": "This is **a register of what you hold**, never a judgment of whether it is enough "
+                  "— the product records your cover and reminds you of renewals, and stops there.\n"
+                  "\n"
+                  "- Lapsed and expired policies stay listed but are kept out of the totals and "
+                  "the active count, so the table and the tiles will legitimately disagree on how "
+                  "many policies there are.\n"
+                  "- The premium column is an annual equivalent whatever your payment frequency, "
+                  "and a policy with no recurring premium shows a dash rather than zero.\n"
+                  "- Insurance cash value is excluded from Net worth, which is why it has its own "
+                  "tile saying so."},
     {"id": "page-estate", "category": "Pages", "title": "Estate",
      "body": "A readiness register — will, contacts and key documents. A record and reminders, never "
              "legal advice. It holds your will's status and where it is kept, who the executor is, "
@@ -397,9 +449,9 @@ HELP: list[dict] = [
              "lives and when it was last reviewed. It counts what is present and what is missing "
              "or out of date. It carries no money and links to nothing else in the app.",
      "keywords": "estate will executor beneficiary guardian nominee documents readiness contacts",
-     "inputs": ["Edit — your will status, executor, where the will is kept, and review dates",
-                "Add contact — the people who matter, and the roles they hold",
-                "Add document — what exists, where it is, and whether it is current"],
+     "inputs": ["**Edit** — your will status, executor, where the will is kept, and review dates",
+                "**Add contact** — the people who matter, and the roles they hold",
+                "**Add document** — what exists, where it is, and whether it is current"],
      "options": ["Will status: Not recorded · Draft · Executed · Needs update",
                  "Document category: Will · Insurance · Property · Loan · Identity · Bank · Tax · "
                  "Medical · Other",
@@ -411,14 +463,17 @@ HELP: list[dict] = [
                  "and beneficiaries, executors and emergency contacts",
                  "Contacts",
                  "Documents"],
-     "interpret": "A record of what exists and where, with reminders to keep it current — not legal "
-                  "or estate-planning advice, and not a check that your arrangements are sound. "
-                  "There is no money anywhere on this page: the readiness strip counts records, so "
-                  "a high number means you have written things down, not that you are well "
-                  "provided for. Documents present and those needing attention are complementary "
-                  "counts over the same set, the second covering what is missing or out of date. "
-                  "Records "
-                  "here stand alone and are not linked to your actual policies or accounts."},
+     "interpret": "A record of what exists and where, with reminders to keep it current — not "
+                  "legal or estate-planning advice, and not a check that your arrangements are "
+                  "sound.\n"
+                  "\n"
+                  "- There is no money anywhere on this page: the readiness strip counts records, "
+                  "so a high number means you have written things down, not that you are well "
+                  "provided for.\n"
+                  "- Documents present and those needing attention are complementary counts over "
+                  "the same set, the second covering what is missing or out of date.\n"
+                  "- Records here stand alone and are not linked to your actual policies or "
+                  "accounts."},
     {"id": "page-reports", "category": "Pages", "title": "Reports",
      "body": "Statements, the Realised P/L report and open tax lots — organised for your accountant. "
              "Statements cover income, fees, cash flow, and realised against unrealised. The Realised "
@@ -428,24 +483,27 @@ HELP: list[dict] = [
              "period that counts as long-term. Every export is produced by the server and carries "
              "the same disclaimers you see on screen. The printable Reports Pack opens from here.",
      "keywords": "reports statements realised tax lots fifo csv export pack accountant",
-     "inputs": ["Reports Pack — the printable pack, in a new tab",
-                "Year — scopes the realised figure and its export",
-                "Export CSV — statements, realised sales, or open lots"],
+     "inputs": ["**Reports Pack** — the printable pack, in a new tab",
+                "**Year** — scopes the realised figure and its export",
+                "**Export CSV** — statements, realised sales, or open lots"],
      "options": ["Year offers every year either report knows about, so a year with no sales is "
                  "still selectable"],
      "outputs": ["Statements — income, fees and cash flow by year",
                  "Realised P/L report — each sale, its term, and two base-currency totals",
                  "Open tax lots — what you still hold, by acquisition"],
      "interpret": "Everything here is organisation for you and your accountant, and none of it is "
-                  "tax advice or fit for filing. The statements table lists every year and is NOT "
-                  "narrowed by the Year control — that control scopes the realised figure beside it "
-                  "and what the export contains, which is why it sits apart from the table. The two "
-                  "realised totals answer different questions: one converts at today's rates, the "
-                  "other at the rate stored when each trade was recorded, and it leaves out any "
-                  "trade that has no stored rate rather than substituting one — the count of what "
-                  "was left out is stated. Long and short are a neutral split at the threshold you "
-                  "chose, not a ruling about your jurisdiction. Every disclaimer you see travels "
-                  "into the exported file."},
+                  "tax advice or fit for filing.\n"
+                  "\n"
+                  "- The statements table lists every year and is NOT narrowed by the Year "
+                  "control — that control scopes the realised figure beside it and what the "
+                  "export contains, which is why it sits apart from the table.\n"
+                  "- The two realised totals answer different questions: one converts at today's "
+                  "rates, the other at the rate stored when each trade was recorded, and it "
+                  "leaves out any trade that has no stored rate rather than substituting one — "
+                  "the count of what was left out is stated.\n"
+                  "- Long and short are a neutral split at the threshold you chose, not a ruling "
+                  "about your jurisdiction.\n"
+                  "- Every disclaimer you see travels into the exported file."},
     {"id": "page-pricing-health", "category": "Pages", "title": "Pricing Health",
      "body": "Why a number is what it is. For every holding: how it was valued, which source served "
              "it, the route that reached that source, how fresh it is, and a confidence score with "
@@ -454,24 +512,27 @@ HELP: list[dict] = [
              "API key. The route is shown here so you can see it, and changed in Settings. Refresh "
              "is unavailable while no-egress is on.",
      "keywords": "pricing health source route freshness stale confidence refresh mapping api key",
-     "inputs": ["Refresh all market data — quotes, world indices, exchange rates and news",
-                "Refresh — on a single holding",
-                "Correct source — force one instrument to be priced by a chosen provider",
-                "Details — why a holding scores what it scores"],
+     "inputs": ["**Refresh all market data** — quotes, world indices, exchange rates and news",
+                "**Refresh** — on a single holding",
+                "**Correct source** — force one instrument to be priced by a chosen provider",
+                "**Details** — why a holding scores what it scores"],
      "options": ["Corrected source offers the providers your install can actually use, plus auto "
                  "to clear the correction"],
      "outputs": ["Portfolio confidence, and how your holdings fall across the bands",
                  "Per-holding diagnostics — status, confidence, source and rule",
                  "Details — routing, and why this confidence"],
-     "interpret": "This page answers 'why is this number what it is'. Confidence is about how well "
-                  "sourced a value is, never about whether the holding is any good — a low score "
-                  "points at a data problem, and the details list each deduction so you can see "
-                  "which. Correcting a source affects that one instrument only and changes nothing "
-                  "about how anything else is priced. Refreshing covers market data, not the "
-                  "instrument master lists, which are synced from Settings — the page states the "
-                  "difference rather than letting you assume one button does both. While no-egress "
-                  "is on, refresh makes no network call at all and says so; prices go stale "
-                  "honestly instead of being filled in."},
+     "interpret": "This page answers 'why is this number what it is'.\n"
+                  "\n"
+                  "- Confidence is about how well sourced a value is, never about whether the "
+                  "holding is any good — a low score points at a data problem, and the details "
+                  "list each deduction so you can see which.\n"
+                  "- Correcting a source affects that one instrument only and changes nothing "
+                  "about how anything else is priced.\n"
+                  "- Refreshing covers market data, not the instrument master lists, which are "
+                  "synced from Settings — the page states the difference rather than letting you "
+                  "assume one button does both.\n"
+                  "- While no-egress is on, refresh makes no network call at all and says so; "
+                  "prices go stale honestly instead of being filled in."},
     {"id": "page-settings", "category": "Pages", "title": "Settings",
      "body": "Preferences for this install, across six tabs. General covers how figures are "
              "reported. Appearance is theme, density, high contrast and reduced motion, and applies "
@@ -490,8 +551,8 @@ HELP: list[dict] = [
                 "Theme, Density, High contrast and Reduced motion",
                 "No-egress mode, Create token and Revoke",
                 "Market data provider and Provider API key",
-                "Sync now and Edit feeds… — masters and news feeds",
-                "Add rule — the routing matrix",
+                "**Sync now and Edit feeds…** — masters and news feeds",
+                "**Add rule** — the routing matrix",
                 "PIN, Auto-lock after, Allow LAN access and Reset data"],
      "options": ["Theme: System · Light · Dark",
                  "Density: Comfortable · Compact",
@@ -500,12 +561,15 @@ HELP: list[dict] = [
                  "Whether the root helper is installed, and whether a PIN is set",
                  "The providers configured, what each covers, and whether it needs a key"],
      "interpret": "Appearance is saved on this device only — it describes the display, not your "
-                  "data, so it does not travel with a restore or across browsers. Changing your "
-                  "base currency restarts valuation so every page re-reports in it. Some controls "
-                  "are shown but disabled when the optional root helper is not installed: the "
-                  "product would rather show you what exists and why it cannot run than hide it. "
-                  "Resetting data erases your records and keeps your settings, and it asks for your "
-                  "PIN — an install with no PIN refuses the wipe outright."},
+                  "data, so it does not travel with a restore or across browsers.\n"
+                  "\n"
+                  "- Changing your base currency restarts valuation so every page re-reports in "
+                  "it.\n"
+                  "- Some controls are shown but disabled when the optional root helper is not "
+                  "installed: the product would rather show you what exists and why it cannot run "
+                  "than hide it.\n"
+                  "- Resetting data erases your records and keeps your settings, and it asks for "
+                  "your PIN — an install with no PIN refuses the wipe outright."},
     {"id": "page-help", "category": "Pages", "title": "Help",
      "body": "This page, in three sections. Orientation says what the platform is for and how the "
              "pages work together. Pages describes each page — what you fill in, what you can "
@@ -516,19 +580,21 @@ HELP: list[dict] = [
              "elsewhere in the app open a short definition where you are standing, and the full "
              "entry lives here.",
      "keywords": "help search topics glossary terms guide catalogue orientation sections type ahead",
-     "inputs": ["Search — narrows all three sections as you type",
-                "Any entry title — opens that entry",
-                "Link to this topic — a link that reopens this entry directly"],
+     "inputs": ["**Search** — narrows all three sections as you type",
+                "**Any entry title** — opens that entry",
+                "**Link to this topic** — a link that reopens this entry directly"],
      "options": ["Search covers Help content only; it does not search your holdings or the market"],
      "outputs": ["Orientation — why the platform exists and how the pages fit together",
                  "Pages — one entry per page",
                  "Glossary — terms from basics to expert, each with an example"],
-     "interpret": "Help describes the product; it never restates your figures. Where an entry names "
-                  "something you own or hold, it names the page that owns it rather than repeating "
-                  "the number, so there is never a second copy that can drift. Glossary examples "
-                  "are illustrative samples with made-up figures, not yours — they are there to "
-                  "show the shape of a calculation, and they are marked as samples wherever they "
-                  "appear."},
+     "interpret": "Help describes the product; it never restates your figures.\n"
+                  "\n"
+                  "- Where an entry names something you own or hold, it names the page that owns "
+                  "it rather than repeating the number, so there is never a second copy that can "
+                  "drift.\n"
+                  "- Glossary examples are **illustrative samples with made-up figures, not yours** — "
+                  "they are there to show the shape of a calculation, and they are marked as "
+                  "samples wherever they appear."},
     # --- Glossary ----------------------------------------------------------- #
     # Section 3 (9-bis-1/9-bis-2): Tier-1+2 terms only, ordered basics > expert, each with a
     # STATIC worked example clearly marked as an illustrative sample (9-bis-3).
@@ -1135,12 +1201,20 @@ def _reading_order(entries: list[dict]) -> list[dict]:
 
 
 def all_help() -> dict:
+    """The whole catalogue, WITH markup — this is the page's consumer, and the page renders it.
+
+    The response DECLARES its markup dialect (§9-bis-11(b)). Without that declaration a consumer
+    receiving `body` has no way to know the string carries markers rather than literal asterisks,
+    and versioning it means a future change to the sanctioned subset is a visible contract change
+    instead of a silent reinterpretation of the same strings.
+    """
     def _project(e: dict) -> dict:
         out = {k: e[k] for k in ("id", "category", "title", "body")}
         out.update({k: e[k] for k in _OPTIONAL if k in e})
         return out
 
-    return {"categories": _CATEGORIES,
+    return {"markup": MARKUP_DIALECT,
+            "categories": _CATEGORIES,
             "entries": [_project(e) for e in _reading_order(HELP)]}
 
 
@@ -1168,7 +1242,10 @@ def search_help(query: str, limit: int = 4) -> list[dict]:
     for e in HELP:
         title = e["title"].lower()
         keys = e.get("keywords", "").lower()
-        body = e["body"].lower()
+        # STRIPPED before ranking. A marker inside a phrase splits the words, so an entry saying
+        # "total **value**" would not match a query term the user typed as one word — formatting
+        # would silently change search results. Ranking reads what the user reads.
+        body = strip_markup(e["body"]).lower()
         hay = f"{title} {keys} {body}"
         # COVERAGE FIRST, then tier. How many of the asked-about terms does this entry address at
         # all? An entry answering the whole question beats one answering a fragment of it, however
@@ -1186,7 +1263,14 @@ def search_help(query: str, limit: int = 4) -> list[dict]:
                 + sum(1 for t in terms if t in body))
         scored.append(((covered, tier), e))
     scored.sort(key=lambda x: x[0], reverse=True)
-    return [{k: e[k] for k in ("id", "category", "title", "body")} for _s, e in scored[:limit]]
+    # STRIPPED, deliberately. This projection has two consumers and NEITHER renders markup: the
+    # page's server-side ranker, and `app/ai/tools.py` `help_facts()`, which hands `body` to the
+    # model as a grounding fact. Serving markers here would put `**` into answers the user reads.
+    # Same lesson as the sample marker (§9-bis-9(b)): the AI reads strings, never styling — so
+    # what the AI must not see has to be removed from the string, and what it must see has to be
+    # in it.
+    return [{k: strip_markup(e[k]) if k == "body" else e[k]
+             for k in ("id", "category", "title", "body")} for _s, e in scored[:limit]]
 
 
 def _re_words(s: str) -> list[str]:
