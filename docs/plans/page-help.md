@@ -1124,6 +1124,42 @@ GLOSSARY rows either. **Three-store parity is untouched** and the Tier-3 counter
 > written around it**: the Policy entry names the controls without asserting how many of each there
 > are. **Owner's call at 0a.**
 
+### §9-bis-10 — Phase 1-bis walked on an isolated instance (2026-07-19). **AWAITING 0a.**
+
+Backend `:8399` on a temp data dir, Vite dev `:5199` proxied to it, both torn down after; owner's
+`5173`/`8321` never touched and still listening; repo-root `.env` **sha256 identical before and
+after** (`460a2da0…`), never printed. Throwaway configs deleted, not committed.
+
+**Walk result — every item green, 0 console errors:** three sections in journey order in BOTH
+themes · page root full-width (1086px inside the 1126px content box, uncapped) · **zero horizontal
+overflow at 320 / 375 / 768 / 1366** with no stray elements · Orientation pill → `?topic=` →
+Section-2 entry marked AND opened · an expanded entry showing all four blocks, its body capped at
+**689px ≈ 78ch — the measure where §9-bis-0 relocated it** · Glossary levels in DOM order
+`Basics → Core → Advanced` across 29 terms · sample chip + the served `Sample — ` prefix · type-ahead
+mid-word (`confid`) grouping hits under Pages and Glossary with a served count · served empty state ·
+deep link scrolled, marked and opened · one nav entry · About card in **Settings → System** with all
+six links (`rel="noreferrer noopener"`) and the tab strip still **SIX** — no 7th tab.
+
+**⚠ THE SETTINGS PRE-PASS EARNED ITS KEEP.** It went **RED**: *"content overflow
+light/system/320px — expected <= 1, received 30"*. The six About links are bare URLs, and
+`github.com/gopalasubramanium/ledgerframe` is **one unbreakable token**; the rows ran to
+`right=350` in a 320px viewport. Found by probing the live DOM, fixed with `min-width: 0` plus
+`overflow-wrap: anywhere` (either alone leaves the row rigid), re-run **7/7 green**. *Nothing in
+review would have caught this — it is a layout fact, and only a browser at 320px states it.*
+This is precisely why §9-bis-6 makes the re-run mandatory for an accepted-page touch.
+
+**Note for the re-run protocol:** `e2e/smoke/` is a destructive live harness and the Settings spec
+**locks the instance** (the API answered `401` afterwards). Re-seed on a fresh temp data dir before
+driving anything else. Also: `playwright.config.ts:11` points at a `playwright.smoke.config.ts`
+that **does not exist** — the smoke specs need a config supplied. Not fixed here (out of scope);
+worth a row.
+
+**Gates:** `npm run check` **exit 0** — 36 test files / 342 unit tests, 361 e2e (the 1728px
+shell-inset and tile-integrity guards among them). Contract **138 path keys / 63 schemas**.
+
+**NOT ratified. NOT closed. NOT pushed.** The owner ratifies structure, voice and every PROPOSED
+DS item at the 0a, by looking.
+
 ---
 
 ## SCOPE-NOTES *(preserved verbatim — owner rulings recorded ahead of the draft; inputs to §9)*
