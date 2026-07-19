@@ -142,3 +142,80 @@ async def test_single_entity_still_renders_its_per_entity_section(session):
     html = await render_reports_pack(session)
     assert "Per-entity &mdash; Solo Household" in html or "Per-entity — Solo Household" in html
     assert html.count("pack-section--entity") == 1
+
+
+# --------------------------------------------------- AC-L8: the product-level footer (page-legal §9-4)
+#
+# ONE source, TWO renderers. The Legal page and this artifact must render the same bytes, and the
+# only way that stays true is a test that compares them rather than a convention that asks nicely.
+
+
+async def test_the_pack_carries_the_product_level_footer_line(app_client):
+    """§9-4: the Pack gains ONE product-level reporting-only / no-advice line."""
+    html = (await app_client.get("/reports/pack")).text
+    assert '<footer class="pack-footer">' in html
+
+
+async def test_the_footer_matches_LEGALS_SERVED_STRING_byte_for_byte(app_client):
+    """AC-L8 — the anti-drift guard, and the whole point of §9-4's "one source, two renderers".
+
+    Fail-first: seen RED with a single character changed in the Pack's copy of the line. The two
+    surfaces would otherwise drift the ordinary way — someone improves the wording on the page,
+    the print artifact keeps the old sentence, and for a while the product states its position two
+    different ways depending on where you read it.
+
+    Compared against what the ENDPOINT serves, not against the module constant, so the assertion
+    covers the whole path the page actually receives.
+
+    Note the path: `/api/v1/legal`, not `/legal`. The Pack is registered at the app root, but the
+    Legal reader is on the versioned API router — and unprefixed `/legal` is swallowed by the SPA
+    catch-all, which answers 200 with `index.html`. Seen RED writing this: the wrong path returned
+    HTML and the test died on a JSON decode rather than on a drift, which would have read as a
+    content bug.
+    """
+    import html as _html
+
+    resp = await app_client.get("/api/v1/legal")
+    assert resp.status_code == 200, resp.text
+    served = resp.json()["pack_footer"]
+    pack = (await app_client.get("/reports/pack")).text
+
+    marker = '<footer class="pack-footer">'
+    rendered = pack[pack.index(marker) + len(marker):pack.index("</footer>")]
+    assert _html.unescape(rendered) == served, (
+        "The Reports Pack footer has DRIFTED from the string Legal serves.\n"
+        f"  legal serves: {served!r}\n"
+        f"  pack renders: {_html.unescape(rendered)!r}\n"
+        "One source, two renderers (page-legal §9-4) — change app/services/legal.py, never the "
+        "Pack's copy."
+    )
+
+
+async def test_the_footer_did_not_replace_the_per_reader_disclaimers(app_client):
+    """The addition is an ADDITION (D-106). §9-4 keeps the Pack's per-reader disclaimers unchanged;
+    the footer states the product's position, it does not absorb theirs."""
+    html = (await app_client.get("/reports/pack")).text
+    assert 'class="pack-disclaimer"' in html, (
+        "the per-reader disclaimers vanished from the Pack — the §9-4 footer is an addition, never "
+        "a replacement (page-legal §9-2 / D-106: removing a scoped caveat is an honesty regression)"
+    )
+
+
+async def test_the_reporting_only_fallback_caption_is_unchanged(app_client):
+    """§9-4 explicitly leaves `reports_pack.py`'s fallback caption for readers that serve no
+    disclaimer of their own alone. Pinned so a later tidy-up cannot fold it into the new footer."""
+    from app.services.reports_pack import _REPORTING_CAPTION
+
+    assert _REPORTING_CAPTION == "Reporting only, not advice."
+    assert _REPORTING_CAPTION in (await app_client.get("/reports/pack")).text
+
+
+async def test_the_seven_guarantees_stay_OFF_the_print_artifact(app_client):
+    """§9-4 ruled the Guarantees do NOT go into the Pack — a page, not a report footer, and they
+    would bloat every print artifact. Guarded so a future "make the Pack more complete" change has
+    to argue with the ruling instead of quietly reversing it."""
+    from app.services.legal import GUARANTEES
+
+    html = (await app_client.get("/reports/pack")).text
+    for g in GUARANTEES:
+        assert g not in html, f"a Product Guarantee reached the print artifact: {g[:48]!r}…"

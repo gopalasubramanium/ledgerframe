@@ -372,6 +372,22 @@ def _document(base: str, generated: str, body: str) -> str:
         f'<div class="pack-running-header">Reports Pack &middot; {_esc(generated)} '
         f'&middot; Base currency {_esc(base)}</div>'
     )
+    # THE PRODUCT-LEVEL FOOTER (page-legal §9-4, owner 2026-07-19; D-038 lane).
+    #
+    # ONE line, and it is LEGAL'S STRING — imported, never copied. One source, two renderers: the
+    # Legal page and this artifact render the same bytes, which is what makes them incapable of
+    # drifting. `test_reports_pack_footer.py` asserts byte-for-byte equality (AC-L8).
+    #
+    # WHAT THIS IS NOT, because both were live options and both were ruled out:
+    # * NOT the seven Guarantees. They are a page, not a report footer, and would bloat every
+    #   print artifact.
+    # * NOT a replacement for anything. The per-reader disclaimers are UNTOUCHED (D-106 — they are
+    #   part of their figures), the `_REPORTING_CAPTION` fallback is unchanged, and the header's
+    #   FX/not-advice block (Pack-5) stays exactly as it was. This is an ADDITION: the product's
+    #   position, stated once, where a reader who reaches the end of a printed pack will see it.
+    from app.services.legal import PACK_FOOTER
+
+    footer = f'<footer class="pack-footer">{_esc(PACK_FOOTER)}</footer>'
     header = (
         '<header class="pack-header">'
         '<h1>Reports Pack</h1>'
@@ -385,7 +401,7 @@ def _document(base: str, generated: str, body: str) -> str:
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
         f"<title>Reports Pack</title><style>{style}</style></head>"
-        f'<body><div class="pack">{running}{header}{body}</div></body></html>'
+        f'<body><div class="pack">{running}{header}{body}{footer}</div></body></html>'
     )
 
 
@@ -477,6 +493,11 @@ th { color: #475569; font-weight: 600; font-size: 12px; }
 .pack-disclaimer { color: #475569; font-size: 12px; font-style: italic; margin: 8px 0 0;
   border-top: 1px dotted #cbd5e1; padding-top: 6px; }
 .pack-empty { color: #64748b; font-style: italic; margin: 8px 0; }
+/* The product-level footer (page-legal §9-4). Styled like a disclaimer, not like a caption: it is
+   the product's position, and the last thing on the artifact. `break-inside: avoid` so it is never
+   split across a page boundary — half a no-advice statement is worse than none. */
+.pack-footer { color: #475569; font-size: 12px; font-style: italic; margin: 24px 0 0;
+  border-top: 1px solid #cbd5e1; padding-top: 8px; break-inside: avoid; }
 .pack-stale { color: #b45309; font-size: 12px; }
 .pack-running-header { display: none; }
 @media print {
