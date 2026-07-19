@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
+import { Checkbox } from "./Checkbox";
 import "./chrome.css";
 import "./structure.css";
 import "./inputs.css";
@@ -48,7 +49,6 @@ export function AcceptanceGate({
   onReadLegal,
 }: AcceptanceGateProps) {
   const [checked, setChecked] = useState(false);
-  const boxId = useId();
 
   // Re-arm whenever the gate re-opens. A checkbox left ticked from a previous appearance would let
   // a re-ask after a CHANGED DOCUMENT be accepted with one click, against a text the person has not
@@ -86,18 +86,17 @@ export function AcceptanceGate({
           </button>
         </div>
 
-        <label className="lf-gate__check" htmlFor={boxId}>
-          <input
-            id={boxId}
-            type="checkbox"
+        {/* The served prompt names EXACTLY what is being accepted. It is the sentence the
+            acceptance record binds to, so it is rendered verbatim and never summarised — it is
+            passed to the primitive as its label, unchanged. */}
+        <div className="lf-gate__check">
+          <Checkbox
             checked={checked}
             disabled={busy || !copy}
-            onChange={(e) => setChecked(e.target.checked)}
+            onChange={setChecked}
+            label={copy?.prompt ?? ""}
           />
-          {/* The served prompt names EXACTLY what is being accepted. It is the sentence the
-              acceptance record binds to, so it is rendered verbatim and never summarised. */}
-          <span className="lf-gate__prompt">{copy?.prompt ?? ""}</span>
-        </label>
+        </div>
 
         {declined && copy && (
           <p className="lf-gate__declined" role="alert">

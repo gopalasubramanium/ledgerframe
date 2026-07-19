@@ -16,6 +16,8 @@ export { InstrumentPicker } from "./InstrumentPicker";
 export type { InstrumentPickerProps, InstrumentPick } from "./InstrumentPicker";
 export { MasterSelect } from "./MasterSelect";
 export type { MasterSelectProps } from "./MasterSelect";
+export { Checkbox } from "./Checkbox";
+export type { CheckboxProps } from "./Checkbox";
 export { Select } from "./Select";
 export type { SelectProps, SelectOption } from "./Select";
 export { RowMenu } from "./RowMenu";

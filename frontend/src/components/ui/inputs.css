@@ -137,3 +137,74 @@
 .lf-field--select.lf-field--disabled {
   background: transparent;
 }
+
+/* ---- Checkbox (the boolean CONSENT control; DESIGN-SYSTEM §5.1 amendment, page-legal §11-J) ----
+ *
+ * The native input is present and focusable but transparent, laid exactly over the drawn box. All
+ * state (checked, focus, disabled) is expressed by selecting the box from the input, so there is one
+ * source of truth — the control itself — and no state the component has to remember to mirror.
+ *
+ * `--border-strong`, not `--border`: an unticked consent box must read as an EMPTY REQUIRED FIELD,
+ * not as a decorative outline someone may pass over. */
+.lf-checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  position: relative;
+}
+.lf-checkbox__input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.lf-checkbox__box {
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: transparent;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
+}
+/* The tick is revealed by COLOUR, never by display: an element that appears from nothing cannot be
+ * transitioned, and a checkbox whose mark pops in reads as a redraw rather than a response. */
+.lf-checkbox__tick {
+  transition: color var(--motion-fast);
+}
+.lf-checkbox__input:checked + .lf-checkbox__box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+.lf-checkbox__input:not(:disabled):hover + .lf-checkbox__box {
+  border-color: var(--accent);
+}
+/* :focus-visible only — a mouse click on a consent box should not leave a ring sitting on it. */
+.lf-checkbox__input:focus-visible + .lf-checkbox__box {
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.lf-checkbox__label {
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+/* Disabled dims the WHOLE control, label included. Dimming only the box would leave a legible
+ * sentence beside a dead target and say nothing about why it will not tick. */
+.lf-checkbox.is-disabled {
+  opacity: 0.5;
+}
+.lf-checkbox.is-disabled .lf-checkbox__input,
+.lf-checkbox.is-disabled .lf-checkbox__label {
+  cursor: not-allowed;
+}

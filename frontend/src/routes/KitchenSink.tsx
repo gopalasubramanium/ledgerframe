@@ -38,6 +38,7 @@ import {
   Dialog,
   FirstRunChecklist,
   Switch,
+  Checkbox,
   EmptyState,
   FileInput,
   GlossaryTerm,
@@ -249,6 +250,9 @@ export function KitchenSink() {
 
   // First-run checklist demos (PROPOSED 2026-07-11 — page-first-run-checklist Phase 0a)
   const [switchOn, setSwitchOn] = useState(false);
+  const [checkOne, setCheckOne] = useState(false);
+  const [checkTwo, setCheckTwo] = useState(true);
+  const [checkThree, setCheckThree] = useState(false);
   const [comboTz, setComboTz] = useState<string | null>("Asia/Singapore");
   const [frOpen, setFrOpen] = useState(false);
   const [frCurrency, setFrCurrency] = useState("SGD");
@@ -335,6 +339,32 @@ export function KitchenSink() {
           </Specimen>
           <Specimen label="focus · disabled">
             <PercentInput value="10" onChange={() => {}} disabled aria-label="Disabled" />
+          </Specimen>
+        </div>
+
+        {/* Checkbox — PROPOSED §5.1 amendment (page-legal §11-J). The boolean CONSENT control; the
+            inventory had a Switch (a setting you change) and no checkbox (a statement you affirm),
+            which is how the Acceptance Gate came to hand-roll a raw input. Tab through all four in
+            both themes: the ring sits on the BOX, and it must be obvious against the ticked accent
+            fill as well as the empty one. */}
+        <div className="ks__row">
+          <Specimen label="Checkbox · unticked (PROPOSED)">
+            <Checkbox checked={checkOne} onChange={setCheckOne} label="I have read the terms" />
+          </Specimen>
+          <Specimen label="Checkbox · ticked">
+            <Checkbox checked={checkTwo} onChange={setCheckTwo} label="Include closed accounts" />
+          </Specimen>
+          <Specimen label="Checkbox · disabled (dims the label too)">
+            <Checkbox checked={false} onChange={() => {}} disabled label="Not available yet" />
+          </Specimen>
+          <Specimen label="Checkbox · long label wraps beside the box, never under it">
+            <div style={{ maxWidth: "22rem" }}>
+              <Checkbox
+                checked={checkThree}
+                onChange={setCheckThree}
+                label="A consent sentence long enough to wrap onto several lines, to prove the box stays aligned to the FIRST line rather than centring itself against the block."
+              />
+            </div>
           </Specimen>
         </div>
 

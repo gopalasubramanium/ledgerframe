@@ -366,20 +366,16 @@
 }
 /* The checkbox and the prompt it governs, on one line-height so the sentence reads as the label of
    the box rather than as body copy that happens to sit near it. */
+/* The framed row the consent control sits in. It holds the FRAME only — the box, the label, the
+   gap between them and every state they carry belong to the Checkbox primitive (§6: pages and
+   surfaces compose primitives, they never style them). `cursor: pointer` is deliberately NOT here:
+   the wrapper is not clickable, and only the control and its label should say that they are. */
 .lf-gate__check {
   display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
   padding: var(--space-3);
   border: var(--border-width) solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface-raised);
-  cursor: pointer;
-}
-.lf-gate__prompt {
-  font-size: var(--font-size-13);
-  line-height: var(--line-13);
-  color: var(--text-primary);
 }
 /* The re-ask note. Deliberately NOT styled as an error — a returning user whose document changed
    has done nothing wrong, and colouring this like a failure would say otherwise. */
