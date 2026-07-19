@@ -101,7 +101,7 @@ export interface LegalAcceptanceStatus {
  *  This is the most consequential copy in the product: it is what the user is RECORDED as having
  *  agreed to. It is served for the same reason Legal's prose is (§9-3) — so the accuracy guards
  *  can reach it — and because a consent record whose wording lives in a frontend constant cannot
- *  be bound to the text the server hashed. ⚑ The wording is PROPOSED until the owner's look (§9-8). */
+ *  be bound to the text the server hashed. The wording is RATIFIED (owner, 2026-07-20, §11). */
 export interface LegalGateCopy {
   prompt: string;
   explainer: string;

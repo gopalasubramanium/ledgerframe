@@ -21,7 +21,7 @@ import "./inputs.css";
 // EVERY STRING A USER READS HERE IS SERVED (§9-3 / §9-8). Nothing in this file authors consent
 // copy. The prompt is what the person is RECORDED as having agreed to, so it is held to the
 // server-side accuracy bar rather than typed into a component where no guard can reach it.
-// ⚑ The wording is PROPOSED until the owner's look.
+// The wording is RATIFIED (owner, in chat, 2026-07-20 — page-legal §11, re-look item 2).
 export interface AcceptanceGateProps {
   open: boolean;
   /** `stale` = a returning user being re-asked because the document changed. Greeted differently. */

@@ -1089,7 +1089,11 @@ under a sentence written in earnest). **True brand marks re-enter only via a fut
 
 ---
 
-## §5 AMENDMENT — the three LEGAL-milestone entries (PROPOSED 2026-07-20, page-legal §11-J; ratify at the owner's look)
+## §5 AMENDMENT — the three LEGAL-milestone entries (~~PROPOSED 2026-07-20~~ **RATIFIED 2026-07-20** by the owner, at the Legal re-look; page-legal §11-J / §11-K)
+
+> **RATIFIED 2026-07-20.** The owner looked at the re-look screenshots and the Legal page on his own
+> instance and accepted all three entries below, together with the reading-return bar's strings
+> being **served** (§11-K). The PROPOSED markers in the rows are superseded by this line.
 
 Three things the Legal milestone needed. **One is a primitive and enters §5.1; two are
 page-scoped and enter the library only as a REGISTERED EXCEPTION** — the distinction is the
@@ -1099,7 +1103,7 @@ entry's whole content, because an unregistered page-scoped style is indistinguis
 
 | Component | Props (surface) | Usage rules |
 |-----------|-----------------|-------------|
-| **Checkbox** *(PROPOSED)* | `checked`, `onChange`, `label?` (ReactNode), `disabled?`, `aria-label?`, `aria-describedby?` | The **only** sanctioned checkbox. Wraps the **native** `<input type="checkbox">` internally (§6 — no raw checkbox anywhere else, mechanised by `npm run check:primitives`). Label association, Space-key operation, `:focus-visible` ring on the drawn box, and a disabled state that dims the label too. **Authors no copy** — `label` is the caller's string, and on a consent surface that string is **served**. |
+| **Checkbox** *(**RATIFIED 2026-07-20**)* | `checked`, `onChange`, `label?` (ReactNode), `disabled?`, `aria-label?`, `aria-describedby?` | The **only** sanctioned checkbox. Wraps the **native** `<input type="checkbox">` internally (§6 — no raw checkbox anywhere else, mechanised by `npm run check:primitives`). Label association, Space-key operation, `:focus-visible` ring on the drawn box, and a disabled state that dims the label too. **Authors no copy** — `label` is the caller's string, and on a consent surface that string is **served**. |
 
 **Why a checkbox when §5.5 already has a Switch:** a Switch is a **setting you change** and takes
 effect as you leave it; a checkbox is a **statement you affirm** and takes effect when you submit.
@@ -1111,7 +1115,7 @@ control is operated by — assistive-tech announcement, the Space key, autofill,
 got right **by construction** only by using it. Borrowing the native element is here both the
 cheaper and the more correct choice, and reimplementing it would have been neither.
 
-### (2) Legal formal-document typography — PAGE-SCOPED, and registered as such
+### (2) Legal formal-document typography — PAGE-SCOPED, and registered as such (**RATIFIED 2026-07-20**)
 
 The clause-numbering rhythm of `Legal.css` (hanging markers in their own column, tabular article
 numbers, nested clause/sub-clause indent) is **DRESS on ratified `lf-card` sections — not a
@@ -1123,7 +1127,7 @@ whether it was written down. **The numbers are rendered from POSITION, never aut
 derives *"2.1.a"* from three indices), and they are **real elements, not `::before` counters**,
 because a counter lives in CSS and a copy-paste of a numbered clause must carry its number.
 
-### (3) Reading-return bar — the way back from a document opened FROM a gate
+### (3) Reading-return bar — the way back from a document opened FROM a gate (**RATIFIED 2026-07-20**)
 
 A fixed bottom bar shown **only** while a blocking gate has been stood down so its own document can
 be read. It is **deliberately not a scrim and dims nothing**: the entire point of the state is that

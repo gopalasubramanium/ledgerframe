@@ -983,7 +983,7 @@ class LegalAcceptanceIn(BaseModel):
 
 
 class LegalGateCopy(BaseModel):
-    """The gate's served strings. PROPOSED (page-legal §9-8) until the owner's look.
+    """The gate's served strings. RATIFIED by the owner 2026-07-20 (page-legal §11).
 
     Served rather than hardcoded in the lock screen for the same reason the page is (§9-3): this
     is the most consequential copy in the product — it is what the user is recorded as having

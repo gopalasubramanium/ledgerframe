@@ -402,6 +402,35 @@ items in 10-D.**
 
 ## 11. 0a REVISION ORDERED — the owner looked, and ruled (2026-07-20)
 
+> ## ⬛ RATIFIED — the owner looked, and accepted (2026-07-20)
+>
+> **THE 0a AND THE RE-LOOK ARE RATIFIED, AND §3b IS ACCEPTED, BY THE OWNER IN CHAT ON 2026-07-20.**
+> No ruling was typed in this CLI; the owner's message is the acceptance record, and it named
+> **all six** items:
+>
+> | # | Item | Where it lives |
+> |---|---|---|
+> | 1 | **The PRODUCT-SPEC §3 diff** — the rename + apparatus clean-up, read in full | [§11-C](#11-c-product-spec-3-cleaned-ac-l3-runs-unexempted--shipped-2026-07-20-4dcd987) |
+> | 2 | **The two sentences** — the gate's acceptance prompt and explainer, PROPOSED since §9-8 because this CLI does not draft legal text. **They are now the owner's, and the PROPOSED flag is discharged.** | [§11-E1](#11-e1-the-acceptance-gate-server-side--shipped-2026-07-20-d44eee5) |
+> | 3 | **The Legal page in BOTH THEMES** — six articles, anchors, formal register, containment | [§11-D](#11-d-the-formal-register--9-5-bis-convenience-links--shipped-2026-07-20-817235f) |
+> | 4 | **The gate / stale / reset / decline behaviour** — including that a **reset ERASES acceptance** and the gate re-fires as `none` | [§11-E1](#11-e1-the-acceptance-gate-server-side--shipped-2026-07-20-d44eee5) · [§11-E2a](#11-e2a-reset-erases-acceptance) |
+> | 5 | **The three DS items** — Checkbox · page-scoped Legal typography (registered, deliberately not promoted) · reading-return bar | [§11-J](#11-j-the-hard-rule-violation--a-raw-checkbox-in-the-gate-the-primitive-and-the-guard) → `DESIGN-SYSTEM.md` §5, flipped **PROPOSED → RATIFIED (dated)** |
+> | 6 | **The architect's reading-bar ruling** — the two strings are state claims on the consent path and must be SERVED | [§11-K](#11-k-the-reading-bar-is-served--the-11-j-open-question-ruled-and-shipped-2026-07-20) |
+>
+> **§3b ACCEPTED in the same message** — the contract deltas this milestone introduced
+> (`GET /api/v1/legal`, `/legal/acceptance` GET+POST, `/legal/gate-copy`) are accepted as the
+> milestone's API surface. **Both counts at acceptance: 141 paths · 71 schemas.**
+>
+> **What this discharges:** the 0a is no longer *"superseded and not ratified"* — the re-look
+> build it was superseded by has itself been looked at and accepted, so the milestone's design
+> record is **closed**. **§11-OPEN item 2 (gate copy PROPOSED) is DISCHARGED** by item 2 above,
+> and it was the last PROPOSED string in the milestone. **10-D item 4 (prose rhythm) is NOT
+> discharged here** — it was never a Legal question; it remains a shared-`HelpProse` delta and is
+> carried to the pre-release backlog, not closed by silence.
+>
+> *(The paragraph below is the pre-ratification framing, left unedited — it was true when written,
+> and rewriting it would erase the record of where this milestone stood. §15 lesson 1.)*
+
 *The owner read the rendered 0a specimen and ordered revisions. **No ruling was typed in this
 CLI**; §11-RULINGS is the record of what was decided in chat on 2026-07-20. The 0a is therefore
 **not ratified** — it is superseded by the build these rulings order, which stops again at a
@@ -449,11 +478,19 @@ against them below; the fourth is carried forward unchanged.*
    having agreed to.
 
 > **Both items are now DISPOSED — see [§11-DISPOSITIONS](#11-dispositions--the-owner-ruled-on-the-four-raised-items-2026-07-20).**
-> Item 1 was **endorsed** (the architect, on the §3 subtitle); item 2 **stands PROPOSED** and is
-> carried to the re-look with the gate copy. Two further items raised *by the build* — reset
-> erasure and hash granularity — were ruled at the same time and are recorded there.
+> Item 1 was **endorsed** (the architect, on the §3 subtitle); item 2 ~~**stands PROPOSED** and is
+> carried to the re-look with the gate copy~~ — **DISCHARGED 2026-07-20: the owner ratified the two
+> sentences by looking (§11 banner, item 2).** Two further items raised *by the build* — reset
+> erasure and hash granularity — were ruled at the same time and are recorded there; the hash
+> granularity decision (whole-document, so any edit re-asks) is **ratified as built** under re-look
+> item 4.
 
-**§11 OPEN. The build resumes at 11-B and STOPS AT THE RE-LOOK.**
+~~**§11 OPEN. The build resumes at 11-B and STOPS AT THE RE-LOOK.**~~
+**§11 CLOSED 2026-07-20** — the re-look happened, the owner ratified all six items (banner at the
+top of §11), and **§11-OPEN item 2 is discharged**: the gate copy is no longer PROPOSED. The
+PROPOSED markers that lived in the **code** (`app/services/legal.py`, the `LegalGateCopy` docstring,
+`api/legal.ts`, `AcceptanceGate.tsx`) are updated to RATIFIED in the same commit as this record —
+a stale ⚑ in a source file outlives any plan file, and the next reader would have believed it.
 
 ---
 
@@ -1141,6 +1178,26 @@ this delta changes served strings, so unlike §11-J it does **not** get to skip 
 **HELP CURRENCY:** ⚑ assessed at Phase 3a with the suite, not asserted here. Two new served strings
 exist; the *user-visible wording is byte-identical* to what shipped, so the expectation is **no Help
 delta** — but that is a claim the corpus adjudicates, not this note.
+
+---
+
+## 12. PHASE 3b — OWNER ACCEPTANCE WALK — FINDINGS LEDGER (2026-07-20)
+
+**ACCEPTANCE BASIS: the owner's ratification in chat on 2026-07-20** (the banner at the head of
+§11), given after reading the §3 diff, the two gate sentences, the Legal page in **both themes**,
+and the gate/stale/reset/decline behaviour — the six items enumerated there. This is a **walk by
+looking**, on the owner's own instance and in chat, not a scripted 3b re-drive; the precedent is
+`data-feed-routing.md` §14 ruling 1c and `intraday-series.md`, where the acceptance basis was
+likewise the reviewed evidence rather than a fresh drive.
+
+**LEDGER STATUS: open until the Phase 2/3a re-drive below records against it.** Findings the
+scripted pre-pass raises after the ratification are filed here as **F-items** and triaged at the
+close; a defect found after acceptance is still a defect, and the ratification does not retire the
+pre-pass.
+
+| # | Finding | Disposition |
+|---|---|---|
+| *(filled by the Phase 2/3a re-drive — §13)* | | |
 
 ---
 

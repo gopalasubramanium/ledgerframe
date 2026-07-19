@@ -30,10 +30,15 @@ states** — restating its sections 15/16 in the product's own words risks CONTR
 it ships under, so this page names them and stops; (c) calls itself "secure", "compliant" or
 "audited" in the abstract; (d) implies review by counsel.
 
-⚠ EVERY PROSE STRING BELOW IS **PROPOSED**, not ratified. §9-8 bars this CLI from drafting legal
-text; what is here is composed from **already-ratified primitives** (the Commitments, the Help
-orientation entries, the per-reader disclaimers, D-060's "for your accountant"). The owner
-ratifies each string by looking, at the 0a.
+✅ RATIFIED 2026-07-20 (owner, in chat, at the re-look — page-legal §11). Every prose string below
+was PROPOSED under §9-8, which bars this CLI from drafting legal text; what is here is composed
+from **already-ratified primitives** (the Commitments, the Help orientation entries, the per-reader
+disclaimers, D-060's "for your accountant"). The owner ratified them **by looking** — the page in
+both themes, and the gate's two sentences named explicitly.
+
+That they are ratified does NOT make them editable at will: an edit here changes the served
+document, moves its hash, and re-locks every install (see the hash note below). Legal copy changes
+by ruling, as it did here.
 """
 
 from __future__ import annotations
@@ -109,7 +114,7 @@ COMMITMENTS: tuple[str, ...] = (
 # unrelaxed. A document that acquired gravitas and lost a guard would be the exact failure this
 # page exists to prevent.
 #
-# TWO BUILD DECISIONS, BOTH PROPOSED UNTIL THE OWNER'S RE-LOOK:
+# TWO BUILD DECISIONS, BOTH RATIFIED AT THE RE-LOOK (owner, 2026-07-20 — page-legal §11):
 #
 # 1. **NUMBERING IS STRUCTURAL, NEVER TYPED.** No clause number appears in any string below. The
 #    renderer derives "2.1.a" from position — article index, clause index, item index. Typed
@@ -336,9 +341,10 @@ def all_legal() -> dict:
 # ⚠ A CONSEQUENCE, STATED PLAINLY RATHER THAN DISCOVERED LATER: because the hash covers the whole
 # served document, ANY edit to this file's copy — including a typo fix — re-locks every install
 # until the user accepts again. That is the honest behaviour for a consent record and it is also
-# a real operational cost. It is flagged for the owner at the re-look as a PROPOSED item: the
-# alternative (a curated "material change" flag) trades that cost for a judgement call about
-# which edits matter, made by whoever is editing.
+# a real operational cost. RATIFIED as the shipped behaviour (owner, 2026-07-20, re-look item 4 —
+# the gate/stale/reset/decline behaviour accepted as built): the alternative (a curated "material
+# change" flag) trades that cost for a judgement call about which edits matter, made by whoever is
+# editing — i.e. it lets the person changing the terms decide whether you have to be re-asked.
 
 _ACCEPTANCE_ACTIONS = ("accepted", "declined")
 
