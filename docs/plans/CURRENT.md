@@ -17,6 +17,16 @@ The product shell + every built page + the platform milestones, owner-accepted:
   Health** · **Markets** · **News** · **Review** · **Heatmap** · **Home**
 - **Policy** · **Cash flow** · **Scenarios** · **Insurance** · **Estate** ·
   **Accounts** · **Reports** · **Reports Pack** · **Settings**
+- **Help (`/help`) + Settings → About** — **closed 2026-07-19**, `page-help.md` §9/§9-bis
+  **CLOSED** + §16 strike-check. The Help page rebuilt on a three-section journey after the 0a
+  specimen was REJECTED; **the knowledge base rewritten** (the v1-era entries were factually wrong,
+  and `app/ai/tools.py:145` feeds them to the AI as grounded fact — AI-surfaces' grounding review
+  must read the NEW content); **About moved out of Help** to become the 7th Settings tab, rebuilt on
+  the four-beat template. **THE HELP CURRENCY LAW** established (CLAUDE.md hard rule + TEMPLATE §8):
+  every close states a Help delta or a guard-corroborated "no Help impact". `RATIFICATION.md §6` row
+  appended. **Open:** 18 hardcoded-port smoke specs (`08-TECH-DEBT.md`) — the harness must fail
+  closed; queued as its own delta.
+
 - **data-feed-routing (R-38)** — **closed 2026-07-18**, `data-feed-routing.md` §14
   **CLOSED (29 findings / 9 batches)** + §15. The owner walk was **deferred to the
   pre-release walk** by dated ruling (§14 ruling 1c); acceptance basis = the batch-9
@@ -36,21 +46,32 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — Help
+## NEXT — Legal
 
-**[Help] retrofit, owner-picked targets** (RD-9 Amendment 4).
+**The v2.0.0 legal surface** (RD-9 Amendment 4, item 2 — Help is closed above).
 
-**PLAN ONLY first — verify-first, STOP at §9** (the R-35/R-38/R-42/R-43 plan-file-first
+**PLAN ONLY first — verify-first, STOP at §9** (the R-35/R-38/R-42/R-43/Help plan-file-first
 precedent). No code before the owner's §9 one-pass.
 
----
+**Carried in from the Help close, and binding on this milestone:**
+
+- **THE HELP CURRENCY LAW applies from the first commit.** Legal ships user-facing surfaces and
+  terminology, so it has a **Help impact by default**; "no Help impact" is the exception and carries
+  the burden of proof. The **HELP CURRENCY SUITE** (TEMPLATE §8) runs at the close.
+- **`docs/audit/ASSETS.md` is the register for vendored redistributed assets**, and the author
+  photograph's licence line is settled there — *© Gopala Subramanium, all rights reserved; …  not
+  covered by the AGPL licence of the code.* Legal must reconcile with it rather than restate it:
+  `LICENSES.md` and `NOTICE` are **generated** and would erase a hand-edit.
+- **DS §3 standing rule** — prose in content surfaces is **full-width responsive by default**; a
+  fixed reading measure only where explicitly ratified, per surface. A legal surface is prose
+  end-to-end, so this is the rule most likely to be tripped.
 
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6)
 
 The remaining v2.0.0 set, in sequence (**Help** is the active NEXT above):
 
-1. ~~**Help**~~ — the active NEXT above.
-2. **Legal.**
+1. ~~**Help**~~ — **CLOSED 2026-07-19** (DONE above).
+2. ~~**Legal**~~ — the active NEXT above.
 3. **AI-surfaces** — D-067 / D-068. **⚠ INTAKE CROSS-NOTE (added 2026-07-19, page-help §9-9 ruling —
    READ BEFORE THE GROUNDING REVIEW):** the **help knowledge base was REWRITTEN in the Help
    milestone**. `app/services/help.py` is not just the Help page's content — `app/ai/tools.py:145`

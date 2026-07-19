@@ -387,3 +387,26 @@ discouraged. Remaining specs: `accounts-journey`, `accounts`, `news`, `markets`,
 `cash-flow`, `cash-flow-editor`, `insurance`, `net-worth` (3 inline URLs), `estate`,
 `reports-pack-journey`, `review`, `first-run`, `pricing-health`, `portfolio`, `scenarios`,
 `reports-artifact`.
+
+> ### ⚠ SECOND FAILURE MODE, SAME ENTRY — `settings-smoke` LEAVES THE INSTANCE PIN-LOCKED
+> *(found 2026-07-19, page-help §9-bis-13/§9-bis-14 — it bit twice in one milestone.)*
+>
+> `settings-smoke.spec.ts` exercises the §12st-1 PIN flow and calls **`POST /api/v1/auth/set-pin`**.
+> It never confirms a reset, but it **does leave the instance locked**, so **every request from
+> every later spec or script in that session answers 401**. Both bites cost real time and both
+> presented as something else entirely:
+>
+> 1. A screenshot run immediately after it logged **90 stray 401s** and rendered chrome in error
+>    states — read at first as a proxy or isolation fault.
+> 2. A Help pre-pass found **`Locked`** where the page should have been, so `.help__entrytoggle`
+>    and friends matched **zero** elements — read at first as a selector bug in a brand-new guard.
+>
+> **The general shape:** *a spec that mutates AUTH state is not order-independent, and the symptom
+> it produces in later specs never mentions auth.* This is the same family as the order-dependent
+> `test_reports_pack.py` + `test_performance.py` pair above — shared mutable state making a later
+> run's verdict depend on an earlier run's side effects.
+>
+> **STANDING CATCH until the harness fails closed:** screenshots and other pre-passes run **before**
+> `settings-smoke`, or against a **freshly booted instance** (new temp data dir). **Queued with the
+> 18-spec fix as one isolation delta**, because both are the same defect: *the harness does not
+> guarantee the state a spec claims to run against.*

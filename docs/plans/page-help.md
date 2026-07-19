@@ -1533,3 +1533,76 @@ Portfolio, and the chrome.**
 > **Verify-first note (2026-07-19):** SN-1's "**two stores**" is now known to be **three** — `help.py`'s
 > served `Terms` entries are a third, unguarded store (0-E). SN-1 is not wrong; it is **incomplete**,
 > because the third store was invisible until this pass read the engine. **§9-2 resolves it.**
+
+---
+
+## 16. §-LEDGER CLOSED + §15 STRIKE-CHECK — the Help milestone, closed 2026-07-19
+
+**Owner-accepted.** Help 3b ACCEPTED (incl. voice); About SIGNED OFF at §9-bis-14 with the
+re-look waived. The §9/§9-bis ledger is **CLOSED**.
+
+### Gates at the close — honestly
+
+| Gate | Result |
+|---|---|
+| Backend FULL suite, **SOLO** | **1603 passed / 15 skipped / 0 failed** (8m30s) |
+| Order-dependent pair (`test_reports_pack.py` + `test_performance.py`) | **19 passed / 0 failed** (88.8s) — ⚠ **a WEAK signal, see below** |
+| Frontend `npm run check` | **GREEN** — lint · typecheck · tokens · copy · **353 unit** · **361 e2e** |
+| HELP CURRENCY SUITE | **309 passed / 15 skipped** |
+| Settings pre-pass (isolated) | **8/8**, 0 console errors |
+| Help/About/Policy pre-pass (isolated) | **7/7**, 0 console errors |
+| API contract | **138 path-keys / 63 schemas** — unchanged from baseline; drift check current |
+| Glossary parity | green · **Tier-3 counter: 71 marked / 29 served / 58 unserved** (R-51, non-blocking, post-release) |
+
+> ⚠ **THE GREEN PAIR IS NOT EVIDENCE, AND THE CLOSE SAYS SO.** Per the `08-TECH-DEBT.md` protocol,
+> `test_reports_pack.py` + `test_performance.py` fail **by test order, not by code**. Four recorded
+> runs of the identical command now read **9 failed · 7 failed · 0 failed · 0 failed**. *A suite
+> whose verdict depends on execution order gives a green that does not mean what it says* — so this
+> green is exactly as weak a signal as a red one, and it is recorded because the numbers are owed,
+> not because they settle anything. **Nothing in this milestone touched those files or their
+> fixtures.** The isolation fix remains its own task.
+
+### §15 STRIKE-CHECK — every lesson MECHANISED, not remembered
+
+*A lesson without a guard is a lesson the next session re-learns. Each row names the mechanism.*
+
+| # | Lesson | Mechanised as |
+|---|---|---|
+| 1 | **Two tests pinned defects IN PLACE.** Two assertions asserted the *drifted* behaviour — a test can be green *because* it was written against the bug. | The pair now asserts the D-021-retired "Total value" is **absent**; `test_help_content_accuracy.py` binds help claims to **live product strings**, so a claim cannot drift from what ships without going red. |
+| 2 | **The guard corpus did not include itself.** The accuracy corpus scanned product surfaces but not the Help content that describes them — the one file most able to lie. | The corpus is **self-inclusive**: `test_help_content_accuracy.py` reads `help.py`'s served entries, on **markup-stripped** text, so formatting can never hide a claim from the guard that would have caught it. |
+| 3 | **A stale uvicorn served a phantom.** A walk measured a **previous build** and reported a defect that no longer existed. | Isolated walks boot a **fresh instance on a spare port with a temp data dir**; startup work is verified **from the API**, never from block-buffered logs. Recorded in the harness protocol. |
+| 4 | **Renderer right, WIRING wrong.** Every markup test passed and none was wrong: they tested the *renderer*, which was correct. `inputs`/`options`/`outputs` were never wired to it, so 54 labels shipped as literal `**Quote source**`. | A guard that reads the **page** and asserts **every served field** passes through a renderer. *A correct component wired to half its fields is a class of defect component tests cannot see.* |
+| 5 | ⚠ **The hardcoded-port near-miss — isolation was never enforced.** `SMOKE_BASE` redirects only the BROWSER; 20 smoke specs hardcoded the owner's `:8321`, so an "isolated" re-run issued **PUT /policy/targets · PUT /policy · PUT /settings against his live database**. Nothing was written **because his instance was PIN-locked and answered 401 — luck, not design.** | The `SMOKE_API` pattern applied to the 3 specs this milestone runs; **18 remain OPEN** in `08-TECH-DEBT.md` with the deeper fix (the env var is **opt-in**, so forgetting it silently re-targets the owner's machine — the harness must **fail closed**). **Queued as its own delta.** |
+| 5b | **The PIN-setting spec is a standing catch.** `settings-smoke` calls `POST /auth/set-pin` and **leaves the instance locked**; every later spec in that session 401s. It bit twice this milestone — 90 stray 401s in a screenshot run, then a Help pre-pass that found `Locked` instead of the page and looked like a selector bug. | Recorded as a **standing catch**: screenshots and other pre-passes run **before** `settings-smoke`, or on a **fresh instance**. Rides the same queued isolation delta. |
+| 6 | **The computed-style guard gap.** 23 undefined-token references shipped across two files. `check-design-tokens` enforced *"resolve through a custom property, never a raw value"* — and `var(--text-muted)` satisfies that perfectly while being undefined. The checker verified the **discipline** and never the **existence**. Three were `outline` shorthands, so Help's accordion toggle, topic link and jump link had **NO keyboard focus ring**. | **Two guards, failing differently.** `check-design-tokens.mjs` **Check 2** — source-level, every rule in the codebase, in `npm run check`. `help-markup-prepass` *"tokens actually RESOLVE"* — **computed styles in a real browser**, incl. a real keyboard focus asserting a real outline. Both seen **RED first**. |
+| 7 | ⚠ **The template-copy accuracy veto — About must meet the SAME truth bar as Help.** The four-beat template arrived describing a **trading product**: "globally connected trading systems", "purposeful profit / seamless integration / empowering teams", a capital-allocation framing. LedgerFrame connects to nothing, trades nothing, has no team, and **reports rather than acts**. | The vetoed vocabulary is a **test**: `Settings.test.tsx` fails if any of it returns in a later copy edit. *A page describing the product is product documentation — the rule forbidding a fabricated **figure** forbids a fabricated **self-description** by the same logic, and a product promising it would rather say nothing than say something untrue fails that promise first and worst in the paragraph where it describes itself.* Borrowed copy is exactly where this slips through: it reads as polished and was never checked against the thing it now describes. |
+| 8 | **A measure cap is invisible to every guard that exists.** The 78ch Help cap was retired at §9-bis-9(b); About reintroduced it at **62ch** three days later. It overflowed nothing, logged nothing, and passed the 320/375/900/1366 sweep — it simply refused **772px of a 1320px box**. | **DS §3 standing rule** (prose is full-width responsive by default; a measure only where explicitly ratified, per surface) + a **geometry assertion measuring the real rendered box** at a wide viewport, seen RED at 548px-in-1320px first. *A defect class only a human can see is closed by a rule, not by remembering.* |
+| 9 | **A guard pinned to superseded copy is worse than no guard.** The Help pre-pass still asserted `"What it stands for"` after the rebuild removed that heading — its red read as a regression in the code rather than in itself. | Updated to the four-beat structure **in the same delta as the rebuild's follow-up**, and the close checks pre-pass assertions against shipped copy. |
+| 10 | **`npm run check` is the gate — not its parts.** The About rebuild ran vitest, tsc, eslint and build, but **not `npm run check`**, so `check:tokens` went unrun and an ADR-0002 violation (raw 36px/18px in the social row) stayed red for four commits. | Both values already existed as tokens; the row now uses **`--control-height` / `--icon-size`** and is density-aware as a side effect. **Running the parts is not running the gate.** |
+
+### Changed files — from the ACTUAL diff (`git diff --stat 2b54eb2..HEAD`)
+
+**50 files · +7037 / −235 · 37 commits.** Baseline `2b54eb2` ("R-43 STEP 5 — CURRENT.md: R-43 DONE, NEXT is Help").
+
+| Area | Files |
+|---|---|
+| **Help page (new)** | `Help.tsx` (+439) · `Help.css` (+339) · `helpMarkup.tsx` (+141) · `api/help.ts` (+75) · `Help.test.tsx` (+210) · `Help.markup.test.tsx` (+79) |
+| **Help engine + guards** | `app/services/help.py` · `test_help_content_accuracy.py` (+486) · `test_help_markup.py` (+240) · `test_glossary_parity.py` (+176) · `test_help.py` |
+| **Settings → About** | `Settings.tsx` (+217) · `Settings.css` (+204) · `Settings.test.tsx` · `icons.ts` · `assets/author-gs.jpg` (11.6 KB, vendored) |
+| **Cross-page fixes** | `Policy.tsx` + `Policy.test.tsx` (duplicate band/concentration) · `NetWorth.css` (undefined `--radius-2`) · `nav.ts` · `AppRoutes.tsx` |
+| **Guards + harness** | `check-design-tokens.mjs` (+70, Check 2) · `help-markup-prepass.spec.ts` (+293) · `settings-smoke.spec.ts` · `policy-smoke.spec.ts` · `overflow.spec.ts` · `playwright.config.ts` |
+| **Specs + plans** | `DESIGN-SYSTEM.md` (+147) · `INFORMATION-ARCHITECTURE.md` · `API-CONTRACT.json` · `page-help.md` (+1514) · `page-settings.md` · `page-policy.md` · `page-portfolio.md` · `reports-pack.md` |
+
+### HELP CURRENCY — the first close under the law
+
+**Help IS this milestone.** The Help delta is not a side-effect to declare; it is the whole subject:
+the page was **rebuilt** (three-section journey, served constrained markup, type-ahead, deep links),
+the **knowledge base was rewritten** (`app/services/help.py` — the v1-era entries were factually
+wrong and are also what `app/ai/tools.py:145` feeds the AI as grounded fact), and **About moved out
+of Help into Settings** as its 7th tab.
+
+**The CURRENCY SUITE is GREEN** — 309 passed / 15 skipped: accuracy corpus (markup-stripped),
+built-page-without-entry, nav-label casing in prose, three-store glossary parity + the Tier-3
+counter. **This close states a Help delta, not a "no Help impact".**
+
+**Ledger CLOSED. Not pushed — the owner pushes.**
