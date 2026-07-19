@@ -298,3 +298,26 @@ test("§12po2-2 — the empty state's action uses the SAME verb", async () => {
   expect(btns.length).toBeGreaterThan(0);
   expect(btns[0].querySelector("svg")).toBeTruthy();
 });
+
+// §9-bis-11(e) — THE DUPLICATE HEADER BLOCK (found at page-help §9-bis-9, ruled 2026-07-19).
+//
+// `Policy.tsx` rendered the `Default band` + `Concentration limit` pair TWICE: once bare in
+// `.pol__editor`, and again inside `.pol__edithead`, whose comment says "ONE header block". Both
+// were live, both bound to the same state, and nothing hid either — so the user saw two identical
+// bands, two identical concentration limits, and each `aria-label` was duplicated with it.
+//
+// WHY THE EXISTING GUARD DID NOT CATCH IT, which is the more useful half of this fix: the smoke
+// spec asserted `.pol__edithead` toHaveCount(1) — and that was TRUE the whole time. It pinned the
+// WRAPPER, not the duplicated controls. A guard can be green, specific, and about the right
+// defect, and still measure the wrong thing. This one counts what the USER actually sees twice:
+// the labelled controls.
+test("§9-bis-11(e) — the editor renders ONE band + concentration pair, not two", async () => {
+  mockFetch();
+  const user = userEvent.setup();
+  renderPage();
+  await user.click(await screen.findByRole("button", { name: /edit policy/i }));
+  const dialog = await screen.findByRole("dialog");
+
+  expect(within(dialog).getAllByLabelText("Default band")).toHaveLength(1);
+  expect(within(dialog).getAllByLabelText("Concentration limit")).toHaveLength(1);
+});

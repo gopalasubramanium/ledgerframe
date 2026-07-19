@@ -1197,3 +1197,48 @@ addendum A9–A11) · **§11** (build) · **§12po1..3** (three walk batches) ·
 | **`e2e/overflow.spec.ts`** | `/policy` added + **two new cross-page guards** (shared shell · themed links). |
 | **`e2e/review-card-row.spec.ts`**, **`e2e/icon-button.spec.ts`** | **NEW** guards (row integrity with the 17-item fixture · icon+label buttons). |
 | **`e2e/smoke/policy-smoke.spec.ts`** | **NEW** Phase-3a pre-pass. |
+
+---
+
+## DELTA NOTE — 2026-07-19 (page-help §9-bis-11(e) · the duplicate header block, removed)
+
+**Policy is CLOSED/accepted; this is a dated delta note on a touched accepted surface, recorded per
+convention — not a re-opening.** Ruled by the architect under standing delegation (R-52 lane),
+2026-07-19, on a defect found while verifying Help copy (page-help §9-bis-9).
+
+**The defect.** `Policy.tsx:416` and `:447` **both** rendered the `Default band` +
+`Concentration limit` pair. Both were live, both bound to the same state, and **nothing hid
+either** — `Policy.css` `.pol__metarow` and `.pol__edithead` were read, and neither suppressed the
+other. The user saw **two identical bands and two identical concentration limits**, with each
+`aria-label` duplicated alongside. The comment at `:439` reads **"ONE header block"**, which is what
+identifies `:416` as the leftover: the §12po2-3 fix was meant to remove it and did not.
+
+**The fix.** The `:416` block is deleted. The pair now exists only inside `.pol__edithead`, as its
+own comment has claimed since §12po2-3.
+
+**Fail-first.** `Policy.test.tsx` §9-bis-11(e) asserts one band control and one concentration
+control in the editor. Seen **RED on the real cause** — *"expected length 1, received 2"* — before
+the removal, green after. Full Policy suite 13/13.
+
+> ### ⚠ WHY THE EXISTING GUARD WAS GREEN THROUGHOUT — the lesson worth more than the fix
+>
+> `e2e/smoke/policy-smoke.spec.ts` already asserted, in these words, **`"exactly ONE header block"`
+> → `.pol__edithead` `toHaveCount(1)`**. That assertion was **TRUE for the entire life of the
+> defect**. It pinned the **WRAPPER**; the duplication was of the **CONTENT**, in a bare
+> `.pol__metarow` *outside* that wrapper.
+>
+> **A guard can be green, specific, aimed at exactly the right defect, and still measure the wrong
+> thing.** The smoke spec now counts what the user actually sees twice — the labelled controls —
+> alongside the wrapper count. *This is a sibling of the §15 "tests pinning defects" strikes and
+> belongs with them at the close.*
+
+**HELP CURRENCY (the law's first application to a non-Help change, §9-bis-11(d)): NO HELP IMPACT —
+guard-corroborated.** The Help `page-policy` entry names `Default band` and `Concentration limit`
+as controls and **never asserts how many of each there are** — Help copy was deliberately written
+around this defect when it was found (§9-bis-9). Corroboration, not assertion: the dead-affordance
+guard checks those labels against the shipped product, both labels are still present in
+`Policy.tsx` after the removal, and the guard **can see the surface** (`Policy.tsx` is inside the
+accuracy corpus; only `help.py` itself and comments are excluded). HELP CURRENCY SUITE green —
+420 passed / 15 skipped.
+
+**Owed and reported at 3b:** the Policy scripted pre-pass re-run on the isolated instance.

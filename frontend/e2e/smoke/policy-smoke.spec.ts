@@ -74,6 +74,12 @@ test.describe.serial("policy pre-pass (live)", () => {
     // §12po2-3 — ONE header, ONE scroll container, and NOTHING prints through the header.
     const scroller = editor.locator(".lf-dialog__body");
     await expect(editor.locator(".pol__edithead"), "exactly ONE header block").toHaveCount(1);
+    // §9-bis-11(e) — count the CONTROLS, not the wrapper. The assertion above was green for the
+    // whole life of the defect: `.pol__edithead` really was single, while a LEFTOVER copy of the
+    // band + concentration pair rendered outside it and the user saw both. A guard aimed at the
+    // right defect can still measure the wrong thing.
+    await expect(editor.getByLabel("Default band"), "ONE band control").toHaveCount(1);
+    await expect(editor.getByLabel("Concentration limit"), "ONE limit control").toHaveCount(1);
     await expect(editor.locator(".pol__gridhead"), "exactly ONE column header").toHaveCount(1);
     await expect(editor.locator(".lf-table__scroll"), "no nested scroll region").toHaveCount(0);
 

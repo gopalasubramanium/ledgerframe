@@ -413,28 +413,11 @@ export function Policy() {
             </p>
           )}
 
-          <div className="pol__metarow">
-            <label className="pol__field">
-              <span>Default band</span>
-              <PercentInput value={band} onChange={setBand} min={0} max={100} aria-label="Default band" />
-              {/* §9-18 — a blank band is NOT "no band": it inherits this one. Say so, or the user
-                  misreads their own risk tolerance. PROPOSED copy — ratify at the walk. */}
-              <small className="pol__muted">
-                Applied either side of a target that sets no band of its own.
-              </small>
-            </label>
-            <label className="pol__field">
-              <span>Concentration limit</span>
-              <PercentInput
-                value={maxPos}
-                onChange={setMaxPos}
-                min={0}
-                max={100}
-                aria-label="Concentration limit"
-              />
-              <small className="pol__muted">Leave empty for no limit.</small>
-            </label>
-          </div>
+          {/* §9-bis-11(e), 2026-07-19 — a LEFTOVER COPY of the band + concentration pair stood
+              here, outside `.pol__edithead`. The §12po2-3 fix below was meant to remove it and
+              did not, so both rendered, both bound to the same state, and the user saw each
+              control twice. Removed. The pair now exists only inside the header block whose own
+              comment has said "ONE header block" since §12po2-3. */}
 
           {/* §12po2-3 — ONE header block, sticky inside the dialog's SINGLE scroll container.
               Before: the table had its OWN nested scroller inside a dialog that already scrolls, and
