@@ -681,3 +681,56 @@ assertion caught up to the richer demo data.
 - **Base-currency affix (RATIFIED):** the four headline tiles (Net worth · Gross assets · Liabilities ·
   Cash & deposits) now carry the served `base_currency` (`/portfolio/summary`) as the muted `.lf-stat__unit`
   affix. `net-worth-smoke` gains a render guard (four tiles carry the affix); NetWorth.test.tsx (7) + smoke green.
+
+---
+
+## DELTA NOTE — 2026-07-19 (page-help §9-bis-14 delta 2, REGULARIZED at the Legal kickoff)
+
+*Filed under the CLAUDE.md standing rule minted this same day (page-legal §9-CONSEQUENCES, architect,
+from the Help-close review): **a new guard that REDs an accepted surface is a delta on that surface,
+not a footnote** — the fix ships WITH a dated delta note and that page's pre-pass re-run, in the same
+delta. **This is that rule's first application, and it is retroactive**: the fix below shipped in
+`0fd61db` during the Help milestone, correctly, but with only a flag. Net worth is an **accepted**
+page (§14 sign-off, 2026-07-12), so it had changed with no record on its own plan file and no re-walk.
+Regularized here.*
+
+### What changed on this page, and when
+
+`frontend/src/routes/NetWorth.css:219` — the Build-history **coverage preflight** box (`.nw__coverage`,
+shipped by R-43 §12 step 7 / F-1) declared `border-radius: var(--radius-2)`. **`--radius-2` does not
+exist** in `frontend/src/theme/tokens.css` (verified: the scale is `--radius-sm: 4px` · `--radius-md: 6px`
+· `--radius-lg: 10px` · `--radius-pill`). The declaration was therefore **invalid at computed-value time
+and dropped by the browser**, so the box had been rendering with **square corners inside a rounded-card
+layout since it shipped**. Caught by the undefined-token guard added in `page-help §9-bis-14 delta 2`
+(`check:tokens`), and fixed in `0fd61db` to `var(--radius-md)`.
+
+**This was a real, visible defect on an accepted page — not a cosmetic tidy.** Recording it is the
+point of the rule: the guard found something the owner's walk had not.
+
+### Re-verification — ISOLATED instance, 2026-07-19
+
+Isolated stack only (spare-port frontend → spare-port backend, temp `LEDGERFRAME_DATA_DIR`, demo seed;
+`smoke-target.mjs` fail-closed, `SMOKE_ALLOW_LIVE` never set). The owner's live stack was not touched.
+
+- **Net worth scripted pre-pass `net-worth-smoke` — GREEN** (1 passed, 5.4s). KPI geometry `wSpread`/
+  `hSpread` = 0 at 320/375/900/1366; KPI net worth **772,154.81** reconciles to the statement net total
+  **772,154.81**; footer↔body value x-offset 0 and totals separator present in **both themes**; summary
+  card heights equal `[417, 417]`; portfolio-summary overlap 0 at all four widths; D-081 exclusion line
+  **15,495.50** served verbatim; **overflow 0/0 across 4 widths × both themes**; **0 console errors**.
+- **The fixed element specifically** — driven live and computed, because the pre-pass does **not**
+  assert this box's radius and a green suite is not evidence for a rule it does not check:
+  `.nw__coverage` **is present** on the demo data, and computes **`border-radius: 6px`**
+  (`--radius-md`), not `0px`. `--radius-2` resolves to **empty (undefined)**, confirming the diagnosis
+  rather than assuming it. Card radius for contrast: `10px` (`--radius-lg`) — an inset rounded *less*
+  than its container, which is the intended relationship.
+
+### One correction made here
+
+The fix's own code comment described `--radius-md` as *"the card/inset radius"*. **Cards use
+`--radius-lg` (10px); `--radius-md` (6px) is the inset radius.** Comment corrected — the token choice
+is unchanged and was correct.
+
+**Status:** Net worth remains **ACCEPTED**; this delta records a fix that had already shipped, adds no
+page behaviour, and closes the record gap. **No Help impact** — the coverage box is not documented in
+the Help catalogue (Help's Net worth entry describes the page's figures, not this preflight's corner
+radius); guard-corroborated by the HELP CURRENCY SUITE at the Legal close.

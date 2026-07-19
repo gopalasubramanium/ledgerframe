@@ -219,7 +219,9 @@
   /* `--radius-2` DOES NOT EXIST (page-help §9-bis-14 delta 2, caught by the new undefined-token
      guard). The declaration was invalid at computed-value time and dropped, so this honest-heads-up
      box has been rendering with SQUARE corners inside a rounded-card layout since it shipped.
-     `--radius-md` is the card/inset radius in tokens.css. */
+     `--radius-md` (6px) is the INSET radius in tokens.css; cards use `--radius-lg` (10px), so this
+     box is deliberately rounded LESS than the card it sits inside. (Wording corrected at the Legal
+     kickoff regularization, page-net-worth DELTA NOTE 2026-07-19 — the token choice was right.) */
   border-radius: var(--radius-md);
   background: var(--surface);
 }
