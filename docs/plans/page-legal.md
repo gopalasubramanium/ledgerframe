@@ -397,3 +397,55 @@ looking at it — §9-8 bars this CLI from drafting legal text, and nothing here
 
 **STOPPED. Awaiting the owner's ratification of every prose string on this page, and of the four
 items in 10-D.**
+
+---
+
+## 11. 0a REVISION ORDERED — the owner looked, and ruled (2026-07-20)
+
+*The owner read the rendered 0a specimen and ordered revisions. **No ruling was typed in this
+CLI**; §11-RULINGS is the record of what was decided in chat on 2026-07-20. The 0a is therefore
+**not ratified** — it is superseded by the build these rulings order, which stops again at a
+**RE-LOOK** (§11-F). The three of the four 10-D items that the rulings dispose of are marked
+against them below; the fourth is carried forward unchanged.*
+
+### 11-RULINGS — the record
+
+| # | Ruled by | Ruling |
+|---|---|---|
+| **11-1** | owner | **RENAME: "Product Guarantees" → "PRODUCT COMMITMENTS".** Rationale, stated: *"guarantee" is warranty-family vocabulary; the AGPL §15 position is **NO WARRANTY**; the seven are **self-enforced behavioural commitments, tested.*** The old name invited the reader to hear a warranty on a page whose licence section says there is none — the page contradicted itself in its own vocabulary. **GLOSSARY-first**, then the served strings, then the corpora; **historical records are history and are not rewritten** (see 11-B scope). |
+| **11-2** | owner | **PRODUCT-SPEC §3 EDIT AUTHORIZED** — rename **+ apparatus clean-up**: (a) decision-ID parentheticals become **non-rendered annotations**; (b) backtick identifiers are replaced by **the human terms they mean**; (c) spec-internal cross-references (Guarantee 7's *"(below, §8)"*) are made **self-contained**. **Claims unchanged in substance.** **AC-L3 rules verbatim against the CLEANED source**, and the **self-measuring exemption is DELETED** — the guard runs unexempted. The **full §3 diff is captured in the report** for the owner's re-ratification read. *This disposes of **10-D items 1, 2 and 3** at their source: the edit the 0a said it could not make is now authorized, and AC-L3 carries it to the page automatically.* |
+| **11-3** | owner | **9-5-bis — CONVENIENCE LINKS PERMITTED.** The **shipped files remain canonical** (§9-5 stands). Convenience links to external authoritative texts are permitted — e.g. the AGPL at `https://www.gnu.org/licenses/agpl-3.0.html` — **marked as convenience**, carrying `rel="noreferrer noopener"`, and **never load-bearing**: the page must remain complete and true with every link dead. This **amends** §9-5's *"Never a URL"* to *"never a URL **in place of** the shipped file"*. |
+| **11-4** | owner | **FORMAL REGISTER.** The page reads as a **formal agreement**: numbered clauses and sub-clauses (**1, 1.1, 1.1.a**), **defined-term capitals**, and bold/italic conventions. **Register changes dress, never claims** — **AC-L5 / AC-L6 / AC-L7 / AC-L8 and the accuracy corpus (markup-stripped) still bind**, unchanged and unrelaxed. New **DS PROPOSED** items are raised for the owner: **formal-document typography** — clause numbering · defined-terms treatment · any new construct the register requires. |
+| **11-5** | owner | **ACCEPTANCE GATE — NEW SCOPE, ACCEPTED INTO THIS MILESTONE.** The user must **accept the licence terms + the product position**; **unaccepted installs are LOCKED at entry.** Acceptance **binds to the hash of the served legal content**: a changed hash requires **re-acceptance at next entry**. The enforcement point is to be chosen **honestly** — a frontend-only lock is **theatre**; the gate is **server-side**, exempting only the legal-content, acceptance, and auth endpoints needed to render the gate itself. |
+
+### 11-CONSEQUENCES — what the rulings change, and one they did not reach
+
+- **10-D disposed:** items **1** (visible decision IDs), **2** (literal backticks) and **3** (the
+  dangling *"below, §8"*) are **all resolved by 11-2 at the source** — the spec is cleaned and
+  AC-L3 carries the cleaned text to the page. **Item 4 (prose rhythm) is NOT reached by these
+  rulings** and is carried into the RE-LOOK unchanged: it remains a shared-`HelpProse` question
+  that is a delta on Help, not on Legal alone.
+- **Scope grows.** 11-5 adds a **backend store + migration + a server-side gate + a chrome
+  change** to what was a documentation page. Per the standing CLAUDE.md rule, the **accepted
+  surfaces it touches** (chrome/shell lock screen, first-run) take **dated delta notes in their
+  own plan files and a pre-pass re-run**, in the same delta — not a footnote in a close report.
+- **SECURITY-BASELINE:** the acceptance gate **composes with** the PIN flow and **never replaces
+  or weakens it**. **§20-P is unchanged.** Recorded so that a later reader cannot mistake the
+  new gate for an authentication boundary: it is a **consent** boundary in front of the same
+  data, and an install with no PIN is no more protected after this milestone than before it.
+
+### 11-OPEN — raised by this CLI against the rulings, not decided here
+
+1. **§3's own subtitle becomes false.** PRODUCT-SPEC §3 is titled *"Product Guarantees (verbatim
+   from DECISIONS.md)"*, and `DECISIONS.md:14-33` carries the same block. 11-2 authorizes editing
+   **§3**; 11-B rules **DECISIONS.md is history and untouched**. After the clean-up the two
+   diverge, and **§3's parenthetical would assert a verbatim relationship that no longer holds** —
+   on the spec whose whole purpose in this milestone is to be the true source. Treating the
+   subtitle as **apparatus** (11-2a) and restating the real relationship is inside the authorized
+   scope and is what this build does; **it is flagged because it is a claim-adjacent edit, not a
+   cosmetic one**, and the owner should see it in the §3 diff.
+2. **Gate copy is PROPOSED**, per §9-8 — this CLI does not draft legal text, and the acceptance
+   sentence is the most consequential string in the product: it is what the user is recorded as
+   having agreed to.
+
+**§11 OPEN. The build resumes at 11-B and STOPS AT THE RE-LOOK.**
