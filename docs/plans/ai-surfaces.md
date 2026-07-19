@@ -527,3 +527,61 @@ corpus extended to AI fact labels so the class cannot recur.
 
 **§9 IS CLOSED. BUILD IS AUTHORIZED. The build stops at the Phase-0a specimen and waits for the
 owner** — 0a is ratified by looking, not by report.
+
+---
+
+## 9-BIS. ⚑ BLOCKING OWNER CALL — R-22 vs the shipped egress gate (found 2026-07-20, Phase 0.5)
+
+**Status: BUILD-BLOCKING for one of the three ruled posture states in Step 3. Phase 0 continues;
+the Ask panel's no-egress copy cannot be written until this is ruled.** Nothing is decided below.
+
+### The conflict
+
+**R-22 is normative and says local AI keeps working under no-egress:**
+
+> *"no-egress interaction is **normative** — **under no-egress AI is local-only (Ollama)**, a cloud
+> provider makes zero calls"* — `ROADMAP.md:36`; same text `DECISIONS.md:909`.
+
+**The shipped gate blocks local AI too.** `egress_client` is the only way to get an HTTP client
+(`app/core/egress.py:73`) and it calls `assert_egress_allowed` **before it looks at anything**
+(`:82-83`). It takes no URL and has **no loopback exemption** — grep for `127.0.0.1|localhost|
+is_local` across `app/core/egress.py` returns **nothing**. So under no-egress the local Hailo/Ollama
+call at `hailo_ollama.py:52` raises `EgressBlocked` exactly like a cloud call.
+
+**A ratified test already pins the blocking behaviour**, which is what makes this a ruling and not a
+bug report. `tests/integration/test_egress_guard.py:120` `test_ai_provider_makes_no_call` constructs
+the provider with **`base_url="http://127.0.0.1:9/v1"` — a loopback URL** — and asserts under
+no-egress that no client is constructed and `status.available is False`. The current behaviour is
+therefore **deliberate and guarded**, not an oversight.
+
+### Why it blocks Step 3
+
+The (f) ruling authorised **mode-and-consequence** posture copy, with this PROPOSED string for
+no-egress + a local provider:
+
+> *"No-egress is on — AI runs on this device only"*
+
+**As shipped, that sentence is false.** With no-egress on there is no local AI either: `health()`
+reports unavailable, `answer_stream` takes the deterministic-fallback branch, and the user gets
+fact-only answers. Writing that string would be the product describing itself falsely on the exact
+surface built to be honest about its posture — and `check:*` would never catch it, because a false
+sentence is a working sentence (§11-J's own lesson).
+
+The other two posture states are unaffected and buildable today.
+
+### The two ways out — ⚑ OWNER
+
+| | Ruling | What ships | Cost |
+|---|---|---|---|
+| **(a)** | **R-22 stands; the gate is wrong.** Exempt loopback from the egress gate so local AI works under no-egress. | The proposed copy becomes true. | Edits `SECURITY-BASELINE.md`'s choke point and **reverses a ratified test's assertion**. Defensible on Commitment 5's own wording — *"zero **outbound** network calls"*, and a loopback call never leaves the device — but it is a change to the product's strongest guarantee and needs the owner, not an inference. |
+| **(b)** | **The gate stands; R-22 is superseded.** No-egress means zero calls **including loopback**. | R-22 gains a dated amendment; the posture copy is re-worded to the truth — no-egress + local provider is **the same state** as no-egress + no provider: AI is off, answers are deterministic fact-only. Three posture states collapse to two. | Strictly safer, and matches every line of code and test shipping today. Costs R-22 its normative claim. |
+
+**No recommendation is recorded here.** The plan's §9 proposals were written where the evidence
+supported one; here the evidence supports *both*, and the choice is about what the product's
+strongest promise means — which is the owner's, not the architect's and certainly not this CLI's.
+
+### What proceeds meanwhile
+
+Phase 0 deltas 6–8 are unaffected and continue. Step 3 builds the Ask panel and the two unaffected
+posture states; **the no-egress + local-provider string is left unwritten**, not guessed. If (b) is
+ruled, that state is deleted rather than worded.

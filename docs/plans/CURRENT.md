@@ -139,7 +139,26 @@ owed · **R-40** (Alpha Vantage premium feed expansion) — parked, definition o
 
 ## Needs decision
 
-- (none open). **RESOLVED 2026-07-19 — the author photograph's licence terms**
+- **⚑ OPEN 2026-07-20 — R-22 vs the shipped egress gate.** *(AI-surfaces §9-BIS; found at
+  Phase 0.5. **Blocks one of three ruled posture states in the Ask panel; does not block the
+  rest of the milestone.**)* **R-22 is normative** — *"under no-egress AI is **local-only**
+  (Ollama), a cloud provider makes zero calls"* (`ROADMAP.md:36`, `DECISIONS.md:909`) — i.e.
+  local AI keeps working. **The shipped gate blocks local AI too:** `egress_client`
+  (`app/core/egress.py:73`) checks the toggle **before it looks at any URL** (`:82-83`) and has
+  **no loopback exemption**. This is deliberate and already guarded —
+  `tests/integration/test_egress_guard.py:120` constructs the provider at
+  **`http://127.0.0.1:9/v1`** and asserts it is blocked. **Consequence:** the (f)-ruled posture
+  string *"No-egress is on — AI runs on this device only"* would be **false as shipped**, on the
+  one surface built to be honest about posture. **⚑ Two ways out, neither recommended here:**
+  **(a)** R-22 stands, exempt loopback from the gate — defensible on Commitment 5's own wording
+  (*"zero **outbound** network calls"*; loopback never leaves the device) but it edits the
+  product's strongest guarantee and reverses a ratified assertion; **(b)** the gate stands,
+  R-22 gains a dated amendment, and no-egress + local provider is re-worded as what it actually
+  is — the same state as no-egress + no provider, AI off, deterministic answers. Evidence
+  supports both; the choice is what the strongest promise *means*, which is the owner's.
+  **The string is left unwritten, not guessed.**
+
+- (none otherwise open). **RESOLVED 2026-07-19 — the author photograph's licence terms**
    (page-help §9-bis-14, `docs/audit/ASSETS.md`). The owner ruled:
    *"© Gopala Subramanium, all rights reserved; included in this repository by the
    author; not covered by the AGPL licence of the code."* The photograph is
