@@ -22,7 +22,8 @@ import {
   useToast,
 } from "../components/ui";
 import type { Column } from "../components/ui";
-import { Plus, Trash2 } from "../icons";
+import { Plus, Trash2, Globe, Code, UserRound, GitBranch, Briefcase, Heart } from "../icons";
+import type { LucideIcon } from "../icons";
 import { useTheme } from "../theme/theme-context";
 import { useDisplay } from "../theme/display-context";
 import { getSettings, putSettings } from "../api/settings";
@@ -722,141 +723,199 @@ function SystemPanel() {
 // page-settings.md rather than rewritten over, because a plan file that erases its own reversals
 // cannot be audited.
 //
-// WHAT DOES NOT COME WITH IT: the product guarantee ("what LedgerFrame will never do") stays in
-// Help, Section 1. That is orientation of the first order — a user asking what the product refuses
-// to do is asking a help question, not an authorship question.
+// ── REBUILT ON THE FOUR-BEAT TEMPLATE (page-help §9-bis-13, owner 2026-07-19) ──────────────────
 //
-// CREDITS RECONCILED WITH THE LICENCE RECORD (§9-bis-6). `docs/audit/LICENSES.md` is GENERATED
-// ("Regenerate, never hand-edit") — a dependency audit, not a credits file. This card does not
-// restate it: a restated list is a second home for something regenerated on a schedule, stale the
-// first time a dependency moves. The card names the licence this product ships under and credits
-// the open-source stack in the general, which is the claim that stays true.
+// The owner REOPENED About's content ratification and adopted a four-beat narrative template:
+// Story & Mission · Conflict · Resolution · Sequel. What is reopened is the COPY, not the
+// placement — About is still the seventh tab, and `set__avatar` survives untouched.
 //
-// PROPOSED COPY — every string here is ratified by the owner AT THE LOOK, like all user-facing
-// copy. The six links are the owner's, given verbatim.
+// ONE SURFACE, DE-BOXED. The four bordered cards this replaces (about-brand / about-ethics /
+// about-author / about-links) chopped one continuous piece of prose into four unrelated
+// announcements. The beats are a story; a story is one surface. Hierarchy is carried by SPACING,
+// not borders — which is why nothing here is an `lf-card`.
 //
-// PROPOSED DS PATTERN — the round author avatar (`set__avatar`). Listed for the owner's look. The
-// brand block is NOT a new pattern: it uses the ratified `BrandLockup`, because DESIGN-SYSTEM §5.6
-// says every surface that shows the brand uses the one lockup, and the last time a surface
-// hand-built its own the mobile header shipped without the mark.
+// ⚠ THE TEMPLATE'S ORIGINAL WORDING WAS VETOED ON ACCURACY, and that is the load-bearing note.
+// It described a trading product: "globally connected trading systems", "purposeful profit /
+// seamless integration / empowering teams", and a capital-allocation framing. LedgerFrame connects
+// to nothing, trades nothing, has no team, and REPORTS RATHER THAN ACTS. The copy below is the
+// architect's truthful rewrite. The rule it enforces: **About satisfies the SAME truth bar as Help
+// content** — a page describing the product is product documentation, and a product whose central
+// promise is that it would rather say nothing than say something untrue fails that promise first
+// and worst in the paragraph where it describes itself. Borrowed template copy is exactly where
+// this slips through, because it reads as polished and was never checked against what it describes.
+//
+// PROPOSED COPY — every string here is ratified by the owner AT THE RE-LOOK, like all user-facing
+// copy. The author's professional sentences and the six links are the owner's own, verbatim.
+//
+// PROPOSED DS PATTERNS listed for the re-look: the pull-quote, the social-icon row, the
+// brand-lockup size variant, the beat heading + its glyph, and the round avatar (`set__avatar`,
+// carried over). The brand block is NOT a new pattern: it uses the ratified `BrandLockup`, because
+// DESIGN-SYSTEM §5.6 says every surface showing the brand uses the one lockup, and the last time a
+// surface hand-built its own the mobile header shipped without the mark.
+//
+// PUNCTUATION RULE (owner): prose sentences take full stops; pull-quotes and headings are exempt.
+
+// The six owner-given destinations. `name` is the ACCESSIBLE NAME — it is not decoration, it is
+// where the meaning lives, because the glyphs are semantic rather than brand marks (see icons.ts:
+// lucide 1.24.0 has no `Github`/`Linkedin`, and adding a brand-icon package would need an ADR).
+const ABOUT_LINKS: { url: string; href: string; name: string; Icon: LucideIcon }[] = [
+  { url: "ledgerframe.org", href: "https://ledgerframe.org", name: "Project home", Icon: Globe },
+  {
+    url: "github.com/gopalasubramanium/ledgerframe",
+    href: "https://github.com/gopalasubramanium/ledgerframe",
+    name: "Source code on GitHub",
+    Icon: Code,
+  },
+  { url: "me.sgopala.com", href: "https://me.sgopala.com/", name: "Author's site", Icon: UserRound },
+  {
+    url: "github.com/gopalasubramanium",
+    href: "https://github.com/gopalasubramanium",
+    name: "Author on GitHub",
+    Icon: GitBranch,
+  },
+  {
+    url: "linkedin.com/in/gopalasubramanium",
+    href: "https://www.linkedin.com/in/gopalasubramanium/",
+    name: "Author on LinkedIn",
+    Icon: Briefcase,
+  },
+  // `Heart`, not `Coffee` — both were offered. A coffee cup is a tip-jar idiom that reads as a joke
+  // about the price, and it sits directly under a sentence written in earnest.
+  { url: "paypal.me/sgopala", href: "https://paypal.me/sgopala", name: "Support the project", Icon: Heart },
+];
+
+// A narrative beat: the ornament, the heading, the paragraph. The glyph is the TYPOGRAPHIC ORNAMENT
+// ✦ and not a lucide sparkle — a sparkle icon is the AI-affordance vocabulary everywhere else in
+// this product (D-088), and borrowing it here would imply these paragraphs were machine-written,
+// which is the one thing About cannot imply. It is `aria-hidden`: it carries no meaning a reader
+// who cannot see it is missing.
+function Beat({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="set__beat">
+      <h2 className="set__beathead">
+        <span className="set__beatglyph" aria-hidden="true">✦</span>
+        {title}
+      </h2>
+      <p className="set__beatbody">{children}</p>
+    </section>
+  );
+}
+
 function AboutPanel() {
-  const links: { label: string; href: string; note: string }[] = [
-    { label: "ledgerframe.org", href: "https://ledgerframe.org", note: "Project home" },
-    {
-      label: "github.com/gopalasubramanium/ledgerframe",
-      href: "https://github.com/gopalasubramanium/ledgerframe",
-      note: "Source code",
-    },
-    { label: "me.sgopala.com", href: "https://me.sgopala.com/", note: "Author" },
-    {
-      label: "github.com/gopalasubramanium",
-      href: "https://github.com/gopalasubramanium",
-      note: "Author on GitHub",
-    },
-    {
-      label: "linkedin.com/in/gopalasubramanium",
-      href: "https://www.linkedin.com/in/gopalasubramanium/",
-      note: "Author on LinkedIn",
-    },
-    { label: "paypal.me/sgopala", href: "https://paypal.me/sgopala", note: "Support the project" },
-  ];
+  // The hovered/focused destination, shown in ONE reserved caption line under the row. A `title`
+  // attribute was the obvious alternative and is the wrong one: it never appears for keyboard
+  // focus, so the URL would be visible to a mouse and invisible to a Tab key. The caption is
+  // `aria-hidden` because the accessible name already announces the destination — without it a
+  // screen reader reads every link twice.
+  const [shownUrl, setShownUrl] = useState<string | null>(null);
 
   return (
-    <>
-      <section className="lf-card set__section" data-card="about-brand">
-        <div className="lf-card__body set__stack">
-          <div className="set__brandblock">
-            <BrandLockup className="set__brandlockup" />
-            <p className="set__tagline">A private record of everything you own and owe.</p>
+    <article className="set__about">
+      <header className="set__aboutlede">
+        <BrandLockup className="set__brandlockup" />
+        <p className="set__tagline">A private record of everything you own and owe.</p>
+      </header>
+
+      <Beat title="The Story & Mission">
+        Wealth ends up scattered across brokers, banks, funds, insurers and currencies, and no one
+        of them can show the whole picture. LedgerFrame exists to keep that whole picture — private,
+        complete, and on your own machine.
+      </Beat>
+
+      {/* PROPOSED DS — the pull-quote. No terminal full stop, per the owner's punctuation rule.
+          A `blockquote` and not a styled `p`: it is a restatement of the line above it in the
+          product's own voice, and the element that says so is the one to use. */}
+      <blockquote className="set__pullquote">
+        <p>One honest picture of everything you own and owe</p>
+      </blockquote>
+
+      <Beat title="The Conflict">
+        Every app shows only its own slice. Aggregators want your credentials and your data in their
+        cloud. Spreadsheets drift, and nothing says <q>I don&rsquo;t know</q> when it doesn&rsquo;t.
+        The question no statement answers honestly at once: <em>where do I actually stand?</em>
+      </Beat>
+
+      <Beat title="The Resolution">
+        A single-user, local-first reporting appliance: one derivation per figure, a dash and the
+        reason where a value cannot be established, and consolidation without consolidating your
+        privacy. It reports; it does not act.
+      </Beat>
+
+      <Beat title="The Sequel">
+        The direction is more explanation, not more automation: derivations you can audit step by
+        step, help that stays current with the platform — and still never a trade, never advice.
+      </Beat>
+
+      <section className="set__beat">
+        <h2 className="set__beathead">Who built it</h2>
+        <div className="set__author">
+          {/* The round author avatar. VENDORED, never fetched: the import is bundled locally,
+              because a local-first appliance advertising no telemetry cannot reach out to
+              github.com to draw a face, and under no-egress a remote image would fail visibly.
+              Provenance + EXIF-stripping recorded in docs/audit/ASSETS.md. `alt` names the person;
+              it is not decorative — a reader who cannot see it should still learn whose photograph
+              stands beside the bio. */}
+          <img
+            className="set__avatar"
+            src={authorPhoto}
+            alt="Gopala Subramanium"
+            width={64}
+            height={64}
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="set__authorbio">
+            <p className="set__authorname">
+              Gopala Subramanium
+              <span className="set__authorrole"> — Capital Market Solutions | Singapore.</span>
+            </p>
+            <p className="set__beatbody">
+              With over two decades driving technological and operational excellence in financial
+              services, Gopala architects platforms that bridge high-performance infrastructure with
+              real-world capital-market demands. LedgerFrame is the tool its author wanted and could
+              not buy.
+            </p>
+
+            {/* PROPOSED DS — the social-icon row. Icon-only, so every link carries an `aria-label`;
+                external, so `rel` is not optional — `noopener` denies the opened page a handle back
+                to this one. Nothing here is fetched: these are links, and a local-first appliance
+                under no-egress stays local until the user chooses to leave. */}
+            <ul className="set__social">
+              {ABOUT_LINKS.map(({ url, href, name, Icon }) => (
+                <li key={href}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={name}
+                    onMouseEnter={() => setShownUrl(url)}
+                    onMouseLeave={() => setShownUrl(null)}
+                    onFocus={() => setShownUrl(url)}
+                    onBlur={() => setShownUrl(null)}
+                  >
+                    <Icon aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            {/* The caption line holds its height whether or not it has text, so pointing at an icon
+                never nudges the licence line below it. */}
+            <p className="set__socialcap" aria-hidden="true">{shownUrl ?? " "}</p>
           </div>
-          <p className="set__fieldhelp">
-            LedgerFrame is a single-user, local-first wealth-reporting appliance. Wealth ends up
-            scattered across brokers, banks, funds, insurers and currencies, and no one of them can
-            show you the whole picture. This is that whole picture, kept on your own machine.
-          </p>
         </div>
       </section>
 
-      <section className="lf-card set__section" data-card="about-ethics">
-        <header className="set__cardhead"><h2 className="lf-card__title">What it stands for</h2></header>
-        <div className="lf-card__body set__stack">
-          {/* The three commitments, in the platform's own voice. Each is a statement the product
-              can be held to, not a value it merely admires — which is why they are phrased as
-              things it DOES and REFUSES, never as adjectives about itself. */}
-          <dl className="set__ethos">
-            <dt>It is yours</dt>
-            <dd>
-              Your records live on your machine. There is no account, no telemetry, and no
-              analytics — and with no-egress on, the product makes no network calls at all.
-            </dd>
-            <dt>It reports; it does not act</dt>
-            <dd>
-              It never places trades and never gives buy, sell, hold, tax or financial advice.
-              What you do with your own figures is yours to decide.
-            </dd>
-            <dt>It would rather say nothing than say something untrue</dt>
-            <dd>
-              No figure is ever invented. Where a value cannot be established, you get a dash and
-              the reason — never a plausible-looking guess. The AI explains verified figures and
-              is not permitted to produce new ones.
-            </dd>
-          </dl>
-        </div>
-      </section>
-
-      <section className="lf-card set__section" data-card="about-author">
-        <header className="set__cardhead"><h2 className="lf-card__title">Who built it</h2></header>
-        <div className="lf-card__body set__stack">
-          <div className="set__author">
-            {/* PROPOSED DS — the round author avatar. VENDORED, never fetched: the import is
-                bundled locally, because a local-first appliance advertising no telemetry cannot
-                reach out to github.com to draw a face, and under no-egress a remote image would
-                fail visibly. Provenance + EXIF-stripping recorded in docs/audit/ASSETS.md.
-                `alt` names the person; it is not decorative — a reader who cannot see it should
-                still learn whose photograph stands beside the bio. */}
-            <img
-              className="set__avatar"
-              src={authorPhoto}
-              alt="Gopala Subramanium"
-              width={64}
-              height={64}
-              loading="lazy"
-              decoding="async"
-            />
-            <div className="set__authorbio">
-              <p className="set__authorname">Gopala Subramanium</p>
-              <p className="set__fieldhelp">
-                LedgerFrame was built to answer one question that no broker statement, banking app
-                or spreadsheet could answer honestly at once: <em>where do I actually stand?</em>{" "}
-                It is the tool its author wanted and could not buy — one that consolidates without
-                consolidating your privacy, and that says <q>I don't know</q> when it doesn't.
-              </p>
-            </div>
-          </div>
-          <p className="set__fieldhelp">
-            Released under the AGPL-3.0-or-later licence and built on open-source software — the
-            full dependency and licence record ships with the source.
-          </p>
-        </div>
-      </section>
-
-      <section className="lf-card set__section" data-card="about-links">
-        <header className="set__cardhead"><h2 className="lf-card__title">Links</h2></header>
-        <div className="lf-card__body">
-          <ul className="set__aboutlinks">
-            {links.map((l) => (
-              <li key={l.href}>
-                {/* External, so `rel` is not optional: `noopener` denies the opened page a handle
-                    back to this one. Nothing here is fetched — these are links, and a local-first
-                    appliance under no-egress stays local until the user chooses to leave. */}
-                <a href={l.href} target="_blank" rel="noreferrer noopener">{l.label}</a>
-                <span className="set__aboutnote">{l.note}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    </>
+      {/* CREDITS RECONCILED WITH THE LICENCE RECORD (§9-bis-6). `docs/audit/LICENSES.md` is
+          GENERATED ("Regenerate, never hand-edit") — a dependency audit, not a credits file. This
+          line does not restate it: a restated list is a second home for something regenerated on a
+          schedule, stale the first time a dependency moves. It names the licence this product ships
+          under and credits the open-source stack in the general, which is the claim that stays
+          true. */}
+      <p className="set__licence">
+        Released under the AGPL-3.0-or-later licence and built on open-source software — the full
+        dependency and licence record ships with the source.
+      </p>
+    </article>
   );
 }
 

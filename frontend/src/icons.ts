@@ -40,6 +40,20 @@ export {
   Trash2,
   // Status
   TriangleAlert,
+  // Settings → About, the social-icon row (page-help §9-bis-13).
+  //
+  // THESE ARE SEMANTIC GLYPHS, NOT BRAND MARKS, AND NOT BY PREFERENCE. lucide REMOVED its brand
+  // icons: `Github` and `Linkedin` do not exist in the pinned 1.24.0 (checked against the installed
+  // package). A brand-icon package is a NEW DEPENDENCY and CLAUDE.md forbids one without an ADR, so
+  // the meaning lives in each link's accessible name and its hover/focus URL instead of in the
+  // glyph. `Code` is the repository, `GitBranch` the author's profile — the pair has to be
+  // distinguishable because both destinations are GitHub.
+  Globe,
+  Code,
+  UserRound,
+  GitBranch,
+  Briefcase,
+  Heart,
 } from "lucide-react";
 
 export type { LucideIcon } from "lucide-react";

@@ -299,97 +299,141 @@
   min-width: 0;
 }
 
-/* About card (page-help §9-bis-6 — moved out of Help into the existing System tab).
-   A link register, not a nav: two columns so the destination and what it is read together. */
-.set__aboutlinks {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-1);
-}
-.set__aboutlinks li {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  /* `min-width: 0` lets the row shrink below its content, and `anywhere` lets a bare URL break
-     mid-token. Without BOTH, "github.com/gopalasubramanium/ledgerframe" is one unbreakable word
-     that pushed the System tab 30px past a 320px viewport — caught by the Settings pre-pass
-     re-run that §9-bis-6 requires, not by review. A URL is the one string a reader cannot be
-     asked to scroll sideways for. */
-  min-width: 0;
-}
-.set__aboutlinks a {
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
-.set__aboutnote {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
+/* --- About, the 7th tab — REBUILT ON THE FOUR-BEAT TEMPLATE (page-help §9-bis-13) -------------- */
 
-/* --- About, the 7th tab (page-help §9-bis-11(c)) ---------------------------------------------- */
+/* ONE COMPOSED SURFACE, DE-BOXED. This replaces four bordered `lf-card`s (brand / ethos / author /
+   links) with a single article whose hierarchy is carried by SPACING, not borders. Four boxes made
+   one continuous piece of prose read as four unrelated announcements; the beats are a story, and a
+   story is one surface.
 
-/* Brand block. The lockup itself is the RATIFIED `BrandLockup` (DESIGN-SYSTEM §5.6, the
-   one-lockup rule) — this only scales and positions it. A surface that hand-builds its own
-   lockup is how the mobile header once shipped without the mark. */
-.set__brandblock {
+   ⚠ TOKEN FIX FOLDED IN (verify-first, 2026-07-19). The block this replaces used
+   `--text-muted`, `--text-sm` and `--text-xl`, and NONE OF THE THREE IS DEFINED — the token layer
+   has `--text-secondary`/`--text-tertiary` and `--font-size-*`. An undefined custom property with
+   no fallback is invalid at computed-value time, so each of those declarations resolved to `unset`
+   and INHERITED instead: the "muted" prose rendered at full primary contrast and the brand lockup
+   was never actually enlarged. Every unit test was green, because no test asserts a computed style.
+   The same drift remains in Help.css (13 usages) and is fixed in its own delta. */
+
+.set__about {
+  /* A measure, not a page width. Prose set the full width of a 1366px panel is unreadable, and this
+     surface is prose almost end to end. */
+  max-width: 62ch;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-.set__brandlockup {
-  font-size: var(--text-xl);
-  font-weight: 600;
-}
-.set__tagline {
-  margin: 0;
-  color: var(--text-muted);
+  gap: var(--space-8);
 }
 
-/* The three commitments. A definition list, because each IS a term and its meaning — and because
-   a `<dl>` gives a screen reader the pairing for free, where stacked paragraphs give it nothing. */
-.set__ethos {
-  margin: 0;
-  display: grid;
+/* The lede: the brand, slightly larger and integrated into the prose rather than boxed above it.
+   The lockup is the RATIFIED `BrandLockup` (DESIGN-SYSTEM §5.6, the one-lockup rule) — this only
+   scales and positions it, and the mark follows because BrandLockup sizes it to the cap height. */
+.set__aboutlede {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
-.set__ethos dt {
+/* PROPOSED DS — the brand-lockup size variant. */
+.set__brandlockup {
+  font-size: var(--font-size-28);
+  line-height: var(--line-28);
   font-weight: 600;
   color: var(--text-primary);
 }
-.set__ethos dd {
-  margin: var(--space-1) 0 0;
-  color: var(--text-muted);
-  line-height: 1.6;
+.set__tagline {
+  margin: 0;
+  font-size: var(--font-size-16);
+  line-height: var(--line-16);
+  color: var(--text-secondary);
 }
 
-/* Author row. `flex-wrap` + `min-width: 0` so the bio can drop below the avatar rather than
-   forcing the row wider than the viewport — the SAME failure the About links hit at 320px
-   (an unbreakable token pushing the tab 30px past the fold), which the Settings pre-pass caught
-   and review did not. */
+/* PROPOSED DS — the beat heading and its ornament. The glyph is a TYPOGRAPHIC ✦, decorative and
+   `aria-hidden`. `--text-tertiary` and not an accent: colour on this page is semantic only, and a
+   coloured ornament would be signalling something it does not mean. */
+.set__beat {
+  min-width: 0;
+}
+.set__beathead {
+  margin: 0 0 var(--space-3);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--font-size-16);
+  line-height: var(--line-16);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.set__beatglyph {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-13);
+  flex-shrink: 0;
+}
+.set__beatbody {
+  margin: 0;
+  font-size: var(--font-size-14);
+  /* Looser than the token line-height on purpose: `--line-14` (20px) is tuned for dense control
+     labels, and this is the one surface on the page that is read as continuous prose. */
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+/* PROPOSED DS — the pull-quote. Bold italic, centred, NO terminal full stop (the owner's
+   punctuation rule: prose takes full stops, pull-quotes and headings are exempt). Serif, because it
+   is the one line on the surface spoken in the product's own voice rather than describing it.
+   No border and no background — the emphasis is space and weight, which is the whole point of a
+   de-boxed surface. */
+.set__pullquote {
+  margin: 0;
+  padding: 0 var(--space-5);
+  align-self: center;
+  max-width: 34ch;
+  font-family: var(--font-serif);
+  font-size: var(--font-size-20);
+  line-height: var(--line-28);
+  font-weight: 700;
+  font-style: italic;
+  text-align: center;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+.set__pullquote p {
+  margin: 0;
+}
+
+/* Author row. `flex-wrap` + `min-width: 0` so the bio drops below the avatar rather than forcing
+   the row wider than the viewport — the failure the Settings pre-pass caught at 320px (an
+   unbreakable token pushing the tab 30px past the fold) and review did not. */
 .set__author {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
+  gap: var(--space-5);
   flex-wrap: wrap;
 }
 .set__authorbio {
   flex: 1 1 16rem;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 .set__authorname {
-  margin: 0 0 var(--space-1);
+  margin: 0;
+  font-size: var(--font-size-14);
+  line-height: var(--line-14);
   font-weight: 600;
   color: var(--text-primary);
 }
+/* The role rides in the same paragraph so the owner's line survives verbatim, em dash and pipe
+   intact; only its weight and colour step back. */
+.set__authorrole {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
 
-/* PROPOSED DS PATTERN — the round avatar. Listed for the owner's look.
-   `flex-shrink: 0` so it never squashes to an ellipse: a circular crop that goes oval reads as a
-   rendering fault, not a style. `object-fit: cover` keeps the framing whatever the source ratio.
-   The border is a token, and it is what keeps the photo from bleeding into the card on a dark
-   background where the jacket is nearly the surface colour. */
+/* The round avatar (carried over from §9-bis-11(c), unchanged). `flex-shrink: 0` so it never
+   squashes to an ellipse: a circular crop that goes oval reads as a rendering fault, not a style.
+   `object-fit: cover` keeps the framing whatever the source ratio. The border is a token, and it is
+   what keeps the photo from bleeding into the surface on a dark background where the jacket is
+   nearly the background colour. */
 .set__avatar {
   width: 4rem;
   height: 4rem;
@@ -397,4 +441,58 @@
   border-radius: 50%;
   object-fit: cover;
   border: var(--border-width) solid var(--border);
+}
+
+/* PROPOSED DS — the social-icon row. Icon-only links; the destination is announced by each link's
+   `aria-label` and shown to sighted users in the caption line below. `flex-wrap` because six
+   targets do not fit a 320px viewport in one row and a link register must never scroll sideways. */
+.set__social {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.set__social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 36px of target. Icon-only links are the easiest thing on a page to miss with a thumb, and the
+     glyph itself is 18px. */
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+.set__social a:hover {
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+.set__social a:focus-visible {
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  color: var(--text-primary);
+}
+.set__social svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* The URL caption. `min-height` reserves the line whether or not it has text, so pointing at an
+   icon never nudges the licence line below it. */
+.set__socialcap {
+  margin: 0;
+  min-height: var(--line-12);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.set__licence {
+  margin: 0;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
 }

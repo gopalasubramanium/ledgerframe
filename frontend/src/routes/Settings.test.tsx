@@ -410,39 +410,90 @@ test("masters card is honest when the status readers fail (retry, never a fake r
   expect(await screen.findByText("Couldn't load masters")).toBeTruthy();
 });
 
-// --- About, the 7th tab (D-069 amendment #3; page-help §9-bis-11(c)) ---------
-test("About is its own tab: brand, ethos, author with a LOCAL photo, and the six links", async () => {
+// --- About, the 7th tab, on the FOUR-BEAT template (page-help §9-bis-13) -----
+test("About: the four beats, the pull-quote, the author with a LOCAL photo, and the six links", async () => {
   renderAt("/settings?tab=about");
 
-  expect(await screen.findByText("What it stands for")).toBeTruthy();
-  expect(screen.getByText("Who built it")).toBeTruthy();
+  // The four beats, in order. Order is the assertion, not just presence: the template IS a
+  // narrative, and Resolution before Conflict is not the same page.
+  const beats = ["The Story & Mission", "The Conflict", "The Resolution", "The Sequel"];
+  expect(await screen.findByText(beats[0])).toBeTruthy();
+  const headings = screen.getAllByRole("heading", { level: 2 });
+  // Order, with the ✦ ornament stripped — it is in `textContent` because it is a real character.
+  expect(headings.map((h) => h.textContent!.replace("✦", ""))).toEqual([...beats, "Who built it"]);
+
+  // …and the ornament is NOT in the ACCESSIBLE NAME. `getByRole({ name })` computes the accname,
+  // which honours `aria-hidden` — so this fails the moment the glyph stops being decorative and a
+  // screen reader starts announcing "black four pointed star, The Conflict".
+  for (const beat of beats) {
+    expect(screen.getByRole("heading", { level: 2, name: beat })).toBeTruthy();
+  }
+
+  // ⚠ THE ACCURACY VETO, KEPT AS A GUARD. The template arrived describing a trading product, and
+  // three of its phrases were struck (§9-bis-13). About satisfies the SAME truth bar as Help
+  // content: the rule that forbids a fabricated figure forbids a fabricated self-description by
+  // the same logic. This asserts the vetoed vocabulary cannot come back in a later copy edit —
+  // a ruling nobody can find is a ruling that gets re-litigated.
+  const page = document.body.textContent ?? "";
+  for (const banned of [/trading system/i, /purposeful profit/i, /seamless integration/i,
+                        /empowering teams/i, /allocat/i]) {
+    expect(page, `About uses vetoed template wording: ${banned}`).not.toMatch(banned);
+  }
+
+  // The pull-quote: bold-italic, centred, and NO terminal full stop (the owner's punctuation
+  // rule — prose takes full stops, pull-quotes and headings are exempt).
+  const quote = document.querySelector(".set__pullquote")!;
+  expect(quote.textContent).toBe("One honest picture of everything you own and owe");
+
   expect(screen.getByText("Gopala Subramanium")).toBeTruthy();
 
   // THE PHOTO IS BUNDLED, NEVER FETCHED. A local-first appliance that advertises no telemetry
   // cannot reach github.com to draw a face, and under no-egress a remote image would fail
   // visibly. The bundler rewrites the import to a local URL, so the assertion is that the src is
-  // NOT remote — the 3a pre-pass proves the stronger claim (no request leaves) from the live
-  // page's own request log, which is the only place that can actually be observed.
+  // NOT remote — the pre-pass proves the stronger claim (no request leaves) from the live page's
+  // own request log, which is the only place that can actually be observed.
   const photo = screen.getByAltText("Gopala Subramanium") as HTMLImageElement;
   expect(photo.getAttribute("src")).toBeTruthy();
   expect(photo.getAttribute("src")).not.toMatch(/^https?:\/\//);
 
-  // All six owner-specified links, each carrying BOTH rel tokens: `noopener` denies the opened
-  // page a handle back to this one, and it is not optional on a target="_blank" link.
-  const hrefs = [
-    "https://ledgerframe.org",
-    "https://github.com/gopalasubramanium/ledgerframe",
-    "https://me.sgopala.com/",
-    "https://github.com/gopalasubramanium",
-    "https://www.linkedin.com/in/gopalasubramanium/",
-    "https://paypal.me/sgopala",
+  // All six owner-specified links. Each carries BOTH rel tokens (`noopener` denies the opened page
+  // a handle back to this one, and it is not optional on target="_blank"), and each carries an
+  // ACCESSIBLE NAME — these links are icon-only, so without the label they announce as their bare
+  // URL or as nothing at all. The name is where the meaning lives, because lucide 1.24.0 has no
+  // brand glyphs and the icons are semantic stand-ins (§9-bis-13).
+  const links: [string, string][] = [
+    ["https://ledgerframe.org", "Project home"],
+    ["https://github.com/gopalasubramanium/ledgerframe", "Source code on GitHub"],
+    ["https://me.sgopala.com/", "Author's site"],
+    ["https://github.com/gopalasubramanium", "Author on GitHub"],
+    ["https://www.linkedin.com/in/gopalasubramanium/", "Author on LinkedIn"],
+    ["https://paypal.me/sgopala", "Support the project"],
   ];
-  for (const href of hrefs) {
+  for (const [href, name] of links) {
     const a = document.querySelector(`a[href="${href}"]`);
     expect(a, `About is missing the link ${href}`).toBeTruthy();
     expect(a!.getAttribute("rel")).toContain("noopener");
     expect(a!.getAttribute("rel")).toContain("noreferrer");
+    expect(a!.getAttribute("aria-label"), `${href} has no accessible name`).toBe(name);
   }
+
+  // The licence line survived the rebuild. It is the only sentence on the surface that is a legal
+  // claim, and a rebuild is exactly when that kind of line goes missing unnoticed.
+  expect(screen.getByText(/AGPL-3\.0-or-later/)).toBeTruthy();
+});
+
+test("About: the destination URL is revealed on FOCUS, not just hover", async () => {
+  // A `title` attribute was the obvious way to show the URL and is the wrong one: it never appears
+  // for keyboard focus. This asserts the keyboard path specifically, because it is the one that
+  // silently regresses the moment someone "simplifies" this back to a title.
+  renderAt("/settings?tab=about");
+  const home = (await screen.findByLabelText("Project home")) as HTMLAnchorElement;
+
+  expect(document.querySelector(".set__socialcap")!.textContent!.trim()).toBe("");
+  fireEvent.focus(home);
+  expect(document.querySelector(".set__socialcap")!.textContent).toBe("ledgerframe.org");
+  fireEvent.blur(home);
+  expect(document.querySelector(".set__socialcap")!.textContent!.trim()).toBe("");
 });
 
 test("About left the System tab — it is not rendered in both places", async () => {
@@ -451,6 +502,6 @@ test("About left the System tab — it is not rendered in both places", async ()
   // the shape of the Policy defect fixed in this same milestone.
   renderAt("/settings?tab=system");
   await screen.findByText("PIN");
-  expect(screen.queryByText("What it stands for")).toBeNull();
+  expect(screen.queryByText("The Conflict")).toBeNull();
   expect(screen.queryByAltText("Gopala Subramanium")).toBeNull();
 });
