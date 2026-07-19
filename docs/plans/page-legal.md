@@ -657,3 +657,52 @@ finding; both are judgements the owner may take differently, which is why they a
 rulings on the record rather than build decisions in a commit message.
 
 **§11-OPEN item 2 (gate copy) is NOT disposed** and stands **PROPOSED** to the re-look.
+
+---
+
+### 11-E3. §9-7 MECHANISED — the licence-spelling guard (2026-07-20)
+
+**The defect that ordered this.** §9-7 ruled the spelling split *in as many words* — user-facing
+prose takes British **"licence"**; **filenames and SPDX identifiers keep "License"** — and then
+shipped **with no guard**. The 0a served *"**License**, disclaimer, …"* as the `PageHeader`
+subtitle: the American spelling, in the most prominent prose on the very page the ruling was
+about, with the same error live in **IA §5**. Neither was caught by review. Both were found by a
+grep run for an unrelated rename. **A convention that lives only in a plan file is enforced by
+whoever last read the plan file — which, over a long enough project, is nobody.**
+
+**`tests/unit/test_licence_spelling.py` reads two surfaces, and needs both.**
+
+| Surface | What it reads | Why it is not redundant |
+|---|---|---|
+| **Served payload** | `all_legal()` + `all_help()`, walked recursively | Asserts what a user is **sent**, not what someone typed — so a wrong spelling is caught whichever module produced it |
+| **Authored frontend copy** | quoted literals in `routes/` + `components/ui/` | **The original defect was a `.tsx` subtitle.** A served-only guard would have sailed straight past it |
+
+**Fail-first, both surfaces, observed:**
+- the **real reverted `Legal.tsx` defect** → RED, naming `Legal.tsx:65`;
+- an **injected `License` in served preamble prose** → RED, naming `legal.preamble`;
+- restored → **94 passed**.
+
+The real defect is kept **verbatim as a permanent specimen**, alongside four more must-bite strings
+and seven must-spare ones, so the exact string that got through can never get through again.
+
+**⚑ ONE REFINEMENT OF §9-7, RAISED AS PROPOSED — the ruling is under-specified.** Applied
+literally, *"user-facing prose says licence"* would force the product to **misname the licence it
+ships under**: `GNU Affero General Public License` is the **actual title of an actual document**,
+and it is served on Legal's pointer row. **Renaming someone else's document to suit our house style
+is not a spelling convention, it is an inaccuracy** — on the one page whose purpose is to state
+that licence correctly. The guard therefore exempts **proper names** narrowly (known licence
+titles, never the bare word), and **the owner should rule whether §9-7 is amended to say so.** The
+other three exemptions — URLs, filenames/SPDX, and code identifiers — are either §9-7's own stated
+carve-out or mechanical consequences of requiring a word boundary on both sides.
+
+**Not guarded, deliberately and on the record:** British spells the **noun** *licence* and the
+**verb** *license*. No served string uses the verb, so the guard treats every American spelling as
+a defect. A future genuine verb use goes in `_VERB_EXEMPTIONS` **by name and with a reason** —
+never by loosening the pattern, because widening a bar to admit one string quietly admits all of
+them.
+
+**Scope, stated so it is not mistaken for coverage it does not have:** the guard reads **served
+content and authored frontend copy**. It does **not** read `docs/specs/`, where the IA §5 instance
+lived. Those were corrected in §11-B and a grep confirms the specs are currently clean, but **that
+is a measurement, not a guard** — a spec regression would not be caught. Widening to the specs is a
+judgement about what counts as "user-facing" and is left for the owner rather than assumed.
