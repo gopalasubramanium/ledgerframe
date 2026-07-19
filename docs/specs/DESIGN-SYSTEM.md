@@ -1041,6 +1041,15 @@ Serif (`--font-serif`), `text-wrap: balance`, **no border and no background**: t
 and weight. **The missing full stop is deliberate and ratified** — the punctuation rule is *prose
 sentences take full stops; pull-quotes and headings are exempt*.
 
+> **THE ONE EXPLICITLY RATIFIED MEASURE ON THIS SURFACE (§3 standing rule).** The pull-quote keeps a
+> narrow centred measure (`max-width: 34ch`) **while the prose around it is full-width**. This is
+> recorded here because the standing rule requires a measure to be *explicitly ratified, per surface*
+> — an unrecorded exemption is exactly the drift the rule exists to stop. It is ratified because a
+> pull-quote is **not prose**: it is a display quotation whose ratified form is *centred and
+> balanced*, and centring is meaningless at full width — a single 1300px line is not a pull-quote.
+> The full-width geometry guard measures the prose containers and **deliberately does not measure
+> this element**; if the owner wants it full-width too, that is a one-line change and a re-ratification.
+
 ### (2) Social-icon row — icon-only links, meaning in the ACCESSIBLE NAME
 
 Icon-only external links. **Every link carries an `aria-label`** (icon-only links otherwise announce

@@ -314,10 +314,14 @@
    was never actually enlarged. Every unit test was green, because no test asserts a computed style.
    The same drift remains in Help.css (13 usages) and is fixed in its own delta. */
 
+/* ⚑ FULL-WIDTH RESPONSIVE — no measure cap (DS §3 standing rule, RATIFIED 2026-07-19; page-help
+   §9-bis-14). This surface shipped at `max-width: 62ch` on the architect's "prose reads better
+   narrow" judgement. That was the SECOND time the drift shipped — §9-bis-9(b) had already retired a
+   78ch cap on Help entry bodies — and it is now a standing rule: a fixed reading measure exists only
+   where explicitly ratified, per surface. The cap refused 772px of a 1320px content box, and no
+   containment sweep, console gate or pre-pass complained, because a cap breaks nothing. The guard
+   that now measures it is `settings-smoke.spec.ts` "About prose is FULL-WIDTH". */
 .set__about {
-  /* A measure, not a page width. Prose set the full width of a 1366px panel is unreadable, and this
-     surface is prose almost end to end. */
-  max-width: 62ch;
   min-width: 0;
   display: flex;
   flex-direction: column;

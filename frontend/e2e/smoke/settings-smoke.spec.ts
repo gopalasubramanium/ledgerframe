@@ -72,6 +72,64 @@ test.describe.serial("settings pre-pass (live)", () => {
     expect(consoleErrors, "zero console/page errors across the settings pre-pass").toEqual([]);
   });
 
+  // ⚑ THE FULL-WIDTH GEOMETRY GUARD (DS §3 standing rule, RATIFIED 2026-07-19; page-help §9-bis-14).
+  //
+  // "Prose in content surfaces is full-width responsive by default; a fixed reading measure exists
+  // only where explicitly ratified, per surface."
+  //
+  // WHY THIS GUARD HAD TO BE WRITTEN AT ALL. A measure cap is invisible to every other gate in this
+  // file. It overflows nothing, throws nothing, and photographs beautifully — the containment sweep
+  // above ran 320/375/900/1366 × both themes over an About capped at 62ch and reported ZERO
+  // problems, because it asks "does anything break?" and a cap breaks nothing. It just refuses half
+  // the page. This is the second time the same drift shipped (§9-bis-9(b) retired a 78ch cap on
+  // Help; About reintroduced it at 62ch three days later), and a defect class only a human can see
+  // is closed by a guard, not by remembering.
+  //
+  // IT MEASURES THE REAL RENDERED BOX, NOT THE MECHANISM. Asserting `max-width: none` would be a
+  // different and weaker test: `max-width` is one of many ways to be narrow (a width, a flex-basis,
+  // an inline-size, a grid track, a centred margin), and the owner-visible defect is "the text stops
+  // short of the page", not "a particular property is set". So it compares the prose container's
+  // rendered width against its PARENT'S CONTENT BOX, at a WIDE viewport — the only place a cap is
+  // visible at all. At 320px every one of these fills its parent whether or not a cap exists, which
+  // is exactly why the narrow sweep could never have caught this.
+  test("About prose is FULL-WIDTH — the DS §3 standing rule, measured at a wide viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto(`/#/settings?tab=about`);
+    await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(".set__about")).toBeVisible();
+
+    const geo = await page.evaluate(() => {
+      const inner = (el: Element) => {
+        const cs = getComputedStyle(el);
+        // The PARENT'S CONTENT BOX — its border box less its own padding. Comparing against
+        // `clientWidth` alone would silently forgive a parent that pads the prose into a column.
+        return el.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      };
+      const rows: { name: string; width: number; avail: number }[] = [];
+      const push = (name: string, el: Element | null) => {
+        if (!el || !el.parentElement) return;
+        rows.push({ name, width: el.getBoundingClientRect().width, avail: inner(el.parentElement) });
+      };
+      push("set__about", document.querySelector(".set__about"));
+      document.querySelectorAll(".set__beatbody").forEach((el, i) => push(`beatbody[${i}]`, el));
+      push("tagline", document.querySelector(".set__tagline"));
+      return rows;
+    });
+
+    expect(geo.length, "the About prose containers were not found — the guard measured nothing").toBeGreaterThan(4);
+    for (const r of geo) {
+      // 1px of tolerance for sub-pixel layout, and nothing more. A ratified measure would show up
+      // here as a large, deliberate shortfall (62ch ≈ 600px inside a ~1250px box), never as 2px.
+      expect(
+        r.avail - r.width,
+        `${r.name} stops ${Math.round(r.avail - r.width)}px short of its parent's content box ` +
+          `(${Math.round(r.width)}px in ${Math.round(r.avail)}px) — DS §3 says prose is full-width ` +
+          `responsive unless a measure is explicitly ratified for this surface`,
+      ).toBeLessThanOrEqual(1);
+    }
+    await page.screenshot({ path: `${OUT}/about-fullwidth-1600.png`, fullPage: true });
+  });
+
   test("tab screenshots — each of the seven tabs, both themes", async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 900 });
     for (const theme of THEMES) {
