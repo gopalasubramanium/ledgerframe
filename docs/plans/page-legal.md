@@ -448,6 +448,11 @@ against them below; the fourth is carried forward unchanged.*
    sentence is the most consequential string in the product: it is what the user is recorded as
    having agreed to.
 
+> **Both items are now DISPOSED — see [§11-DISPOSITIONS](#11-dispositions--the-owner-ruled-on-the-four-raised-items-2026-07-20).**
+> Item 1 was **endorsed** (the architect, on the §3 subtitle); item 2 **stands PROPOSED** and is
+> carried to the re-look with the gate copy. Two further items raised *by the build* — reset
+> erasure and hash granularity — were ruled at the same time and are recorded there.
+
 **§11 OPEN. The build resumes at 11-B and STOPS AT THE RE-LOOK.**
 
 ---
@@ -496,3 +501,159 @@ against in as many words (*user-facing prose = British "licence"*; filenames and
 keep "License"). The same wrong spelling was in **IA §5's page table**. Both corrected. It shipped
 in the 0a and no guard caught it — **§9-7's ruling has no guard**, and that gap is now on the
 record as a PROPOSED item for the re-look.
+
+---
+
+### 11-C. PRODUCT-SPEC §3 CLEANED; AC-L3 RUNS UNEXEMPTED — shipped (2026-07-20, `4dcd987`)
+
+Ruling **11-2** authorized the edit the 0a said it could not make. §3's seven commitments are
+cleaned **for rendering**: decision-ID parentheticals become a **non-rendered annotation table**
+below the blockquote (AC-L3's parser reads **blockquote lines only**, so nothing there can reach a
+user, and the lineage is kept rather than lost); the backticked `long_term_days` becomes **"the
+Long-term threshold"**, the label the Settings control actually carries; and Commitment 7's
+document-internal *"(below, §8)"* becomes self-contained. **Claims unchanged in substance.**
+
+**Fail-first, observed rather than asserted.** AC-L3 went **RED on exactly the five edited
+commitments** — 2 and 3 were untouched and stayed green — then green once the served tuple
+matched. **No hand-edit on the `legal.py` side:** the guard carried every change across, which is
+the whole argument for its existence.
+
+**The exemption is DELETED, not narrowed**, and both self-measuring tests go with it: an exemption
+that no longer exists cannot be measured, and a green test named after a solved problem is a
+monument. The verbatim corpus now faces the **identical three-check bar** as authored copy. The
+corpus **split survives, for a different reason than before** — it is now about **provenance** (a
+red in `_verbatim` must route the reader to `PRODUCT-SPEC.md`, never to `legal.py`), not latitude.
+
+**One clean-up beyond the three the owner named, flagged rather than slipped.** Commitment 1's
+*"No order endpoints exist (Kite is market-data read-only)"*. Running the bar unexempted requires
+it — *"endpoints"* is a banned implementation term — and **naming one provider understated the
+commitment**, which binds *every* market connection. Now: *"has no mechanism for doing so. Its
+market connections are read-only price data."* **See §11-DISPOSITIONS-2 — endorsed.**
+
+**Two consequences handled, not left.** `GLOSSARY.md` held a **third copy** of the block that
+nothing guarded; once §3 was cleaned it went stale silently — the exact failure the
+one-canonical-home rule exists to prevent, in the worst possible file. Replaced with a pointer.
+And **"Long-term threshold"** entered served copy with **no glossary row**, though it has been
+user-visible in Settings since that control shipped. Added.
+
+Backend **FULL solo: 1681 passed, 15 skipped.**
+
+---
+
+### 11-D. THE FORMAL REGISTER + 9-5-bis CONVENIENCE LINKS — shipped (2026-07-20, `817235f`)
+
+Ruling **11-4**: the page reads as a **formal agreement**. A **preamble** fixing the defined terms,
+then **six numbered Articles** over the same six served contents — **no content added, none
+dropped, the IA unchanged.**
+
+**Two build decisions, both PROPOSED until the owner's look:**
+
+1. **Numbering is STRUCTURAL, never typed.** No served string carries a clause number; the renderer
+   derives *"2.1.a"* from three indices. **Typed numbers are how a formal document rots** — insert
+   a clause and every later number is silently wrong, *undetectably*, because the numbers are
+   prose. Guarded two ways: the rendered sequence is asserted exactly, and **no clause may open
+   with its own number**.
+2. **The markup subset is UNCHANGED and `MARKUP_DIALECT` is NOT bumped.** Defined terms are
+   Capitalised in the text itself, so no new inline construct was needed. The alternative was
+   considered and **rejected on a safety ground, not a cost one**: guards read `strip_markup`
+   output, and every new inline marker is one more way to split a phrase and send a guard quietly
+   green. The contract change here is the **shape** of the content, not the dialect.
+
+**9-5-bis (ruling 11-3) — each condition made MECHANICAL rather than intended:** the shipped file
+stays canonical (every pointer must name one); the link is **marked as a convenience** and carries
+`rel="noreferrer noopener"`; and it is **never load-bearing** — a guard **strips every URL** and
+asserts the row still answers *"where is this?"*, including a check for descriptions that **defer
+to their link**. That is the condition violated **by omission**, which is precisely why intention
+alone could not hold it. URLs are **https-only and host-allow-listed**: an open `url` field on a
+legal page is how it eventually points somewhere nobody vetted.
+
+**Fail-first:** all three new guards driven **RED on deliberate specimens** — a deferring
+description, an `http` URL, an unvetted host — before being trusted.
+
+**Two guards caught this build, and both fixes were the build's to make, not the guards'.** The
+Help entry said *"does not advise or act"* and the **advisory-phrase bar bit "advise"** — the bar
+is blunt and **right** to be; the copy was reworded. And **AC-L6 and both accuracy corpora read the
+old single-body shape**; they now walk **clauses and sub-clauses**, because an overreach buried in
+a lettered item is exactly as damaging as one in a heading.
+
+**Recorded because it is how guards go wrong:** an earlier draft of the frontend numbering guard
+asserted *"no digits in any served string"* and matched **`AGPL-3.0-or-later`** and the dialect id.
+The note lives in the test.
+
+**HELP CURRENCY:** the Legal entry rewritten for the register, the rename rationale, and the
+convenience-link marking.
+
+Contract regenerated: **139 paths (unchanged) / 67 → 68 schemas** (`LegalClause` is new;
+`LegalSection` → `LegalArticle` is a rename). Backend **FULL solo 1704 passed**. Frontend
+`npm run check` **exit 0**.
+
+---
+
+### 11-E1. THE ACCEPTANCE GATE, SERVER-SIDE — shipped (2026-07-20, `d44eee5`)
+
+Ruling **11-5**: unaccepted installs are **LOCKED at entry**, and the enforcement point chosen
+**honestly** — *"a frontend-only lock is theatre"*.
+
+**The gate is in `require_read_auth`**, the router-wide dependency every `/api/v1` read already
+passes. **Proof it is not theatre:** the moment it landed, **22 of 25 tests in one integration
+module went 451** with no browser involved. A React app that refused to render while `curl`
+returned the whole portfolio would not be a weaker gate — it would be **the absence of one**.
+
+**It runs BEFORE the PIN check, deliberately** — terms first, then unlock. After would leave an
+unaccepted **PIN-less** install wide open, which is **every fresh install**. It runs for **API
+tokens** too: a LAN widget is not a second party who can be exempt from this install's terms.
+
+**451, not 401.** The request is well-formed and the caller may be perfectly authorised; what is
+missing is **consent**. Collapsing them would leave the lock screen unable to tell *"unlock with
+your PIN"* from *"read and accept the terms"*.
+
+**The exempt set is exactly what rendering the gate needs.** `/legal` is exempt **as a matter of
+principle, not plumbing**: a gate demanding acceptance of a text it would not show is asking for
+consent that **cannot be informed**. `/system/status` is the one entry that is not self-evident, so
+it is **named as a deliberate widening** rather than buried.
+
+**Version-stamping:** the acceptance binds to a **sha256 of the served document**. Reword one
+sub-clause and every install is asked again; change a comment, a CSS rule or a test and nothing
+moves. A hand-maintained version constant was **rejected** — its failure mode is **silent and
+one-directional** (text changes, version doesn't, users held to terms never shown). **See
+§11-DISPOSITIONS-4 — whole-document hash KEPT.**
+
+**An EVENT LOG, not a flag.** A flag keeps the answer and loses the question, and a decline would
+erase the fact that an earlier acceptance happened. Status is **three-valued**: a user re-asked
+because the document changed is **`stale`**, not **`none`**, and must not be greeted as a stranger.
+
+**Found by the suite, not by reasoning.** Reset-data purges every table not in `RESET_KEEP_TABLES`
+(§14dr-26), so a data reset **silently withdrew consent** and re-locked the app. This delta
+**preserved** acceptance and flagged the counter-argument as PROPOSED. **The owner ruled the other
+way — see §11-DISPOSITIONS-3; the behaviour is INVERTED in §11-E2.**
+
+**A test that looked strong and proved nothing.** A test asserted 451 on five data endpoints;
+**four were 404s**. A non-existent route refuses whether the gate works or not. It now asserts each
+path **exists in the contract first**.
+
+Contract: **139 → 141 paths, 68 → 71 schemas**. Backend **FULL solo 1712 passed**. Gate copy
+**PROPOSED** (§9-8). **The frontend gate is not in this delta** — it is §11-E2.
+
+---
+
+### 11-DISPOSITIONS — the owner ruled on the four raised items (2026-07-20)
+
+*Ruled in chat on 2026-07-20; **no ruling was typed in this CLI**. Two were the owner's to endorse
+directly; two were taken **by the architect under delegation** and are marked as such — a
+delegated ruling is **reversible by the owner at the re-look**, and both are listed in the PROPOSED
+carry-forward for exactly that reason.*
+
+| # | Item | Ruled by | Disposition |
+|---|---|---|---|
+| **11-D1** | **§3 subtitle rewrite** (raised as §11-OPEN item 1) | architect | **ENDORSED.** §3 is the **rendering source**; `DECISIONS.md` is the **ratifying record**. The old *"(verbatim from DECISIONS.md)"* asserted a relationship that the clean-up ended, on the one spec whose purpose in this milestone is **to be the true source**. The rewrite **sits in the §3 diff** and is carried to the owner's re-read there, not buried in a plan file. |
+| **11-D2** | **Commitment 1 rewrite** (the clean-up beyond the three named) | architect | **ENDORSED.** It fixes **two** defects at once: an **AC-L7 violation** (*"endpoints"* is a banned implementation term, and the guard now runs unexempted) and an **understatement** (naming Kite implied the commitment bound one provider when it binds every market connection). **In the diff for the owner's re-read.** |
+| **11-D3** | **Does reset erase acceptance?** | architect, **under delegation — reversible** | **RESET ERASES ACCEPTANCE. The earlier fix is INVERTED.** The gate binds **the person using the install**, not the machine. Reset returns the install to **first-run posture**; a preserved consent record would be **the previous user's**, and holding a new user to it would be **wrong**. So erasure-on-reset is now the **specified** behaviour — **deliberate, fail-first tested** (reset → gate re-fires; the accept/decline event log is wiped with the data) **and STATED in the reset-data confirmation copy so it is never silent.** Shipped in **§11-E2**. |
+| **11-D4** | **Hash granularity** — whole document vs. materiality | architect, **under delegation — reversible** | **WHOLE-DOCUMENT HASH KEPT.** The alternative requires the product to make a **materiality judgment** about its own legal text — deciding which edits are small enough not to re-ask — and that judgment is exactly the thing a consent record must not make on the user's behalf. **Any change to served content re-locks.** The **cost is stated and accepted**: a typo fix in one sub-clause re-asks every install. |
+
+**What 11-D3 and 11-D4 have in common, and why both are reversible:** each is a choice between a
+**convenient** behaviour and a **conservative** one, and in both the conservative reading was taken
+because the thing at stake is a **record of what a person agreed to**. Neither is a technical
+finding; both are judgements the owner may take differently, which is why they are delegated
+rulings on the record rather than build decisions in a commit message.
+
+**§11-OPEN item 2 (gate copy) is NOT disposed** and stands **PROPOSED** to the re-look.
