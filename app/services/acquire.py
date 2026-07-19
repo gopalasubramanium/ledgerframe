@@ -28,7 +28,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.egress import egress_allowed
-from app.providers.market.amfi import chunk_date_ranges, fetch_nav_history
+from app.providers.market.amfi import (
+    AmfiReportUnavailable,
+    chunk_date_ranges,
+    fetch_nav_history,
+)
 from app.providers.market.coingecko import (
     CRYPTO_HISTORY_FREE_TIER_DAYS,
     clamp_to_free_tier,
@@ -200,6 +204,23 @@ async def _held_instruments(session: AsyncSession) -> list:
     )).scalars().all()
 
 
+async def _instrument_start(session: AsyncSession, instrument_id: int, *,
+                            default: datetime) -> datetime:
+    """F-9: the first dated transaction for THIS instrument (falling back to ``default``).
+
+    History before an instrument was ever held cannot affect any valuation, so requesting it is
+    pure cost — and for the AMFI archive each window is a whole-market download."""
+    from app.models import Transaction as Txn
+
+    first = (await session.execute(
+        select(func.min(Txn.ts)).where(Txn.deleted_at.is_(None),
+                                       Txn.instrument_id == instrument_id)
+    )).scalar()
+    if first is None:
+        return default
+    return datetime(first.year, first.month, first.day, tzinfo=UTC)
+
+
 async def _identifier(session: AsyncSession, instrument_id: int, id_type: str) -> str | None:
     from app.models import InstrumentIdentifier
 
@@ -296,10 +317,34 @@ async def acquire_prices(session: AsyncSession, base_currency: str | None = None
                         session, instr.id, ok=False, rows=0, source=source,
                         reason=f"No AMFI scheme mapped for {instr.symbol} — map it, then Build history")
                     continue
-                for a, b in chunk_date_ranges(start.date(), end.date()):
-                    text = await asyncio.wait_for(fetch_nav_history(a, b), timeout=PRICE_FETCH_TIMEOUT_S)
-                    rows += await ingest_nav_history(session, instr.id, str(code), text, verify=True)
+                # F-9: start from THIS instrument's first transaction, not the book's. The global
+                # earliest made every fund request windows from years before it was ever held —
+                # fund 145834 (first bought 2025-06-25) was pulling 31 chunks back to 2019, each a
+                # ~70 MB whole-market download. Useless work, and every extra request is another
+                # chance to hit the transient portal-page response.
+                fund_start = await _instrument_start(session, instr.id, default=start)
+                windows = chunk_date_ranges(fund_start.date(), end.date())
+                failed_windows: list[str] = []
+                for a, b in windows:
+                    # A single bad window must not discard the fund. Before F-9 the first failure
+                    # aborted the whole loop, so one transient response cost every remaining chunk.
+                    try:
+                        text = await asyncio.wait_for(
+                            fetch_nav_history(a, b), timeout=PRICE_FETCH_TIMEOUT_S)
+                        rows += await ingest_nav_history(
+                            session, instr.id, str(code), text, verify=True)
+                    except AmfiReportUnavailable as exc:
+                        failed_windows.append(f"{a.isoformat()}→{b.isoformat()}")
+                        log.warning("acquire_prices: %s window %s unavailable — %s",
+                                    instr.symbol, failed_windows[-1], exc)
                 counts["mutual_fund"] += rows
+                if failed_windows:
+                    # Honest partial history: say how much is missing and why, rather than
+                    # reporting a clean success or throwing away what did arrive.
+                    reason = (
+                        f"{len(failed_windows)} of {len(windows)} history windows unavailable — "
+                        "AMFI served its portal page instead of the report; the rest was stored. "
+                        "Re-run Build history to fill the gaps")
             else:
                 counts["skipped"] += 1
                 await _record_outcome(

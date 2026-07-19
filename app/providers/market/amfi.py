@@ -15,6 +15,8 @@ from the product spec:
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -32,7 +34,13 @@ NAV_ALL_URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
 # house) / tp (scheme type). The parser reads the response by HEADER, so column-order variance does
 # not break it; only the request params need on-stack confirmation.
 NAV_HISTORY_URL = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx"
+log = logging.getLogger("ledgerframe")
+
 NAV_HISTORY_CHUNK_DAYS = 90
+# F-9: AMFI intermittently serves its HTML portal page instead of the report. Retry briefly
+# before declaring the window unavailable — the condition is transient, not a data problem.
+NAV_HISTORY_ATTEMPTS = 3
+NAV_HISTORY_RETRY_BACKOFF_S = 2.0
 
 # Section-header lines (no ';') that name a scheme *category* rather than a fund house.
 _CATEGORY_PREFIXES = ("Open Ended", "Close Ended", "Closed Ended", "Interval")
@@ -112,23 +120,57 @@ def _match(header: list[str], *needles: str) -> int | None:
     return None
 
 
+class AmfiReportUnavailable(RuntimeError):
+    """F-9: AMFI answered 200 with something that is NOT the NAV history report.
+
+    Observed live with the exact fetcher request shape: an XHTML frameset portal page
+    ("View/Download NAV History"), 13,694 bytes, served with ``content-type: text/plain``,
+    intermittently, in place of the CSV report. It is transient — the same window served
+    73 MB of real data on the next attempt.
+
+    This is a DIFFERENT condition from a malformed report, and conflating them is the F-9
+    defect: the portal page parses to zero records, which the F-4 integrity gate then
+    reported as "refusing a truncated/malformed payload" — an alarming, wrong diagnosis
+    that also discarded the whole fund's acquisition. The integrity gate is correct and
+    unchanged; it simply must not be handed a payload that was never a report.
+    """
+
+
+def looks_like_nav_report(text: str) -> bool:
+    """Is this payload actually an AMFI history report? (F-9 — the classifier the fetcher lacked.)
+
+    Keyed to the same header resolution :func:`parse_nav_history` uses, so "parsable" and
+    "recognised as a report" cannot drift apart."""
+    return _report_columns(text) is not None
+
+
+def _report_columns(text: str) -> tuple[list[str], int, int, int] | None:
+    """The header row + the mandatory column indices, or None if this is not a report."""
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        return None
+    header = lines[0].split(";")
+    ci_code = _match(header, "scheme code")
+    ci_nav = _match(header, "net asset value")
+    ci_date = _match(header, "date")
+    if ci_code is None or ci_nav is None or ci_date is None:
+        return None  # not a recognisable history report — refuse to guess columns
+    return header, ci_code, ci_nav, ci_date
+
+
 def parse_nav_history(text: str) -> list[SchemeNav]:
     """Parse the AMFI ``DownloadNAVHistoryReport`` payload into one :class:`SchemeNav` per
     (scheme, date) row. Column positions are resolved from the HEADER row (robust to order — the
     ▲-D uncertainty). A missing/N.A. NAV → ``nav=None`` (defunct/unpriced, never fabricated); a row
     with no valid date is skipped."""
-    lines = [ln for ln in text.splitlines() if ln.strip()]
-    if not lines:
+    cols = _report_columns(text)
+    if cols is None:
         return []
-    header = lines[0].split(";")
-    ci_code = _match(header, "scheme code")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    header, ci_code, ci_nav, ci_date = cols
     ci_name = _match(header, "scheme name")
-    ci_nav = _match(header, "net asset value")
-    ci_date = _match(header, "date")
     ci_isin_g = _match(header, "isin div payout", "isin growth")
     ci_isin_r = _match(header, "isin div reinvest")
-    if ci_code is None or ci_nav is None or ci_date is None:
-        return []  # not a recognisable history report — refuse to guess columns
 
     def _cell(parts: list[str], idx: int | None) -> str:
         return parts[idx].strip() if idx is not None and idx < len(parts) else ""
@@ -185,9 +227,28 @@ async def fetch_nav_history(from_date: date, to_date: date, *, mf: str | None = 
     headers = {"User-Agent": "LedgerFrame/1.0 (+local)", "Accept": "text/plain, */*"}
     async with await egress_client("mutual-fund NAV history backfill", timeout=timeout,
                                    headers=headers, follow_redirects=True) as client:
-        r = await client.get(NAV_HISTORY_URL, params=params)
-        r.raise_for_status()
-        return r.text
+        # F-9: AMFI intermittently answers 200 (content-type text/plain) with its HTML portal page
+        # instead of the report. It is transient — verified live, the same window served 73 MB of
+        # real data on the next attempt — so retry briefly before giving up. The payload is
+        # CLASSIFIED here rather than downstream, so a non-report never reaches the parser and can
+        # never be mistaken for a malformed one.
+        last_len = 0
+        for attempt in range(NAV_HISTORY_ATTEMPTS):
+            r = await client.get(NAV_HISTORY_URL, params=params)
+            r.raise_for_status()
+            if looks_like_nav_report(r.text):
+                return r.text
+            last_len = len(r.text)
+            log.warning(
+                "amfi: non-report payload for %s→%s (%d bytes, attempt %d/%d) — AMFI served its "
+                "portal page, not the report", params["frmdt"], params["todt"], last_len,
+                attempt + 1, NAV_HISTORY_ATTEMPTS)
+            if attempt + 1 < NAV_HISTORY_ATTEMPTS:
+                await asyncio.sleep(NAV_HISTORY_RETRY_BACKOFF_S * (attempt + 1))
+        raise AmfiReportUnavailable(
+            f"AMFI served its portal page instead of the NAV history report for "
+            f"{params['frmdt']}→{params['todt']} ({last_len} bytes) after "
+            f"{NAV_HISTORY_ATTEMPTS} attempts")
 
 
 async def fetch_nav_all(timeout: float = 20.0) -> str:

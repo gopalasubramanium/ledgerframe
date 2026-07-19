@@ -1466,3 +1466,77 @@ next run still ends `failed: true`, that log line is the first thing to read.
   say where backend logs are.
 - **R10 (F-8b).** Freshness is checked before the download, on a threshold that can only skip
   provably redundant work.
+
+## 20. F-9 (2026-07-19) — AMFI's PORTAL PAGE WAS DIAGNOSED AS A MALFORMED REPORT
+
+Owner evidence: both held funds failed at 04:19 and 12:19 with *"AMFI history report: parsed 0
+row(s) (< 1) — refusing a truncated/malformed payload"*, recorded in `instrument_acquisitions` and
+`ledgerframe.log`. **The F-8 machinery worked**: the failure was named, persisted, and legible —
+which is why F-9 could be investigated at all. The same run recorded BTC/XRP at 364 rows with the
+clamp note, and the build itself completed (2740 days).
+
+### 20-1 — WHAT THE FETCHER ACTUALLY RECEIVED (captured live)
+
+The request shape is confirmed correct — `frmdt`/`todt` as `dd-Mon-yyyy`, no other params, exactly
+the owner's working curl:
+
+    https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?frmdt=18-Jul-2019&todt=15-Oct-2019
+    → HTTP 200, content-type text/plain, 70,458,459 bytes, "Scheme Code;Scheme Name;ISIN…"
+
+But the SAME shape intermittently returns AMFI's **XHTML frameset portal page**:
+
+    frmdt=20-Apr-2026&todt=18-Jul-2026
+    → HTTP 200, content-type text/plain, 13,694 bytes,
+      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"… <title>View/Download NAV History'
+
+**It is transient, not a window problem** — the same window returned data on every later attempt
+(6/6), and a full 73 MB download of the failing window shows the schemes are present: **61 rows for
+102000, 75 rows for 145834**. I could NOT reproduce the portal page deterministically; it was
+captured once, on the first request of a session. **The trigger is not established** and is not
+claimed to be.
+
+### 20-2 — WHY IT BECAME "MALFORMED" (mechanism, reproduced exactly)
+
+`ingest_nav_history` runs the F-4 guard when the payload has any `;`-bearing line after the first.
+The portal page's markup (`content="text/html; charset=utf-8"`, CSS `;`) satisfies that, and
+`parse_nav_history` returns `[]` because the header is unrecognisable — so
+`assert_not_truncated(0)` fired. Feeding the captured payload to `ingest_nav_history(verify=True)`
+reproduces the owner's error string exactly; that reproduction is now a permanent pin.
+
+**The integrity gate is correct and is UNCHANGED.** The defect is that a payload which was never a
+report reached it at all.
+
+### 20-3 — THE COST OF THE MISDIAGNOSIS
+
+The exception propagated out of the **chunk loop**, so the first bad window discarded **every
+remaining window** for that fund. Timing confirms it: both funds failed ~16 s apart — far too fast
+for even one 21 s / 70 MB download, i.e. they died on their first window.
+
+### 20-R — FIXES
+
+- **R11 (classify before parsing).** `looks_like_nav_report()` (sharing `parse_nav_history`'s header
+  resolution, so "parsable" and "is a report" cannot drift) gates the fetcher. A non-report is
+  **retried** (3 attempts, backoff — the condition is transient) and then raised as
+  `AmfiReportUnavailable`, a named condition distinct from a malformed report.
+- **R12 (a window is not the fund).** The chunk loop degrades **per window**: rows already fetched
+  are kept, and the outcome records an honest partial note ("N of M history windows unavailable …
+  the rest was stored"). A genuinely empty window (a valid report holding other schemes) still
+  degrades quietly — that behaviour was already correct and is now pinned.
+- **R13 (per-instrument start).** Windows begin at **the instrument's own** first transaction, not
+  the book's. Fund 145834 (first bought 2025-06-25) was requesting **31 windows back to 2019**, each
+  a ~70 MB whole-market download — ~2 GB of pointless egress per fund per build, and 26 extra
+  chances to hit the transient failure. **Noted, not fixed:** the report cannot be filtered to a
+  scheme code, so each window is still a whole-market download; a per-scheme source or a cached
+  window store would be the real remedy. Left for a ruling.
+
+### 20-P — PRE-RELEASE ITEM (recorded, not actioned)
+
+`ledgerframe.log` carries, on every boot:
+
+    SECURITY: weak LEDGERFRAME_SECRET_KEY (placeholder/short) — tolerated on a loopback-only bind,
+    but set a strong one before any LAN/remote exposure.
+
+The tolerance is correct for the current loopback-only dev bind, and the warning is doing its job.
+**Pre-release blocker: a strong `LEDGERFRAME_SECRET_KEY` must be set before ANY LAN or remote
+exposure** (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Filed here so it is
+not discovered at exposure time.
