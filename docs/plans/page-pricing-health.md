@@ -506,3 +506,36 @@ non-reproduction reported plainly, not dressed up) was owner-accepted as the rig
     guarded) and a Pricing Health integration test (Save correction disables in-flight,
     a re-click fires no second call, completion toast on resolve) — both RED before.
     Pricing Health pre-pass re-run stated in the report.
+
+## DELTA NOTE — 2026-07-19 (R-43 §18-R4, F-7 ruling (a))
+
+- **The priority chain now distinguishes "keyed here" from "supported, no key".**
+  **Verify-first (§18-F7b #1):** the chain the owner saw was **not** bad data — it is the
+  shipped policy constant `DEFAULT_PRIORITY` (`router.py`), which by design names every
+  provider that *could* price the lane, including keyed ones this instance has no
+  credential for (`eodhd`, `kite`). Rendered as an undifferentiated list of pills, those
+  entries read as **providers that do not exist**; that false alarm survived **two levels
+  of review** before the dumps falsified it. The defect was therefore **presentational,
+  and real**.
+- **Fix.** `route()` now also returns `priority_chain_detail` — the **same** chain, in the
+  same order, each entry carrying `keyed` + a served `note`. An entry whose provider has
+  `needs_key=True` and no credential on this instance is `keyed: false` with the **served**
+  note **`(no key)`**; every other entry is unannotated. The diagnostics modal renders an
+  unkeyed entry with `StatusChip muted` (the ratified disabled dimming, DESIGN-SYSTEM §5
+  amendment 2026-07-19) and appends the **served** note verbatim — **no frontend-invented
+  copy** (D-105).
+- **What did NOT change.** The chain is still **read-only** (D-072) and still **selects
+  nothing** (§18-F7b #2 — an unkeyed entry was already inert). No provider was removed from
+  the policy, no route changed, and `priority_chain` is served unchanged for existing
+  readers. Presentation only.
+- **One derivation.** "Does this instance hold a credential for this provider" is now the
+  single helper `_is_keyed()`, shared with the routing-matrix keyed gate (§9-7) — which
+  keeps its conservative unknown-case answer (a gate must never price through a credential
+  it cannot see; an annotation must never assert an absence it cannot see).
+- **Fail-first:** `tests/unit/test_chain_keyed_presentation.py` (the §18 pin —
+  SBICARD.BSE's chain renders `kite`/`eodhd` unkeyed while the keyed provider renders
+  normally; keyless/terminal entries never annotated; a credential flips the entry;
+  routing unchanged) and a Pricing Health frontend test (unkeyed pill is `muted` + carries
+  the served note; a keyed pill is neither) — both RED before.
+- **ACCEPTED-page rule honoured:** scripted pre-pass re-run on touch — see the run recorded
+  in this note's batch (isolated stack, owner's 5173/8321/`~/.ledgerframe-data` untouched).

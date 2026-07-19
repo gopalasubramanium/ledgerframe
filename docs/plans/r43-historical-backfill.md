@@ -1197,6 +1197,30 @@ milestone's intake. R-43 records the finding and stops.
   `still_stale[]` so no surface can read clean while a covered quote is stale.
 - **R3 (F-7a #4, applied).** A cached quote whose `source` differs from the routed source is
   **route-mismatched** and is refetched from the new route regardless of freshness.
+- **R4 (F-7b ruling (a), applied 2026-07-19).** **Chain presentation — the priority chain must
+  distinguish "configured/keyed here" from "supported, no key".** Ruled in chat 2026-07-19 by the
+  architect under the owner's standing delegation; **reversible by a dated entry**. R1 established
+  that the chain is *correct data* (the shipped `DEFAULT_PRIORITY` policy); what was defective was
+  showing a keyed-but-uncredentialed entry identically to a usable one. **Rationale for the record:
+  that ambiguity produced a P1 false alarm ("phantom providers") that survived TWO levels of
+  review** — a presentation that reliably misleads reviewers is a defect, not a cosmetic. Applied:
+  `route()` serves `priority_chain_detail` (same chain, same order, per entry `keyed` + a served
+  `note`); an entry whose provider is `needs_key=True` with no credential on this instance is
+  `keyed: false` + the **served** note **`(no key)`**, rendered as a `StatusChip muted` pill (the
+  ratified disabled dimming; DESIGN-SYSTEM §5 amendment 2026-07-19, PROPOSED). **No
+  frontend-invented copy (D-105); read-only (D-072); routing unchanged** — chain membership still
+  selects nothing (§18-F7b #2), no provider left the policy, `priority_chain` is served unchanged.
+  Pin: SBICARD.BSE renders `kite`/`eodhd` unkeyed, the keyed provider normally
+  (`tests/unit/test_chain_keyed_presentation.py`). Delta note + isolated pre-pass re-run recorded in
+  `page-pricing-health.md` (ACCEPTED-page rule).
+- **R5 (§17-R4, CLOSED AS MOOT 2026-07-19).** The un-migrated Alpha-Vantage `source_override` on
+  **BTC/XRP** needed no auto-migration policy: **the owner corrected both overrides to CoinGecko
+  manually on 2026-07-19.** No migration code was written and **no recorded decision was
+  rewritten** — the history stands as made. Ruled in chat 2026-07-19 (architect, standing
+  delegation), reversible by a dated entry. **Optional, unscheduled, cosmetic:** with the
+  `(crypto, *, coingecko)` matrix row present, the owner MAY later clear both overrides so the
+  matrix owns the route rather than a per-instrument override; there is no behavioural difference
+  today, so nothing is scheduled.
 
 ### 18-P — F-7 FIX-BATCH PROGRESS LOG (2026-07-19)
 
@@ -1229,6 +1253,45 @@ two F-7 test files); `ruff` **All checks passed**; contract **current at 138** p
 **uncontended solo run**. Two earlier verdicts in this batch were void because competing
 pytest processes overlapped them, and one was reported as clean before that was noticed.
 
+### 18-C — F-7 CLOSE-OUT BATCH (2026-07-19)
+
+#### DONE — committed, tested, gates green
+
+- **§18-R4 (ruling (a), implemented)** — the priority chain distinguishes keyed from
+  supported-but-unkeyed: `route()` serves `priority_chain_detail` (per entry `keyed` +
+  served `note`), the diagnostics modal renders an unkeyed entry as a `StatusChip muted`
+  pill with the served `(no key)` verbatim. `_is_keyed()` is now the ONE derivation of
+  "does this instance hold a credential", shared with the routing-matrix keyed gate — which
+  keeps its conservative unknown-case answer (a **gate** must not price through a credential
+  it cannot see; an **annotation** must not assert an absence it cannot see). Routing
+  unchanged; chain still read-only (D-072).
+- **§18-R5 (ruling (b), recorded)** — §17-R4 CLOSED AS MOOT (owner corrected both crypto
+  overrides by hand 2026-07-19); no migration policy, no decision rewritten.
+- **Docs** — DESIGN-SYSTEM §5 `StatusChip muted?` amendment (PROPOSED, ratify at the next
+  Pricing Health look; reuses the ratified `Segmented`-disabled dimming rather than
+  inventing a second one) + the dated `page-pricing-health.md` delta note.
+
+#### PRE-PASS (ACCEPTED-page rule — scripted re-run on touch)
+
+Re-run on an **ISOLATED** stack (backend `:8399` on a temp `LEDGERFRAME_DATA_DIR` + demo
+seed, throwaway Vite dev `:5199` proxied to it). The owner's 5173/8321/`~/.ledgerframe-data`
+were **never touched**, and `.env` is byte-identical before and after (sha256 `460a2da0…`,
+unread beyond the hash). Live result, AAPL diagnostics modal:
+
+    1. eodhd (no key)   muted=true   opacity=0.5
+    2. alphavantage     muted=false  opacity=1
+    3. yahoo / 4. csv / 5. manual    muted=false  opacity=1
+
+**0 console errors.** Screenshot: `frontend/e2e/smoke/artifacts/prepass-chain-keyed.png`
+(gitignored). Throwaway config/spec deleted; isolated servers stopped by PID.
+
+#### GATES (SOLO run — §18-F7d lesson; no competing process, verified before starting)
+
+Backend **1211 passed, 0 failed** (+6 over the §18 baseline of 1205, all from the new chain
+test file); `ruff` **All checks passed**; contract **current** (`priority_chain_detail` is a
+new key inside an existing response object — no new path, no path-key change); frontend
+`npm run check` **exit 0 from `frontend/`** (337).
+
 #### STOP — OWNER ON-STACK RE-RUN
 
 Both F-7 fixes are pinned in tests, but the **live** CoinGecko refetch runs against the
@@ -1236,6 +1299,8 @@ owner's egress and budget. Confirmed on his stack, not in this CLI. Findings ret
 chat. **Open for a chat ruling:** (a) the served priority chain does not distinguish
 "configured here" from "supported but unkeyed" — the presentational gap that made
 `eodhd`/`kite` read as phantom; (b) §17-R4, the un-migrated AV override on BTC/XRP.
+**BOTH RULED 2026-07-19 — (a) implemented as §18-R4, (b) closed as moot as §18-R5; see
+§18-C below.**
 
 ---
 

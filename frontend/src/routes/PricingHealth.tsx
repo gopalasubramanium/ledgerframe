@@ -370,10 +370,23 @@ export function PricingHealth() {
             {/* D1-c: the router's OWN served reason (e.g. "awaiting NAV (refresh AMFI)"), surfaced
                 here in the Routing block — otherwise masked by the generic failure_reason (D-105). */}
             {detail.route_reason && <p className="ph__note">{detail.route_reason}</p>}
+            {/* §18-R4: the chain distinguishes "usable here" from "supported, no key on this
+                instance" — the latter renders muted with its SERVED note (D-105), because an
+                undifferentiated chain read as phantom providers at two levels of review. Falls
+                back to the flat `priority_chain` if the detail is absent (older payload). */}
             <div className="ph__chain">
               <span className="ph__chainlabel">Priority chain (read-only):</span>
               {detail.priority_chain.length > 0
-                ? detail.priority_chain.map((s, i) => <StatusChip key={s} label={`${i + 1}. ${s}`} />)
+                ? (detail.priority_chain_detail?.length
+                    ? detail.priority_chain_detail
+                    : detail.priority_chain.map((s) => ({ source: s, keyed: true, note: null }))
+                  ).map((e, i) => (
+                    <StatusChip
+                      key={e.source}
+                      muted={!e.keyed}
+                      label={`${i + 1}. ${e.source}${e.note ? ` ${e.note}` : ""}`}
+                    />
+                  ))
                 : <span className="ph__note">manual — no provider chain</span>}
             </div>
             {(detail.auth_required || detail.mapping_required) && (

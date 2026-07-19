@@ -195,6 +195,64 @@ _MANUAL_LANES = {"manual_only", "deposit"}
 _TERMINAL_SOURCES = {"manual", "statement", "accrual", "cache"}
 
 
+def _is_keyed(
+    src: str, availability: dict[str, ProviderAvailability] | None, *, when_unknown: bool,
+) -> bool:
+    """Does THIS instance hold a usable credential for ``src``? (§9-7)
+
+    Keyless providers are always keyed. A keyed provider counts only when
+    :func:`app.services.market.provider_availability` reports credentials for it —
+    that function enumerates every credential the instance actually holds, so a
+    *missing entry* in a supplied map means "no key here", not "unknown".
+
+    ``when_unknown`` covers the one genuinely unknowable case — a pure-policy call with
+    no availability map — and the two callers want opposite answers, so neither guesses:
+    the matrix GATE says False (never price through a credential you cannot see), the
+    chain ANNOTATION says True (never assert an absence you cannot see).
+    """
+    if not capabilities_for(src).needs_key:
+        return True
+    if availability is None:
+        return when_unknown
+    av = availability.get(src)
+    return bool(av and av.has_credentials)
+
+
+# §18-R4 (F-7b ruling (a)) — the served "supported but unkeyed" annotation. The chain is a
+# shipped policy constant listing every provider that COULD price the lane; without this the
+# entries an instance has no credential for read as phantom providers (they did, twice, at
+# review). Served here so the frontend invents no copy (D-105).
+UNKEYED_NOTE = "(no key)"
+
+
+@dataclass(frozen=True)
+class ChainEntry:
+    """One priority-chain entry with its keyed state — the read-only presentation of
+    ``priority_chain`` (D-072: visible, never editable)."""
+
+    source: str
+    keyed: bool
+    note: str | None = None
+
+
+def _chain_detail(
+    chain: list[str], availability: dict[str, ProviderAvailability] | None,
+) -> list[ChainEntry]:
+    """Annotate each chain entry with whether this instance can actually use it.
+
+    Terminal entries (manual/statement/accrual/cache) are not credentialed providers and
+    are never annotated. Chain membership still selects nothing (see ``route``); this is
+    presentation of the shipped policy, not a change to it.
+    """
+    out: list[ChainEntry] = []
+    for src in chain:
+        if src in _TERMINAL_SOURCES or _is_keyed(src, availability, when_unknown=True):
+            out.append(ChainEntry(source=src, keyed=True))
+        else:
+            out.append(ChainEntry(source=src, keyed=False, note=UNKEYED_NOTE))
+    return out
+
+
 def _auth_gap(
     chain: list[str], selected: str | None,
     availability: dict[str, ProviderAvailability],
@@ -228,6 +286,9 @@ class RouteDiagnostic:
     has_manual_override: bool = False
     reason: str | None = None
     route_rule: str = "lane"              # which rule selected the source: override|matrix|lane|active (§9-10)
+    # §18-R4: the SAME chain, per entry, with its keyed state + served annotation. Parallel to
+    # `priority_chain` (unchanged for existing readers), one derivation, filled in `_finish`.
+    priority_chain_detail: list[ChainEntry] = field(default_factory=list)
 
 
 def route(
@@ -261,6 +322,8 @@ def route(
     )
 
     def _finish(diag: RouteDiagnostic) -> RouteDiagnostic:
+        # §18-R4: annotate the chain once, on every exit path (all returns come through here).
+        diag.priority_chain_detail = _chain_detail(chain, availability)
         # Compute the real auth gap once, unless a more specific reason is set.
         if availability and not diag.auth_required:
             gap, why = _auth_gap(chain, diag.source_selected, availability)
@@ -335,11 +398,9 @@ def route(
             (not mcaps.asset_classes or asset_class in mcaps.asset_classes or "*" in mcaps.asset_classes)
             and (not mcaps.regions or not country or country in mcaps.regions or "*" in mcaps.regions)
         )
-        keyed = True
-        if mcaps.needs_key:
-            av = (availability or {}).get(matrix_provider)
-            keyed = bool(av and av.has_credentials)
-        if capable and keyed:
+        # §18-R4: the same keyed test the chain annotation uses — ONE derivation of
+        # "does this instance hold a credential for this provider" (§9-7).
+        if capable and _is_keyed(matrix_provider, availability, when_unknown=False):
             d.source_selected = matrix_provider
             d.valuation_method = "official_nav" if matrix_provider == "amfi_nav" else "market_quote"
             d.route_rule = "matrix"

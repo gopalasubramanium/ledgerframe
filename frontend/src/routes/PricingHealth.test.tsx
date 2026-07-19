@@ -28,7 +28,14 @@ vi.mock("../api/pricing-health", () => ({
       holdings: [
         // Each holding carries a distinct served route_rule so the provenance column shows all four
         // values (§9-10): matrix · override · lane · active.
-        row({ id: 1, symbol: "AAPL", label: "AAPL", status: "Fresh", is_stale: false, confidence: 92, confidence_band: "high", route_rule: "matrix", route_source: "yahoo" }),
+        // §18-R4: a realistic served chain — one keyed provider and one supported-but-unkeyed.
+        row({ id: 1, symbol: "AAPL", label: "AAPL", status: "Fresh", is_stale: false, confidence: 92, confidence_band: "high", route_rule: "matrix", route_source: "yahoo",
+          priority_chain: ["eodhd", "yahoo", "manual"],
+          priority_chain_detail: [
+            { source: "eodhd", keyed: false, note: "(no key)" },
+            { source: "yahoo", keyed: true, note: null },
+            { source: "manual", keyed: true, note: null },
+          ] }),
         row({ id: 2, symbol: "D05", label: "DBS", status: "Cached", is_stale: true, confidence: 60, confidence_band: "medium", source: "kite", auth_required: true, route_rule: "override", source_override: "kite" }),
         row({ id: 3, symbol: null, label: "My Flat", status: "Manual", is_stale: false, confidence: 40, confidence_band: "low", valuation_method: "manual_valuation", source: "manual", priority_chain: [], route_rule: "lane" }),
         row({ id: 4, symbol: "RELIANCE", label: "Reliance", status: "Delayed", is_stale: true, confidence: 55, confidence_band: "medium", route_rule: "active" }),
@@ -182,6 +189,22 @@ test("Details row action opens the read-only routing chain + confidence factors 
   expect(within(dialog).getByText("Routing")).toBeTruthy();
   expect(within(dialog).getByText(/Priority chain \(read-only\)/)).toBeTruthy();
   expect(within(dialog).getByText(/Why this confidence/)).toBeTruthy();
+});
+
+test("§18-R4: an unkeyed chain provider renders muted with its SERVED note; a keyed one renders normally", async () => {
+  const user = userEvent.setup();
+  const { container } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await user.click(await screen.findByRole("button", { name: /Actions for AAPL/ }));
+  await user.click(await screen.findByText("Details"));
+  const dialog = await screen.findByRole("dialog");
+  // The annotation is the SERVED string, rendered verbatim (D-105) — never composed here.
+  const unkeyed = within(dialog).getByText("1. eodhd (no key)");
+  expect(unkeyed.classList.contains("lf-statuschip--muted")).toBe(true);
+  // A keyed provider is neither annotated nor muted — the distinction the ruling exists for.
+  const keyed = within(dialog).getByText("2. yahoo");
+  expect(keyed.classList.contains("lf-statuschip--muted")).toBe(false);
+  expect(container.textContent).not.toMatch(/yahoo \(no key\)/);
 });
 
 test("identifier-duplicate banner is omitted at zero, shown when count > 0", async () => {

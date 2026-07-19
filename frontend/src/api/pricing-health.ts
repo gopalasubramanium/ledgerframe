@@ -5,6 +5,13 @@ import { refreshBriefing } from "./news";
 // (provenance/confidence/routing); the page performs no money math (P-1/D-031). Everything the
 // page needs is already in the frozen contract (no §3b delta).
 
+/** One priority-chain entry as served (§18-R4) — read-only presentation, never editable (D-072). */
+export interface ChainEntry {
+  source: string;
+  keyed: boolean;
+  note: string | null;
+}
+
 export interface PricingRow {
   id: number;
   symbol: string | null;
@@ -28,6 +35,11 @@ export interface PricingRow {
   route_lane: string;
   route_source: string;
   priority_chain: string[];
+  // §18-R4: the same chain, per entry, with its keyed state and the SERVED annotation for the
+  // unkeyed case ("(no key)"). The chain is a shipped policy constant naming every provider that
+  // could price the lane; without this, entries this instance has no credential for read as
+  // phantom providers. `note` is rendered verbatim — never frontend-invented (D-105).
+  priority_chain_detail?: ChainEntry[];
   mapping_required: boolean;
   auth_required: boolean;
   // R-38 §9-10: which rule selected the source (override | matrix | lane | active) — ONE derivation

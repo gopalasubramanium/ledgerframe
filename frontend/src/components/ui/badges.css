@@ -91,4 +91,11 @@
 .lf-statuschip--positive { color: var(--gain); border-color: var(--gain); }
 .lf-statuschip--negative { color: var(--loss); border-color: var(--loss); }
 
+/* Muted = a real thing that is NOT active here (dead affordance). Identical to the ratified
+   disabled `Segmented` segment (--text-tertiary + 0.5), so one dimming language across the DS.
+   Colour is never the signal: the served label still carries the meaning (WCAG 1.4.1). */
+.lf-statuschip--muted {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
 .lf-statuschip__count { color: var(--text-tertiary); }

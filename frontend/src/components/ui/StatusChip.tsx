@@ -16,6 +16,13 @@ export interface StatusChipProps {
   /** Optional trailing count, e.g. "Delayed · 3". */
   count?: number;
   title?: string;
+  /**
+   * Dead-affordance treatment — the chip names something real that is NOT active here (e.g. a
+   * priority-chain provider this instance holds no key for). Same ratified dimming as a disabled
+   * `Segmented` option (`--text-tertiary` + 0.5 opacity, DESIGN-SYSTEM §5). The MEANING must still
+   * be carried by the served label (WCAG 1.4.1) — dimming annotates it, never replaces it.
+   */
+  muted?: boolean;
 }
 
 /**
@@ -28,9 +35,9 @@ export interface StatusChipProps {
  *
  * The label is MANDATORY and always rendered: a chip's meaning may never be carried by colour alone.
  */
-export function StatusChip({ label, tone = "neutral", count, title }: StatusChipProps) {
+export function StatusChip({ label, tone = "neutral", count, title, muted }: StatusChipProps) {
   return (
-    <span className={`lf-statuschip lf-statuschip--${tone}`} title={title}>
+    <span className={`lf-statuschip lf-statuschip--${tone}${muted ? " lf-statuschip--muted" : ""}`} title={title}>
       {label}
       {count !== undefined && <span className="lf-statuschip__count">· {count}</span>}
     </span>

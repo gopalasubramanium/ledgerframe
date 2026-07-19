@@ -298,6 +298,13 @@ async def pricing_health(session: AsyncSession = Depends(get_db)) -> dict:
             "route_lane": diag.lane if diag else "manual_only",
             "route_source": diag.source_selected if diag else "manual",
             "priority_chain": diag.priority_chain if diag else [],
+            # §18-R4: the same chain per entry with its keyed state + SERVED annotation, so the
+            # diagnostics modal can show "supported but unkeyed on this instance" instead of
+            # letting a policy entry read as a phantom provider. Presentation only (D-072).
+            "priority_chain_detail": [
+                {"source": e.source, "keyed": e.keyed, "note": e.note}
+                for e in (diag.priority_chain_detail if diag else [])
+            ],
             "mapping_required": diag.mapping_required if diag else False,
             "auth_required": diag.auth_required if diag else False,
             # R-38 §9-10: which rule selected the source (override|matrix|lane|active).
