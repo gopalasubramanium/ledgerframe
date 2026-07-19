@@ -1423,6 +1423,29 @@ instantly recognisable than the brand mark, which is why **the visible URL on ho
 decoration — it is what carries the destination**, and why the accessible names spell out the
 service by name. **If the owner wants true brand marks, that is an ADR, and it is his call.**
 
+#### ⚠ AN UNDEFINED-TOKEN DEFECT — fixed on About, and DELIBERATELY LEFT on Help
+
+This milestone's CSS uses three custom properties that **do not exist**: `--text-muted`,
+`--text-sm`, `--text-xl`. The token layer has `--text-secondary` / `--text-tertiary` and
+`--font-size-*`; `--text-muted` appears **10 times, all of them in this milestone's own two files**,
+against **114** uses of `--text-secondary` elsewhere. It is drift, not a convention.
+
+**A `var()` with no fallback and no definition is invalid at computed-value time**, so each such
+declaration resolved to `unset` and **inherited**. The visible consequence: prose meant to be muted
+rendered at **full primary contrast**, `--text-sm` text rendered at its **parent's size**, and the
+About lockup **was never actually enlarged** despite a rule saying so. **Every unit test stayed
+green, because not one of them asserts a computed style** — the same shape as §9-bis-12's
+renderer-wired-to-half-its-fields defect: the rule was correct, and it was never in force.
+
+* **Settings.css (5 uses) — FIXED**, folded into the About rebuild, because that surface was being
+  rewritten anyway and its ratification is **reopened**.
+* **Help.css (13 uses) — NOT FIXED, and that is a decision, not an oversight.** ⚠ **The owner
+  ACCEPTED Help 3b looking at the BROKEN rendering.** Correcting the tokens would shrink six text
+  runs and mute six more — i.e. **silently change an accepted surface into something he has never
+  seen**, on the architect's own authority. *A ratification is of what the owner actually saw, not
+  of what the stylesheet meant to say.* **The fix is written and reverted; it is his call**, and it
+  is a one-line-per-usage change whenever he makes it.
+
 **PROPOSED, not ratified. NOT closed. NOT pushed.** The owner's **re-look** is the gate.
 
 ---
