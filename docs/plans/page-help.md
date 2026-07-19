@@ -622,8 +622,15 @@ them before this ruling lands.
 
 ## 11. §9-6 VOICE SPECIMENS — **PROPOSED, for the owner to ratify**
 
-*Three rewrites of real entries — one per category — in the register the product already uses. Ratifying
-these ratifies the voice for the whole catalogue (**41 entries today, 49 after Tier 2**); each conforms.*
+> **⚠ SUPERSEDED BY THE SHIPPED COPY (2026-07-19, Phase 1).** These three were drafted **before** the
+> per-page audit, so they are proposals, not the product. The §9-6 ruling puts ratification **at the 0a
+> specimen, by looking** — so what the owner ratifies is the copy that actually ships, rendered. The
+> three specimens now correspond to live entries and are captured in the 0a walk: **`page-net-worth`**
+> (Pages), **`term-data-confidence`** (Terms), **`guarantee`** (About). The drafts below are kept as the
+> record of what was proposed, and the shipped text is what stands.
+
+*Three rewrites of real entries — one per category — in the register the product already uses. The
+catalogue ships **48 entries** (Pages 18 · Terms 29 · About 1).*
 
 **Specimen A — a `Pages` entry** *(rewrite of `page-snapshot`, corrected per 0-C):*
 
@@ -760,6 +767,102 @@ POST-RELEASE per §9-5, with the verbatim principle recorded on the row.
 
 **Gates:** full backend suite run **SOLO** at delta 1 (**1244 passed, exit 0**) and again at delta 3.
 `ruff` clean. `make api-contract-check` current.
+
+---
+
+## 13. PHASE 1 + THE 0a SPECIMEN (2026-07-19) — walked, awaiting ratification
+
+*Built to the §9-3 / §9-13 / §9-4 rulings. **STOP is here**: nothing beyond 0a (the §9-1 popover
+retrofit, the owner walk) begins until the specimen is ratified in chat.*
+
+### What shipped
+
+| Piece | Detail |
+|---|---|
+| `frontend/src/routes/Help.tsx` + `.css` | Settings-template page; sections in the **served** category order |
+| `frontend/src/api/help.ts` | the `helpContent` binding `docs/audit/03-API-SURFACE.md:51` had named and nobody had written |
+| `AppRoutes.tsx` | `/help` registered |
+| `nav.ts` | `built: true` — **the entire nav change** |
+| `Help.test.tsx` | 8 tests: structure, triad-on-Terms-only, one-anchor, search-replaces, honest empty, honest error, deep link, filter |
+| `e2e/overflow.spec.ts` | `/help` **and** `/help?q=` added to every sweep |
+
+### §9-3 as ruled — ONE canonical anchor, and a deep link that really lands
+
+**Search REPLACES the catalogue** rather than rendering matches above it. That is the criterion, not a
+style choice: two renderings would put **two elements carrying `id="term-xirr-twr"`** in the DOM, and a
+deep link would land on whichever came first. One entry, one anchor — asserted in unit tests *and*
+measured in the walk (`DUPLICATE anchors: none`).
+
+**The deep link is a query param, not a `#fragment`.** Under HashRouter the route already lives in the
+hash, so a second fragment is not addressable and the browser performs **no** native anchor scroll. A
+`#`-anchor would have *looked* native and silently done nothing. `?topic=` + an effect that scrolls is
+the honest mechanism, and the landed entry is **visibly marked** — landing mid-page with no indication
+is how a working deep link still feels broken.
+
+### §9-13 as ruled — composition only, NO amendment requested
+
+Built from `PageHeader` · `TextInput` · `Segmented` · `Button` · `EmptyState` · `Skeleton` · `.lf-card`
++ `.lf-card__body`. The reading measure uses the **already-sanctioned inner-MEASURE cap**
+(`DESIGN-SYSTEM §3.1`), never a page-root `max-width` — **measured in the walk: prose 689px inside an
+1086px card.** **No DESIGN-SYSTEM amendment is requested**, so there is nothing of that kind for the
+owner to ratify here.
+
+### §9-4 as ruled — one flag, and R-39 is untouched
+
+`nav.ts` gains `built: true`. Nothing else: no new entry, no reorder, no new group, no component. R-39's
+three recorded constraints (`ROADMAP.md:52`) — semantic-only colour · no avatar/account block ·
+collapse-to-icon rides the **existing** D-078 `sidebar-collapsed` setting — all concern how the sidebar
+**looks and persists**, not which items it lists, so **nothing here is re-done there**. page-chrome
+**P-3** sized the nav density for all 19 RD-9 items **by name, Help included**, so this consumes a
+reserved slot rather than forcing a re-density.
+
+**Two pinned tests were inverted, not deleted** — `chrome.test.tsx` asserted Help's link was **null**,
+and `AppShell.test.tsx` used `/help` as its unbuilt-route fixture (repointed to `/legal`). *The
+progressive-reveal invariant is the thing being guarded; Help crossing from hidden to shown is exactly
+the transition it exists to police.*
+
+### The 0a walk (isolated instance: ports 8399/5199, temp data dir, `.env` snapshotted → verified
+unchanged, throwaway vite config deleted, owner's stack untouched)
+
+| Check | Result |
+|---|---|
+| Nav entry present, active, in the System group | ✅ `SYSTEM ǀ Settings ǀ Help` |
+| Sections in served order | ✅ `Pages · Terms · About` |
+| Entries rendered | ✅ **48** |
+| Duplicate anchors | ✅ **none** |
+| Reading measure capped | ✅ 689 / 1086 px |
+| Containment @ 320 / 375 / 768 / 1366 | ✅ **no element overruns at any width** |
+| Deep link `?topic=term-xirr-twr` | ✅ scrolled into view **and** marked |
+| Search replaces catalogue | ✅ 6 ranked hits, `Policy` first |
+| No-match | ✅ honest reason, not a blank |
+| Live `[Help]` popover (Home → Net worth) | ✅ opens, overlays |
+| Light + dark | ✅ both captured |
+| **Console errors** | ✅ **0**, across every step and both themes |
+
+`npm run check` from `frontend/`: **exit 0** (361 e2e). Backend suite: solo, green.
+
+### ⚠ Two defects the walk caught that the guards did not
+
+**1 — "Pricing health" (lowercase h) inside two Terms bodies.** My accuracy guard checks a `Pages`
+entry's **own title** against the nav; it could not see a page named **in passing** inside another
+entry's prose. Caught **by eye**, in the rendered page, twice. Fixed, and the guard extended:
+`test_page_names_in_PROSE_use_the_canonical_casing` now checks every multi-word nav label in every
+body/triad field. *A guard that checks a field checks that field — the walk is what finds the rest.*
+
+**2 — the walk was reading a STALE backend.** The first run reported **47** entries when the catalogue
+had 48: `uvicorn` was started before the content edits and serves the module it imported at boot. The
+count is what exposed it — every other assertion was green and meaningless. Backend restarted, walk
+re-run, **48**. *This is the recorded "a proof run against a stale module is worthless" hazard, and the
+only reason it was caught is that one number was checkable against something known.*
+
+### ⚑ ONE DESIGN JUDGMENT FOR THE OWNER AT 0a
+
+**"Link to this topic" renders on all 48 entries.** It is what makes a topic shareable, and it is
+honest — but it is 48 buttons on a page whose job is reading, and in the walk it reads as repetitive
+chrome. Options: **(a)** keep as-is; **(b)** keep but reveal on hover/focus only (quiet until wanted —
+*recommended*); **(c)** drop it — deep links still work, they would just be produced by the popovers
+that link here (Phase 4) rather than by the page. **Not resolved unilaterally — this is the kind of
+judgment 0a exists for.**
 
 ---
 

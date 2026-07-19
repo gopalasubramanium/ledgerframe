@@ -343,7 +343,9 @@ test("the routed page renders inside the shell with chrome around it — `/` is 
 });
 
 test("an unbuilt route lands on the honest NotBuilt fallback inside the shell", async () => {
-  renderRoutesAt("/help"); // Reports is built now (page-reports Phase 1); Help/Legal/Settings are still unbuilt
+  // Repointed to /legal: Help is BUILT as of page-help Phase 1, so it is no longer an example
+  // of an unbuilt route. Legal is the remaining one (its milestone is next).
+  renderRoutesAt("/legal");
   expect(document.querySelector(".lf-topbar")).not.toBeNull();
   expect(await screen.findByText(/isn't built yet/)).toBeTruthy();
 });

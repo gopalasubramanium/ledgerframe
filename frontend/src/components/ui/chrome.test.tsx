@@ -45,7 +45,10 @@ test("Sidebar shows only built pages as entries; showAll reveals the full skelet
   expect(screen.getByRole("link", { name: "Accounts" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Reports" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "Settings" })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: "Help" })).toBeNull();
+  // Help SHIPS (page-help Phase 1) — this assertion previously pinned its ABSENCE, and is
+  // INVERTED rather than deleted: the sidebar's progressive reveal is the invariant, and Help
+  // moving from hidden to shown is exactly the transition it exists to police.
+  expect(screen.getByRole("link", { name: "Help" })).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Legal" })).toBeNull();
 
   rerender(

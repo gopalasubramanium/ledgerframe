@@ -28,6 +28,11 @@ const ROUTES = [
   { name: "estate (worklist)", hash: "#/estate" },
   { name: "accounts (worklist)", hash: "#/accounts" },
   { name: "reports (overview)", hash: "#/reports" },
+  // Help (System, Settings template) — page-help Phase 1. Long unbroken PROSE is the specific
+  // overflow risk this page brings; the reading measure is capped component-locally (§9-13), so
+  // the guard must prove the cap holds at every width, not merely that the card fits.
+  { name: "help (config/content)", hash: "#/help" },
+  { name: "help · searching", hash: "#/help?q=xirr" },
   // Settings (config) — all four D-069 tabs, URL-addressable (Amendment C). Backend-free here, so
   // each tab renders its honest load-error / empty states; the tab strip + cards must still fit at
   // every breakpoint (the token table + feeds rows are the overflow-prone bits). §7 acceptance.
@@ -117,7 +122,7 @@ for (const route of ROUTES) {
 test("every page fills the shell content box — one page inset, no per-page cap/centering", async ({ page }) => {
   await page.setViewportSize({ width: 1728, height: 1000 });
   const ROUTES = ["#/", "#/net-worth", "#/holdings", "#/portfolio", "#/markets", "#/heatmap", "#/news",
-    "#/instrument/AAPL", "#/pricing-health", "#/review", "#/policy", "#/cash-flow", "#/scenarios", "#/insurance", "#/estate", "#/accounts", "#/reports"];
+    "#/instrument/AAPL", "#/pricing-health", "#/review", "#/policy", "#/cash-flow", "#/scenarios", "#/insurance", "#/estate", "#/accounts", "#/reports", "#/help"];
   const offenders: string[] = [];
   for (const hash of ROUTES) {
     await page.goto(`/${hash}`);
@@ -178,7 +183,7 @@ for (const theme of THEMES) {
 // TEST FAILURE, not a style choice — which is what stops the eleventh page from re-inventing it.
 const SHELL_ROUTES = [
   "#/", "#/net-worth", "#/holdings", "#/portfolio", "#/markets", "#/heatmap",
-  "#/news", "#/instrument/AAPL", "#/pricing-health", "#/review", "#/policy", "#/cash-flow", "#/scenarios", "#/insurance", "#/estate", "#/accounts", "#/reports",
+  "#/news", "#/instrument/AAPL", "#/pricing-health", "#/review", "#/policy", "#/cash-flow", "#/scenarios", "#/insurance", "#/estate", "#/accounts", "#/reports", "#/help",
 ];
 test("every page uses the ONE shared page shell (page-local shells are a failure)", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 800 });

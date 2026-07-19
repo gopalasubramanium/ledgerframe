@@ -1,0 +1,83 @@
+/* Help — System group, Settings template. page-help §9-3 / §9-13.
+   Composition of ratified primitives only; no new component (§9-13 ruling). */
+
+.help__search {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+/* The search field is the page's one input; let it take the room and wrap the buttons under it
+   at narrow widths rather than shrinking to unusability. */
+.help__search > :first-child {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+
+.help__filter {
+  margin-bottom: var(--space-3);
+}
+
+.help__entry + .help__entry {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+}
+
+.help__entrytitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+  color: var(--text);
+}
+
+/* DESIGN-SYSTEM §3.1 sanctions capping an inner content MEASURE (a reading column inside a card).
+   This is that — component-local, never a page-root max-width. Prose set the full width of a
+   1728px card is unreadable; ~78ch is the reading measure. */
+.help__body,
+.help__triad dd {
+  max-width: 78ch;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.help__triad {
+  margin: var(--space-2) 0 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+}
+.help__triad dt {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  /* Two columns collapse to stacked pairs — a max-content column plus prose does not survive
+     a phone width. */
+  .help__triad {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .help__triad dt {
+    margin-top: var(--space-2);
+  }
+}
+
+.help__link {
+  margin: var(--space-2) 0 0;
+}
+
+/* A deep-linked topic is marked so the reader can SEE which entry the link meant — landing
+   mid-page with no indication is how a deep link feels broken even when it worked. */
+.help__entry.is-target {
+  /* Same weight as the sidebar's active rail — a "this is the one you asked for" marker
+     reads at the same strength wherever the app uses it. */
+  border-left: var(--nav-rail-width) solid var(--accent);
+  padding-left: var(--space-3);
+  margin-left: calc(var(--space-3) * -1);
+}

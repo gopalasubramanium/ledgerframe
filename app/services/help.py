@@ -141,6 +141,12 @@ HELP: list[dict] = [
              "the routing matrix. AI shows the current configuration. System covers your PIN, "
              "auto-lock, network access and data controls.",
      "keywords": "settings tabs appearance privacy data feeds ai system pin token provider theme"},
+    {"id": "page-help", "category": "Pages", "title": "Help",
+     "body": "This page. It describes what each page is for and what the words mean, and nothing "
+             "else — every figure stays on the page that owns it. Search accepts a plain question; "
+             "results are ranked on the server. The [Help] markers elsewhere in the app open a "
+             "short definition where you are standing, and the full entry lives here.",
+     "keywords": "help search topics glossary terms guide catalogue"},
     # --- Concepts / terms --------------------------------------------------- #
     {"id": "term-valuation-method", "category": "Terms", "title": "Valuation method",
      "body": "How a value was established: market quote (a delayed/EOD price), official NAV "
@@ -185,7 +191,7 @@ HELP: list[dict] = [
             "source — rather than to the merit of the asset.",
      "improves": "Resolving the listed deductions raises the score: refresh a stale quote, supply "
                  "a missing identifier mapping, or configure the provider an unavailable source "
-                 "needs. The Pricing health page lists each holding's deductions."},
+                 "needs. The Pricing Health page lists each holding's deductions."},
     {"id": "term-xirr-twr", "category": "Terms", "title": "XIRR & TWR",
      "body": "XIRR is a money-weighted return (accounts for the size and timing of your "
              "cash flows). TWR is time-weighted (removes the effect of deposits/withdrawals, "
@@ -273,7 +279,7 @@ HELP: list[dict] = [
             "recent it is. It underpins the data-confidence score.",
      "improves": "Provenance strengthens as a holding is mapped to a live source and refreshed, "
                  "which replaces manual or estimated values with quoted or NAV-based ones. The "
-                 "Pricing health page shows each holding's source, routing, and freshness."},
+                 "Pricing Health page shows each holding's source, routing, and freshness."},
     {"id": "term-fifo", "category": "Terms", "title": "FIFO (first-in, first-out)",
      "body": "FIFO is the lot-matching rule used for cost basis: when you sell, the "
              "earliest-acquired parcels are treated as sold first. It determines which acquisition "

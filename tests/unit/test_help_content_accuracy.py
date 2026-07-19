@@ -104,6 +104,33 @@ def test_no_page_entry_points_at_a_redirect_only_path():
     assert not hits, f"help copy points at redirect-only paths: {hits}"
 
 
+@pytest.mark.parametrize("entry", HELP, ids=lambda e: e["id"])
+def test_page_names_in_PROSE_use_the_canonical_casing(entry: dict):
+    """A page named INSIDE a body/triad must be spelled as the nav spells it (D-022).
+
+    The title guard above only checks a `Pages` entry's own title. It cannot see a page named in
+    passing — which is where "Pricing health" (lowercase h) survived the whole content pass and was
+    caught by EYE at the 0a walk, twice, inside Terms entries.
+
+    Only the MULTI-WORD labels are checked: single-word ones ("Home", "Reports", "Review") are
+    ordinary English and matching them would fire on every sentence. A fully-lowercase mention is
+    left alone as prose; a Capitalised-first-word mention is clearly naming the page, so it must
+    match the nav exactly.
+    """
+    multiword = [label for label, _p, _b in _nav_items() if " " in label]
+    fields = ("body", "what", "why", "improves")
+    for label in multiword:
+        for field in fields:
+            for m in re.finditer(re.escape(label), entry.get(field, ""), re.I):
+                got = entry[field][m.start():m.end()]
+                if got in (label, label.lower()):
+                    continue
+                pytest.fail(
+                    f'{entry["id"]}.{field} names the page as {got!r}; the nav spells it '
+                    f"{label!r} (nav label = H1 = route)."
+                )
+
+
 # --- Deprecated wording ---------------------------------------------------------------------- #
 # GLOSSARY.md's "Deprecated terms" table says outright: "These must not appear in UI copy."
 # Its first column is prose, not a machine vocabulary, so the checks are AUTHORED — but the set of

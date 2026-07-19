@@ -289,3 +289,46 @@ an honest message (Guarantee 3).
 account an **explicit choice** (an account picker, optionally linking to `/accounts` to create one first),
 so the attribution is chosen, never guessed. Not an Accounts-page capability (no new capability was added
 to Accounts by recording this).
+
+---
+
+## TD — `test_reports_pack.py` + `test_performance.py` fail by TEST ORDER, not by code (found 2026-07-19, page-help Phase 1)
+
+**Status: PRE-EXISTING. Not caused by the Help milestone — proven by controlled comparison.**
+
+**Symptom.** A solo full-suite run reported **5 failed / 1406 passed**, all inside
+`tests/unit/test_reports_pack.py` and `tests/integration/test_performance.py`
+(`test_key_stats_endpoint` fails with a SQLAlchemy error; the Pack tests fail on rendered content).
+The *same* files had passed in a targeted run 30 minutes earlier, and an earlier solo full run the
+same day was **1360 passed / 0 failed** on nearly the same tree.
+
+**It is ORDER/SHARED-STATE, not contention and not content:**
+- `test_reports_pack.py::test_reports_pack_route_serves_html_with_the_header_block` **passes alone**
+  (1 passed in 22.69s).
+- Running the two files **together** reproduces it: **7 failed / 12 passed**.
+- The run logs show the suite mutating shared DB state as it goes — e.g.
+  *"§12-R3 wrong-instrument candle purge: purged 795 candle(s)"* — so what a later test sees depends
+  on what an earlier one did.
+
+**CONTROLLED COMPARISON (the reason this is filed rather than fixed here).** The same two files, in
+the same order, run against a **clean worktree at `2b54eb2`** — the commit immediately *before* the
+Help milestone, with none of its changes present:
+
+| Tree | Result on `test_reports_pack.py` + `test_performance.py` |
+|---|---|
+| **baseline `2b54eb2`** (pre-Help) | **9 failed / 10 passed** |
+| **Help branch** (post Phase 1) | **7 failed / 12 passed** |
+
+The defect is **present on untouched code**, and the Help milestone's changes *reduced* the failure
+count by two (it corrected two assertions that had pinned the D-021-retired "Total value").
+
+**Why this matters beyond the fix.** A suite whose verdict depends on execution order gives a
+**green that does not mean what it says** — the 1360/0 run and the 1406/5 run were both "solo" and
+both honest reports of the same code. Until this is closed, *no single full-suite run is on its own
+proof*; a failure in these two files must be re-checked in isolation and against the baseline before
+it is attributed to a change.
+
+**Scope of the fix (its own task, not this milestone's):** give these modules per-test DB isolation
+(the fixtures currently share seeded state and mutate it), or make the mutating purges idempotent /
+scoped. Reproducing ref: `pytest tests/unit/test_reports_pack.py tests/integration/test_performance.py`
+run in that order.
