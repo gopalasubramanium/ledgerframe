@@ -116,11 +116,18 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 // --- tabs + URL state (Amendment C) -----------------------------------------
-test("renders the six D-069 tabs (§14st-2) and defaults to General", async () => {
+test("renders the seven D-069 tabs (§14st-2, amendment #3) and defaults to General", async () => {
   renderAt();
-  for (const t of ["General", "Appearance", "Privacy", "Data feeds", "AI", "System"]) {
+  // D-069 amendment #3 (page-help §9-bis-11(c), 2026-07-19): About is the SEVENTH tab, reversing
+  // the ruling that had made it a card inside System.
+  const TABS = ["General", "Appearance", "Privacy", "Data feeds", "AI", "System", "About"];
+  for (const t of TABS) {
     expect(screen.getByRole("button", { name: t })).toBeTruthy();
   }
+  // The COUNT is asserted too, not just the presence of each: a strip that grew an eighth tab
+  // would satisfy every check above while shipping something nobody ratified.
+  const strip = screen.getByRole("group", { name: "Settings sections" });
+  expect(within(strip).getAllByRole("button")).toHaveLength(TABS.length);
   // General is the default control set: base currency + timezone + the long-term threshold.
   expect(await screen.findByLabelText("Base currency")).toBeTruthy();
   expect(screen.getByLabelText("Long-term threshold in days")).toBeTruthy();
@@ -401,4 +408,49 @@ test("masters card is honest when the status readers fail (retry, never a fake r
   vi.mocked(getMasters).mockResolvedValue(null);
   renderAt("/settings?tab=data-feeds");
   expect(await screen.findByText("Couldn't load masters")).toBeTruthy();
+});
+
+// --- About, the 7th tab (D-069 amendment #3; page-help §9-bis-11(c)) ---------
+test("About is its own tab: brand, ethos, author with a LOCAL photo, and the six links", async () => {
+  renderAt("/settings?tab=about");
+
+  expect(await screen.findByText("What it stands for")).toBeTruthy();
+  expect(screen.getByText("Who built it")).toBeTruthy();
+  expect(screen.getByText("Gopala Subramanium")).toBeTruthy();
+
+  // THE PHOTO IS BUNDLED, NEVER FETCHED. A local-first appliance that advertises no telemetry
+  // cannot reach github.com to draw a face, and under no-egress a remote image would fail
+  // visibly. The bundler rewrites the import to a local URL, so the assertion is that the src is
+  // NOT remote — the 3a pre-pass proves the stronger claim (no request leaves) from the live
+  // page's own request log, which is the only place that can actually be observed.
+  const photo = screen.getByAltText("Gopala Subramanium") as HTMLImageElement;
+  expect(photo.getAttribute("src")).toBeTruthy();
+  expect(photo.getAttribute("src")).not.toMatch(/^https?:\/\//);
+
+  // All six owner-specified links, each carrying BOTH rel tokens: `noopener` denies the opened
+  // page a handle back to this one, and it is not optional on a target="_blank" link.
+  const hrefs = [
+    "https://ledgerframe.org",
+    "https://github.com/gopalasubramanium/ledgerframe",
+    "https://me.sgopala.com/",
+    "https://github.com/gopalasubramanium",
+    "https://www.linkedin.com/in/gopalasubramanium/",
+    "https://paypal.me/sgopala",
+  ];
+  for (const href of hrefs) {
+    const a = document.querySelector(`a[href="${href}"]`);
+    expect(a, `About is missing the link ${href}`).toBeTruthy();
+    expect(a!.getAttribute("rel")).toContain("noopener");
+    expect(a!.getAttribute("rel")).toContain("noreferrer");
+  }
+});
+
+test("About left the System tab — it is not rendered in both places", async () => {
+  // The §9-bis-6 card lived inside System. When it became a tab, the card had to GO, not stay:
+  // two homes for one surface is the duplication the IA law exists to prevent, and it is exactly
+  // the shape of the Policy defect fixed in this same milestone.
+  renderAt("/settings?tab=system");
+  await screen.findByText("PIN");
+  expect(screen.queryByText("What it stands for")).toBeNull();
+  expect(screen.queryByAltText("Gopala Subramanium")).toBeNull();
 });

@@ -534,7 +534,7 @@ HELP: list[dict] = [
                   "- While no-egress is on, refresh makes no network call at all and says so; "
                   "prices go stale honestly instead of being filled in."},
     {"id": "page-settings", "category": "Pages", "title": "Settings",
-     "body": "Preferences for this install, across six tabs. General covers how figures are "
+     "body": "Preferences for this install, across **seven tabs**. General covers how figures are "
              "reported. Appearance is theme, density, high contrast and reduced motion, and applies "
              "to this device only. Privacy states what this device is doing — with no-egress on it "
              "makes no network calls — and manages API tokens. Data feeds is your market data "
@@ -545,8 +545,10 @@ HELP: list[dict] = [
              # stale-after posture as "not yet built — served only". The sentence described an
              # affordance that has never shipped: a dead affordance, and the release-bar kind of
              # false ("describing itself falsely is a release bar"). Removed, not softened.
-             "auto-lock, network access and data controls.",
-     "keywords": "settings tabs appearance privacy data feeds ai system pin token provider theme",
+             "auto-lock, network access and data controls. About is what the product is, who "
+             "built it, the licence it ships under, and where to find it.",
+     "keywords": "settings tabs appearance privacy data feeds ai system about author licence "
+                 "links pin token provider theme",
      "inputs": ["Base / reporting currency, Timezone and Long-term threshold",
                 "Theme, Density, High contrast and Reduced motion",
                 "No-egress mode, Create token and Revoke",

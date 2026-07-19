@@ -328,3 +328,73 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+
+/* --- About, the 7th tab (page-help §9-bis-11(c)) ---------------------------------------------- */
+
+/* Brand block. The lockup itself is the RATIFIED `BrandLockup` (DESIGN-SYSTEM §5.6, the
+   one-lockup rule) — this only scales and positions it. A surface that hand-builds its own
+   lockup is how the mobile header once shipped without the mark. */
+.set__brandblock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.set__brandlockup {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+.set__tagline {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* The three commitments. A definition list, because each IS a term and its meaning — and because
+   a `<dl>` gives a screen reader the pairing for free, where stacked paragraphs give it nothing. */
+.set__ethos {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.set__ethos dt {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.set__ethos dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Author row. `flex-wrap` + `min-width: 0` so the bio can drop below the avatar rather than
+   forcing the row wider than the viewport — the SAME failure the About links hit at 320px
+   (an unbreakable token pushing the tab 30px past the fold), which the Settings pre-pass caught
+   and review did not. */
+.set__author {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.set__authorbio {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.set__authorname {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* PROPOSED DS PATTERN — the round avatar. Listed for the owner's look.
+   `flex-shrink: 0` so it never squashes to an ellipse: a circular crop that goes oval reads as a
+   rendering fault, not a style. `object-fit: cover` keeps the framing whatever the source ratio.
+   The border is a token, and it is what keeps the photo from bleeding into the card on a dark
+   background where the jacket is nearly the surface colour. */
+.set__avatar {
+  width: 4rem;
+  height: 4rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: var(--border-width) solid var(--border);
+}

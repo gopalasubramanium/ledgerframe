@@ -7,6 +7,7 @@ import {
   Combobox,
   ConfirmDialog,
   DataTable,
+  BrandLockup,
   Dialog,
   EmptyState,
   GlossaryTerm,
@@ -40,6 +41,7 @@ import {
   getPinSet,
 } from "../api/systemConfig";
 import type { DataSource, SystemConfig, AiConfig } from "../api/systemConfig";
+import authorPhoto from "../assets/author-gs.jpg";
 import { getFeeds, putFeeds, testFeeds } from "../api/feeds";
 import type { FeedTestResult } from "../api/feeds";
 import { getMasters, syncMaster } from "../api/masters";
@@ -77,8 +79,8 @@ const marketLabel = (code: string) => (code === "*" ? "All markets" : code);
 // lock and LAN are access controls, not feeds.
 
 const TRUTHY = new Set(["1", "true", "yes", "on"]);
-type TabId = "general" | "appearance" | "privacy" | "data-feeds" | "ai" | "system";
-const TAB_IDS: TabId[] = ["general", "appearance", "privacy", "data-feeds", "ai", "system"];
+type TabId = "general" | "appearance" | "privacy" | "data-feeds" | "ai" | "system" | "about";
+const TAB_IDS: TabId[] = ["general", "appearance", "privacy", "data-feeds", "ai", "system", "about"];
 const TABS = [
   { value: "general", label: "General" },
   { value: "appearance", label: "Appearance" },
@@ -86,6 +88,7 @@ const TABS = [
   { value: "data-feeds", label: "Data feeds" },
   { value: "ai", label: "AI" },
   { value: "system", label: "System" },
+  { value: "about", label: "About" },
 ];
 
 function timezoneOptions() {
@@ -123,6 +126,7 @@ export function Settings() {
         {tab === "data-feeds" && <DataFeedsPanel />}
         {tab === "ai" && <AiPanel />}
         {tab === "system" && <SystemPanel />}
+        {tab === "about" && <AboutPanel />}
       </div>
     </div>
   );
@@ -705,29 +709,37 @@ function SystemPanel() {
         </div>
       </section>
 
-      <AboutCard />
     </div>
   );
 }
 
-// About — MOVED HERE FROM HELP (page-help §9-bis-6, owner ruling 2026-07-19). It was a third tab on
-// Help; Help is now a three-section journey (Orientation · Pages · Glossary) and About is none of
-// those. It is a card in the EXISTING System tab, explicitly NOT a seventh Settings tab.
+// About — the SEVENTH Settings tab (D-069 amendment #3; page-help §9-bis-11(c), owner 2026-07-19,
+// REVERSING the §9-bis-6 card ruling that put it inside System).
 //
-// What belongs here is what About actually is: who made this, where it lives, and under what
-// licence. What does NOT come with it is the product guarantee ("what LedgerFrame will never do") —
-// that is orientation of the first order and stays in Help, Section 1.
+// WHY A TAB AND NOT A CARD. Every other Settings tab CHANGES something; About only tells you what
+// the thing is and who made it. Filing a read-only identity surface behind a tab named for
+// controls put it where nobody looking for it would go. The reversal is recorded in
+// page-settings.md rather than rewritten over, because a plan file that erases its own reversals
+// cannot be audited.
 //
-// CREDITS RECONCILED WITH THE LICENCE RECORD, as §9-bis-6 requires. docs/audit/LICENSES.md is a
-// GENERATED dependency audit ("Regenerate, never hand-edit"), not a credits file — so this card
-// does not restate it. Restating it would be a second home for a list that is regenerated on a
-// schedule, and it would be stale the first time a dependency moved. The card names the licence
-// this product ships under (AGPL-3.0-or-later, the same SPDX header every source file carries) and
-// credits the open-source stack in the general, which is the claim that stays true.
+// WHAT DOES NOT COME WITH IT: the product guarantee ("what LedgerFrame will never do") stays in
+// Help, Section 1. That is orientation of the first order — a user asking what the product refuses
+// to do is asking a help question, not an authorship question.
 //
-// PROPOSED COPY — every string here is ratified by the owner at the 0a look, like all user-facing
-// copy. The six links are the owner's, given verbatim at §9-bis-6.
-function AboutCard() {
+// CREDITS RECONCILED WITH THE LICENCE RECORD (§9-bis-6). `docs/audit/LICENSES.md` is GENERATED
+// ("Regenerate, never hand-edit") — a dependency audit, not a credits file. This card does not
+// restate it: a restated list is a second home for something regenerated on a schedule, stale the
+// first time a dependency moves. The card names the licence this product ships under and credits
+// the open-source stack in the general, which is the claim that stays true.
+//
+// PROPOSED COPY — every string here is ratified by the owner AT THE LOOK, like all user-facing
+// copy. The six links are the owner's, given verbatim.
+//
+// PROPOSED DS PATTERN — the round author avatar (`set__avatar`). Listed for the owner's look. The
+// brand block is NOT a new pattern: it uses the ratified `BrandLockup`, because DESIGN-SYSTEM §5.6
+// says every surface that shows the brand uses the one lockup, and the last time a surface
+// hand-built its own the mobile header shipped without the mark.
+function AboutPanel() {
   const links: { label: string; href: string; note: string }[] = [
     { label: "ledgerframe.org", href: "https://ledgerframe.org", note: "Project home" },
     {
@@ -748,32 +760,103 @@ function AboutCard() {
     },
     { label: "paypal.me/sgopala", href: "https://paypal.me/sgopala", note: "Support the project" },
   ];
+
   return (
-    <section className="lf-card set__section" data-card="about">
-      <header className="set__cardhead"><h2 className="lf-card__title">About</h2></header>
-      <div className="lf-card__body set__stack">
-        <p className="set__fieldhelp">
-          LedgerFrame is a single-user, local-first wealth-reporting appliance. It consolidates what
-          you own and owe into one private picture, on your own machine. It reports; it does not act
-          — it never places trades, never advises, and never fabricates a number.
-        </p>
-        <p className="set__fieldhelp">
-          Built by Gopala Subramanium. Released under the AGPL-3.0-or-later licence, and built on
-          open-source software — the full dependency and licence record ships with the source.
-        </p>
-        <ul className="set__aboutlinks">
-          {links.map((l) => (
-            <li key={l.href}>
-              {/* External, so `rel` is not optional: `noopener` denies the opened page a handle
-                  back to this one. Nothing here is fetched — these are links, and a local-first
-                  appliance under no-egress stays local until the user chooses to leave. */}
-              <a href={l.href} target="_blank" rel="noreferrer noopener">{l.label}</a>
-              <span className="set__aboutnote">{l.note}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <>
+      <section className="lf-card set__section" data-card="about-brand">
+        <div className="lf-card__body set__stack">
+          <div className="set__brandblock">
+            <BrandLockup className="set__brandlockup" />
+            <p className="set__tagline">A private record of everything you own and owe.</p>
+          </div>
+          <p className="set__fieldhelp">
+            LedgerFrame is a single-user, local-first wealth-reporting appliance. Wealth ends up
+            scattered across brokers, banks, funds, insurers and currencies, and no one of them can
+            show you the whole picture. This is that whole picture, kept on your own machine.
+          </p>
+        </div>
+      </section>
+
+      <section className="lf-card set__section" data-card="about-ethics">
+        <header className="set__cardhead"><h2 className="lf-card__title">What it stands for</h2></header>
+        <div className="lf-card__body set__stack">
+          {/* The three commitments, in the platform's own voice. Each is a statement the product
+              can be held to, not a value it merely admires — which is why they are phrased as
+              things it DOES and REFUSES, never as adjectives about itself. */}
+          <dl className="set__ethos">
+            <dt>It is yours</dt>
+            <dd>
+              Your records live on your machine. There is no account, no telemetry, and no
+              analytics — and with no-egress on, the product makes no network calls at all.
+            </dd>
+            <dt>It reports; it does not act</dt>
+            <dd>
+              It never places trades and never gives buy, sell, hold, tax or financial advice.
+              What you do with your own figures is yours to decide.
+            </dd>
+            <dt>It would rather say nothing than say something untrue</dt>
+            <dd>
+              No figure is ever invented. Where a value cannot be established, you get a dash and
+              the reason — never a plausible-looking guess. The AI explains verified figures and
+              is not permitted to produce new ones.
+            </dd>
+          </dl>
+        </div>
+      </section>
+
+      <section className="lf-card set__section" data-card="about-author">
+        <header className="set__cardhead"><h2 className="lf-card__title">Who built it</h2></header>
+        <div className="lf-card__body set__stack">
+          <div className="set__author">
+            {/* PROPOSED DS — the round author avatar. VENDORED, never fetched: the import is
+                bundled locally, because a local-first appliance advertising no telemetry cannot
+                reach out to github.com to draw a face, and under no-egress a remote image would
+                fail visibly. Provenance + EXIF-stripping recorded in docs/audit/ASSETS.md.
+                `alt` names the person; it is not decorative — a reader who cannot see it should
+                still learn whose photograph stands beside the bio. */}
+            <img
+              className="set__avatar"
+              src={authorPhoto}
+              alt="Gopala Subramanium"
+              width={64}
+              height={64}
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="set__authorbio">
+              <p className="set__authorname">Gopala Subramanium</p>
+              <p className="set__fieldhelp">
+                LedgerFrame was built to answer one question that no broker statement, banking app
+                or spreadsheet could answer honestly at once: <em>where do I actually stand?</em>{" "}
+                It is the tool its author wanted and could not buy — one that consolidates without
+                consolidating your privacy, and that says <q>I don't know</q> when it doesn't.
+              </p>
+            </div>
+          </div>
+          <p className="set__fieldhelp">
+            Released under the AGPL-3.0-or-later licence and built on open-source software — the
+            full dependency and licence record ships with the source.
+          </p>
+        </div>
+      </section>
+
+      <section className="lf-card set__section" data-card="about-links">
+        <header className="set__cardhead"><h2 className="lf-card__title">Links</h2></header>
+        <div className="lf-card__body">
+          <ul className="set__aboutlinks">
+            {links.map((l) => (
+              <li key={l.href}>
+                {/* External, so `rel` is not optional: `noopener` denies the opened page a handle
+                    back to this one. Nothing here is fetched — these are links, and a local-first
+                    appliance under no-egress stays local until the user chooses to leave. */}
+                <a href={l.href} target="_blank" rel="noreferrer noopener">{l.label}</a>
+                <span className="set__aboutnote">{l.note}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </>
   );
 }
 
