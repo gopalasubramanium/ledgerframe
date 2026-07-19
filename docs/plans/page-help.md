@@ -1342,6 +1342,91 @@ closed**.
 
 ---
 
+### §9-bis-13 — About's ratification REOPENED; the four-beat template adopted, and three of its phrases VETOED (2026-07-19)
+
+**Help 3b is ACCEPTED (owner, including the voice). About is not.** The owner **reopens the About
+content ratification** — a recorded reversal of the §9-bis-11(c) acceptance, written here rather
+than over the top of it, for the same reason §9-bis-6's reversal was: *a plan file that erases its
+own reversals cannot be audited.*
+
+**What is reopened is the CONTENT, not the placement.** About stays the seventh Settings tab
+(D-069 amendment #3). `set__avatar` **survives** as a PROPOSED DS item — it was never the
+objection. The CURRENCY LAW and the five ratified DS patterns stand.
+
+#### The adoption — a four-beat narrative template
+
+About is rebuilt on a **four-beat template**: **The Story & Mission · The Conflict · The Resolution
+· The Sequel**, preceded by the brand lockup and its tagline and followed by *Who built it* and the
+licence line. The four boxed cards it replaces (`about-brand` / `about-ethics` / `about-author` /
+`about-links`) become **ONE composed surface** — de-boxed, hierarchy carried by **spacing, not
+borders**. Four bordered cards for one continuous piece of prose chopped a narrative into four
+unrelated announcements; the beats are a story, and a story is one surface.
+
+#### ⚠ THE ACCURACY VETO — three template phrases struck (owner, in chat)
+
+The template arrived with its **original wording**, and that wording **described a different
+product**. Three phrases are **vetoed**:
+
+1. **"globally connected trading systems"** — LedgerFrame connects to nothing and trades nothing.
+2. **"purposeful profit / seamless integration / empowering teams"** — marketing abstractions, and
+   each is false here besides: there is no profit, no integration, and no team. *Single-user* is the
+   product.
+3. **the capital-allocation framing** — the platform **reports; it does not act**, and it never
+   advises. A frame in which the product allocates capital contradicts the hard rule it is built on.
+
+**The rationale, which is the durable part: About must satisfy the SAME truth bar as Help content.**
+A page describing the product is product documentation. The bar that forbids a fabricated *figure*
+forbids a fabricated *self-description* by the same logic — and a product whose central promise is
+*"it would rather say nothing than say something untrue"* **fails that promise first and worst in
+the paragraph where it describes itself.** Borrowed template copy is exactly where this slips
+through, because it reads as polished and was never checked against the thing it now describes.
+
+**The copy that replaces it is the architect's truthful rewrite, and it is PROPOSED** — every string
+ratified by the owner at the re-look, like all user-facing copy. The author bio's professional
+sentences are the owner's own and are carried verbatim.
+
+#### PROPOSED DS items for the re-look
+
+| Item | What it is |
+| --- | --- |
+| Pull-quote | Bold-italic, centred, no terminal full stop (punctuation rule: prose takes full stops; pull-quotes and headings are exempt). |
+| Social-icon row | Six icons, no label text; accessible name + visible URL on hover/focus. |
+| Brand-lockup size variant | The ratified `BrandLockup`, scaled and integrated — **not** a hand-built lockup (DESIGN-SYSTEM §5.6). |
+| Beat heading + glyph | Chosen glyph: the **typographic ornament ✦**, decorative (`aria-hidden`), NOT a lucide sparkle — see below. |
+| Round author avatar (`set__avatar`) | Survives from §9-bis-11(c), unchanged. |
+
+#### ⚠ VERIFY-FIRST — the icon set does not contain the icons the instruction names
+
+`lucide-react` is pinned at **1.24.0**, and **`Github` and `Linkedin` do not exist in it** — lucide
+**removed brand glyphs** from the icon set. Checked against the installed package, not from memory.
+
+**This is not fixable by picking harder.** A brand-icon package is a **new dependency, and CLAUDE.md
+forbids one without an ADR** — which is not something to improvise mid-build to satisfy a copy
+instruction. So the row ships with **semantic** glyphs and the meaning moves into the accessible
+name, where it was always doing the real work:
+
+| Destination | Icon | Accessible name |
+| --- | --- | --- |
+| ledgerframe.org | `Globe` | Project home |
+| github.com/gopalasubramanium/ledgerframe | `Code` | Source code on GitHub |
+| me.sgopala.com | `UserRound` | Author's site |
+| github.com/gopalasubramanium | `GitBranch` | Author on GitHub |
+| linkedin.com/in/gopalasubramanium | `Briefcase` | Author on LinkedIn |
+| paypal.me/sgopala | `Heart` | Support the project |
+
+**`Heart`, not `Coffee`** — both were offered. A coffee cup is a tip-jar idiom that reads as a joke
+about the price; the surface it sits on is the one that says *this is the tool its author wanted and
+could not buy*, and the register there is sincere.
+
+**The cost is a sighted-user cost, and it is stated rather than hidden:** a generic glyph is less
+instantly recognisable than the brand mark, which is why **the visible URL on hover/focus is not
+decoration — it is what carries the destination**, and why the accessible names spell out the
+service by name. **If the owner wants true brand marks, that is an ADR, and it is his call.**
+
+**PROPOSED, not ratified. NOT closed. NOT pushed.** The owner's **re-look** is the gate.
+
+---
+
 ## SCOPE-NOTES *(preserved verbatim — owner rulings recorded ahead of the draft; inputs to §9)*
 
 ### SN-1 — `[Help]` retrofit to the pre-affordance pages *(owner, 2026-07-14)*
