@@ -37,7 +37,7 @@ row lacks a disposition.** This plan is the rule's first user.*
 | **F-3** | Finding | **The fact pack has its OWN money formatter, and it destroys sub-cent prices.** `_fmt` (`tools.py:25`) is `f"{value:,.2f} {ccy}"`; the D-105 formatters (`money.py:25,38,47`) are the product's. Three differences, one of them live | Found at Phase 0-4 by the ruled survey (1a), **before** any unification — which is what the survey-first ordering was for | ✅ **RULED + FIXED 2026-07-21** (`33f57bf`) — `_fmt` deleted, `money.py` owns all rendering, `format_fact_display` is the named pack variant. **Pending the 0a look** (specimen obligation below). Original finding, for the record: **⚑ (ruling 1c: STOP, change nothing).** **(i) LIVE — sub-cent destruction:** a crypto quote of `0.00004567` renders **`0.00 USD`** through `_fmt`, while `format_price_display(…, "crypto")` gives `0.00004567`. `money.py:19-20` states the D-105 intent **verbatim**: *"crypto → up to 6 significant digits (so sub-cent tokens aren't truncated to `0.00`)"* — **the pack does exactly what D-105 exists to prevent.** Compounds with **R-56**: `_sig3("0.00") → ""` is discarded, so such a fact **cannot be narrated either** — fact list shows `0.00`, model falls back. Invisible on the demo set (BTC is high-priced): a **real-shaped-data** case. **(ii) LATENT — rounding mode:** `_fmt` uses Python's default (**banker's/HALF_EVEN** — `2.005 → 2.00`), D-105 uses **HALF_UP** (`→ 2.01`). **Not reachable on headline money today**, because `portfolio.py:577` cent-quantizes each holding first — latent, not live. **(iii) LATENT — `None`:** `_fmt(None)` **raises `TypeError`**; the D-105 formatters pass `None` through (Guarantee 3, never a fabricated 0). **⚠ NOT a pure refactor either way:** D-105's crypto path also drops thousands grouping and trims trailing zeros (`68000.50 → 68000.5`), so unification **changes ratified fact-list rendering** (ratified at AI-surfaces 0a) and needs a ruling + dated note. The R-54 0a specimens will put it in front of the owner regardless |
 
 | **F-4** | Finding | **Watchlist fact fidelity** — `watchlist_quote_facts` read `wl.items[:8]` over a relationship with **no `order_by`** (`models/__init__.py:492`), so facts followed **insertion order** and could slice away the rows the user put at the top | Found at Phase 0-4 while building the F-3 fixture; **filed by owner ruling 2026-07-21 item 4** | ✅ **FIXED 2026-07-21** (`7ba669f`). **It was the one-line ORDER BY it appeared to be** — and in the **AI path**, not the model: `watchlists.py:34` already sorts explicitly, so the **page was right and only the AI's view of it was wrong**. Fixed in `tools.py` so no shipped surface moves. *Grounding that does not mirror what the user sees is a **fidelity** defect, not a cosmetic one* |
-| **F-5** | Finding | **`pct` / `ratio` / `count` are still rendered INLINE in `tools.py`** (`f"{round(float(v), 2)}%"` and siblings) — F-3's *"no rendering logic outside `money.py`"* was **scoped to `_fmt`** and these three survived it | Found at Phase 0-4, exposed by a **false positive** in the raw-float guard (it fired on `Return / volatility = 11.82`, a legitimately unitless ratio) | **⚑ OPEN — RULING OWED.** The architecture holds for **money** and not yet for the rest. `round(float(v), 2)` is float-based, carrying the **same banker's-rounding class as F-3(ii)**. **Filed not fixed:** it is the same ratified-rendering question F-3 was, on three more value kinds, so it wants a ruling rather than a judgement call inside a delta |
+| **F-5** | Finding | **`pct` / `ratio` / `count` are still rendered INLINE in `tools.py`** (`f"{round(float(v), 2)}%"` and siblings) — F-3's *"no rendering logic outside `money.py`"* was **scoped to `_fmt`** and these three survived it | Found at Phase 0-4, exposed by a **false positive** in the raw-float guard (it fired on `Return / volatility = 11.82`, a legitimately unitless ratio) | ✅ **RULED 2026-07-21 — the F-3 precedent applies WHOLESALE; own delta immediately after 0-5, BEFORE 0a's specimens are cut.** (a) registry gains **`value_kind`** (money/pct/ratio/count) as a **declared column** — rendering dispatches on kind, **never inferred from the value** (the F5-identity lesson applied to units); (b) `money.py` owns **per-kind named variants**, no inline formatting survives anywhere; (c) blast radius proven **the F-3 way** — byte-identity for every unaffected rendering, movers enumerated by ruled class; (d) **0a gains one fact per kind**, rounding changes ratified **by looking**, dated notes on any moved ratified rendering; (e) **the false-positive lesson rides the record** — `Return / volatility` stays a **unitless ratio**. Original finding: The architecture holds for **money** and not yet for the rest. `round(float(v), 2)` is float-based, carrying the **same banker's-rounding class as F-3(ii)**. **Filed not fixed:** it is the same ratified-rendering question F-3 was, on three more value kinds, so it wants a ruling rather than a judgement call inside a delta |
 | **F-6** | Finding | **⛔ A REGRESSION THIS MILESTONE SHIPPED.** Phase 0-1's word-boundary conversion **silently killed the stems** written for the substring matcher (`perform`, `return`, `concentrat`, `diversif`): under `\b(...)\b` the trailing boundary requires the word to END there, so *"performing"*, *"concentration"* and *"diversified"* stopped routing. **6 of 9 probes misrouted** | Found at Phase 0-4 **by accident**, asking whether XIRR reached the pack — **not by any gate**, and not by the delta that introduced it | ✅ **FIXED 2026-07-21** (`7ba669f`) — stems carry `\w*`; **0/16 misrouted**; pinned by `test_intent_stem_probes.py` through **inflected** forms, with a blindness pin that caught `liabilit` unprobed on its first run. **⚑ THE LESSON, and it is new: A TEST THAT CAN REACH ITS ASSERTION BY TWO ROUTES CANNOT TELL YOU THAT ONE OF THEM BROKE** — the 1982-test suite stayed green because the one performance test's question also contains *"risk"*. Phase 0-1's guards were sound about what they measured and **none asked whether the rules still matched real questions**: the property was verified, the capability was not |
 
 *Rows F-n (walk findings) are appended below this table as the milestone runs. **The CLOSED claim
@@ -1414,6 +1414,125 @@ Phase 0-1 broke it.
 
 ---
 
+### Phase 0-5 — SERVED SEMANTIC LINK IDs (`ce58d70`) — DONE
+
+**§9-D, on the ruling of 2026-07-21 item 4.** The backend issues `<kind>:<key>` IDs; the frontend's
+ID→route registry lands in Phase 1. This is the **served half**, plus the served half of the
+bidirectional resolution guard.
+
+#### `canonical_page` IS DECLARED, NOT INFERRED — and that was checked before the column existed
+
+The obvious move is to assign each figure a page from its name. **That is the F5 defect** (identity —
+and now location — is DECLARED, never inferred), so the spec was read first:
+
+| Source | What it declares |
+|---|---|
+| **D-032** + IA §5 *Net worth Owns* | `net_worth` · `gross_assets` · `liabilities` → **`/net-worth`** |
+| **D-032** + IA §5 *Portfolio Owns* | `todays_change` · `unrealised_pl` · `realised_pl` · `total_return` → **`/portfolio`** |
+| **IA §5 Portfolio Owns names "KeyStats" explicitly** | every stats-served metric — XIRR, TWR, 1Y return, volatility, drawdown, income, concentration, `positions` → **`/portfolio`** |
+| **D-033** (allocation canonical on Portfolio) | the four `alloc_*` rows → **`/portfolio`** |
+
+**All 22 rows are declarable with no inference.** The `KeyStats` clause is the load-bearing one:
+without it, XIRR and TWR would have had no ratified home and assigning them one would have been a
+guess wearing a citation.
+
+#### THE LINK IS STAMPED AT THE `_dedupe` CHOKEPOINT, AND THAT IS THE DESIGN
+
+`_attach_link_ids` runs inside `_dedupe`, not in the fact producers. **`_dedupe` is where a fact's
+identity is finally settled** — it collapses figures by declared identity and relabels the survivor
+to its GLOSSARY spelling — so it is the one place a link can be attached **from the figure a fact
+IS, rather than from the label it happened to arrive with**.
+
+Stamping per-producer would put `portfolio_facts`, `networth_facts`, `performance_facts` and
+`holdings_facts` each in charge of where a figure lives: **four sites deciding one fact**, which is
+the exact shape this milestone has spent its whole length removing. *The mutation that collapsed
+every figure onto one page (M3) is what that failure looks like, and the probe distinguishes it.*
+
+**`None` is a real answer.** A fact with no registry row, or a row with no canonical page, carries no
+link. Tier-1 declines rather than inventing a destination — *a link that resolves to nothing is a
+dead affordance with extra steps.*
+
+#### Served end-to-end, incl. the tier-1(a) worked example
+
+```
+"what is XIRR"  → Help · XIRR & TWR   link_id=help:term-xirr-twr
+                → Net worth           link_id=page:/net-worth
+                → Unrealised P/L      link_id=page:/portfolio
+```
+
+#### THE BIDIRECTIONAL GUARD — served half
+
+| Assertion | Checked against |
+|---|---|
+| `help:<id>` names a real entry | **`GET /api/v1/help`** — the served catalogue a deep link resolves against |
+| `page:<route>` names a real route | **`AppRoutes.tsx` itself**, parsed |
+| every ID is namespaced and of a known kind | `{help, page}` |
+| a fact with no destination carries **no** link | the `None` path, exercised |
+
+**A dead `page:` route reds HERE, not in Phase 1** — the dead-affordance rule applied to figures
+rather than links.
+
+#### ⊕ THE F-6 GATING CONSEQUENCE, APPLIED FOR THE FIRST TIME (ruling item 2)
+
+**(a) CAPABILITY PROBES ship alongside the property guards.** Property guards alone are what let F-6
+through: they proved the thing that changed and never asked whether the capability still worked. The
+probes here drive **real questions end-to-end at the served surface** and assert **the link a user
+would actually follow**.
+
+**(b) THE REDUNDANT-ROUTE AUDIT is written into each assertion** — what ELSE could satisfy this? Four
+places it changed the test that got written:
+
+| Assertion | The redundant route it had to exclude |
+|---|---|
+| help ids are real | checking `app.services.help.HELP` directly is **circular** — that is the store the pack reads. Uses the **served endpoint** instead. |
+| a term question links to its entry | *"some `help:` link is present"* passes on the **wrong** entry. Asserts the **exact** id. |
+| a figure links to its owning page | *"some `page:` link is present"* passes if **every** figure collapsed onto one page. Asserts **two figures with DIFFERENT pages** — confirmed by mutation M3. |
+| routes exist | a hardcoded path list in the test passes while the router says otherwise. **Parses `AppRoutes.tsx`.** |
+
+*An assertion reachable two ways cannot tell you which one broke.*
+
+#### Mutations — four, each on the right guard
+
+| Mutation | Guard that fired |
+|---|---|
+| `canonical_page` → a route the app does not register | route-existence guard |
+| a `help:` id absent from the served catalogue | help-catalogue guard **and** both term probes |
+| every figure collapsed onto one page | the different-pages probe (**only** that one — the discriminating assertion) |
+| an unknown link kind (`route:`) | well-formedness/kind guard |
+
+#### ⊕ Item 3 — the 0-1 delta note
+
+**Confirmed MISSING, and done immediately (`5709911`) rather than deferred to this commit.** The
+Phase 0-1 record described the word-boundary conversion as a correctness win and said nothing about
+the regression the same conversion shipped; it now carries a dated F-6 cross-reference and states
+that **the gates listed directly beneath it were green while the defect was live**. *The delta that
+shipped a defect should point at the record of it, or the lesson lives only where it was found.*
+
+#### Gates — solo, uncontended
+
+| Gate | Result |
+|---|---|
+| Backend, **ordered** | **2049 passed, 15 skipped** — exit 0 |
+| Backend, **randomized** | `**2049 passed, 15 skipped** — exit 0` |
+| `make lint` | **PASS** |
+| Contract | **141 / 71 unchanged, no regen** |
+
+**Suite reconciliation: 2041 → 2049, +8 = this delta's own** (link-ID guards + capability probes).
+No other test moved.
+
+**⚠ Contract note, stated because it is exactly §3b's finding in action:** `GroundingFact` gained
+`link_id`, a **new field on the served `/ai/facts` response and SSE `facts` events** — and the
+contract counts are **unchanged**, because those shapes are not typed (`ai_facts` returns `dict`;
+`/ai/chat` is a `StreamingResponse`). This is the §3b/R-61 hazard occurring for real: *the served
+shape moved and `make api-contract-check` cannot see it.* What sees it is this milestone's own
+served-shape work — the guards above assert the field's presence and content directly. **Phase 0-6
+pins the shape formally.**
+
+**Help currency:** no Help or GLOSSARY entry changed. Link IDs are served metadata, not rendered
+copy; how the panel renders a link is Phase 1 and ratifies at 0a.
+
+---
+
 ### Phase 0a — THE SPECIMEN, RATIFIED BY LOOKING *(isolated instance; expect 1–3 revision loops)*
 
 Reset + isolated per the harness convention; **both themes**; zero console errors (excluding expected
@@ -1431,9 +1550,12 @@ Reset + isolated per the harness convention; **both themes**; zero console error
    *"the 2026-07 ratification exhibited no sub-cent case."* **The 2026-07 ratification could not
    have covered this — the demo set has no sub-cent instrument**, which is precisely why the
    defect survived a walk.
-4. **Any PROPOSED DS entry** for the link affordance (§4) — *ratified at 0a by looking, never
+4. **⚑ OWED BY F-5 (ruling 2026-07-21, item 1d) — ONE FACT PER `value_kind`**: money, pct, ratio,
+   count. The per-kind rounding changes are **user-visible** and are ratified **by looking**; any
+   ratified rendering that moves carries a **dated note**.
+5. **Any PROPOSED DS entry** for the link affordance (§4) — *ratified at 0a by looking, never
    assumed*, and on a **free axis**: colour and slant are both taken.
-5. **The honest-miss render.**
+6. **The honest-miss render.**
 
 **Revision loops are expected and are the point** — the ai-surfaces 0a took four. **The owner closes
 this phase; it is never self-certified.**
