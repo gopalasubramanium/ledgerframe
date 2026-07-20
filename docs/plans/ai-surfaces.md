@@ -889,6 +889,21 @@ test now asserts clause 6's **three actual promises separately**: the model text
 are served, and the text ends with the disclaimer. **The third is enforced on the TEXT for the
 first time** — previously a model omitting the line broke clause 6 and **nothing went red**.
 
+**✅ CONFIRMED BY THE OWNER, 2026-07-20 — the reading is RATIFIED, not merely recorded.** The
+architect flagged the re-reading *for* the owner precisely because a normative clause is not the
+architect's to re-read alone; the owner has now read it and confirmed it:
+
+> the fact list **IS** the showing that clause 6 demands; the body need not duplicate it. Clause 7
+> governs **where** facts are shown.
+
+So clause 6's *"a deterministic fact-only answer is SHOWN"* is satisfied by the **served fact pack
+rendered in the panel** — the showing is the surface, not the sentence. This closes the flag carried
+at §13-E; it is no longer an open reading. **What follows from it, and is why the confirmation is
+worth a record of its own:** the empty fallback body is now the *ratified* shape of clause 6, so a
+future change that puts facts back into the answer prose would be a **regression against a
+confirmed reading**, not a matter of taste — and `test_ask_answer_projection.py` is the guard that
+holds it.
+
 **⊕ Found while fixing:** the model-error preamble still carried **markdown underscores**
 (`_The AI model didn't return an answer…_`). The **same defect as Finding 3**, at the one remaining
 site, unseen only because no screenshot ever drove the model-error path. Now plain text.
@@ -1136,5 +1151,116 @@ wiped between runs.
 ### 13-E. Still owed / carried
 
 - **⚑ Findings 5 and 6 above** — recorded, not fixed, awaiting the owner's ruling.
+  **→ RULED 2026-07-20, see §14-2 and §14-3.**
 - **⚑ The zero-fact narration gap** (§12-4) — recorded, errs safe.
+  **→ RULED 2026-07-20 as Finding 7, see §14-5.**
 - **⚑ Clause 6's reading** (§12-1) — flagged: a normative clause was re-read, not changed.
+  **→ CONFIRMED by the owner 2026-07-20, see §12-1. Closed.**
+
+---
+
+## 14. THE 0a WALK RULINGS — owner, 2026-07-20
+
+The owner walked the 0a re-drive screenshots and ruled. **This section is the record**; the rulings
+below are quoted or stated in the owner's terms, and each one names what it obliges.
+
+### 14-0. 0a RENDERS RATIFIED — by looking
+
+The owner ratified, **by looking at them**, the renders this milestone put on camera:
+
+| Render | §  | Status |
+|---|---|---|
+| Narrated answer — the panel's primary state | §12-4 | **RATIFIED** |
+| Echo-free fallback (fact list once, no body facts) | §12-1 | **RATIFIED** |
+| Synthesis disclaimer — text always, panel once | §12-2 | **RATIFIED** |
+| No-egress posture string, as SHIPPED | §12-3 | **RATIFIED** (already pinned) |
+| Explainer (seeded, does not fire on mount) + empty state | §13-A | **RATIFIED** |
+| 451 renders the gate | §13-A | **RATIFIED** |
+
+**EXCEPT** the two things the owner found *at* the walk and ruled **into** this milestone rather
+than past it: **the AI tab copy** (§14-3) and **answer provenance** (§14-4). Ratification of a
+render is ratification of *that* render — it does not extend to a surface the walk newly indicted.
+
+### 14-1. The naming ruling — THREE KINDS OF INTELLIGENCE
+
+Recorded here and in `GLOSSARY.md` **first** (spec-first; the three-store parity guard carries it
+into the stores), then into code. See §14-2 for the full statement.
+
+### 14-2. Vocabulary — the owner's three kinds
+
+> - **"Built-in intelligence"** — deterministic answers from the user's own figures; **no model
+>   involved**; works in every posture including no-egress.
+> - **"On-device model"** — an LLM running on this device (Ollama or compatible); questions and
+>   figures **never leave the device**, but the narration **IS** model-generated.
+> - **"External model"** — a cloud API; **data leaves the device** and the copy says so plainly.
+
+**User-facing "hailo" is RETIRED** → the served label is **"On-device model
+(Ollama-compatible)"**. The owner's reasoning is worth keeping, because it is a rule about naming
+and not just this name: the endpoint is **OpenAI-compatible** and works with Ollama *and its
+lookalikes*, so the honest label **names the standard rather than over-pinning a vendor**. A label
+that names one implementation is false the moment a second one is what is running — which is the
+same defect class as §14-3 below, in the vocabulary rather than in the plumbing.
+
+**Migration is additive, never breaking.** Old env keys are accepted as **aliases**: the owner's
+live `.env` must keep working across this rename. Internal module ids stay unless the rename is
+trivial — this is a **user-facing vocabulary** ruling, and renaming private symbols for tidiness
+would put churn in the same delta as a copy change, hiding one in the other.
+
+**⚠ R-52 precedent, cited because this is the second time.** A retired term was already found *in
+the AI's mouth* (§0-H). Retiring a term without a parity guard is retiring it in one place; the
+guard is what makes it retired.
+
+### 14-3. FINDING 6 + THE AI TAB COPY — merged, and both halves ruled
+
+The owner ruled Finding 6 **(a)** — *serve the effective settings* — and **merged the tab's copy
+into the same delta**, because the walk found the tab wrong in **two** ways at once and fixing the
+truthfulness without the vocabulary would ship a sentence that is accurate and still unreadable.
+
+1. **Truthfulness** — served `ai-config` reports the **EFFECTIVE resolved configuration the process
+   sees** (OS-env overrides included), so the tab **can never name a provider that isn't
+   answering**. This restores §15st-1's ratified promise — *"this line reflects the served
+   configuration only"* — to being **true**.
+2. **Vocabulary** — the tab **describes the configuration in the ruled terms** (§14-2): **which
+   kind of intelligence is active**, **its data-locality consequence**, and **that external models
+   are configured here**.
+
+Register example — **draft served strings, PROPOSED until the owner's 3b look**:
+
+> *"AI is on — on-device model (Ollama-compatible); no data leaves this device. Built-in answers
+> work in every mode."*
+
+**Obliges:** fail-first on the **env-override case that induced the disagreement** (§13-C); a
+**dated delta note on `page-settings.md`** and that page's pre-pass re-run, per the standing
+new-guard-reds-an-accepted-surface rule in `CLAUDE.md`.
+
+### 14-4. THE PROVENANCE LEGEND — the walk's centrepiece
+
+**Owner ruling.** Every answer carries a **served provenance line matching its ACTUAL generation
+path**. Three states, three lines:
+
+| Generation path | Served legend |
+|---|---|
+| Deterministic, no model — **and the fallback state** | *"Built-in intelligence only — no model was used."* |
+| Facts from the engine, narration by an on-device model | *"Facts: built-in · Narration: on-device model — nothing left this device."* |
+| Facts from the engine, narration by a cloud API | *"Facts: built-in · Narration: external model."* |
+
+**And model-generated text renders in a DISTINCT TREATMENT** — italic; a **PROPOSED DESIGN-SYSTEM
+item: model-text styling, semantic and not decorative**. **Engine-served facts never carry it.**
+
+**Why this is the centrepiece and not a nicety.** The panel already showed *what the answer is built
+from*; it never showed **who wrote the sentence**. Those are different questions, and the second one
+is the one a reader needs in order to weigh the first. The treatment makes it legible **without
+reading a line of copy** — the reader can see, at a glance, which words came from a model and which
+came from their own ledger.
+
+**Guards, fail-first, both directions:** the legend **must match the generation path** — a
+built-in-only legend on a narrated answer is **RED** — and **model text carries the treatment while
+facts do not**. Strings **served**, never composed client-side (§0-C). **All PROPOSED** until the
+owner's look.
+
+### 14-5. FINDING 7 — the zero-valued-fact narration gap (POST-RELEASE)
+
+**Ruled: file the ROADMAP polish row.** `_sig3("0.00") → ""` is discarded, so a zero-valued fact
+cannot be cited by the narration. It **errs safe** — the failure mode is *no narration of a zero*,
+never a fabricated one — and it is a **known limit**, not a defect this milestone repairs.
+**POST-RELEASE.**
