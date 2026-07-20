@@ -1483,3 +1483,117 @@ silent-fallback failure D-070 exists to prevent, reintroduced on a new field.
 and the three kinds in `interpret` — including that model-written wording is **shown in italics**
 and that **the numbers are the same numbers whichever kind answered**. `GLOSSARY.md` carries the
 vocabulary from §15-0. Help/glossary guards: **524 passed, 15 skipped**.
+
+---
+
+## 16. PHASE 3a — THE SCRIPTED PRE-PASS (isolated instance, 2026-07-20)
+
+**100/100 assertions, both themes, across four phases.** Screenshots in `docs/plans/assets/`
+(`ai-3a-*.png`, 14 files, light + dark).
+
+### 16-A. What the drive asserted
+
+| Phase | Assertions | What it put on camera |
+|---|---|---|
+| **gate** | 6/6 | the 451 acceptance gate; Ask cannot be opened behind it; **the SERVER refuses `/ai/chat` — HTTP 451** |
+| **narrated** | 54/54 | the passing narrated answer with its legend and italic treatment · the deduped pack · empty state · AI tab · explainer · deep links |
+| **fallback** | 20/20 | a **configured** model that answered nothing → the built-in legend, no treatment anywhere, the fact pack still the answer |
+| **no-egress** | 20/20 | the ratified posture string · the built-in legend · the no-egress AI-tab sentence |
+
+**The legend, on camera, in all three of its states:**
+
+```
+narrated   Facts: built-in · Narration: on-device model — nothing left this device.
+fallback   Built-in intelligence only — no model was used.
+no-egress  Built-in intelligence only — no model was used.
+```
+
+**The treatment, measured rather than eyeballed** — `getComputedStyle`: answer `italic`, fact value
+`normal`, legend `normal`. **Both directions, both themes.**
+
+**The pack, as served:** `Net worth · Unrealised P/L · Today's change · Total return · Realised P/L ·
+Income (div/int) · Income yield · Largest position · Top 5 concentration` — **no alias pairs, no raw
+money**, and the anti-blind pin confirmed the money guard could see 9 rows rather than passing on an
+empty list.
+
+**Geometry, not presence** (Finding 1's lesson): the legend at `y=638 of 900`, the AI-tab summary at
+`y=283 of 900`. On screen, not merely in the DOM.
+
+### 16-B. ⚠ THE FIRST DRIVE FAILED 5 OF 98, AND ONLY ONE CAUSE WAS THE PRODUCT
+
+Recorded in full, because two of the three were **the harness convicting itself**.
+
+**(1) The 451 assertion was WRONG, not the product.** It asserted `askButtons === 0` — **DOM
+absence** — and went red with `askButtons=1`. The gate is a `role="dialog" aria-modal` overlay with
+the shell rendered behind it; *"the button is not in the DOM"* was never the guarantee. The
+guarantee has two halves and both are now tested for what they are: the panel cannot be **opened**
+(the scrim swallows the click), and **the server refuses regardless** (`HTTP 451`). *The second is
+the real one — a DOM-absence check would pass happily on a build whose server had stopped
+refusing.*
+
+**(2) ⚠ A PATCH REPORTED SUCCESS ON A NO-OP.** The fix for (1) was applied by a script whose
+`str.replace` matched **nothing** — the target comment ended *"behind it."*, not *"behind the
+gate."* — and which then **printed "patched"** unconditionally. The second drive re-ran the
+identical old assertion and failed identically. Re-applied with an `assert` **before** the write, so
+the tool can no longer claim a change it did not make. *This is the milestone's own defect class —
+a report that describes an intention rather than an outcome — committed by the tooling used to
+document it.*
+
+**(3) The no-egress toggle was not idempotent.** Light turned no-egress **on**; the data dir
+persists across themes; dark clicked the same switch and turned it **off**, then asserted the
+no-egress posture string against a device that was no longer in no-egress. **A toggle driven blind
+undoes itself on the second theme.** It reads state before acting now.
+
+**(4) R-56 BIT THE HARNESS ITSELF.** The stub's zero-fact skip did `.lstrip("0")` on `" 0.00 SGD"` —
+**leading space**, so it stripped nothing, the zero fact was cited, and every narration attempt died
+on `unsupported figure '0.00' not in the facts`. **The exact defect R-56 files, reproduced by a typo
+about it.** Worth stating plainly: while that bug was live the **legend was correct** — it reported
+`built_in` / `narrated: false`, which is exactly what had happened. §15-4's rule held under a
+condition created by accident.
+
+### 16-C. ⚑ FINDING 10 — a real 500, and NOT this milestone's
+
+The one console error that survives the filter, traced to its frame:
+
+```
+GET /api/v1/portfolio/performance?days=365&benchmark=SPY&include_manual=false → 500
+  app/services/analytics.py:244  performance_series → get_history_cached(...)
+  app/services/market.py:980     get_history_cached → await session.flush()
+  sqlite3.IntegrityError: UNIQUE constraint failed: settings.key
+```
+
+A **concurrent-insert race on `settings.key`** during a fresh-DB first load, in the market/analytics
+path. **Pre-existing, reproducible, and nothing to do with the AI surfaces.** **NOT FIXED** — it is
+a separate delta on a surface this milestone does not own, and quietly repairing it here would put
+an unreviewed change to the pricing path inside an AI-copy milestone. ⚑ **For the owner.**
+
+### 16-D. Isolation
+
+Isolated stack on spare ports (backend · stub narrator · vite dev), **fresh temp data dir per run**,
+demo-seeded. The owner's live backend and dev server **verified still listening, before and after**.
+Repo-root `.env` **verified byte-identical** — `460a2da0…` at both ends, checked from the repo root.
+`SMOKE_ALLOW_LIVE` **never set**. Throwaway driver, vite config and stub **deleted before staging**;
+`git status` clean.
+
+**⊕ Two teardown defects in the runner, both caught by checking rather than trusting:** its own
+`.env` verification ran from `frontend/` and reported *"no-env"* — **the check was broken while the
+invariant held**, confirmed independently from the repo root; and the vite dev server **survived
+`kill -TERM` on the captured PID** (`setsid` detaches, so the recorded PID was not the listener).
+Killed by port lookup and re-verified down. *A teardown that reports success without probing the
+port is the same class of claim as (2) above.*
+
+### 16-E. Gates at this phase
+
+| Gate | Result |
+|---|---|
+| Backend FULL, **solo**, ordered (`-p no:randomly`) | **1951 passed, 15 skipped** |
+| Backend FULL, **solo**, randomized | **1951 passed, 15 skipped** |
+| Frontend `npm run check` (the gate, not the parts) | **PASS end-to-end** — lint · typecheck · tokens (89) · internal-copy · smoke-isolation (24 drivers) · primitives (139 files) · **401 vitest / 41 files** · **361 Playwright** |
+| Help/GLOSSARY currency suite | **524 passed, 15 skipped** |
+| API contract | **141 paths / 71 schemas** — declared and unchanged |
+
+**⚠ The solo full suite earned its place this session.** The first ordered run came back **1951
+passed, 1 failed**: §15-3 moved `_is_local_url` to `app/ai/vocabulary.py`, and the assertion for it
+lives in `test_ai_safety.py` — a file whose name matches **none** of the surfaces that changed, so
+every targeted re-run of the AI, Settings, posture and glossary suites was green. *A targeted re-run
+tests the code you were thinking about; the full suite tests the code you were not.*
