@@ -972,8 +972,9 @@ HELP: list[dict] = [
     {"id": "term-income", "category": "Glossary", "title": "Income (dividends & interest)",
      "body": "Income is the dividends and interest recorded in your transaction ledger, summed in "
              "base currency at today's rates. It counts cash actually received and entered, not "
-             "accrued or projected income.",
-     "keywords": "income dividends interest cash received ledger",
+             "accrued or projected income. Where a row is too narrow to spell out, it is "
+             "shortened to Income (div/int) — the same figure under a shorter label.",
+     "keywords": "income dividends interest cash received ledger div/int div int short",
      "what": "The total dividends and interest recorded in your ledger, converted to base currency "
              "at today's exchange rates. It reflects cash actually received and entered, not accrued "
              "or forecast income.",
