@@ -2,9 +2,42 @@
 
 **Status: ⏸ GATES C–F STANDING/DORMANT. GATE A CLOSED (+ A9–A11 addendum) · GATE B CLOSED
 (owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, as REFINED by Amendment 4 and
-EXTENDED by Amendments 5 + 6, owner 2026-07-18 — Voice is POST-RELEASE; the v2.0.0 set is enumerated
-below, now incl. R-45 + R-46 + R-43 (with R-8); the R-41/R-43/R-44 ruling is now RESOLVED by
-Amendment 6 — R-43 IN, R-41 + R-44 POST-RELEASE).**
+EXTENDED by Amendments 5 + 6, owner 2026-07-18, and by Amendment 7, owner 2026-07-20 — Voice is
+POST-RELEASE; the v2.0.0 set is enumerated below, now incl. R-45 + R-46 + R-43 (with R-8) + R-54 +
+R-55; the R-41/R-43/R-44 ruling is now RESOLVED by Amendment 6 — R-43 IN, R-41 + R-44
+POST-RELEASE).**
+
+> ## ⚠ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — **v2.0.0 scope += R-54, R-55.** *(Filed at the AI-surfaces Phase-0a walk.)*
+>
+> **Both rows were raised by the owner USING THE SHIPPED 0a SPECIMEN**, which is the amendment's
+> whole justification: they are not new ideas bolted onto a frozen scope, they are **what looking at
+> the built thing revealed the built thing is missing**.
+>
+> - **R-54 — Deterministic answer intelligence (the two-tier Ask panel): ⚡ IN v2.0.0.** Owner's
+>   rationale: **most of the Ask panel's value needs no model at all**, and *"a clear call-out of what
+>   the inbuilt AI can do without egress is great value in itself, with the ethos of Privacy as the
+>   core of the solution."* Tier 1 makes **zero network calls by construction**, so the panel goes
+>   **LOCAL, not dark**, under no-egress. This is release-relevant rather than cosmetic: **the panel
+>   as shipped at 0a is honest but thin in the posture the product is built to be proud of.**
+> - **R-55 — Help content: asset classes & corporate actions: ⚡ IN v2.0.0.** Owner's rationale:
+>   **missing coverage of the two subject areas a user most needs Help for.** Note the boundary
+>   against R-51 (⛔ post-release): **R-51 is `[Help]`-mark parity; R-55 is subject coverage** — and
+>   R-55 is bounded by the **verify-first hard gate**, so it can only ever document shipped
+>   behaviour.
+>
+> **Relationship to Amendment 3 (RELEASE = FULL COMPLETION).** Amendment 3 is unchanged and is what
+> makes this an amendment at all: because release requires the **enumerated set complete**, adding a
+> row **moves the finish line**, and that is a ruling only the owner can make. It is recorded here so
+> the finish line is never inferred from a roadmap status cell.
+>
+> **The v2.0.0 set is now:** all pages DONE + Settings + data-feed-routing (R-38) + intraday-series
+> (R-42) + R-43 (with R-8) + Help + Legal + AI-surfaces (D-067/D-068) + R-45 + R-46 + **R-54** +
+> **R-55** + chrome-sidebar-refresh (R-39, FINAL) + Gates C→F clear. (R-41 + R-44 + R-50 + R-51 +
+> R-53 remain POST-RELEASE.) ROADMAP status cells filed for R-54 / R-55.
+>
+> **Neither row is started by this amendment.** Both carry the **plan-file gate standard**: own plan
+> file, survey-first, a §9 one-pass with the owner, then the full loop. Cross-ref: ROADMAP R-54,
+> R-55; ai-surfaces §12.
 
 > ## ⚠ RD-9 SCOPE AMENDMENT 6 (owner, 2026-07-18) — **the R-41 / R-43 / R-44 ruling: R-43 IN (with R-8); R-41 + R-44 POST-RELEASE.**
 >

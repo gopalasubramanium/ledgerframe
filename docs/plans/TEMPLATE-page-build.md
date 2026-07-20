@@ -621,6 +621,19 @@ tests. Never assemble the page against an endpoint that does not exist.*
     | Three-store glossary parity + the Tier-3 counter | `tests/unit/test_glossary_parity.py` |
     *A page that ships a new control, renames a tab, or changes a count has a Help impact by
     default. "No Help impact" is the exception and carries the burden of proof.*
+  - **KB-SYNC — the LAST block of every session report (owner, 2026-07-20; CLAUDE.md hard rule).**
+    The report ends with the **exact list of KB-mirrored files this session changed**, derived
+    mechanically from the diff — never recalled:
+    ```
+    git diff --name-only <session-start-sha>..HEAD -- \
+      docs/specs docs/plans docs/adr docs/audit ROADMAP.md CLAUDE.md DECISIONS.md
+    ```
+    The owner re-uploads **precisely that list**. *Why it is a ritual line and not a courtesy:* the
+    knowledge base is a **hand-maintained mirror**, so a file changed here and not re-uploaded there
+    leaves the next session reading a **stale spec it has no way to know is stale** — the same class
+    of failure as a Help entry describing a feature that moved. An **empty diff is reported as
+    "no KB-mirrored files changed"**, explicitly; an **absent block fails the close**, exactly as a
+    missing `CURRENT.md` does.
 
 ---
 

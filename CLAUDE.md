@@ -40,6 +40,15 @@
   mandatory part of every close.* Every close states either the Help delta that shipped,
   or an explicit **guard-corroborated** "no Help impact". The guards are the **HELP
   CURRENCY SUITE** (TEMPLATE-page-build.md §8) and they run at every close.
+- **EVERY SESSION REPORT ENDS WITH A KB-SYNC BLOCK** (owner, 2026-07-20). The last thing in every
+  report is the **exact list of spec/plan/doc files this session changed** — mechanically derived
+  (`git diff --name-only <session-start-sha>..HEAD`, filtered to KB-mirrored paths: `docs/specs/`,
+  `docs/plans/`, `docs/adr/`, `docs/audit/`, `ROADMAP.md`, `CLAUDE.md`, `DECISIONS.md`), so the
+  owner re-uploads **precisely those files** and never hunts timestamps. *Why:* the knowledge base
+  is a **mirror the owner maintains by hand**, and a mirror that silently drifts is worse than no
+  mirror — the next session reads the KB, believes it, and builds on a stale spec. The block is
+  **derived, not recalled**: a remembered list is exactly the failure mode this replaces. State
+  "no KB-mirrored files changed" explicitly when the diff is empty; an absent block is a defect.
 - **A NEW GUARD THAT REDS AN ACCEPTED SURFACE IS A DELTA ON THAT SURFACE, NOT A FOOTNOTE**
   (architect, 2026-07-19, from the Help-close review): when a guard introduced by one
   milestone goes RED on a page ratified by an earlier one, the fix ships **with a dated

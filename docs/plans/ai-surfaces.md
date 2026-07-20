@@ -810,3 +810,40 @@ primitives · `ruff check .` clean · `make lint` clean · contract **exit 0, 14
 
 `page-settings.md` §15st-1's pre-pass re-run. This re-drive again covered the AI surfaces, not the
 Settings AI tab whose rendered copy changed.
+
+---
+
+## 12. PHASE 0a — FINAL FIXES after the owner's screenshot walk (2026-07-20)
+
+The owner walked the 0a screenshots in chat on 2026-07-20. That walk produced **two roadmap
+filings** and **five deltas**. This section is the record; §13 is the re-drive it ends in.
+
+**Read the shape of this walk before the items.** Findings 1–3 at the previous re-drives were
+**defects**: a signal below the fold, a refusal misreporting itself as a network error, a sentence
+rendered twice with raw markdown. What the owner found by looking this time is mostly **not
+defects** — it is *"the built thing is honest, and thinner than it should be"* (R-54) and *"the
+built thing is undocumented in two subject areas"* (R-55). **That is what a look is for, and it is
+not something a gate can produce.** The 30/30 driver run was green through every one of these.
+
+### 12-0. Records filed (Step 0)
+
+| Filed | Where | Status |
+|---|---|---|
+| **R-54** — Deterministic answer intelligence: the two-tier Ask panel | `ROADMAP.md` | ⚡ v2.0.0 scope (RD-9 Amendment 7) |
+| **R-55** — Help content: asset classes & corporate actions | `ROADMAP.md` | ⚡ v2.0.0 scope (RD-9 Amendment 7) |
+| **RD-9 SCOPE AMENDMENT 7** — v2.0.0 scope += R-54, R-55 | `release-readiness.md` | owner, 2026-07-20 |
+| **KB-SYNC** — every session report ends with the derived list of changed KB-mirrored files | `CLAUDE.md` hard rules + `TEMPLATE-page-build.md` close ritual | standing |
+
+**⚠ Amendment 7 was WRITTEN, not merely cited.** The owner's ruling named *"RD-9 Amendment 7"* as
+the authority for pulling both rows pre-release, and **no Amendment 7 existed** — Amendment 6
+(2026-07-18) was the latest. Filing the roadmap rows alone would have left **two release-blocking
+items citing an amendment that was not in the file**, which is precisely the drift the amendment
+mechanism exists to prevent: under **Amendment 3 the release gate is FULL COMPLETION of an
+enumerated set**, so a row that moves the finish line is only real if the finish line says so.
+Amendment 7 is now written at the top of `release-readiness.md`, and the status line above it
+updated to name it.
+
+**R-54 carries a cross-reference that is easy to lose, so it is stated twice:** the **no-egress
+deterministic answering that already shipped at this 0a is tier-1's SEED**, not a separate thing to
+be reconciled later — §12-3 records the string as its first artifact, and R-54 **owns the
+posture-copy amendment** when tier-1 formally lands.
