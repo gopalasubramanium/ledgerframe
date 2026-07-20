@@ -17,7 +17,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
-from app.core.egress import EgressBlocked, egress_client
+from app.core.egress import REFUSED_BY_POSTURE, EgressBlocked, assert_egress_allowed, egress_client
 from app.schemas.ai import AIChunk, AIRequest, HealthStatus, ModelInfo
 
 log = logging.getLogger(__name__)
@@ -88,6 +88,14 @@ class HailoOllamaProvider:
         return best.name
 
     async def health(self) -> HealthStatus:
+        try:
+            # Checked FIRST. `list_models()` catches every exception and returns [], so without
+            # this a refusal arrived here as "reachable but no models listed" — a sentence that
+            # describes a running service with an empty catalogue, which is the opposite of the
+            # truth (§10-C).
+            await assert_egress_allowed("AI health check")
+        except EgressBlocked:
+            return HealthStatus(available=False, provider="hailo", detail=REFUSED_BY_POSTURE)
         try:
             models = await self.list_models()
             if not models:

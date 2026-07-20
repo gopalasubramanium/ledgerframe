@@ -116,29 +116,38 @@ async def _run(monkeypatch, mode: str):
 
 async def test_a_validation_failure_SHOWS_the_signal_to_the_user(monkeypatch):
     text, done = await _run(monkeypatch, "unsafe")
-    assert FALLBACK_SIGNAL in text, (
-        "The answer fell back and the user was not told. This is §0-G's defect: the discard was "
-        "correct and SILENT, so the product was quietly less than it appeared.\n"
-        f"  streamed: {text!r}"
-    )
     assert done.get("fallback_signal") == FALLBACK_SIGNAL, (
-        "The signal must also be on the done event — a client that renders terminal state from "
-        "the event rather than the stream needs it there too."
+        "The answer fell back and the user was not told. This is §0-G's defect: the discard was "
+        "correct and SILENT, so the product was quietly less than it appeared."
+    )
+    # ⊕ 2026-07-20, 0a re-drive: the signal is SERVED ON THE DONE EVENT and rendered by the client
+    # as its own element. It is deliberately NOT also injected into the answer body — doing both
+    # showed the reader the same sentence twice, the second time with its markdown underscores
+    # rendered literally, because the answer body is text. One served string, rendered once.
+    assert FALLBACK_SIGNAL not in text, (
+        "The fallback signal was injected into the answer body as well as served on the done "
+        "event. The reader sees it twice."
     )
     assert done.get("validation"), "the reason must still travel with it"
     assert "You should buy" not in text, "the rejected model text leaked alongside the signal"
 
 
-async def test_the_signal_LEADS_the_fallback_answer(monkeypatch):
-    """Ordering is the behaviour, not a nicety.
+async def test_the_signal_arrives_BEFORE_the_client_can_render_the_answer(monkeypatch):
+    """Ordering is the behaviour, not a nicety — asserted where it now lives.
 
-    A signal after the template reads as a footnote to an answer the user has already taken as
-    the AI's. Leading, it frames what follows.
+    A signal presented after the answer reads as a footnote to a conclusion the reader has already
+    drawn. It used to lead by being the first delta; it now leads because the CLIENT renders the
+    served field above the fact pack (owner ruling, §10-B), which is asserted in
+    `AskPanel.test.tsx` and, as on-screen geometry, by the 0a driver.
+
+    What this test still owns: the signal must accompany the SAME response that fell back — never
+    a later one — so the reason cannot drift away from the answer it explains.
     """
-    text, _ = await _run(monkeypatch, "unsafe")
-    assert text.index(FALLBACK_SIGNAL) < text.index("Net worth"), (
-        f"the signal trails the facts it is meant to frame: {text!r}"
+    text, done = await _run(monkeypatch, "unsafe")
+    assert done.get("fallback_signal") and done.get("validation"), (
+        "the fallback response carries no signal/reason pair"
     )
+    assert "Net worth" in text, "the deterministic fallback answer did not arrive with it"
 
 
 async def test_a_MODEL_ERROR_does_not_claim_a_grounding_failure(monkeypatch):

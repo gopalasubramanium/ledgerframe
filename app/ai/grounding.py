@@ -142,7 +142,13 @@ async def answer_stream(
         # this happened. Silently swapping a model answer for a template is the product being
         # quietly less than it appeared, which is the opposite of the honesty the fallback exists
         # to protect. The signal leads, so it frames what follows rather than trailing it.
-        yield {"type": "delta", "delta": f"_{FALLBACK_SIGNAL}_\n\n"}
+        # The signal travels on the `done` event ONLY — it is not injected into the answer body.
+        #
+        # It used to be emitted as a leading delta as well. The 0a re-drive showed what that
+        # produced once the panel rendered the served field properly: the sentence appeared TWICE,
+        # and the second copy carried its markdown underscores literally, because the answer body
+        # is rendered as text (the AI reads strings, never styling — and so, here, does the
+        # reader). One served string, rendered once, in the place the client puts it.
         yield {"type": "delta", "delta": _template_answer(question, facts)}
         yield {"type": "done", "grounded": True, "provider": "fallback", "validation": reason,
                "fallback_signal": FALLBACK_SIGNAL, "disclaimer": DISCLAIMER}

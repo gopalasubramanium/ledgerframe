@@ -704,3 +704,109 @@ composition-only, and `check:primitives` is green.
 
 `page-settings.md` §15st-1's **pre-pass re-run** is **still incomplete**: this run drove the AI
 surfaces, not the Settings AI tab whose rendered copy changed. It runs with the fix for Finding 1.
+
+---
+
+## 11. PHASE 0a — RE-DRIVE after the Finding 1 + Finding 2 rulings (2026-07-20)
+
+**30/30 driver assertions, both themes, zero console errors.** Same isolation discipline: owner's
+`:8321`/`:5173` verified still listening and untouched, `.env` verified byte-identical afterwards,
+throwaway drivers deleted, `SMOKE_ALLOW_LIVE` never set.
+
+### 11-A. FINDING 1 — display projection (owner ruled (a))
+
+**Fail-first, as ruled — geometry, not presence.** The new assertions were run against the
+**unfixed** render first and went RED with numbers rather than opinions:
+
+```
+FAIL  D-070 signal is ON SCREEN — top=902 bottom=934 vh=900
+FAIL  answer is ON SCREEN — top=946 bottom=1306
+FAIL  disclaimer is ON SCREEN — top=1318 bottom=1343
+FAIL  signal precedes the facts — signal top=902 vs facts top=174
+FAIL  fact pack occupies less than half the viewport — 716px of 900
+```
+
+The signal sat **two pixels below the fold**. After the projection:
+
+```
+PASS  D-070 signal ON SCREEN (top=174 of 900)     PASS  answer ON SCREEN (top=500 bottom=860)
+PASS  disclaimer ON SCREEN (bottom=897 of 900)    PASS  fact pack bounded at 270px of 900
+PASS  D-070 signal LEADS the fact pack (174 < 218)
+```
+
+**Shipped:** a help fact renders as **title + first line + `Show more`**; the model keeps the full
+widened pack. The fact list scrolls inside `max-height: 30vh`, so it can never again push the
+answer off-screen. Component tests pin the projection (including that `Show more` **reveals the
+full served text** — a projection is a display decision, never a redaction); the driver pins the
+geometry. **Neither alone would have caught the original defect.**
+
+**Clause 7 is untouched, and this was checked rather than assumed.** The ruling put the signal
+first; the contract requires **facts before the ANSWER**. Both hold: signal → facts → answer. The
+signal is not the answer.
+
+### 11-B. FINDING 2 — a refusal reports as a refusal (owner ruled in-scope by extension of (f))
+
+**Fail-first:**
+```
+AssertionError: openai_compatible: under no-egress health() blames the NETWORK ('cannot connect'):
+  "cannot connect to http://127.0.0.1:9/v1 — verify it's reachable … (try: curl …)"
+```
+
+Both providers now check the gate **first** in `health()` and return one served constant,
+`REFUSED_BY_POSTURE` (`app/core/egress.py`). `health()` still **reports rather than raises** — that
+contract is unchanged and `test_ai_provider_makes_no_call` depends on it.
+
+Served live at the re-drive: *"No-egress is on — no outbound call was made. This is the privacy
+posture working, not a connection problem."*
+
+**Pinned against going blind:** with egress ON, a **real** connection failure must still be
+diagnosed — reporting "no-egress" unconditionally would satisfy the test above and destroy a
+genuinely useful diagnosis.
+
+**Note on wording:** `REFUSED_BY_POSTURE` deliberately does **not** reuse `EgressBlocked`'s message,
+which names *"Product Guarantee 5"* — retired vocabulary kept in internal code by the §11-G
+no-sweep ruling. **A string that reaches a reader does not get that exemption.**
+
+### 11-C. ⚠ FINDING 3 — found at the re-drive, FIXED: the signal rendered twice
+
+Looking at the first re-drive screenshot: D-070's sentence appeared **twice** — once as the served
+element, once inside the answer body as `_AI answer didn't pass grounding checks — showing facts
+directly._`, **markdown underscores rendered literally**, because the answer body is text.
+
+Phase 0.8 emitted the signal as a **leading delta** *and* on the `done` event. That was right when
+no client existed; once the panel rendered the served field properly it became a duplicate with
+artifacts. The delta injection is removed — **one served string, rendered once, where the client
+puts it.** Its ordering guarantee moved to where it now lives: the component test and the driver's
+geometry.
+
+*This was caught by looking, not by a gate — the 30/30 run was green with the duplicate present.*
+
+### 11-D. ⚑ FINDING 4 — NOT FIXED, owner's call: the disclaimer also renders twice
+
+`ai-0a-fallback-signal-light.png` shows *"Information only, not financial advice."* **twice**: once
+ending the answer body (`_template_answer` appends it) and once as the served element the panel
+renders beneath.
+
+**I did not treat this as Finding 3.** They differ in a way that matters: the signal's duplicate was
+**defective** (raw markdown artifacts), and removing it touched nothing normative. This one is
+**redundant but correct** — both copies render cleanly — and the trailing line is part of how
+**Commitment 2's** *"every AI answer **ends with** the fixed disclaimer"* is mechanised in the
+deterministic template. Removing it is a change to a Commitment's mechanism, and that is not mine.
+
+**⚑ Options:** **(a)** the panel renders the served disclaimer and the template stops appending it
+— cleanest visually, but the answer TEXT no longer ends with the disclaimer for any raw-stream
+consumer; **(b)** the template keeps it and the panel stops rendering its own element — keeps
+Commitment 2 mechanised in the text, but loses the disclaimer on model-narrated answers where the
+model may omit it; **(c)** leave both. **No recommendation recorded** — (a) and (b) trade the same
+guarantee against two different readers, which is a ruling.
+
+### 11-E. Gates
+
+Backend **1901 / 15 skipped**, solo (`pgrep pytest` = 0) · `npm run check` **exit 0** — 41 files /
+**394** vitest / **361** Playwright / lint / typecheck / tokens / copy / smoke-isolation /
+primitives · `ruff check .` clean · `make lint` clean · contract **exit 0, 141 / 71** unchanged.
+
+### 11-F. Still owed
+
+`page-settings.md` §15st-1's pre-pass re-run. This re-drive again covered the AI surfaces, not the
+Settings AI tab whose rendered copy changed.

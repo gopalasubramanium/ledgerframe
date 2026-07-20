@@ -48,6 +48,23 @@ class EgressBlocked(RuntimeError):
         self.what = what
 
 
+# The SERVED explanation of a refusal, for surfaces that REPORT rather than raise.
+#
+# `EgressBlocked` carries the machine truth; this carries the reader's. A provider's `health()`
+# never raises by contract — it reports — so without this it fell through to the generic
+# connection diagnosis and told the operator the endpoint was unreachable. It was not: no client
+# was ever constructed. That is Commitment 3's distinction ("you turned this off" vs "it broke")
+# reappearing in a served string, found at the 0a specimen (AI-surfaces §10-C).
+#
+# Deliberately NOT the EgressBlocked message: that one names "Product Guarantee 5", which is
+# retired vocabulary (page-legal §11-1) kept in internal code by the §11-G no-sweep ruling. A
+# string that reaches a reader does not get that exemption.
+REFUSED_BY_POSTURE = (
+    "No-egress is on — no outbound call was made. This is the privacy posture working, "
+    "not a connection problem."
+)
+
+
 async def no_egress_enabled(session: AsyncSession) -> bool:
     """True when the no-egress toggle (``privacy_mode``) is on."""
     row = (

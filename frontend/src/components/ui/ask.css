@@ -95,3 +95,24 @@
   line-height: var(--line-12);
   color: var(--text-tertiary);
 }
+
+/* A projected help fact: title, one line, and an expander. The full text still reaches the model —
+   this is the READER's view of the same served fact (§10-B). */
+.lf-ask__fact--prose {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+}
+.lf-ask__fact-prose {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.lf-ask__fact--prose .lf-btn {
+  align-self: flex-start;
+}
+/* The fact pack is a reference, not the content: it scrolls inside its own bounds so it can never
+   again push the answer, the disclaimer or D-070's signal off the screen. */
+.lf-ask__facts {
+  max-height: 30vh;
+  overflow-y: auto;
+}

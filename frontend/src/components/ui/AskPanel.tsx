@@ -55,14 +55,54 @@ export interface AskPanelProps {
   seedQuestion?: string;
 }
 
+/**
+ * A help fact carries the entry's whole meaning — body AND interpret — because that is what the
+ * MODEL needs (the owner's Phase 0.9 widening). The READER needs to see what the answer rests on,
+ * which is a different job: at the 0a specimen three help entries rendered in full and pushed the
+ * answer, the disclaimer and D-070's signal off the bottom of the screen (§10-B).
+ *
+ * So the pack is PROJECTED for display — title and first line, expandable — while the model keeps
+ * the full text. One served list, two presentations; nothing is hidden, and the reader chooses.
+ */
+function isHelpFact(fact: GroundingFactDTO): boolean {
+  return fact.fact_type === "help" || fact.label.startsWith("Help · ");
+}
+
+function firstLine(value: string): string {
+  const line = value.split("\n").find((l) => l.trim()) ?? value;
+  return line.trim();
+}
+
 function FactRow({ fact }: { fact: GroundingFactDTO }) {
+  const [expanded, setExpanded] = useState(false);
+  const help = isHelpFact(fact);
+
+  if (!help) {
+    return (
+      <li className="lf-ask__fact">
+        <span className="lf-ask__fact-label">{fact.label}</span>
+        <span className="lf-ask__fact-value lf-num">{fact.value}</span>
+        {fact.is_stale && fact.timestamp ? (
+          <StalenessChip isStale asOf={fact.timestamp} />
+        ) : null}
+      </li>
+    );
+  }
+
+  const summary = firstLine(fact.value);
+  const hasMore = summary.length < fact.value.trim().length;
+
   return (
-    <li className="lf-ask__fact">
+    <li className="lf-ask__fact lf-ask__fact--prose">
       <span className="lf-ask__fact-label">{fact.label}</span>
-      <span className="lf-ask__fact-value lf-num">{fact.value}</span>
-      {fact.is_stale && fact.timestamp ? (
-        <StalenessChip isStale asOf={fact.timestamp} />
-      ) : null}
+      <span className="lf-ask__fact-prose">
+        {expanded ? fact.value : summary}
+      </span>
+      {hasMore && (
+        <Button variant="default" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? "Show less" : "Show more"}
+        </Button>
+      )}
     </li>
   );
 }
@@ -203,6 +243,20 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
 
           {phase === "loading" && <Skeleton lines={3} aria-label="Gathering the facts" />}
 
+          {/* D-070's SERVED signal — rendered verbatim, never composed here, and never styled as
+              an error. The answer fell back: that is the validator working, not a failure.
+
+              IT LEADS (owner ruling, §10-B). It explains why facts are being shown instead of an
+              answer, so it has to arrive before them — a signal underneath the thing it explains
+              is a footnote to a conclusion the reader has already drawn. This does NOT disturb
+              contract clause 7: the facts still precede the ANSWER, which is what the clause
+              requires. The signal is not the answer. */}
+          {fallbackSignal && (
+            <p className="lf-ask__signal" role="status" data-testid="ask-fallback-signal">
+              {fallbackSignal}
+            </p>
+          )}
+
           {facts.length > 0 && (
             <section className="lf-ask__facts" aria-label="Facts used">
               <h3 className="lf-ask__facts-title">What this is built from</h3>
@@ -212,14 +266,6 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
                 ))}
               </ul>
             </section>
-          )}
-
-          {/* D-070's SERVED signal — rendered verbatim, never composed here, and never styled as
-              an error. The answer fell back: that is the validator working, not a failure. */}
-          {fallbackSignal && (
-            <p className="lf-ask__signal" role="status" data-testid="ask-fallback-signal">
-              {fallbackSignal}
-            </p>
           )}
 
           {answer && (

@@ -232,3 +232,82 @@ test("AskPanel: closing the explainer discards the ANSWER but restores the seed"
   await waitFor(() => expect(screen.queryByTestId("ask-answer")).toBeNull());
   expect(screen.getByLabelText("Your question")).toHaveValue("Explain AAPL");
 });
+
+// --- The display projection (§10-B, owner ruled option (a)) -------------------------------------
+// The 0a specimen found three help entries rendering in full and pushing the answer, the
+// disclaimer and D-070's signal off the bottom of the screen — while every DOM assertion passed.
+// These pin the PROJECTION; the driver pins the GEOMETRY. Neither alone would have caught it.
+
+const HELP_FACT = {
+  label: "Help · Net worth",
+  value:
+    "Your headline and liquidity. Four figures lead: Net worth, Gross assets, Liabilities.\n\n" +
+    "Interpret: Net worth is Gross assets minus Liabilities, and nothing else — insurance cash " +
+    "value is deliberately outside it.",
+  fact_type: "help",
+};
+
+test("AskPanel: a help fact is PROJECTED to its first line, not dumped in full", async () => {
+  mockStream([
+    { type: "facts", facts: [HELP_FACT] },
+    { type: "delta", delta: "Answer." },
+    { type: "done", grounded: true, provider: "openai_compatible", disclaimer: DISCLAIMER },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "what is net worth?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  const region = await screen.findByRole("region", { name: "Facts used" });
+  expect(region).toHaveTextContent("Your headline and liquidity.");
+  // The Interpret section is in the MODEL's copy of this fact and must not be dumped on the reader.
+  expect(region).not.toHaveTextContent("insurance cash value is deliberately outside it");
+  expect(screen.getByRole("button", { name: "Show more" })).toBeInTheDocument();
+});
+
+test("AskPanel: the projection HIDES nothing — Show more reveals the full served fact", async () => {
+  mockStream([
+    { type: "facts", facts: [HELP_FACT] },
+    { type: "done", grounded: true, provider: "openai_compatible", disclaimer: DISCLAIMER },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "what is net worth?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  await user.click(await screen.findByRole("button", { name: "Show more" }));
+  const region = screen.getByRole("region", { name: "Facts used" });
+  // Projection is a DISPLAY decision, not a redaction. Everything the model was given stays
+  // reachable, or the fact pack stops being the thing it claims to be.
+  expect(region).toHaveTextContent("insurance cash value is deliberately outside it");
+  expect(screen.getByRole("button", { name: "Show less" })).toBeInTheDocument();
+});
+
+test("AskPanel: a FIGURE fact is never projected — it is one line already", async () => {
+  mockStream(GROUNDED_RUN);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  const region = await screen.findByRole("region", { name: "Facts used" });
+  expect(region).toHaveTextContent("796,543.93 SGD");
+  expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+});
+
+test("AskPanel: in the fallback view the D-070 signal PRECEDES the fact pack", async () => {
+  mockStream([
+    { type: "facts", facts: [HELP_FACT] },
+    { type: "delta", delta: `_${FALLBACK_SIGNAL}_\n\n` },
+    {
+      type: "done", grounded: true, provider: "fallback", validation: "unsupported figure",
+      fallback_signal: FALLBACK_SIGNAL, disclaimer: DISCLAIMER,
+    },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  const signal = await screen.findByTestId("ask-fallback-signal");
+  const region = screen.getByRole("region", { name: "Facts used" });
+  // The signal explains WHY facts are being shown instead of an answer, so it must arrive before
+  // them. Clause 7 is untouched: the facts still precede the ANSWER, and the signal is not one.
+  expect(signal.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});

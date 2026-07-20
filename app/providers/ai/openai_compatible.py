@@ -14,7 +14,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
-from app.core.egress import EgressBlocked, egress_client
+from app.core.egress import REFUSED_BY_POSTURE, EgressBlocked, assert_egress_allowed, egress_client
 from app.schemas.ai import AIChunk, AIRequest, HealthStatus, ModelInfo
 
 log = logging.getLogger(__name__)
@@ -95,6 +95,12 @@ class OpenAICompatibleProvider:
         if not self.base_url:
             return HealthStatus(available=False, provider=self.name, detail="no base URL set")
         warn = "sends data off-device"
+        try:
+            # Checked FIRST so the refusal is reported as a refusal. Everything below this line
+            # diagnoses a network that, under no-egress, was never touched (§10-C).
+            await assert_egress_allowed("AI health check")
+        except EgressBlocked:
+            return HealthStatus(available=False, provider=self.name, detail=REFUSED_BY_POSTURE)
         try:
             async with await egress_client("AI request", base_url=self.base_url, timeout=10) as client:
                 r = await client.get("/models", headers=self._headers())

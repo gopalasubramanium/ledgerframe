@@ -290,3 +290,66 @@ async def test_grounding_status_does_not_claim_no_egress_when_it_is_off(app_clie
         "grounding-status reports no-egress while the toggle is OFF — the posture label would "
         "tell the user the device makes no outbound calls when it may be about to make one."
     )
+
+
+async def test_health_reports_REFUSED_BY_POSTURE_not_a_connection_error(no_egress, forbid_http):
+    """FINDING 2 from the 0a specimen (owner ruled it in-scope by extension of (f)).
+
+    Under no-egress the specimen found `/ai/grounding-status` serving this as `last_error`:
+
+        "cannot connect to http://…/v1 — verify it's reachable from the device running
+         LedgerFrame (try: curl …)"
+
+    **Nothing failed to connect. The product refused to call it.** Phase 0.5 fixed exactly this
+    confusion inside `chat()` with the typed `EgressBlocked` re-raise; `health()` → `list_models()`
+    still swallowed it into the generic connection-diagnosis path, and `last_error` SERVED that to
+    the client. A served string that misdescribes the product's own posture is the class this
+    milestone exists to close — and it would send the first operator who read it hunting a network
+    fault that does not exist.
+
+    `health()` still does not RAISE — that contract is unchanged and deliberate
+    (`test_ai_provider_makes_no_call` above depends on it): it REPORTS, and now it reports the
+    right thing. Driven at the PROVIDER, which is where the defect lives; the route simply serves
+    whatever `health().detail` says.
+    """
+    from app.providers.ai.hailo_ollama import HailoOllamaProvider
+    from app.providers.ai.openai_compatible import OpenAICompatibleProvider
+
+    for provider in (
+        OpenAICompatibleProvider(base_url="http://127.0.0.1:9/v1", api_key="k", model="m"),
+        HailoOllamaProvider(base_url="http://127.0.0.1:8000", model="m"),
+    ):
+        status = await provider.health()
+        detail = (status.detail or "").lower()
+
+        assert status.available is False, f"{provider.name}: no-egress is not a healthy provider"
+        for wrong in ("cannot connect", "verify it's reachable", "connection refused",
+                      "no route", "timed out", "cannot resolve", "no models listed"):
+            assert wrong not in detail, (
+                f"{provider.name}: under no-egress health() blames the NETWORK ({wrong!r}): "
+                f"{status.detail!r}\n"
+                "Nothing failed to connect — no client was ever constructed. This is the posture "
+                "working, and saying otherwise sends the reader after a fault that does not exist."
+            )
+        assert "no-egress" in detail, (
+            f"{provider.name}: health() does not name the posture: {status.detail!r}"
+        )
+    assert not forbid_http, "a client was constructed while reporting health under no-egress"
+
+
+async def test_health_still_diagnoses_a_REAL_connection_failure_when_egress_is_on(app_client):
+    """Pinned against going blind: reporting 'no-egress' unconditionally would satisfy the above.
+
+    With egress ON and nothing listening, the connection diagnosis is genuinely useful and must
+    survive. The fix must narrow the posture message to the posture, not replace the diagnosis.
+    """
+    from app.providers.ai.openai_compatible import OpenAICompatibleProvider
+
+    p = OpenAICompatibleProvider(base_url="http://127.0.0.1:9/v1", api_key="k", model="m")
+    status = await p.health()
+
+    assert status.available is False
+    assert "no-egress" not in (status.detail or "").lower(), (
+        f"a real connection failure was reported as a posture refusal: {status.detail!r}"
+    )
+    assert status.detail, "a real failure must still carry a diagnosable reason"
