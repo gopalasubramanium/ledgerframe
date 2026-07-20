@@ -1585,6 +1585,24 @@ invariant held**, confirmed independently from the repo root; and the vite dev s
 Killed by port lookup and re-verified down. *A teardown that reports success without probing the
 port is the same class of claim as (2) above.*
 
+**⊕ DATED CORRECTION, 2026-07-20 (found at the §17 close, filed rather than quietly cleaned up).**
+**That teardown was still incomplete.** A **second** vite dev server — `vite.prepass.config.ts`,
+port **5200** — was **never killed**, and was found **107 minutes later still listening**, serving a
+build from a config file that had been deleted. The §16-D paragraph above verified *the port it knew
+about* and reported success.
+
+*The lesson is the paragraph's own lesson, one level up:* it replaced *"trust `kill`"* with *"probe
+the port"* — and **kept an enumeration of ports that was itself from memory**. **A probe of the
+ports you remember is not a probe.** The check that would have caught it is the one now used at
+§17-6's teardown: enumerate **every** listener the drive could own (`ss -ltnp` filtered by process
+name), not the list the driver happens to hold.
+
+**Filed as a correction to the record, not as a footnote**, because §16-D is a *claim about
+isolation* — the one claim in this project that must never be optimistic. The orphan was on a spare
+port and never touched the owner's stack (`:8321` / `:5173` verified up throughout, and the owner's
+own `vite` process was identified and left alone), so **nothing was at risk; the RECORD was wrong,
+and that is enough to correct it.**
+
 ### 16-E. Gates at this phase
 
 | Gate | Result |
