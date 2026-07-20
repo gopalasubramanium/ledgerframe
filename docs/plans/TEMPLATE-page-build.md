@@ -588,6 +588,18 @@ tests. Never assemble the page against an endpoint that does not exist.*
   the owner. A page is **done only after this walk**, not at green suites. Layout/popover/picker
   items MUST be verified by rendering (screenshots / DOM measurement), not tests. **The owner
   closes the phase — never self-certify it.**
+- **THE §-LEDGER ENUMERATES INTAKE, NOT JUST FINDINGS (Chat ruling 2026-07-20 / ai-surfaces
+  §19-K).** **Every §0 intake item enters the §-ledger as a numbered row at plan time. A ledger may
+  not claim CLOSED while any intake row lacks a disposition — the CLOSED claim enumerates intake,
+  walk findings, and lettered sub-findings alike.**
+  *Why:* the AI-surfaces ledger enumerated F1–F10 plus two walk fixes and **never asked what §0
+  intake was outstanding**, so *"every disposition"* was **true of the list and false of the
+  milestone** — a contention-fragile test the plan had explicitly assigned to that milestone was
+  still open at close, and **every gate was green because it passes solo**. An enumeration is a
+  claim of completeness; it can only be checked against a list that was written down. Enforcement
+  here is **procedural + structural** — the ledger's own enumeration plus the checklist line below,
+  **not CI** — and saying so is part of the rule.
+
 - **Close ritual — the milestone is written down, then PUSHED (page-accounts §15-2).** On acceptance:
   (a) record the close (plan §-retrospective + the central acceptance log, `RATIFICATION.md §6`); (b)
   strike-check every §9/§12/§walk item against the actual diff before writing the retrospective (a claim
@@ -600,6 +612,10 @@ tests. Never assemble the page against an endpoint that does not exist.*
     show `CURRENT.md` inside the close commit's diff; a claimed CURRENT.md update without the file in
     the diff FAILS the close.** (A `git log --oneline -- CURRENT.md` at the R-38 close confirmed prior
     closes did touch it — this rule keeps it that way instead of on trust.)
+  - **§0 INTAKE RECONCILED — every intake row has a disposition in the ledger (ai-surfaces
+    §19-K).** A close that cannot point at each intake row's disposition has not finished, however
+    green the gates are: intake is work the plan **accepted from elsewhere**, so it is exactly the
+    work no finding number and no walk will remind you of.
   - **HELP CURRENCY — a permanent line on every close checklist (THE HELP CURRENCY LAW, owner
     2026-07-19, page-help §9-bis-11(d); CLAUDE.md hard rule).** *"Help is live documentation: any
     platform change updates Help in the same milestone, unsaid, as a mandatory part of every close."*
