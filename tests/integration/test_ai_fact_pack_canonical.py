@@ -166,7 +166,24 @@ async def test_the_money_guard_can_actually_see_money(app_client):
 
 
 def test_the_figure_identity_map_is_not_empty():
-    """The de-duplication guard is blind if nothing declares identity."""
-    from app.ai.tools import FIGURE_IDENTITY
+    """The de-duplication guard is blind if nothing declares identity.
 
-    assert FIGURE_IDENTITY, "no declared figure identities — the de-dupe guard protects nothing"
+    ⊕ R-54 Phase 0-2a — REPOINTED, NOT REWRITTEN. This pin used to import `FIGURE_IDENTITY` from
+    `app/ai/tools.py`; §9-B absorbed that map into `app/services/figure_registry.py`, so the pin's
+    SUBJECT moved. It is repointed deliberately and kept asserting the same property — a blindness
+    pin that is deleted because its import broke is a guard silently retired, which is the exact
+    failure the pin exists to prevent.
+
+    It now asserts the two halves separately: that identities are declared at all, and that the
+    lookup `_dedupe` actually calls still resolves one. An empty registry and a registry the
+    resolver cannot reach are both "protecting nothing", and only the first is visible from the
+    table alone.
+    """
+    from app.ai.tools import figure_identity
+    from app.services.figure_registry import REGISTRY
+
+    assert REGISTRY, "no declared figure identities — the de-dupe guard protects nothing"
+    assert figure_identity("Net worth") == "net_worth", (
+        "the identity lookup no longer resolves a known label — the de-dupe guard is blind even "
+        "though the registry is populated"
+    )

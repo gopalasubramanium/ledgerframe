@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.models import Watchlist
 from app.schemas.ai import GroundingFact
+from app.services.figure_registry import canonical_label, figure_for_label
 from app.services.market import get_cached_quote
 from app.services.portfolio import top_movers, value_portfolio
 
@@ -50,33 +51,25 @@ def _fmt(value, ccy: str) -> str:
 # was wholly right. So the survivor keeps the winner's value and is RELABELLED to the canonical
 # spelling.
 #
-# Keys are lower-cased labels; values are (figure id, canonical label).
-FIGURE_IDENTITY: dict[str, tuple[str, str]] = {
-    "net worth": ("net_worth", "Net worth"),
-    "total unrealised p/l": ("unrealised_pl", "Unrealised P/L"),
-    "unrealised p/l": ("unrealised_pl", "Unrealised P/L"),
-    "total return %": ("total_return", "Total return"),
-    "total return": ("total_return", "Total return"),
-    "today's change": ("todays_change", "Today's change"),
-    "total assets": ("total_assets", "Total assets"),
-    "total liabilities": ("total_liabilities", "Total liabilities"),
-    "realised p/l": ("realised_pl", "Realised P/L"),
-}
-
-
+# ⊕ R-54 Phase 0-2a — ABSORBED. This table WAS `FIGURE_IDENTITY`, a 9-entry map living beside an
+# unrelated `term_id` map in `analytics.py`, with no endpoint on either. §9-B ruled ONE registry:
+# figure identity → canonical GLOSSARY label → canonical endpoint. It now lives in
+# `app/services/figure_registry.py` (services, not ai — `analytics.py` derives from it at 0-2b and
+# a portfolio surface must not import the AI package to learn its own figures' names).
+#
+# The two functions below keep their exact contracts so `_dedupe` is untouched by the move.
 def figure_identity(label: str) -> str | None:
     """The figure a fact label names, or None if the label has no declared identity.
 
     None means "nothing to collide with" — most labels are per-instrument or per-bucket and are
     already unique by label. Only figures a second source can also produce need declaring.
     """
-    entry = FIGURE_IDENTITY.get(label.strip().lower())
-    return entry[0] if entry else None
+    fig = figure_for_label(label)
+    return fig.figure_id if fig else None
 
 
 def _canonical_label(label: str) -> str:
-    entry = FIGURE_IDENTITY.get(label.strip().lower())
-    return entry[1] if entry else label
+    return canonical_label(label)
 
 
 async def portfolio_facts(session: AsyncSession) -> list[GroundingFact]:
@@ -531,7 +524,7 @@ def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
     any portfolio intent, so the survivor's value comes from `value_portfolio` — the canonical
     reader — rather than from the analytics engine's copy of the same quantity. The survivor is
     then RELABELLED to the GLOSSARY spelling, because the canonical label and the canonical value
-    did not come from the same source (see FIGURE_IDENTITY).
+    did not come from the same source (see the figure registry).
     """
     seen_labels: set[str] = set()
     seen_figures: set[str] = set()
