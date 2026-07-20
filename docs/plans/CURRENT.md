@@ -73,6 +73,7 @@ The product shell + every built page + the platform milestones, owner-accepted:
   appended. **⚑ Open:** **F10** (the NEXT delta, release-blocking) · **R-54 / R-55** (Amendment 7) ·
   **R-56** (F7, post-release) · the §19-J gap — **no guard asserts a sanctioned short form is
   searchable in Help**, carried to the pre-release backlog.
+  ⚠ **2026-07-20 post-close correction (§19-K):** the §0 intake item (contention-robustness, `test_ai_facts_routing.py:34`) was found NOT DONE after close — carried to R-54 by dated re-assignment; intake-in-ledger mechanised (TEMPLATE).
 
 ---
 

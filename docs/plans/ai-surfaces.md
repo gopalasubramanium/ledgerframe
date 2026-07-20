@@ -1911,6 +1911,7 @@ recorded with a dated disposition.
 | **F10** | Fresh-DB `get_history_cached` race — `UNIQUE constraint failed: settings.key` | **RECORDED, NOT FIXED — its own standalone delta immediately after this close, BEFORE R-54. Release-train blocking.** | §17-5 |
 | **W-1** | Header/legend redundancy — two locality statements at once | **RULED + FIXED (§17-1)** — a handover; D-067 gains a dated reading note | §17-1 |
 | **W-2** | Phantom timestamps — the stub cites UI that does not render | **RULED + FIXED (§17-2)** — corrected, guarded, specimen pinned | §17-2 |
+| **§0-intake** | Contention-robustness fix for `tests/integration/test_ai_facts_routing.py:34` (fails only under machine contention, passes solo — `r43-historical-backfill.md` §18-F7d) | **MISSED AT CLOSE — found post-close (§19-K). Carried to R-54 by dated re-assignment (chat ruling 2026-07-20), recorded in ROADMAP R-54 and CURRENT.md; mechanised so intake cannot silently vanish again (TEMPLATE amendment, Commit 2).** | §19-K |
 
 **Open and carried, stated rather than buried:** **R-54** and **R-55** (RD-9 Amendment 7, v2.0.0
 scope, neither started) · **R-56** (F7, post-release) · **§0-K item 1** — `DECISIONS.md` D-069 still
@@ -2031,6 +2032,15 @@ mechanism held under exactly the conditions that produced the original defect.*
 | **How it was caught** | **Not by a guard.** By asking what the GLOSSARY change *implied* for Help, under the HELP CURRENCY LAW. The parity guard shipped in the same delta checks that the short form is **recorded in the spec** and **still served by the code** — neither of which is the same as **reachable by a reader**. |
 | **The lesson** | **"RECORDED" AND "FINDABLE" ARE DIFFERENT PROPERTIES, and only the second one is what a glossary is *for*.** A vocabulary guard that measures spec↔code parity is measuring the two stores against each other, not either against the person who has to look the word up. |
 | **What turns red** | Today: nothing — and that is stated rather than glossed. The Help delta shipped (body + keywords, `444 passed, 15 skipped`), but **no guard asserts that a sanctioned short form is searchable in the Help catalogue.** ⚑ **Carried to the pre-release backlog as a named gap**, in the shape §19-E's lesson recommends: written down where the next reader will meet it, not remembered. |
+
+### 19-K. FOUND POST-CLOSE — the close never reconciled its own intake
+
+| | |
+|---|---|
+| **What happened** | The plan's §0 intake assigned the contention-robustness fix for `tests/integration/test_ai_facts_routing.py:34` to this milestone (*"the natural owner of the AI streaming surface"*). **No commit in the close touched that file.** The close report asserted the milestone closed; `CURRENT.md` said **CLOSED** while the intake item assigned here was still open — **the record was wrong in the direction that matters**, since the next session reads that file and believes it. |
+| **How it was caught** | **Not by a guard.** By the architect's post-close sweep in chat (2026-07-20), then verified by this session against the actual diff before answering. **All four gate runs were green because the test passes solo** — the gates could not see it. |
+| **The lesson** | **AN ENUMERATION IS A CLAIM OF COMPLETENESS, AND THE LEDGER NEVER ENUMERATED INTAKE.** §18 enumerated F1–F10 + two walk fixes and never asked what §0 intake was outstanding — so *"every disposition"* was **true of the list and false of the milestone**. The same defect class this milestone spent ten lessons on: **a claim about one's own completeness that no mechanism checked.** |
+| **What turns red** | After the Commit-2 mechanisation: **§0 intake items enter the §-ledger as numbered rows at plan time**, so a ledger claiming CLOSED with an intake row lacking a disposition is a **checkably false enumeration**, and the close-ritual checklist line asks the question explicitly. Enforcement is **procedural + structural** (the ledger's own enumeration), **not CI** — stated, not glossed. |
 
 ---
 
