@@ -556,26 +556,41 @@ def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
 # deep-dive, markets, news, net worth, performance/risk, allocation, movers,
 # holdings or watchlist — so the model has a rich, relevant, grounded dataset.
 async def gather_facts(session: AsyncSession, question: str) -> list[GroundingFact]:
-    q = question.lower()
+    """Gather the grounded fact pack for a question.
 
-    def has(*ws: str) -> bool:
-        return any(w in q for w in ws)
+    R-54 §9-A — THIS FUNCTION NO LONGER ROUTES. It used to compute eight booleans from its own
+    substring word lists, which made it a SECOND intent router that did not share code with
+    `classify_intent` and could disagree with it (r54 §0-A). The flags below are now a PROJECTION
+    of the single authority, read from `intent.INTENT_FACT_SOURCES` — the one table. The downstream
+    assembly is deliberately unchanged: this delta moves WHERE the routing decision comes from, not
+    what is done with it, so a regression here is a routing regression and never an assembly one.
+    """
+    from app.ai.intent import Intent, classify_intent, fact_sources
+
+    q = question.lower()
 
     symbols = await _resolve_symbols(session, question)
     instrument_facts = await instrument_deep_facts(session, symbols) if symbols else []
 
-    is_market = has("market", "indices", "index", "global", "world", "nasdaq", "s&p", "s & p",
-                    "dow", "nikkei", "ftse", "hang seng", "nifty", "stoxx", "sensex", "wall street")
-    is_news = has("news", "headline", "happening", "story", "stories", "going on")
-    is_networth = has("net worth", "networth", "asset", "liabilit", "wealth", "cash")
-    is_perf = has("perform", "return", "risk", "volatil", "drawdown", "sharpe", "benchmark",
-                  " vs ", "beat", "how am i", "doing", "yield", "dividend", "income")
-    is_alloc = has("alloc", "exposure", "diversif", "concentrat", "sector", "weight", "spread")
-    is_movers = has("mov", "gain", "los", "detractor", "best", "worst", "drop", "today", "up ", "down")
-    is_holdings = has("biggest", "largest", "top holding", "what do i own", "position", "holding", "breakdown", "own")
-    is_watch = has("watch", "watchlist")
+    # THE SINGLE ROUTING DECISION. Everything below reads `sources`; nothing re-inspects `q` to
+    # decide WHAT to gather. (Two places still read `q` to parameterise a source or to judge
+    # whether a question is about the user's own money — both are marked and neither selects a
+    # fact source.)
+    intent = classify_intent(question)
+    sources = fact_sources(intent)
+
+    is_market = "market" in sources
+    is_news = "news" in sources
+    is_networth = "networth" in sources
+    is_perf = "perf" in sources
+    is_alloc = "alloc" in sources
+    is_movers = "movers" in sources
+    is_holdings = "holdings" in sources
+    is_watch = "watch" in sources
     # "Personal" = the question is about the user's own money, not just an instrument
     # in the abstract. Generic verbs like "doing"/"moving" don't count.
+    # NOT ROUTING: this decides whether a resolved instrument answer should stay focused on the
+    # instrument, not which fact source to use. Already word-boundary matched.
     import re as _re
     personal = bool(_re.search(
         r"\b(my|i|we|our|me|mine|portfolio|holdings?|positions?|net ?worth|allocation|"
@@ -602,7 +617,10 @@ async def gather_facts(session: AsyncSession, question: str) -> list[GroundingFa
     if is_perf:
         facts += await performance_facts(session)
     if is_alloc:
-        facts += await allocation_facts(session, "native_currency" if "currency" in q else "asset_class")
+        # NOT ROUTING: `is_alloc` already selected this source; this only picks which axis to split
+        # on. Word-boundary matched for the same reason the rules are.
+        by_currency = bool(_re.search(r"\bcurrenc(?:y|ies)\b", q))
+        facts += await allocation_facts(session, "native_currency" if by_currency else "asset_class")
     if is_movers:
         facts += await movers_facts(session)
     if is_holdings:
@@ -612,8 +630,8 @@ async def gather_facts(session: AsyncSession, question: str) -> list[GroundingFa
 
     # Data-quality / pricing-health intents (B3/B4): add the honest "what's missing"
     # signals so the AI can answer "which prices are stale?" / "what needs mapping?".
-    from app.ai.intent import Intent, classify_intent
-    intent = classify_intent(question)
+    # `intent` was resolved once at the top — the second `classify_intent` call that used to sit
+    # here was the visible seam between the two routers (R-54 §0-A).
     if intent in (Intent.DATA_QUALITY_QUESTION, Intent.PRICING_HEALTH_QUESTION):
         facts = await data_quality_facts(session) + facts
 
