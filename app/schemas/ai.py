@@ -64,6 +64,16 @@ class GroundingFact(BaseModel):
     confidence: str | None = None           # high | medium | low
     related_symbols: list[str] = []
     related_holding_ids: list[int] = []
+    #: R-54 §9-D — the SERVED SEMANTIC LINK ID for this fact, or None.
+    #:
+    #: The backend issues an ID; the FRONTEND owns the ID→route registry (Phase 1). That split is
+    #: the ruling: route knowledge lives where routes live, and the backend never hardcodes a
+    #: frontend path. Namespaced `<kind>:<key>` — `help:<entry-id>`, `page:<route>`.
+    #:
+    #: `None` is a real answer, not a gap: a fact with no canonical destination gets no link, and
+    #: tier-1 must not invent one. A link that resolves to nothing is a dead affordance with extra
+    #: steps, which is what the bidirectional guard exists to prevent.
+    link_id: str | None = None
     explanation: str | None = None
 
 

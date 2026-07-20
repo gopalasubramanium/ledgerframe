@@ -292,7 +292,8 @@ def help_facts(question: str) -> list[GroundingFact]:
         value = _render_help_fact(full)
         if value:
             facts.append(GroundingFact(label=f"Help · {hit['title']}", value=value,
-                                       source="help", fact_type="help"))
+                                       source="help", fact_type="help",
+                                       link_id=f"help:{hit['id']}"))
     return facts
 
 
@@ -553,6 +554,27 @@ async def instrument_deep_facts(session: AsyncSession, symbols: list[str], max_s
     return facts
 
 
+def _attach_link_ids(facts: list[GroundingFact]) -> list[GroundingFact]:
+    """Stamp the SERVED SEMANTIC LINK ID on every fact that has a canonical destination (§9-D).
+
+    Applied at the dedupe chokepoint, deliberately: `_dedupe` is where a fact's identity is finally
+    settled and relabelled to its GLOSSARY spelling, so it is the one place a link can be attached
+    from the figure the fact actually IS rather than from the label it happened to arrive with.
+    Stamping earlier would mean stamping per-producer — a second, third and fourth site deciding
+    where a figure lives, which is the shape this milestone has spent its whole length removing.
+
+    A fact with no registry row, or a row with no canonical page, gets NO link. `None` is the honest
+    answer; tier-1 declines rather than inventing a destination.
+    """
+    for f in facts:
+        if f.link_id is not None:
+            continue  # already carries one (help facts name their own entry)
+        fig = figure_for_label(f.label)
+        if fig is not None and fig.canonical_page:
+            f.link_id = f"page:{fig.canonical_page}"
+    return facts
+
+
 def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
     """One fact per label AND one fact per FIGURE (§14-3 / Finding 5).
 
@@ -581,7 +603,7 @@ def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
                 f = f.model_copy(update={"label": canonical})
                 seen_labels.add(canonical)
         out.append(f)
-    return out[:cap]
+    return _attach_link_ids(out[:cap])
 
 
 # Intent-routed fact gathering. Resolves any instruments named in the question

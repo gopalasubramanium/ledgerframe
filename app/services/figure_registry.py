@@ -63,6 +63,13 @@ class Figure:
     #: several headline figures have a GLOSSARY row but no `term-*` Help entry (Net worth is the
     #: striking one). Tier-1(a) can show the figure without an explanation; it must not invent one.
     term_id: str | None = None
+    #: The route of the page this figure is CANONICAL on — R-54 §9-D, the `page:` link ID's
+    #: target. **Declared from the spec, never inferred from the figure's name**: IA §5's per-page
+    #: "Owns" blocks plus D-032 (headline split) and D-033 (allocation canonical on Portfolio).
+    #: IA §5 Portfolio *Owns* names **KeyStats** explicitly, which is what makes every stats-served
+    #: metric declarable here rather than a guess. Same discipline as `figure_id`: identity — and
+    #: now location — is DECLARED (the F5 lesson).
+    canonical_page: str = ""
     #: Whether the GROUNDING FACT PACK can produce this figure (R-54 §9-C, ruling 2026-07-21 item
     #: 2). **Declared state, not an ambient fact.** `False` is a legitimate answer and does not
     #: mean "missing": the registry is a MAP of where each figure canonically lives, never a
@@ -85,55 +92,55 @@ class Figure:
 REGISTRY: tuple[Figure, ...] = (
     # ── Headline figures — canonical on /portfolio/summary ──
     Figure("net_worth", "Net worth", _SUMMARY, "total_value",
-           term_id=None, aliases=()),
+           term_id=None, aliases=(), canonical_page="/net-worth"),
     # ⚠ GLOSSARY:66 spells this **Gross assets**; `FIGURE_IDENTITY` called it "Total assets",
     # which is NOT a GLOSSARY term (see LABELS_NOT_IN_GLOSSARY below). The canonical label here is
     # the GLOSSARY one and "total assets" survives as an alias so old labels still resolve.
     Figure("gross_assets", "Gross assets", _SUMMARY, "gross_assets",
-           term_id="term-gross-assets", aliases=("total assets",)),
+           term_id="term-gross-assets", aliases=("total assets",), canonical_page="/net-worth"),
     # ⊕ R-54 F-1, owner-ratified 2026-07-20 as a GLOSSARY CATCH-UP. The canonical label is
     # **Liabilities** — the spelling D-032 and D-054 already ratified and `NetWorth.tsx:204` has
     # been shipping. `networth_facts` served "Total liabilities", which was in no spec; it survives
     # as an alias so old labels still resolve and `_dedupe` relabels them to the ratified spelling.
     Figure("liabilities", "Liabilities", _SUMMARY, "liabilities",
-           term_id=None, aliases=("total liabilities",)),
+           term_id=None, aliases=("total liabilities",), canonical_page="/net-worth"),
     Figure("unrealised_pl", "Unrealised P/L", _SUMMARY, "unrealised_pl",
-           term_id="term-unrealised-pl", aliases=("total unrealised p/l",)),
+           term_id="term-unrealised-pl", aliases=("total unrealised p/l",), canonical_page="/portfolio"),
     Figure("todays_change", "Today's change", _SUMMARY, "day_change",
-           term_id=None, aliases=()),
+           term_id=None, aliases=(), canonical_page="/portfolio"),
     Figure("total_return", "Total return", _SUMMARY, "total_return_pct",
-           term_id="term-total-return", aliases=("total return %",)),
+           term_id="term-total-return", aliases=("total return %",), canonical_page="/portfolio"),
 
     # ── Return / risk metrics — canonical on /portfolio/stats ──
     Figure("realised_pl", "Realised P/L", _STATS, "Realised P/L",
-           term_id="term-realised-pl", aliases=()),
+           term_id="term-realised-pl", aliases=(), canonical_page="/portfolio"),
     Figure("xirr", "Money-weighted return (XIRR)", _STATS, "Money-weighted return (XIRR)",
-           term_id="term-xirr-twr"),
+           term_id="term-xirr-twr", canonical_page="/portfolio"),
     Figure("twr", "Time-weighted return (TWR)", _STATS, "Time-weighted return (TWR)",
-           term_id="term-xirr-twr"),
+           term_id="term-xirr-twr", canonical_page="/portfolio"),
     Figure("income", "Income (div/int)", _STATS, "Income (div/int)",
-           term_id="term-income"),
+           term_id="term-income", canonical_page="/portfolio"),
     Figure("income_yield", "Income yield", _STATS, "Income yield",
-           term_id="term-income-yield"),
+           term_id="term-income-yield", canonical_page="/portfolio"),
     Figure("period_return_1y", "1Y return", _STATS, "1Y return",
-           term_id="term-period-return"),
+           term_id="term-period-return", canonical_page="/portfolio"),
     Figure("volatility_1y", "1Y volatility", _STATS, "1Y volatility",
-           term_id="term-volatility"),
+           term_id="term-volatility", canonical_page="/portfolio"),
     Figure("return_volatility", "Return / volatility", _STATS, "Return / volatility",
-           term_id="term-return-volatility"),
+           term_id="term-return-volatility", canonical_page="/portfolio"),
     Figure("max_drawdown_1y", "Max drawdown (1Y)", _STATS, "Max drawdown (1Y)",
-           term_id="term-max-drawdown"),
+           term_id="term-max-drawdown", canonical_page="/portfolio"),
     Figure("largest_position", "Largest position", _STATS, "Largest position",
-           term_id="term-concentration"),
+           term_id="term-concentration", canonical_page="/portfolio"),
     Figure("concentration_top5", "Top 5 concentration", _STATS, "Top 5 concentration",
-           term_id="term-concentration"),
+           term_id="term-concentration", canonical_page="/portfolio"),
 
     # ⊕ R-54 Phase 0-3 — owner-ratified as a GLOSSARY CATCH-UP, the F-1 pattern applied a second
     # time: a figure the engine serves must have a row. **No exemption class for counts** — it is
     # an ordinary row and an ordinary GLOSSARY term. Its derivation was verified BEFORE the spec
     # row was written, and that changed the definition: it counts every non-soft-deleted Holding
     # INCLUDING liabilities, so 13 assets and one mortgage report 14.
-    Figure("positions", "Positions", _STATS, "Positions", term_id=None, pack_reachable=False),
+    Figure("positions", "Positions", _STATS, "Positions", term_id=None, pack_reachable=False, canonical_page="/portfolio"),
 
     # ── Allocation buckets. NOT pack-reachable, and DEMANDED-BUT-DEFERRED rather than undemanded:
     #    `term-allocation-weight` reaches all four through the reverse index, so ruling item 1 would
@@ -145,13 +152,13 @@ REGISTRY: tuple[Figure, ...] = (
     #    `Allocation (asset_class) — <bucket>` labels. Their labels are MASTER-DATA asset-class names, not GLOSSARY terms;
     #    the shared `term-allocation-weight` entry explains what a weight IS. ──
     Figure("alloc_cash_deposits", "Cash & deposits", _STATS, "Cash & deposits",
-           term_id="term-allocation-weight", pack_reachable=False),
+           term_id="term-allocation-weight", pack_reachable=False, canonical_page="/portfolio"),
     Figure("alloc_equities_etfs", "Equities & ETFs", _STATS, "Equities & ETFs",
-           term_id="term-allocation-weight", pack_reachable=False),
+           term_id="term-allocation-weight", pack_reachable=False, canonical_page="/portfolio"),
     Figure("alloc_crypto", "Crypto", _STATS, "Crypto",
-           term_id="term-allocation-weight", pack_reachable=False),
+           term_id="term-allocation-weight", pack_reachable=False, canonical_page="/portfolio"),
     Figure("alloc_alternatives", "Alternatives", _STATS, "Alternatives",
-           term_id="term-allocation-weight", pack_reachable=False),
+           term_id="term-allocation-weight", pack_reachable=False, canonical_page="/portfolio"),
 )
 
 
