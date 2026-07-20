@@ -65,17 +65,27 @@ class Intent(str, enum.Enum):
 #
 # EVERY PATTERN MATCHES ON WORD BOUNDARIES (R-54 §9-A). A rule that can fire on a fragment inside
 # an unrelated word is not a deterministic rule; see the module docstring for what that cost.
+#
+# ⚠ AND A STEM NEEDS `\w*`, OR THE TRAILING `\b` SILENTLY KILLS IT (R-54 Phase 0-4).
+# These alternations were written for the SUBSTRING matcher Phase 0-1 replaced, where a bare stem
+# like `perform` matched *performing* for free. Under `\b(...)\b` it does not: the trailing
+# boundary requires the word to END there, so `perform` stopped matching *performing*,
+# `concentrat` stopped matching *concentration*, and `diversif` stopped matching *diversified*.
+# **Six of nine probe questions misrouted** and the full suite stayed green, because the one
+# performance test's question also contains the word "risk" and reached the facts by another route.
+# Stems now carry `\w*` — anchored at the START, open at the end — and
+# `test_intent_stem_probes.py` pins the inflections so this cannot silently recur.
 _RULES: list[tuple[Intent, re.Pattern]] = [
     (Intent.DAILY_BRIEFING, re.compile(r"\b(daily briefing|morning briefing|before (?:market )?open|start of day|brief me)\b", re.I)),
     (Intent.AI_NEWS_BRIEFING, re.compile(r"\bnews briefing|summar(?:ise|ize) (?:the )?news\b", re.I)),
     (Intent.PRICING_HEALTH_QUESTION, re.compile(r"\b(stale|unpriced|unavailable|no price|not priced|needs? mapping|pricing health)\b", re.I)),
     (Intent.DATA_QUALITY_QUESTION, re.compile(r"\b(missing|what data|data quality|needs? (?:attention|mapping|fixing)|unmapped|which .* need)\b", re.I)),
-    (Intent.NEWS_QUESTION, re.compile(r"\b(news|headline|happening|announced|report(?:ed)?)\b", re.I)),
+    (Intent.NEWS_QUESTION, re.compile(r"\b(news|headline\w*|happening|announced|report(?:ed)?)\b", re.I)),
     (Intent.EXPLANATION_OF_METRIC, re.compile(r"\b(what (?:is|does|are)|explain|why does .* show|meaning of)\b.*\b(xirr|twr|nav|official nav|entitlement|valuation|sharpe|drawdown|volatility|canonical|delayed|stale)\b", re.I)),
-    (Intent.ALLOCATION_ANALYSIS, re.compile(r"\b(allocation|asset mix|breakdown|diversif|weighting|how much .* in)\b", re.I)),
+    (Intent.ALLOCATION_ANALYSIS, re.compile(r"\b(allocation\w*|asset mix|breakdown|diversif\w*|weighting|how much .* in)\b", re.I)),
     (Intent.EXPOSURE_ANALYSIS, re.compile(r"\bexpos|how exposed|geograph|currency exposure|region(?:al)? (?:exposure|mix)\b", re.I)),
-    (Intent.RISK_CONCENTRATION, re.compile(r"\b(risk|concentrat|biggest position|largest holding|too much in|over.?weight)\b", re.I)),
-    (Intent.PERFORMANCE_ANALYSIS, re.compile(r"\b(perform|return|xirr|twr|vs (?:benchmark|s&p|index)|how (?:am i|have i) (?:doing|done)|cagr)\b", re.I)),
+    (Intent.RISK_CONCENTRATION, re.compile(r"\b(risk\w*|concentrat\w*|biggest position|largest holding|too much in|over.?weight)\b", re.I)),
+    (Intent.PERFORMANCE_ANALYSIS, re.compile(r"\b(perform\w*|return\w*|xirr|twr|vs (?:benchmark|s&p|index)|how (?:am i|have i) (?:doing|done)|cagr)\b", re.I)),
     # Watchlist before the market/movement rules — "what's on my watchlist today" is a watchlist
     # question, not a movement one. (R-54 Phase 0-1: absorbs the old `is_watch` flag.)
     (Intent.WATCHLIST_QUESTION, re.compile(r"\bwatch ?lists?\b", re.I)),
@@ -85,7 +95,7 @@ _RULES: list[tuple[Intent, re.Pattern]] = [
     # "indices", the remaining index names) so the single authority is at least as capable as the
     # two routers it replaces — otherwise consolidating would quietly narrow the product.
     (Intent.MARKET_REGION_QUESTION, re.compile(r"\b(india|singapore|us market|u\.s\.? market|nifty|sensex|s&p|s ?& ?p|nasdaq|dow|sti|markets?|indices|nikkei|ftse|hang seng|stoxx|wall street|global market|what happened in (?:the )?(?:us|india|singapore|market))\b", re.I)),
-    (Intent.PORTFOLIO_MOVEMENT, re.compile(r"\b(what (?:changed|moved)|why (?:is|am|are).*(?:up|down)|today|move[dr]?|gainers?|losers?|detractors?|drove)\b", re.I)),
+    (Intent.PORTFOLIO_MOVEMENT, re.compile(r"\b(what (?:changed|moved)|why (?:is|am|are).*(?:up|down)|today|mov(?:e[dr]?|ing|ement)|gainers?|losers?|detractors?|drove)\b", re.I)),
     (Intent.SETTINGS_HELP, re.compile(r"\b(how do i|settings|configure|set up|enable|api key|provider|map (?:a )?fund|add (?:a )?holding)\b", re.I)),
     # R-54 Phase 0-1: gained the vocabulary the old `is_networth`/`is_holdings` flags carried
     # (assets, liabilities, cash, wealth, positions) — same reason as the market rule above.

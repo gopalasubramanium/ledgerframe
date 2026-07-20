@@ -132,7 +132,14 @@ async def watchlist_quote_facts(session: AsyncSession) -> list[GroundingFact]:
     facts: list[GroundingFact] = []
     if not wl:
         return facts
-    for item in wl.items[:8]:
+    # ⊕ R-54 F-4. This read `wl.items[:8]` — and `Watchlist.items` declares no `order_by`
+    # (`models/__init__.py:492`), so it arrives in ID order. The fact list therefore followed
+    # INSERTION order and could slice away the rows the user had deliberately put at the top.
+    # `watchlists.py:34` already sorts explicitly for the page, so the PAGE was right and only the
+    # AI's view of it was wrong — grounding that does not mirror what the user sees is a fidelity
+    # defect, not a cosmetic one. Sorted here rather than on the relationship: the API already
+    # sorts, so a model-level change would alter a shipped surface to fix a bug it does not have.
+    for item in sorted(wl.items, key=lambda i: i.sort_order)[:8]:
         from app.models import Instrument
 
         instr = await session.get(Instrument, item.instrument_id)
@@ -362,10 +369,16 @@ async def performance_facts(session: AsyncSession) -> list[GroundingFact]:
         ks = await key_stats(session, base)
     except Exception:  # noqa: BLE001
         return await portfolio_facts(session)
+    # ⊕ R-54 §9-C (ruling 2026-07-21, item 1: NARROW-BY-DEMAND). XIRR and TWR were absent from
+    # this set, so the pack could not produce them — while `term-xirr-twr` reaches BOTH through the
+    # registry's reverse index, and *"what is XIRR"* is the ROADMAP's own worked example of
+    # tier-1(a). The two demanded rows are added; nothing else is, because the scope is what tier-1
+    # can resolve to, not everything the engine computes.
     want = {
         "Total return", "1Y return", "1Y volatility", "Max drawdown (1Y)",
         "Return / volatility", "Top 5 concentration", "Largest position",
         "Income (div/int)", "Income yield", "Realised P/L", "Unrealised P/L",
+        "Money-weighted return (XIRR)", "Time-weighted return (TWR)",
     }
     facts: list[GroundingFact] = []
     for m in ks.get("metrics", []):

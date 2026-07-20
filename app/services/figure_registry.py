@@ -63,6 +63,12 @@ class Figure:
     #: several headline figures have a GLOSSARY row but no `term-*` Help entry (Net worth is the
     #: striking one). Tier-1(a) can show the figure without an explanation; it must not invent one.
     term_id: str | None = None
+    #: Whether the GROUNDING FACT PACK can produce this figure (R-54 §9-C, ruling 2026-07-21 item
+    #: 2). **Declared state, not an ambient fact.** `False` is a legitimate answer and does not
+    #: mean "missing": the registry is a MAP of where each figure canonically lives, never a
+    #: promise that the AI serves everything. A row that is unreachable AND undemanded is served by
+    #: its canonical PAGE, and tier-1 must decline rather than invent it (guarded).
+    pack_reachable: bool = True
     #: Other lower-cased labels that name this same figure — NOT including the canonical label
     #: itself, which is always resolvable. (A row that repeated it tripped the collision guard on
     #: its own alias at Phase 0-2a: the guard was right, the data was redundant.)
@@ -127,18 +133,25 @@ REGISTRY: tuple[Figure, ...] = (
     # an ordinary row and an ordinary GLOSSARY term. Its derivation was verified BEFORE the spec
     # row was written, and that changed the definition: it counts every non-soft-deleted Holding
     # INCLUDING liabilities, so 13 assets and one mortgage report 14.
-    Figure("positions", "Positions", _STATS, "Positions", term_id=None),
+    Figure("positions", "Positions", _STATS, "Positions", term_id=None, pack_reachable=False),
 
-    # ── Allocation buckets. Their labels are MASTER-DATA asset-class names, not GLOSSARY terms;
+    # ── Allocation buckets. NOT pack-reachable, and DEMANDED-BUT-DEFERRED rather than undemanded:
+    #    `term-allocation-weight` reaches all four through the reverse index, so ruling item 1 would
+    #    extend the pack for them — except **F-2 is open on these exact four buckets** (bond, other
+    #    and retirement fall into none of them, so the weights sum to 92.1% on the demo set).
+    #    Extending grounding to a census known to be incomplete would feed the model figures that do
+    #    not add up. They are extended by F-2's own delta, which owns the census. The model is not
+    #    blind to allocation meanwhile: `allocation_facts` already grounds it, under
+    #    `Allocation (asset_class) — <bucket>` labels. Their labels are MASTER-DATA asset-class names, not GLOSSARY terms;
     #    the shared `term-allocation-weight` entry explains what a weight IS. ──
     Figure("alloc_cash_deposits", "Cash & deposits", _STATS, "Cash & deposits",
-           term_id="term-allocation-weight"),
+           term_id="term-allocation-weight", pack_reachable=False),
     Figure("alloc_equities_etfs", "Equities & ETFs", _STATS, "Equities & ETFs",
-           term_id="term-allocation-weight"),
+           term_id="term-allocation-weight", pack_reachable=False),
     Figure("alloc_crypto", "Crypto", _STATS, "Crypto",
-           term_id="term-allocation-weight"),
+           term_id="term-allocation-weight", pack_reachable=False),
     Figure("alloc_alternatives", "Alternatives", _STATS, "Alternatives",
-           term_id="term-allocation-weight"),
+           term_id="term-allocation-weight", pack_reachable=False),
 )
 
 
