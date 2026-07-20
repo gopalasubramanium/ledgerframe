@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./AppShell.css";
 import {
   AcceptanceGate,
+  AskPanel,
   Clock,
   DemoBadge,
   FirstRunChecklist,
@@ -231,6 +232,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           controls={<DisplayControls />}
           clock={<Clock timezone={timezone} />}
           demoBadge={demoBadge}
+          askSlot={<AskPanel />}
         />
         <StaleBanner count={staleCount} />
         {!updateDismissed && (

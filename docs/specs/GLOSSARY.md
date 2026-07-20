@@ -183,8 +183,13 @@ Home shows one summary of each, linked to its canonical page.
 
 | Term | Canonical definition |
 |------|----------------------|
-| **Briefing** | A short, **factual** daily summary of your portfolio and the market, built **deterministically from your own served figures** — never a fabricated number. **Information only, not advice.** Canonical on **News** (Home shows a summary). Richer AI narration is a future addition (AI-surfaces milestone, D-068) and is not shown until then. **[Help]** |
+| **Briefing** | A short, **factual** daily summary of your portfolio and the market, built **deterministically from your own served figures** — never a fabricated number. **Information only, not advice.** Canonical on **News** (Home shows a summary). Richer AI narration is a future addition ~~(AI-surfaces milestone, D-068)~~ **(deferred to ROADMAP R-45 by the owner, 2026-07-20 — AI-surfaces ships the Ask panel, not Briefing narration)** and is not shown until then. **[Help]** |
 | **Headlines** | **Grouped news headlines** retrieved from your configured sources (RSS + provider), **deduplicated** and grouped by area (My holdings · India · Singapore · US · Global · Macro / FX); "My holdings" ranked by relevance. **Retrieved, never invented** — the app never fabricates a headline (Commitment 3). Under **no-egress**, none are fetched (honest empty). Canonical on **News**. **[Help]** |
+
+| **Ask panel** | The panel that answers questions about **your own data**, opened from the top bar. Every answer is built from a **Fact pack** shown before it, is checked against the **Validation contract** before you see any of it, and ends with the fixed information-only disclaimer. **Nothing you ask or receive is stored** (Commitment 6) — closing the panel discards the exchange. **[Help]** |
+| **Fact pack** | The **served figures and help entries an AI answer is built from**, shown **before** the answer rather than after it, so what the answer rests on is visible whether or not you read the answer. Facts carry their source and staleness. **The facts are the only source of numbers** — the AI never computes one. |
+| **Grounding** | Building an answer **only** from the Fact pack. An answer that introduces a figure, symbol or quotation not in the pack is **not grounded** and is discarded before display — you are shown the facts directly, and told that is what happened. |
+| **Validation contract** | The **seven checks every AI answer passes before it is displayed** — buffered and never streamed raw; every significant figure traced to a fact; unknown symbols, recommendations, real-time claims and secret-like text rejected; long quotations verbatim; failure falls back to a deterministic answer. **It may be strengthened and never loosened** (Commitment 7). |
 
 ---
 

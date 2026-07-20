@@ -64,7 +64,16 @@ def _template_answer(question: str, facts: list[GroundingFact]) -> str:
     lines = ["Here is what the data shows:"]
     for f in facts[:8]:
         suffix = " (may be out of date)" if f.is_stale else ""
-        lines.append(f"• {f.label}: {f.value}{suffix}")
+        # ONE LINE PER FACT. Help facts became multi-section when the grounding pack was widened
+        # (Phase 0.9), and pasting several paragraphs into a bullet turned this list into a wall of
+        # prose — it also split one fact across many lines, so "every bullet traces to a fact"
+        # silently stopped being checkable.
+        #
+        # The FIRST PARAGRAPH is taken because it is a WHOLE UNIT: for a help fact it is the entry's
+        # body, which stands on its own. Nothing is cut mid-sentence, which is the same rule the
+        # fact pack itself follows — a caveat that stops halfway reads as complete.
+        value = " ".join(f.value.split("\n\n")[0].split())
+        lines.append(f"• {f.label}: {value}{suffix}")
     lines.append("")
     lines.append(DISCLAIMER)
     return "\n".join(lines)

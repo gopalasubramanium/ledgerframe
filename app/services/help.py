@@ -618,6 +618,43 @@ HELP: list[dict] = [
     # blocks this entry while the flag is false, and `test_every_built_page_has_a_help_entry`
     # fails the flip without this entry. Neither can land alone. That vice IS the HELP CURRENCY
     # LAW mechanised for this page.
+    # AI-surfaces (D-067), 2026-07-20. THE HELP CURRENCY LAW: a shipped surface's Help entry lands
+    # in the same milestone, same commit. This entry describes what the Ask panel DOES TODAY —
+    # answers about your own data, grounded in your figures and this catalogue. It deliberately
+    # describes NO narration of the Briefing: that is deferred to ROADMAP R-45 and does not ship
+    # here, and an entry that described it would be the dead-affordance rule broken in prose.
+    {"id": "ask", "category": "Orientation", "title": "Asking about your data",
+     "body": "Ask opens from the top bar and answers questions about your own figures — what you "
+             "hold, how net worth moved, what a term means, how a page works. Every answer is "
+             "built from a fact pack that is shown to you BEFORE the answer, so you can see what "
+             "it rests on whether or not you read the rest. The facts are the only source of "
+             "numbers: the AI never computes a figure and never fetches one. Nothing you ask and "
+             "nothing you are told is stored anywhere.",
+     "keywords": "ask ai question answer chat panel fact pack grounding disclaimer privacy "
+                 "no-egress local remote model help",
+     "inputs": ["**Your question** — up to 500 characters, about your data or how the app works",
+                "**Ask** — send the question"],
+     "outputs": ["The facts the answer is built from, shown first, with staleness where it applies",
+                 "The answer",
+                 "The fixed information-only disclaimer, on every answer"],
+     "interpret": "The panel states what this device is doing with your data, every time it is "
+                  "open, above the box you type into. Read it before you ask.\n\n"
+                  "- The answer is checked before you see any of it. If a check fails — a figure "
+                  "that traces to nothing, a symbol that is not in your data, a quotation that "
+                  "was not in the source — the answer is discarded and you are shown the facts "
+                  "directly, and told that is what happened. That is the check working, not a "
+                  "fault.\n"
+                  "- It gives no advice. It will not tell you what to buy, sell or hold, and it has "
+                  "no view on whether something is good to own.\n"
+                  "- With no-egress on, this device makes no outbound calls at all, so there is "
+                  "no AI narration and answers are assembled from your figures alone. They are "
+                  "still complete answers, and still built from the same facts.\n"
+                  "- Nothing is kept. Closing the panel discards the question and the answer, and "
+                  "there is no history to return to — that is a commitment the product makes, "
+                  "not an omission.\n"
+                  "- If a question is about a figure, the page that owns that figure is still "
+                  "where it is explained in full. Ask points at the product; it does not replace "
+                  "reading it."},
     {"id": "page-legal", "category": "Pages", "title": "Legal",
      "body": "The terms you have LedgerFrame under, and what it will never do. It is written as a "
              "formal document — a short preamble that fixes what its capitalised words mean, then "

@@ -1153,3 +1153,37 @@ honest shape.
 **Still required, unchanged from the note above:** a **Settings pre-pass re-run** on an isolated
 instance. **PROPOSED copy** (ethos/brand/ethics, author bio) and **any new DS pattern** the tab
 needs (avatar, brand block) are ratified by the owner **at the look**, not here.
+
+---
+
+### 15st-1. ⊕ DATED DELTA — the AI tab's deferral note, replaced by AI-surfaces (2026-07-20)
+
+**Accepted-page touch, recorded here per the standing CLAUDE.md rule.**
+
+**What changed.** The AI tab's static note read *"Model management lives with the AI surfaces — this
+line reflects the served configuration only."* It now reads:
+
+> *"Model management is not configurable here yet — this line reflects the served configuration
+> only. Ask, in the top bar, answers questions about your data using this configuration."*
+
+**Why it had to.** The old note deferred to a milestone that **has now arrived** — AI-surfaces
+shipped the Ask panel (D-067). **The dead-affordance rule (§12 (d)) cuts both ways:** a note
+promising a milestone that has landed is as misleading as a control that does nothing. It would
+have left the tab describing a future that is now the present.
+
+**What did NOT ship, stated precisely.** Model **management** — choosing or pulling a model from
+Settings — is still not built. The new note says exactly that and no more, and then names what did
+ship, so the tab tells the truth about **today** in both directions.
+
+**Test updated with it:** `Settings.test.tsx`'s Amendment-C assertion pinned the old sentence. It
+now pins the new one **plus** the Ask reference, with the reason written at the assertion — a test
+that pins copy is fine; a test that pins copy *nobody rechecked* is how stale strings survive.
+
+**⚠ PRE-PASS RE-RUN: OWED, NOT YET RUN.** This changes **rendered copy on an accepted page**, so
+the rule's trigger is met and a Settings pre-pass re-run is required — unlike `page-legal` §14-D
+and §14-E, where nothing rendered moved and the omission was a stated judgement. It is **not
+skipped and not waived**: it runs as part of the AI-surfaces **Phase-0a specimen**, which drives
+the browser across the AI surfaces on the isolated instance. **Until that run lands, this delta is
+recorded as incomplete.**
+
+**Gates at this delta:** `npm run check` — 387 frontend tests (Settings 29), 361 Playwright.

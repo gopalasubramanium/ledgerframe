@@ -255,3 +255,38 @@ async def test_the_two_providers_refuse_identically(no_egress, forbid_http) -> N
         f"the providers refuse differently: openai_compatible→{type(a).__name__}, "
         f"hailo→{type(b).__name__}. No-egress means the same thing on both."
     )
+
+
+# --- The SERVED posture: no-egress overrides the configured provider ---------------------------
+#
+# R-22 AMENDMENT (owner 2026-07-20, option (b)): no-egress means zero outbound calls INCLUDING
+# LOOPBACK, so a configured LOCAL provider is not answering either. `/ai/grounding-status` must
+# say so. Reporting "On-device — portfolio facts stay on this device" while no-egress is on would
+# describe a local AI that is not running, on the one surface built to be honest about posture.
+
+
+async def test_grounding_status_reports_no_egress_and_overrides_the_provider(no_egress, app_client):
+    body = (await app_client.get("/api/v1/ai/grounding-status")).json()
+
+    assert body["no_egress"] is True, (
+        "grounding-status does not report no-egress. The client cannot tell a SWITCHED-OFF AI "
+        "from a BROKEN one without it, and those are opposites: one is the product doing exactly "
+        "what it promised (Commitment 3)."
+    )
+    assert body["remote"] is False, "no outbound calls are possible, so nothing is remote"
+    assert body["mode"] == "deterministic", (
+        f"mode is {body['mode']!r} under no-egress. Per the R-22 amendment the device is not "
+        "running a local model either — deterministic is what it is actually doing."
+    )
+    assert "no-egress" in body["privacy_label"].lower(), (
+        f"the served privacy label does not name the posture: {body['privacy_label']!r}"
+    )
+
+
+async def test_grounding_status_does_not_claim_no_egress_when_it_is_off(app_client):
+    """Pinned against going blind: a hardcoded True would satisfy the test above."""
+    body = (await app_client.get("/api/v1/ai/grounding-status")).json()
+    assert body["no_egress"] is False, (
+        "grounding-status reports no-egress while the toggle is OFF — the posture label would "
+        "tell the user the device makes no outbound calls when it may be about to make one."
+    )

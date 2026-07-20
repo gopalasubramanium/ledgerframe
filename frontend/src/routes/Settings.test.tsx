@@ -164,8 +164,13 @@ test("Amendment C: ?tab=ai deep-links to the read-only served AI-config line + d
   renderAt("/settings?tab=ai");
   // arrival at the CONTROL: the served AI-config display line (getAiConfig → enabled/hailo/llama3).
   expect(await screen.findByText(/^AI is (on|off)/)).toBeTruthy();
-  // The static deferral note — model management stays with AI-surfaces (D-067/D-068).
-  expect(screen.getByText(/Model management lives with the AI surfaces/i)).toBeTruthy();
+  // The static note. ⊕ UPDATED 2026-07-20 (AI-surfaces §9(b); page-settings §15st-1): it used to
+  // read "Model management lives with the AI surfaces", which promised a milestone that has now
+  // ARRIVED — the Ask panel shipped. The dead-affordance rule cuts both ways: a note pointing at
+  // a milestone that has landed is as misleading as a control that does nothing. Model MANAGEMENT
+  // genuinely did not ship, so the note now says only that, and names what DID.
+  expect(screen.getByText(/Model management is not configurable here yet/i)).toBeTruthy();
+  expect(screen.getByText(/Ask, in the top bar/i)).toBeTruthy();
 });
 
 test("Amendment C: ?tab=data-feeds deep-links to the provider control (first-run provider journey target, §14st-1)", async () => {

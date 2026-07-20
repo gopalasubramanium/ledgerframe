@@ -38,11 +38,25 @@ async def test_no_fabricated_numbers_only_facts_appear(session):
     await seed_demo_data(session)
     await session.flush()
     facts, text, _ = await _collect(session, "what is my portfolio value?")
-    # Every numeric value rendered in the fallback answer must come from a fact.
+    # Every bullet in the fallback answer must come from a fact — nothing is composed here.
+    #
+    # ⊕ 2026-07-20 (AI-surfaces Phase 0.9): the direction of the containment check was flipped, and
+    # the reason is worth keeping. It asserted `fact_value in line`, which assumed a bullet renders
+    # a fact's value ENTIRE. Once the grounding pack carried multi-section help entries, the
+    # template began showing the first paragraph of such a fact — a whole unit, but not the whole
+    # value — and the old check read that as fabrication.
+    #
+    # The property that actually matters is the anti-fabrication one, and it is the other way
+    # round: everything SHOWN must come from a fact. `line_value in fact_value` says exactly that,
+    # and still fails on an invented bullet, which is what this test exists to catch.
     fact_values = {f["value"] for f in facts}
     for line in text.splitlines():
-        if line.startswith("•"):
-            assert any(v in line for v in fact_values)
+        if not line.startswith("•"):
+            continue
+        shown = line.removeprefix("•").split(":", 1)[-1].removesuffix(" (may be out of date)").strip()
+        assert any(shown in " ".join(v.split()) for v in fact_values), (
+            f"the fallback answer shows a bullet that traces to no fact: {shown!r}"
+        )
 
 
 async def test_refusal_when_no_data(session):

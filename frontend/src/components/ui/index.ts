@@ -106,6 +106,7 @@ export type { FirstRunChecklistProps, FirstRunStepId, FirstRunLinks } from "./Fi
 
 // §5.4 / §5.5 amendments (2026-07-10 — Holdings page-build). Ratified at the
 // kitchen-sink look (2026-07-10).
+export { AskPanel } from "./AskPanel";
 export { Dialog } from "./Dialog";
 export type { DialogProps } from "./Dialog";
 export { ConfirmDialog } from "./ConfirmDialog";

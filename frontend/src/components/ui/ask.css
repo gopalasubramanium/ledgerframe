@@ -1,0 +1,97 @@
+/* Ask panel (D-067) — composed from ratified primitives; this file is layout only.
+   Token-only, semantic colour only. Nothing here encodes a status in hue: the fallback signal and
+   the closed-posture line are distinguished by WEIGHT and a border, not by "warning orange" —
+   a fallback is the validator working, and colouring it as an error would say the opposite of
+   what the copy says. */
+
+.lf-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The privacy-mode label — ALWAYS VISIBLE (D-067). Quiet by default: it is a standing statement
+   of posture, not an alert, and an always-visible line that shouts stops being read. */
+.lf-ask__posture {
+  margin: 0;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-secondary);
+}
+/* No-egress: the posture is doing something, so it reads as a stated fact rather than a footnote. */
+.lf-ask__posture--closed {
+  color: var(--text-primary);
+  padding-left: var(--space-3);
+  border-left: var(--border-width) solid var(--border);
+}
+
+.lf-ask__composer {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.lf-ask__composer > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* FACTS BEFORE ANSWER (D-067 trust UX / contract clause 7). */
+.lf-ask__facts-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+  font-weight: var(--weight-medium);
+}
+.lf-ask__fact-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.lf-ask__fact {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: var(--font-size-14);
+  line-height: var(--line-14);
+}
+.lf-ask__fact-label {
+  color: var(--text-secondary);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lf-ask__fact-value {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+/* D-070's served fallback signal. Deliberately NOT error-styled. */
+.lf-ask__signal {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+}
+
+.lf-ask__answer {
+  font-size: var(--font-size-14);
+  line-height: var(--line-14);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.lf-ask__disclaimer {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+}

@@ -597,7 +597,7 @@ function DataFeedsPanel() {
 // --------------------------------------------------------------------------- //
 // AI is its own nature (owner re-walk 2026-07-18, option B): "AI is what the machine does with the
 // data." This tab surfaces ONLY the served AI-config line (D-105 — the frontend computes nothing) plus
-// a static deferral note. Model MANAGEMENT stays deferred to the AI-surfaces milestone (D-067/D-068);
+// a static note. Model MANAGEMENT stays deferred (AI-surfaces shipped the Ask panel, not model config);
 // nothing is invented beyond the moved line + the note. The "AI never persists" statement stays in
 // Privacy (its D-069 home — no move, no duplicate). Named "AI", NOT "AI & Voice" (R-32 undefined).
 function AiPanel() {
@@ -619,7 +619,13 @@ function AiPanel() {
                 : "AI is off."
               : "AI configuration unavailable."}
         </p>
-        <p className="set__fieldhelp">Model management lives with the AI surfaces — this line reflects the served configuration only.</p>
+        {/* ⊕ 2026-07-20 (AI-surfaces §9(b)) — the deferral note is REPLACED, not deleted.
+            The dead-affordance rule (page-settings §12 (d)) cuts both ways: a note promising
+            something that has now shipped is as misleading as a control that does nothing. The
+            Ask panel SHIPPED in this milestone, so "lives with the AI surfaces" now points at a
+            milestone that has arrived. Model MANAGEMENT did not ship and is still deferred, so
+            the note says exactly that and no more. This tab tells the truth about TODAY. */}
+        <p className="set__fieldhelp">Model management is not configurable here yet — this line reflects the served configuration only. Ask, in the top bar, answers questions about your data using this configuration.</p>
       </div>
     </section>
   );

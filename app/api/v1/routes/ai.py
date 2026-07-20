@@ -55,8 +55,27 @@ async def ai_grounding_status() -> dict:
     provider = get_ai_provider()
     health = await provider.health()
 
-    # Determine the privacy mode from the configured provider (not just health).
-    if not s.ai_enabled or s.ai_provider == "disabled":
+    # NO-EGRESS FIRST, and it OVERRIDES the configured provider (R-22 AMENDMENT, owner
+    # 2026-07-20, option (b)). No-egress means zero outbound calls INCLUDING LOOPBACK, so a
+    # configured local provider is not answering either: `egress_client` refuses before it looks
+    # at any URL. Reporting "On-device — portfolio facts stay on this device" here would describe
+    # a local AI that is not running, on the one surface built to be honest about posture.
+    #
+    # This is why the flag is SERVED rather than inferred from `health.available`. An unavailable
+    # provider and a switched-off one look identical from the client, and they are the opposite of
+    # each other: one is broken, one is the product doing exactly what it promised. That is the
+    # distinction Commitment 3 turns on, and the same one the typed EgressBlocked re-raise
+    # preserves inside the providers.
+    from app.core.egress import egress_allowed
+
+    no_egress = not await egress_allowed()
+
+    if no_egress:
+        # PROPOSED copy — posture strings are ratified at the 0a specimen (§9 (f)).
+        mode, remote = "deterministic", False
+        privacy = ("No-egress is on — this device makes no outbound calls, so answers are built "
+                   "from your data only, with no AI narration.")
+    elif not s.ai_enabled or s.ai_provider == "disabled":
         mode, remote, privacy = "deterministic", False, "Deterministic — fact-only answers; nothing is sent anywhere."
     elif s.ai_provider == "openai_compatible" and s.openai_base_url:
         local = _is_local_url(s.openai_base_url)
@@ -75,6 +94,7 @@ async def ai_grounding_status() -> dict:
         "ai_enabled": s.ai_enabled,
         "mode": mode,
         "remote": remote,
+        "no_egress": no_egress,
         "privacy_label": privacy,
         "last_error": health.detail or None,
     }
