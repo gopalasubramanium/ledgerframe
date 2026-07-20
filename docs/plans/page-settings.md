@@ -1217,3 +1217,56 @@ fix is a ruling (report configured vs effective), and if the answer is "configur
 copy itself needs the amendment.
 
 **Gates at this delta:** `npm run check` — 387 frontend tests (Settings 29), 361 Playwright.
+
+### 15st-3. ⊕ DATED DELTA — the AI tab now tells the truth, in the ruled vocabulary (2026-07-20)
+
+**Discharges the ⚑ carried at the end of §15st-2**, and it is recorded HERE rather than only in the
+AI-surfaces close because of the standing rule in `CLAUDE.md`: *a change to a page an earlier
+milestone ratified ships with a dated delta note in that page's plan file and that page's pre-pass
+re-run, in the same delta.* Flagging it in a close report is not sufficient.
+
+**The owner ruled Finding 6 (a) — serve the EFFECTIVE configuration** — and **merged the tab's copy
+into the same delta**, because the walk found the tab wrong in **two ways at once** and fixing the
+truthfulness without the vocabulary would have shipped a sentence that is accurate and still
+unreadable (ai-surfaces §14-3).
+
+**What changed on this page's surface:**
+
+1. **The line is SERVED, not composed.** It read
+   `` `AI is on — provider ${ai.provider}, model ${ai.model || "(default)"}` `` — assembled in
+   `Settings.tsx`. **Both defects followed from that one fact.** Interpolating the raw provider id
+   rendered the **retired vendor word "hailo"** straight to the screen (§14-2), and describing
+   whatever the payload said meant describing the **`.env` file** rather than the process. The
+   sentence now arrives from `/system/ai-config` and is rendered **verbatim**, the same rule the
+   Ask panel's posture line follows and for the same reason (ai-surfaces §0-C).
+2. **`/system/ai-config` reads `get_settings()`**, the effective resolution — the same object
+   `get_ai_provider()` builds the live provider from — instead of `read_env()`. The posture/kind
+   decision moved to **one resolver** (`app/ai/vocabulary.py`) shared with `/ai/grounding-status`,
+   because *two surfaces working the same fact out separately IS the defect*, not a tidy-up.
+3. **The static note gains the external-model clause** and swaps four words. *"this line reflects
+   the **served** configuration only"* → *"the configuration **this device is actually running**"*.
+   **The promise is the same promise** — §15st-1's ratified sentence was true of what the endpoint
+   *intended* and false of what it *did*. The rest of the ratified note, including *"Model
+   management is not configurable here yet"*, is **unchanged**.
+   **⚠ The external-model clause is deliberately NOT *"external models are configured here"*:** no
+   control here configures anything today, and a note promising one would break the
+   dead-affordance rule (§12 (d)) in prose — the very rule §15st-1's own replacement honoured. It
+   names this tab as where that configuration **belongs**, and says in the next clause that the
+   controls have not landed.
+
+**⚠ THE OLD TEST COULD NOT HAVE CAUGHT THIS, and the fix is a change of subject.**
+`Settings.test.tsx` asserted `/^AI is (on|off)/` against a sentence the **component composed**, so
+it could only confirm that the component's own template still ran. Under Finding 6 the template
+would have rendered the **wrong provider in the right shape** and the assertion would have been
+**green**. It now asserts the **served** sentence is rendered **verbatim**, plus that `hailo` never
+reaches the screen even though the mock's `provider` **is** `"hailo"` — a claim about the boundary
+rather than about the template.
+
+**⚑ CARRIED, NOT FIXED — a save may silently not take effect.** Under (a) the tab is always
+**true**; what it does not say is that a `PUT` writing `.env` has **no effect** while an OS-env
+override is in force, because the override still wins after `reload_settings()`. The owner ruled
+**(a)**, not **(c)** (serve both and warn on drift), so surfacing the drift is **outside this
+delta**. Recorded as **ai-surfaces FINDING 9**.
+
+**Pre-pass re-run and gates:** see ai-surfaces §16 (Phase 3a) — this page's AI tab is driven **by
+name**, both themes, with the corrected line on camera.

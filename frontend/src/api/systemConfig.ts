@@ -57,9 +57,24 @@ export async function putSystemConfig(
 // served config as a plain line, never a control.
 export interface AiConfig {
   enabled: boolean;
+  /** The INTERNAL provider id, not a label. Never rendered — see `summary` (AI-surfaces §14-2). */
   provider: string;
   model: string;
   has_openai_key: boolean;
+  /** One of the three kinds of intelligence: built_in | on_device_model | external_model. */
+  kind: string;
+  kind_label: string;
+  remote: boolean;
+  no_egress: boolean;
+  /**
+   * The SERVED sentence the AI tab renders verbatim (§14-3).
+   *
+   * The tab used to compose this line itself — `AI is on — provider ${provider}, model …` — which
+   * is how the retired vendor word reached the screen AND how the tab came to name a provider
+   * that was not the one answering. A sentence about what this device is doing with the user's
+   * data is not the browser's to assemble (§0-C).
+   */
+  summary: string;
 }
 
 export async function getAiConfig(): Promise<AiConfig | null> {

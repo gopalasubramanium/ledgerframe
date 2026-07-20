@@ -23,7 +23,17 @@ vi.mock("../api/systemConfig", () => ({
   putDataSource: vi.fn(async () => ({ ok: true })),
   getSystemConfig: vi.fn(async () => ({ timezone: "Asia/Singapore", autolock_minutes: "15", stale_after_seconds: "900" })),
   putSystemConfig: vi.fn(async () => ({ ok: true })),
-  getAiConfig: vi.fn(async () => ({ enabled: true, provider: "hailo", model: "llama3", has_openai_key: false })),
+  // ⊕ 2026-07-20 (AI-surfaces §14-3). `summary` is SERVED now — the tab renders it verbatim and
+  // composes nothing. Note what that means for this mock: `provider: "hailo"` is still here and is
+  // deliberately NOT reflected in `summary`, because the retired vendor word must not reach the
+  // screen even when the internal id is exactly that (§14-2).
+  getAiConfig: vi.fn(async () => ({
+    enabled: true, provider: "hailo", model: "llama3", has_openai_key: false,
+    kind: "on_device_model", kind_label: "On-device model (Ollama-compatible)",
+    remote: false, no_egress: false,
+    summary: "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
+      + "Built-in answers work in every mode.",
+  })),
   getLanEnabled: vi.fn(async () => false),
   setLanAccess: vi.fn(async () => ({ ok: true })),
   resetData: vi.fn(async () => ({ ok: true })),
@@ -162,8 +172,22 @@ test("Amendment C: ?tab=system deep-links to the PIN control (first-run PIN jour
 // §14st-2 — the AI-config line is its own tab (owner option B, 2026-07-18).
 test("Amendment C: ?tab=ai deep-links to the read-only served AI-config line + deferral note (§14st-2)", async () => {
   renderAt("/settings?tab=ai");
-  // arrival at the CONTROL: the served AI-config display line (getAiConfig → enabled/hailo/llama3).
-  expect(await screen.findByText(/^AI is (on|off)/)).toBeTruthy();
+  // arrival at the CONTROL: the served AI-config display line.
+  //
+  // ⊕ 2026-07-20 (AI-surfaces §14-3) — and the CHANGE OF SUBJECT here is the point. This used to
+  // assert /^AI is (on|off)/ against a sentence the COMPONENT composed from the payload, so it
+  // could only ever confirm that the component's own template still ran. It could not have caught
+  // Finding 6, in which the payload described a provider that was not the one answering: the
+  // template would have rendered the wrong provider in the right shape, and this assertion would
+  // have been green. It now asserts the SERVED sentence is rendered VERBATIM, which is a claim
+  // about the boundary rather than about the template.
+  const line = await screen.findByTestId("ai-config-summary");
+  expect(line.textContent).toBe(
+    "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
+    + "Built-in answers work in every mode.",
+  );
+  // §14-2 — the retired vendor word never reaches the screen, even though `provider` IS "hailo".
+  expect(line.textContent).not.toMatch(/hailo/i);
   // The static note. ⊕ UPDATED 2026-07-20 (AI-surfaces §9(b); page-settings §15st-1): it used to
   // read "Model management lives with the AI surfaces", which promised a milestone that has now
   // ARRIVED — the Ask panel shipped. The dead-affordance rule cuts both ways: a note pointing at
@@ -171,6 +195,9 @@ test("Amendment C: ?tab=ai deep-links to the read-only served AI-config line + d
   // genuinely did not ship, so the note now says only that, and names what DID.
   expect(screen.getByText(/Model management is not configurable here yet/i)).toBeTruthy();
   expect(screen.getByText(/Ask, in the top bar/i)).toBeTruthy();
+  // §14-3 — the tab says that an external model is configured here AND what that would mean for
+  // the data. Naming the kind without its consequence is only half of what the ruling asked for.
+  expect(screen.getByText(/external model, which would send your data off this device/i)).toBeTruthy();
 });
 
 test("Amendment C: ?tab=data-feeds deep-links to the provider control (first-run provider journey target, §14st-1)", async () => {

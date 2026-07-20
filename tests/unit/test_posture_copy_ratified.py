@@ -130,6 +130,30 @@ def test_the_posture_branches_are_all_registered():
     # the joined value never appears contiguously in the file and a substring check fails on a
     # constant that is being served perfectly well.
     referenced = {n.id for n in ast.walk(func) if isinstance(n, ast.Name)}
+
+    # ⊕ 2026-07-20 (§15-3, Finding 6). The route no longer names each constant in its own branch:
+    # the five-way posture decision moved into `app.ai.vocabulary.resolve_posture()` — shared with
+    # `/system/ai-config`, because two surfaces resolving the same fact separately IS Finding 6 —
+    # and the route now serves `POSTURE_COPY[posture]`.
+    #
+    # This check WENT RED on that refactor, correctly: by its old mechanism all five constants had
+    # "stopped being served". THE PROPERTY IT GUARDS IS UNCHANGED — a ratified string nothing
+    # serves is a record of copy the user cannot see — so the mechanism is re-expressed to follow
+    # the serving path rather than relaxed to accept the failure. A constant is served if the
+    # route names it directly, OR if it is a value in POSTURE_COPY and the route serves through
+    # POSTURE_COPY. The second arm is conditional on that reference precisely so this cannot go
+    # blind: stop serving the dict and every constant is unserved again, exactly as before.
+    serves_via_dict = "POSTURE_COPY" in referenced
+    in_the_dict = {
+        node.id
+        for node in ast.walk(next(
+            n for n in tree.body
+            if isinstance(n, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "POSTURE_COPY" for t in n.targets)
+        ))
+        if isinstance(node, ast.Name)
+    } if serves_via_dict else set()
+
     module_constants = {
         t.id
         for node in tree.body
@@ -137,7 +161,7 @@ def test_the_posture_branches_are_all_registered():
         for t in node.targets
         if isinstance(t, ast.Name) and t.id.startswith("POSTURE_") and t.id != "POSTURE_COPY"
     }
-    unused = module_constants - referenced
+    unused = module_constants - referenced - in_the_dict
     assert not unused, (
         f"Ratified posture constants are defined but no longer served by the route: {sorted(unused)}. "
         "A ratified string nothing serves is a record of copy the user cannot see — either the "

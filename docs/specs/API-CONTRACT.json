@@ -3370,7 +3370,7 @@
     },
     "/api/v1/ai/grounding-status": {
       "get": {
-        "description": "Whether AI answers are grounded, how they're narrated, and where data goes.\nNo secrets \u2014 only the base URL's host is considered, never the key (\u00a78).",
+        "description": "Whether AI answers are grounded, how they're narrated, and where data goes.\nNo secrets \u2014 only the base URL's host is considered, never the key (\u00a78).\n\n\u2295 2026-07-20 (\u00a714-3, Finding 6). The posture branch that used to live inline here is now\n`app.ai.vocabulary.resolve_posture()`, shared with `/system/ai-config`. It was duplicated\nlogic reading two different sources \u2014 this route read `get_settings()`, the Settings tab read\nthe `.env` FILE \u2014 and they disagreed the moment OS env was set. **Two surfaces working the\nsame fact out separately IS the defect**; one resolver is the fix, not a tidy-up.\n\nNO-EGRESS FIRST, and it OVERRIDES the configured provider (R-22 AMENDMENT, owner 2026-07-20,\noption (b)) \u2014 that ordering now lives in the resolver, with its reasoning.\n\nThe posture is still SERVED rather than inferred from `health.available`. An unavailable\nprovider and a switched-off one look identical from the client, and they are the opposite of\neach other: one is broken, one is the product doing exactly what it promised. That is the\ndistinction Commitment 3 turns on, and the same one the typed EgressBlocked re-raise preserves\ninside the providers.",
         "operationId": "ai_grounding_status_api_v1_ai_grounding_status_get",
         "parameters": [
           {
@@ -14223,6 +14223,7 @@
     },
     "/api/v1/system/ai-config": {
       "get": {
+        "description": "The EFFECTIVE AI configuration \u2014 what this process is actually running (Finding 6, ruled (a)).\n\n\u26a0 THIS READ FROM THE ``.env`` FILE AND WAS WRONG. `read_env()` returns what the file SAYS;\npydantic settings let the OS environment override it, so under a systemd ``Environment=`` or a\ncontainer ``-e`` the file and the process disagree \u2014 and this endpoint, and therefore the\nSettings AI tab, described a provider that was **not the one answering**. The 0a walk caught it\nlive: the tab said *\"provider hailo\"* while `/ai/grounding-status` served `openai_compatible`,\nwhich was answering (\u00a713-C).\n\n`page-settings.md` \u00a715st-1's ratified note promises *\"this line reflects the served\nconfiguration only\"*. Serving the file made that promise false. It reads `get_settings()` now \u2014\nthe same object `get_ai_provider()` builds the live provider from \u2014 so the promise holds again.\n\nThe posture and kind come from the ONE resolver (`app.ai.vocabulary`), shared with\n`/ai/grounding-status`, so the two surfaces cannot drift apart the way they just did.",
         "operationId": "get_ai_config_api_v1_system_ai_config_get",
         "parameters": [
           {

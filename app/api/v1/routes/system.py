@@ -338,20 +338,85 @@ async def set_config(payload: ConfigIn) -> dict:
 _AI_PROVIDERS = {"hailo", "openai_compatible", "disabled"}
 
 
+# ── THE AI TAB'S SENTENCE — SERVED (§14-3, owner-ruled 2026-07-20) ──
+#
+# ⚑ PROPOSED. These strings are drafts pending the owner's 3b look; the on-device line is the
+# owner's own register example, quoted from the ruling, and the other three are drawn to match it.
+#
+# SERVED, never composed in the browser, for the reason §0-C exists: a sentence about what the
+# device is doing with the user's data, assembled client-side, is a second source of truth for a
+# claim the product makes about itself. The Settings tab used to build this line by interpolating
+# the raw provider id (`AI is on — provider ${ai.provider}`), which is how the retired vendor word
+# reached the screen AND how the tab came to name a provider that was not answering.
+#
+# Each string does the three jobs §14-3 names: WHICH KIND is active, WHAT THAT MEANS FOR THE DATA,
+# and that built-in answers are always available underneath — the last because a reader who is told
+# the model is off should not conclude that Ask is off.
+AI_TAB_COPY: dict[str, str] = {
+    # No-egress and "AI off" are the SAME KIND (built-in) and DIFFERENT SENTENCES, because the
+    # reader's next action differs: one is a switch they chose, the other is a switch they can
+    # choose. Collapsing them would tell a user who turned no-egress on that their AI is
+    # misconfigured.
+    "no_egress": (
+        "No-egress is on — answers use built-in intelligence only, from your own figures. "
+        "No model is used and nothing leaves this device."
+    ),
+    "disabled": (
+        "AI narration is off — answers use built-in intelligence only, from your own figures. "
+        "Nothing is sent anywhere."
+    ),
+    "on_device_model": (
+        "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
+        "Built-in answers work in every mode."
+    ),
+    "external_model": (
+        "AI is on — external model; your question and the figures it uses are sent to the "
+        "configured provider, so data leaves this device. "
+        "Built-in answers work in every mode."
+    ),
+}
+
+
 @router.get("/system/ai-config")
 async def get_ai_config() -> dict:
-    from app.core.envfile import read_env
+    """The EFFECTIVE AI configuration — what this process is actually running (Finding 6, ruled (a)).
 
-    env = read_env()
+    ⚠ THIS READ FROM THE ``.env`` FILE AND WAS WRONG. `read_env()` returns what the file SAYS;
+    pydantic settings let the OS environment override it, so under a systemd ``Environment=`` or a
+    container ``-e`` the file and the process disagree — and this endpoint, and therefore the
+    Settings AI tab, described a provider that was **not the one answering**. The 0a walk caught it
+    live: the tab said *"provider hailo"* while `/ai/grounding-status` served `openai_compatible`,
+    which was answering (§13-C).
+
+    `page-settings.md` §15st-1's ratified note promises *"this line reflects the served
+    configuration only"*. Serving the file made that promise false. It reads `get_settings()` now —
+    the same object `get_ai_provider()` builds the live provider from — so the promise holds again.
+
+    The posture and kind come from the ONE resolver (`app.ai.vocabulary`), shared with
+    `/ai/grounding-status`, so the two surfaces cannot drift apart the way they just did.
+    """
+    from app.ai.vocabulary import KIND_IS_REMOTE, KIND_LABEL, resolve_posture
+
     s = get_settings()
+    posture, kind = await resolve_posture()
     return {
-        "enabled": env.get("LEDGERFRAME_AI_ENABLED", str(s.ai_enabled)).lower() in ("1", "true", "yes"),
-        "provider": env.get("LEDGERFRAME_AI_PROVIDER", s.ai_provider),
-        "hailo_base_url": env.get("LEDGERFRAME_HAILO_BASE_URL", s.hailo_base_url),
-        "model": env.get("LEDGERFRAME_AI_MODEL", s.ai_model),
-        "openai_base_url": env.get("LEDGERFRAME_OPENAI_BASE_URL", s.openai_base_url),
-        "has_openai_key": bool(env.get("LEDGERFRAME_OPENAI_API_KEY", s.openai_api_key)),
+        "enabled": s.ai_enabled,
+        # The internal provider id, unchanged — it is what the config API round-trips, and the
+        # owner's `.env` keeps working because of it. The RETIRED word is the one a user READS,
+        # which is `summary` below (§14-2).
+        "provider": s.ai_provider,
+        "hailo_base_url": s.hailo_base_url,
+        "model": s.ai_model,
+        "openai_base_url": s.openai_base_url,
+        # Still a boolean, never the key itself (§8: no secrets on any served surface).
+        "has_openai_key": bool(s.openai_api_key),
         "providers": sorted(_AI_PROVIDERS),
+        # ── The ruled vocabulary (§14-2/§14-3) ──
+        "kind": kind,
+        "kind_label": KIND_LABEL[kind],
+        "remote": KIND_IS_REMOTE[kind],
+        "no_egress": posture == "no_egress",
+        "summary": AI_TAB_COPY[posture if posture in AI_TAB_COPY else kind],
     }
 
 

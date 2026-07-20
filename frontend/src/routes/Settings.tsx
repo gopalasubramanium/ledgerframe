@@ -610,14 +610,22 @@ function AiPanel() {
     <section className="lf-card set__section">
       <header className="set__cardhead"><h2 className="lf-card__title">AI configuration</h2></header>
       <div className="lf-card__body">
-        <p className="set__aiconfig">
-          {ai === undefined
-            ? "Loading…"
-            : ai
-              ? ai.enabled
-                ? `AI is on — provider ${ai.provider}, model ${ai.model || "(default)"}${ai.has_openai_key ? ", API key set" : ""}.`
-                : "AI is off."
-              : "AI configuration unavailable."}
+        {/* ⊕ 2026-07-20 (AI-surfaces §14-3, Finding 6 + the tab-copy ruling — ONE delta, because
+            the 0a walk found this line wrong in TWO ways at once and fixing the truthfulness
+            without the vocabulary would ship a sentence that is accurate and still unreadable).
+
+            IT WAS COMPOSED HERE, and both defects followed from that. The old line interpolated
+            the raw provider id — `AI is on — provider ${ai.provider}` — so it rendered the
+            RETIRED vendor word "hailo" straight to the screen (§14-2), and it described whatever
+            the served payload said, which at the walk was the `.env` FILE's provider rather than
+            the one actually answering (§13-C).
+
+            The sentence is now SERVED and rendered VERBATIM. That is the same rule the Ask
+            panel's posture line follows and for the same reason (§0-C): a claim the product makes
+            about what it is doing with the user's data has ONE author, and it is not the browser.
+            The tab renders; it no longer decides. */}
+        <p className="set__aiconfig" data-testid="ai-config-summary">
+          {ai === undefined ? "Loading…" : ai ? ai.summary : "AI configuration unavailable."}
         </p>
         {/* ⊕ 2026-07-20 (AI-surfaces §9(b)) — the deferral note is REPLACED, not deleted.
             The dead-affordance rule (page-settings §12 (d)) cuts both ways: a note promising
@@ -625,7 +633,19 @@ function AiPanel() {
             Ask panel SHIPPED in this milestone, so "lives with the AI surfaces" now points at a
             milestone that has arrived. Model MANAGEMENT did not ship and is still deferred, so
             the note says exactly that and no more. This tab tells the truth about TODAY. */}
-        <p className="set__fieldhelp">Model management is not configurable here yet — this line reflects the served configuration only. Ask, in the top bar, answers questions about your data using this configuration.</p>
+        {/* ⊕ 2026-07-20 (§14-3). "the served configuration only" → "the configuration this device
+            is actually running". The old phrasing was RATIFIED (page-settings §15st-1) and was
+            true of what the endpoint intended; it was not true of what the endpoint DID, which
+            read the .env file while the process ran something else. The promise is the same
+            promise — the wording now names the thing that makes it keepable.
+
+            The external-model sentence is deliberately NOT "external models are configured here":
+            no control here configures anything today, and a note promising one would be the
+            dead-affordance rule (page-settings §12 (d)) broken in prose — the very rule the §9(b)
+            note-replacement above was written to honour. It names this tab as where that
+            configuration BELONGS, and says plainly in the next clause that the controls have not
+            landed. */}
+        <p className="set__fieldhelp">This tab is where the kind of intelligence — including an external model, which would send your data off this device — belongs. Model management is not configurable here yet — this line reflects the configuration this device is actually running. Ask, in the top bar, answers questions about your data using this configuration.</p>
       </div>
     </section>
   );

@@ -72,16 +72,38 @@ POSTURE_COPY = {
 }
 
 
-def _is_local_url(url: str) -> bool:
-    """True if the URL points at this device (localhost), so nothing leaves it."""
-    u = (url or "").lower()
-    return any(h in u for h in ("localhost", "127.0.0.1", "0.0.0.0", "[::1]", "://::1"))
+#: Posture key → the coarse `mode` the client reports. Kept beside POSTURE_COPY so a new branch
+#: declares its copy and its mode in one place.
+POSTURE_MODE = {
+    "no_egress": "deterministic",
+    "disabled": "deterministic",
+    "local_openai": "local",
+    "local_npu": "local",
+    "remote": "remote",
+}
 
 
 @router.get("/ai/grounding-status")
 async def ai_grounding_status() -> dict:
     """Whether AI answers are grounded, how they're narrated, and where data goes.
-    No secrets — only the base URL's host is considered, never the key (§8)."""
+    No secrets — only the base URL's host is considered, never the key (§8).
+
+    ⊕ 2026-07-20 (§14-3, Finding 6). The posture branch that used to live inline here is now
+    `app.ai.vocabulary.resolve_posture()`, shared with `/system/ai-config`. It was duplicated
+    logic reading two different sources — this route read `get_settings()`, the Settings tab read
+    the `.env` FILE — and they disagreed the moment OS env was set. **Two surfaces working the
+    same fact out separately IS the defect**; one resolver is the fix, not a tidy-up.
+
+    NO-EGRESS FIRST, and it OVERRIDES the configured provider (R-22 AMENDMENT, owner 2026-07-20,
+    option (b)) — that ordering now lives in the resolver, with its reasoning.
+
+    The posture is still SERVED rather than inferred from `health.available`. An unavailable
+    provider and a switched-off one look identical from the client, and they are the opposite of
+    each other: one is broken, one is the product doing exactly what it promised. That is the
+    distinction Commitment 3 turns on, and the same one the typed EgressBlocked re-raise preserves
+    inside the providers.
+    """
+    from app.ai.vocabulary import KIND_IS_REMOTE, KIND_LABEL, resolve_posture
     from app.core.config import get_settings
     from app.providers.ai import get_ai_provider
 
@@ -89,42 +111,21 @@ async def ai_grounding_status() -> dict:
     provider = get_ai_provider()
     health = await provider.health()
 
-    # NO-EGRESS FIRST, and it OVERRIDES the configured provider (R-22 AMENDMENT, owner
-    # 2026-07-20, option (b)). No-egress means zero outbound calls INCLUDING LOOPBACK, so a
-    # configured local provider is not answering either: `egress_client` refuses before it looks
-    # at any URL. Reporting "On-device — portfolio facts stay on this device" here would describe
-    # a local AI that is not running, on the one surface built to be honest about posture.
-    #
-    # This is why the flag is SERVED rather than inferred from `health.available`. An unavailable
-    # provider and a switched-off one look identical from the client, and they are the opposite of
-    # each other: one is broken, one is the product doing exactly what it promised. That is the
-    # distinction Commitment 3 turns on, and the same one the typed EgressBlocked re-raise
-    # preserves inside the providers.
-    from app.core.egress import egress_allowed
-
-    no_egress = not await egress_allowed()
-
-    if no_egress:
-        mode, remote, privacy = "deterministic", False, POSTURE_NO_EGRESS
-    elif not s.ai_enabled or s.ai_provider == "disabled":
-        mode, remote, privacy = "deterministic", False, POSTURE_DISABLED
-    elif s.ai_provider == "openai_compatible" and s.openai_base_url:
-        local = _is_local_url(s.openai_base_url)
-        remote = not local
-        mode = "local" if local else "remote"
-        privacy = POSTURE_LOCAL_OPENAI if local else POSTURE_REMOTE
-    else:  # hailo / ollama (local NPU)
-        mode, remote, privacy = "local", False, POSTURE_LOCAL_NPU
+    posture, kind = await resolve_posture()
 
     return {
         "grounded": True,
         "narration": provider.name if health.available else "deterministic-fallback",
         "model": (health.models[0] if health.models else None),
         "ai_enabled": s.ai_enabled,
-        "mode": mode,
-        "remote": remote,
-        "no_egress": no_egress,
-        "privacy_label": privacy,
+        "mode": POSTURE_MODE[posture],
+        "remote": KIND_IS_REMOTE[kind],
+        "no_egress": posture == "no_egress",
+        "privacy_label": POSTURE_COPY[posture],
+        # ── The ruled vocabulary (§14-2). The panel's provenance legend and the Settings tab read
+        #    the SAME kind, resolved in the SAME place.
+        "kind": kind,
+        "kind_label": KIND_LABEL[kind],
         "last_error": health.detail or None,
     }
 
