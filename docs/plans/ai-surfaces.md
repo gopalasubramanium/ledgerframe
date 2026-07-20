@@ -1597,3 +1597,22 @@ passed, 1 failed**: §15-3 moved `_is_local_url` to `app/ai/vocabulary.py`, and 
 lives in `test_ai_safety.py` — a file whose name matches **none** of the surfaces that changed, so
 every targeted re-run of the AI, Settings, posture and glossary suites was green. *A targeted re-run
 tests the code you were thinking about; the full suite tests the code you were not.*
+
+### 16-F. ⊕ THE EVIDENCE WAS RE-DRIVEN — two defects a 100/100 run could not see
+
+The first complete drive passed **100/100** and produced **bad evidence**. Both defects were in the
+photographs, and **assertions read the DOM, not the picture** — which is exactly why a perfect run
+sailed past them.
+
+1. **The first-run checklist sat BEHIND the Ask panel** in the narrated screenshot — the one image
+   this phase exists to produce. `dismissFirstRun` clicked once, 700ms after navigation, without
+   waiting for the dialog to appear or checking it had gone. Now: `waitFor({state:"visible"})` then
+   a retry loop.
+2. **Every phase wrote the SAME AI-tab filename**, so the committed image was whichever phase ran
+   last — the no-egress variant — and the **on-device sentence the ruling is mostly about was
+   silently overwritten**. *Evidence that overwrites itself is evidence of one thing claiming to be
+   evidence of three.* Filenames now carry the phase: `ai-3a-settings-ai-tab-{narrated,fallback,
+   no-egress}-{light,dark}.png`.
+
+**Re-driven clean: 100/100 again, 18 screenshots.** *A green suite certifies the product, not the
+record of it — and at a walk the record IS the deliverable.*
