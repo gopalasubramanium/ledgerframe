@@ -1802,3 +1802,69 @@ and repairing it here would put an **unreviewed change to the pricing path insid
 milestone** — where no reviewer of this milestone's diff would be looking for it. *The cost of
 carrying a known defect one delta further is smaller than the cost of a change landing where nobody
 is looking for it.*
+
+### 17-6. THE §17 RE-DRIVE — the touched renders, re-verified on the isolated instance
+
+**40/40 assertions, both themes, 0 unexplained console errors.** Screenshots in
+`docs/plans/assets/` (`ai-17-*.png`, 6 files).
+
+| State | What it puts on camera |
+|---|---|
+| **empty / pre-ask** | the **posture line present**, no legend — *"On-device (local OpenAI-compatible endpoint) — data stays on this device."* at `y=366 of 900` |
+| **narrated** | the **posture line ABSENT**, the legend present at `y=643 of 900`, and the **corrected** closing sentence in the answer body |
+| **AI tab** | the **F9 override note** at `y=307 of 900` — rendered **because it is true here** |
+
+**The handover, measured in both directions:** the *"exactly ONE locality statement"* count reads
+**1** in the empty state and **1** after the answer — never 2, never 0. The italic treatment was
+read with `getComputedStyle` (answer `italic`, legend `normal`), not eyeballed.
+
+**The F9 note is not staged.** This harness configures itself with **OS-env overrides** — which is
+*precisely* the condition the note describes — so the sentence on camera is **true of the device
+photographing it**. *A conditional warning demonstrated by forcing the condition is a screenshot of
+the template; this is a screenshot of the product.*
+
+**The staleness half is on camera as a NEGATIVE:** the facts are fresh, so **no chip renders**, and
+the asserted count is `0`. That absence is the reason the phantom sentence was a lie, and it is now
+in the record rather than in an argument.
+
+#### ⚠ THE FIRST DRIVE PASSED 37/37 AND PRODUCED THREE MISLABELLED PHOTOGRAPHS
+
+**Every "dark" screenshot came out light.** The driver wrote `localStorage["lf-theme"]`; the key is
+**`lf.theme`** (`frontend/src/theme/theme.ts`). The write was a **silent no-op**, and stamping
+`data-theme` directly was then undone by `ThemeProvider` re-stamping it on mount.
+
+**The run reported 37/37 because NOT ONE ASSERTION MENTIONED THE THEME.** Every claim it made was
+true — the posture line collapsed, the legend rendered, the sentence was corrected — and the
+artefact was still wrong, in a way no assertion in the file could reach. **This is §16-F exactly,
+one milestone later, in the drive written to demonstrate that §16-F had been learned.** *Knowing a
+failure mode by name is not the same as having a guard for it — the same lesson §15-4's docstring
+recorded about itself, now with a second instance.*
+
+**Mechanised, not remembered:**
+
+1. **The theme is ASSERTED** — `data-theme` on the root **and** a rendered background colour,
+   because the attribute alone would pass on a build whose dark tokens had stopped resolving.
+2. **A CROSS-THEME PIN:** the two themes must render **different** backgrounds. Each theme
+   asserting its own attribute would still go green if both rendered identically — *two themes that
+   produce the same background are one theme photographed twice.*
+3. **Fail-first on both**: the broken key reverted → `dark: got data-theme=light` **RED** and
+   `light=rgb(248,250,252) dark=rgb(248,250,252)` **RED**. Restored → 40/40, and the backgrounds
+   now read `rgb(248,250,252)` / `rgb(2,6,23)`.
+
+**The stale evidence was DELETED before the re-drive**, not overwritten — §16-F(2)'s lesson about
+evidence that overwrites itself applies equally to evidence that is *partially* replaced.
+
+**⊕ And the patch script refused to lie.** The first fail-first attempt ran with a wrong interpreter
+path; the `assert OLD in s` guard from §16-B(2) meant it **errored instead of reporting success**,
+and the drive that followed was correctly identified as *the fixed key passing*, not as a
+fail-first. *The tooling fix from the last milestone did its job in this one.*
+
+#### Isolation
+
+Isolated stack on spare ports (backend `:8412` · stub narrator `:8413` · vite dev `:5211`), **fresh
+temp data dir**, demo-seeded, terms accepted by API before the drive. The owner's live backend and
+dev server **verified still listening, before and after**. Repo-root `.env` **verified
+byte-identical** — `460a2da0…` at both ends, checked **from the repo root** (§16-D's lesson).
+`SMOKE_ALLOW_LIVE` **never set**. Throwaway driver, vite config and stub **deleted before staging**;
+`git status` showed only the six screenshots. **Teardown verified by PROBING all three ports**, not
+by trusting `kill`.
