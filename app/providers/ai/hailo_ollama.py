@@ -38,6 +38,10 @@ def _model_rank(name: str) -> float:
 
 class HailoOllamaProvider:
     name = "hailo"
+    #: §14-2 — an ON-DEVICE MODEL. The user-facing label is "On-device model (Ollama-compatible)";
+    #: `name` stays "hailo" because it is the internal id the config API round-trips and the
+    #: owner's `.env` depends on. The retired word is the one a USER READS, never this one.
+    kind = "on_device_model"
 
     def __init__(self, base_url: str, model: str = "", timeout: int = 30):
         self.base_url = base_url.rstrip("/")

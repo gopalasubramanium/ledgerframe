@@ -1148,3 +1148,51 @@ copies are **deleted**; the bar renders what the server sent, verbatim. **Conseq
 the gate's *"Read the Legal page"* is now disabled until the copy loads — the reading state's way
 back is a served string, so the gate is inert as a whole rather than able to enter a state it
 cannot render its exit from.
+
+---
+
+## §5 AMENDMENT — MODEL-TEXT TREATMENT (⚑ PROPOSED 2026-07-20, AI-surfaces §14-4; ratify at the 3b walk)
+
+**The owner's ruling, in his words:** model-generated text renders in a **distinct treatment** —
+**italic** — and it is **semantic, not decorative**. **Engine-served facts never carry it.**
+
+### What it means, and why the product has never needed a token for this before
+
+Until this milestone nothing in LedgerFrame was **written by a model**. Every string on screen came
+from the engine, a spec, or a served constant, so *"who wrote this"* was never a question a reader
+could sensibly ask. The Ask panel introduces the first prose on any surface whose **author is a
+language model**, and with it the first distinction the product must make **visually** rather than
+in copy: the panel already showed the reader **what an answer is built from**; it never showed
+**who wrote the sentence**. Those are different questions, and the second is the one a reader needs
+in order to weigh the first.
+
+### The rule
+
+| | |
+|---|---|
+| **Applies to** | Prose a model generated and the validator passed — today, exactly one element: the Ask panel's answer body when `provenance.narrated` is true |
+| **Never applies to** | The fact pack · the served fallback signal · the disclaimer · the provenance legend itself · any figure, anywhere |
+| **Axis** | `font-style: italic` — **slant only** |
+| **Class** | `.lf-ask__answer--model`, applied from the **served** `narrated` flag, never inferred client-side |
+
+### Why slant, and deliberately not colour
+
+**Colour in this product already carries meaning** — gain/loss direction, staleness, warning,
+danger. A fourth colour meaning *"a model wrote this"* would collide with all three and would be
+read as a judgement about the content rather than a statement about its author. **Slant is
+unused**, and is therefore free to be given a meaning. *A new semantic needs a free axis, not a
+prettier one.*
+
+### Why it is semantic and what follows from that
+
+Italic here does **not** mean quotation, emphasis, or a title. It means **these words were written
+by a model**. Two consequences the guards enforce (`AskPanel.test.tsx`, §14-4):
+
+1. **Both directions are asserted.** A treatment applied to everything distinguishes nothing, so
+   the engine-served elements in the same panel are asserted **not** to carry it.
+2. **The flag is SERVED.** The panel does not decide what is model-written; the stream tells it,
+   from the branch that actually produced the words (§15-4). A client-side inference would make
+   the browser the author of a claim about authorship.
+
+**⚑ PROPOSED.** Ratify at the 3b walk, with the treatment visible on a narrated answer and absent
+from the fact list in the same screenshot.

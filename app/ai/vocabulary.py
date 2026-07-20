@@ -76,6 +76,68 @@ POSTURE_KIND: dict[str, str] = {
 }
 
 
+# --- THE PROVENANCE LEGEND (§14-4, owner ruling 2026-07-20 — the walk's centrepiece) ------------ #
+#
+# ⚑ PROPOSED until the owner's 3b look.
+#
+# WHY THIS EXISTS, in the owner's framing: the panel already showed the reader WHAT AN ANSWER IS
+# BUILT FROM. It never showed WHO WROTE THE SENTENCE. Those are different questions, and the second
+# is the one a reader needs in order to weigh the first — a figure they can check themselves and a
+# figure a model phrased for them warrant different scrutiny even when they are the same figure.
+#
+# ⚠ THE LEGEND DESCRIBES WHAT HAPPENED, NEVER WHAT IS CONFIGURED. That distinction is the whole
+# guard. A device configured with an on-device model that FELL BACK — provider down, rate limited,
+# validation rejected the wording — produced a built-in answer, and must say so. Reading the legend
+# off `resolve_posture()` would have been the natural implementation and would have been a LIE in
+# exactly the states the fallback exists to handle: the panel would credit a model that wrote
+# nothing. So `provenance_for()` takes the kind AND whether narration actually survived, and the
+# guard drives a real fallback to prove it (`tests/integration/test_ai_provenance.py`).
+PROVENANCE_BUILT_IN = "Built-in intelligence only — no model was used."
+PROVENANCE_ON_DEVICE = "Facts: built-in · Narration: on-device model — nothing left this device."
+PROVENANCE_EXTERNAL = "Facts: built-in · Narration: external model."
+
+#: Every provenance line the product can serve. The guard iterates THIS, so a new generation path
+#: that forgets to register its line is caught by a coverage assertion rather than shipping an
+#: unratified — or absent — claim about authorship. Same shape as POSTURE_COPY (§12-3).
+PROVENANCE_COPY: dict[str, str] = {
+    KIND_BUILT_IN: PROVENANCE_BUILT_IN,
+    KIND_ON_DEVICE_MODEL: PROVENANCE_ON_DEVICE,
+    KIND_EXTERNAL_MODEL: PROVENANCE_EXTERNAL,
+}
+
+
+def kind_of_provider(provider) -> str:
+    """The kind of the provider that ACTUALLY produced text — asked of the provider, not of config.
+
+    ⚠ THIS EXISTS BECAUSE THE FIRST IMPLEMENTATION WAS WRONG, and the guard caught it. The legend
+    originally took the kind from `resolve_posture()`, i.e. from CONFIGURATION. Driving a real
+    narrated stream produced ``narrated=True`` alongside ``kind="built_in"`` — a narrated answer
+    labelled *"no model was used"*, which is the precise lie §14-4 exists to prevent, arrived at by
+    the precise route its own docstring warned about. Configuration describes what was set up. Only
+    the object that emitted the tokens knows who wrote them.
+
+    ⚠ AN UNDECLARED PROVIDER IS TREATED AS EXTERNAL, and the asymmetry is deliberate. The two
+    possible errors here are not equally bad: calling a remote model "on-device" tells a user their
+    data stayed put when it left, which is a **privacy claim the product cannot honour**; calling a
+    local model "external" is a warning that is merely too strong. When the answer is unknown, the
+    honest default is the one that cannot mislead about egress.
+    """
+    kind = getattr(provider, "kind", None)
+    return kind if kind in PROVENANCE_COPY else KIND_EXTERNAL_MODEL
+
+
+def provenance_for(kind: str, *, narrated: bool) -> tuple[str, str]:
+    """The legend for an answer that was ACTUALLY produced this way. Returns ``(kind, line)``.
+
+    ``narrated=False`` collapses to built-in **whatever the configuration says**, because that is
+    what happened: the model's text was discarded (or never arrived), and every word on screen came
+    from the engine. This is the same honesty the fallback signal already carries — D-070 tells the
+    reader the answer fell back; the legend tells them what wrote the one they got.
+    """
+    effective = kind if narrated else KIND_BUILT_IN
+    return effective, PROVENANCE_COPY[effective]
+
+
 def is_local_url(url: str) -> bool:
     """True if the URL points at this device (localhost), so nothing leaves it."""
     u = (url or "").lower()

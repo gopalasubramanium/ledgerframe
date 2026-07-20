@@ -87,6 +87,33 @@
   white-space: pre-wrap;
 }
 
+/* MODEL-TEXT TREATMENT — §14-4 (owner ruling 2026-07-20). ⚑ PROPOSED DESIGN-SYSTEM item.
+ *
+ * SEMANTIC, NOT DECORATIVE. The italic does not mean "quotation" or "emphasis" here; it means
+ * THESE WORDS WERE WRITTEN BY A MODEL. It is the one visual distinction in the product that
+ * separates prose a model generated from text the engine served, and it exists so the reader can
+ * see that at a glance rather than by reading a line of copy underneath.
+ *
+ * It rides ONE axis — slant — and deliberately not colour. Colour in this product already carries
+ * meaning (gain/loss, staleness, warning), and a fourth colour meaning "a model wrote this" would
+ * collide with all three. Slant is unused and therefore free to be given a meaning.
+ *
+ * Engine-served text NEVER carries it: not the fact list, not the fallback signal, not the
+ * disclaimer, not the provenance legend itself. `test_ask_provenance` asserts both directions,
+ * because a treatment applied to everything says nothing. */
+.lf-ask__answer--model {
+  font-style: italic;
+}
+
+/* The served provenance legend — who wrote the sentence above. Quieter than the answer and
+ * quieter than the fallback signal: it is standing metadata on every answer, not an event. */
+.lf-ask__provenance {
+  margin: 0;
+  font-size: var(--font-size-12);
+  line-height: var(--line-12);
+  color: var(--text-tertiary);
+}
+
 .lf-ask__disclaimer {
   margin: 0;
   padding-top: var(--space-3);

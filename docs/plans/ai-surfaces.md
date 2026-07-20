@@ -1386,3 +1386,100 @@ the tab honestly reports something else, and nothing explains why. Surfacing tha
 
 **Strings PROPOSED until the 3b look:** the four `AI_TAB_COPY` sentences and the amended static
 note.
+
+### 15-4. THE PROVENANCE LEGEND — the walk's centrepiece
+
+**Owner ruling, §14-4.** Every answer now carries a **served** line saying **who wrote the
+sentence**, and model-generated prose renders in a **distinct treatment**. All strings and the DS
+item are **PROPOSED** until the 3b look.
+
+| Generation path | Served legend | Treatment on the body |
+|---|---|---|
+| Deterministic, no model — **and every fallback** | *"Built-in intelligence only — no model was used."* | none |
+| Narrated by an on-device model | *"Facts: built-in · Narration: on-device model — nothing left this device."* | **italic** |
+| Narrated by a cloud API | *"Facts: built-in · Narration: external model."* | **italic** |
+
+**The distinction being drawn.** The panel already showed the reader **what an answer is built
+from**. It never showed **who wrote the sentence**. Those are different questions, and the second
+is the one a reader needs in order to weigh the first — a figure they can check against the pack
+themselves and a figure a model phrased for them warrant different scrutiny even when they are the
+same figure.
+
+#### ⚠ THE FIRST IMPLEMENTATION WAS A LIE, AND THE GUARD CAUGHT IT
+
+The legend originally took its kind from **`resolve_posture()` — from CONFIGURATION**. It is the
+natural implementation; the resolver was right there, already shared, already correct about
+posture. Driving a **real narrated stream** produced:
+
+```
+{'type': 'provenance', 'narrated': True, 'kind': 'built_in',
+ 'provenance': 'Built-in intelligence only — no model was used.'}
+```
+
+**A model-narrated answer labelled "no model was used"** — the exact lie §14-4 exists to prevent,
+reached by the exact route the guard's own docstring had warned about, in the same hour it was
+written. *Naming a failure mode is not the same as avoiding it.*
+
+**The fix, and why it made the code smaller.** The kind now comes from the **provider that actually
+emitted the tokens** (`kind_of_provider`), because configuration describes what was **set up** and
+only the object that produced the words knows **who wrote them**. Each provider declares its own
+`kind`; `OpenAICompatibleProvider` is the one that computes it, from its **base URL**, because the
+same class is an on-device model or an external one depending on where it points — the very
+distinction the legend turns on, and one the provider *name* cannot express.
+
+Following that through, `resolve_posture()` was **not needed in the stream at all**: every
+non-narrated branch collapses to built-in regardless, so the configured kind was **never once
+used** — while costing a `settings` read on the hot path of **every answer**. Removing it made the
+legend **truer and the stream lighter at the same time**, which is usually the sign that the value
+should not have been there.
+
+**⚠ AN UNDECLARED PROVIDER IS TREATED AS EXTERNAL**, and the asymmetry is pinned by its own test.
+The two possible errors are not equally bad: calling a remote model *on-device* tells a user their
+figures stayed put **when they left** — a privacy claim the product cannot honour — while calling a
+local model *external* is a warning that is merely too strong. **When the answer is unknown, take
+the error that cannot mislead about egress.**
+
+#### The guards, and one that was passing blind
+
+**Fail-first, both directions, against a REAL stream:** a fallback with a model **configured** must
+read built-in; a narrated answer must **never** read built-in. The **validator-rejected** branch
+gets its own test because it is the sharpest case — the model *did* write something and the reader
+sees **none of it**, so crediting it would describe a contribution the product deliberately threw
+away.
+
+**⚠ THE NARRATED GUARD PASSED BLIND ON ITS FIRST DRAFT, and the near-miss is the lesson.** It
+wrapped its real assertions in `if prov["narrated"]:` with a built-in arm for *"the stub didn't
+validate this time"*. It went **green** — through the `else` arm, because the stub was reading the
+**wrong message** (it matched any message containing `"FACTS"`, and the *user* turn carries
+*"Use only the FACTS"*), narrated an empty string, and fell back **every time**. **A guard whose
+happy path is optional is not a guard.** It now **asserts** `narrated is True` before anything
+else. *Same failure family as §12-2's circular fixture — the third time this milestone that a
+test's own scaffolding, not the product, was what made it green.*
+
+**⊕ Found while fixing the stub, and worth recording:** echoing a fact line **with its metadata**
+fails clause 2 — *"unsupported figure '16.778669' not in the facts"* — on the digits of the
+**timestamp**. A perfectly grounded sentence rejected for quoting provenance metadata rather than a
+figure. **Same shape as R-56**: a validator comparing digit runs cannot tell a fact from a
+timestamp. Errs safe, recorded, not fixed.
+
+#### The treatment
+
+**Italic, and semantic rather than decorative** (`.lf-ask__answer--model`, applied from the
+**served** `narrated` flag). **`DESIGN-SYSTEM.md` carries it as a PROPOSED §5 amendment.** Slant is
+the axis **because colour is taken**: gain/loss, staleness and warning already own colour in this
+product, and a fourth colour meaning *"a model wrote this"* would be read as a judgement about the
+content rather than a statement about its author. *A new semantic needs a free axis, not a prettier
+one.*
+
+**Both directions are guarded** — the fact list, the legend itself and the disclaimer are asserted
+**not** to carry it — because **a treatment applied to everything distinguishes nothing**. Proven
+by deleting the class and watching exactly one test red.
+
+**The legend is NOT conditional on `narrated`.** Every answer carries one. Showing it only when a
+model was involved would make the built-in state legible by **omission**, which is the
+silent-fallback failure D-070 exists to prevent, reintroduced on a new field.
+
+**HELP CURRENCY, same commit:** the `ask` entry gains the provenance line as a listed **output**
+and the three kinds in `interpret` — including that model-written wording is **shown in italics**
+and that **the numbers are the same numbers whichever kind answered**. `GLOSSARY.md` carries the
+vocabulary from §15-0. Help/glossary guards: **524 passed, 15 skipped**.

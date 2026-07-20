@@ -633,7 +633,8 @@ HELP: list[dict] = [
              "If the AI's wording does not pass the grounding checks it is discarded and you are "
              "told so — the facts are then shown on their own, and they are the answer.",
      "keywords": "ask ai question answer chat panel fact pack grounding disclaimer privacy "
-                 "no-egress local remote model help",
+                 "no-egress local remote model help built-in intelligence on-device external "
+                 "provenance narration ollama",
      "inputs": ["**Your question** — up to 500 characters, about your data or how the app works",
                 "**Ask** — send the question"],
      # ⊕ 2026-07-20 (ai-surfaces §12-1/§12-2, THE HELP CURRENCY LAW). Two of these three lines were
@@ -643,9 +644,14 @@ HELP: list[dict] = [
      # a block that does not render is the dead-affordance rule broken in prose. The disclaimer line
      # now says "once", because it used to render twice and a reader who saw two copies had no way
      # to know which was the product and which was the defect.
+     # ⊕ 2026-07-20 (ai-surfaces §14-4, THE HELP CURRENCY LAW) — the provenance line is a new
+     # output on every answer, so it is listed as one. A Help entry that describes the panel
+     # without the line the panel now always shows is out of date the day it ships.
      "outputs": ["The facts the answer is built from, shown first, with staleness where it applies",
                  "The answer — or, if the AI's wording was discarded, a note saying so and the "
                  "facts on their own",
+                 "A line saying how the answer was produced: built-in intelligence only, or facts "
+                 "built-in with the narration written by an on-device or an external model",
                  "The fixed information-only disclaimer, once, on every answer"],
      "interpret": "The panel states what this device is doing with your data, every time it is "
                   "open, above the box you type into. Read it before you ask.\n\n"
@@ -656,6 +662,16 @@ HELP: list[dict] = [
                   "fault.\n"
                   "- It gives no advice. It will not tell you what to buy, sell or hold, and it has "
                   "no view on whether something is good to own.\n"
+                  "- Every answer says how it was produced, because who wrote a sentence is a "
+                  "different question from what it was built on. There are three kinds. "
+                  "Built-in intelligence is the app answering from your own figures with no model "
+                  "involved, and it works in every mode. An on-device model is a language model "
+                  "running on this machine: your questions and figures never leave it, but the "
+                  "wording is written by the model, and model-written wording is shown in "
+                  "italics. An external model is a service elsewhere, and using one sends your "
+                  "question and the figures it uses off this device.\n"
+                  "- Whichever kind answered, the numbers are the same numbers. A model never "
+                  "supplies a figure — it only puts words around the facts listed above it.\n"
                   "- With no-egress on, this device makes no outbound calls at all, so there is "
                   "no AI narration and answers are assembled from your figures alone. They are "
                   "still complete answers, and still built from the same facts.\n"

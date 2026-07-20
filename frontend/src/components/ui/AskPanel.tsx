@@ -115,6 +115,10 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
   const [answer, setAnswer] = useState("");
   const [disclaimer, setDisclaimer] = useState("");
   const [fallbackSignal, setFallbackSignal] = useState<string | null>(null);
+  // §14-4 — the SERVED provenance legend and whether the body is model-generated. Both arrive on
+  // one event before the first delta, so the treatment is correct from the first character.
+  const [provenance, setProvenance] = useState<string | null>(null);
+  const [narrated, setNarrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<GroundingStatus | null>(null);
 
@@ -146,6 +150,8 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
     setAnswer("");
     setDisclaimer("");
     setFallbackSignal(null);
+    setProvenance(null);
+    setNarrated(false);
     setError(null);
   }, [seedQuestion]);
 
@@ -166,6 +172,8 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
     setAnswer("");
     setDisclaimer("");
     setFallbackSignal(null);
+    setProvenance(null);
+    setNarrated(false);
     setError(null);
 
     streamRef.current = streamAnswer(
@@ -176,6 +184,11 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
           // answer is built from before they see the answer.
           setFacts(event.facts);
           setPhase("streaming");
+        } else if (event.type === "provenance") {
+          // §14-4. Arrives before the first delta, so `narrated` is already correct when the body
+          // starts rendering — the treatment never has to be applied retroactively.
+          setProvenance(event.provenance);
+          setNarrated(event.narrated);
         } else if (event.type === "delta") {
           setAnswer((prev) => prev + event.delta);
         } else {
@@ -302,9 +315,30 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
               all: in the fallback state the fact pack IS the answer (§12-1), and an empty bordered
               box beneath it would read as "the AI said nothing", which is not what happened. */}
           {answerBody && (
-            <div className="lf-ask__answer" aria-live="polite" data-testid="ask-answer">
+            <div
+              className={`lf-ask__answer${narrated ? " lf-ask__answer--model" : ""}`}
+              aria-live="polite"
+              data-testid="ask-answer"
+              data-narrated={narrated ? "true" : "false"}
+            >
               {answerBody}
             </div>
+          )}
+
+          {/* §14-4 — the SERVED provenance legend, rendered verbatim and never composed here.
+              It sits BENEATH the answer it describes, unlike D-070's signal which LEADS: the
+              signal explains why there is no answer, so it must arrive before the absence; the
+              legend attributes an answer that is already on screen, and an attribution above the
+              thing it attributes is a label on an empty space.
+
+              IT IS NOT CONDITIONAL ON `narrated`. Every answer carries one — "Built-in
+              intelligence only" is a claim about authorship as much as the other two, and showing
+              a legend only when a model was involved would make its ABSENCE the signal, which is
+              the silent-fallback failure D-070 exists to prevent. */}
+          {provenance && (
+            <p className="lf-ask__provenance" data-testid="ask-provenance">
+              {provenance}
+            </p>
           )}
 
           {error && phase === "error" && (

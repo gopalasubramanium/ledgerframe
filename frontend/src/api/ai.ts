@@ -40,6 +40,9 @@ export interface GroundingStatus {
   no_egress: boolean;
   /** SERVED privacy label — D-067 requires it visible at all times. Rendered verbatim. */
   privacy_label: string;
+  /** One of the three kinds of intelligence (§14-2), resolved server-side alongside the posture. */
+  kind: string;
+  kind_label: string;
   last_error: string | null;
 }
 
@@ -65,6 +68,16 @@ export function getGroundingStatus() {
 
 export type ChatEvent =
   | { type: "facts"; facts: GroundingFactDTO[] }
+  /**
+   * §14-4's SERVED provenance legend — WHO WROTE THE SENTENCE, as distinct from what it was built
+   * from. It arrives BEFORE the deltas it describes, because it decides how they are rendered:
+   * delivering it on `done` would leave a narrated answer streaming in plain and restyling itself
+   * at the last token.
+   *
+   * `narrated` is what ACTUALLY happened, never what is configured — a configured model whose
+   * answer was discarded by the validator produced a built-in answer and says so.
+   */
+  | { type: "provenance"; kind: string; narrated: boolean; provenance: string }
   | { type: "delta"; delta: string }
   | {
       type: "done";

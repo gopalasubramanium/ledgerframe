@@ -98,10 +98,44 @@ def _template_answer(question: str, facts: list[GroundingFact]) -> str:
     return _with_disclaimer("")
 
 
+def _provenance_event(narrator=None) -> dict:
+    """The §14-4 legend, as its own SSE event, emitted BEFORE the deltas of its branch.
+
+    `narrator` is the provider whose text ACTUALLY reached the reader, or **None** when nothing a
+    model wrote did. That is the entire input — and the fact that CONFIGURATION is not among the
+    inputs is the design, arrived at by getting it wrong first (§15-4).
+
+    ⚠ THE CONFIGURED KIND WAS ORIGINALLY READ HERE, AND IT WAS BOTH A LIE AND DEAD WEIGHT. It was
+    a lie because a narrated stream came out labelled `narrated=True` beside *"Built-in
+    intelligence only — no model was used."*; the guard caught it. It was dead weight because
+    every non-narrated branch collapses to built-in ANYWAY, so the configured kind was never once
+    used — and resolving it cost a `settings` read on the hot path of every answer. Removing it
+    made the legend truer and the stream lighter at the same time, which is usually the sign that
+    the value should not have been there.
+
+    WHY ITS OWN EVENT AND NOT `done` METADATA — which is where the fallback signal travels, so the
+    difference is deliberate. The legend decides how the answer text is RENDERED: model-generated
+    prose carries a distinct treatment, engine text does not. Delivering it on `done` would leave
+    the panel styling the body only after the last token, so a narrated answer would stream in
+    plain and then restyle itself — the reader would watch the product change its mind about what
+    it was showing them. Every branch below knows its path before it emits its first delta, so the
+    legend can lead, and does.
+
+    It is NOT injected into the answer body. §12-1's rule holds: the body says what the screen does
+    not already say.
+    """
+    from app.ai.vocabulary import KIND_BUILT_IN, kind_of_provider, provenance_for
+
+    narrated = narrator is not None
+    kind = kind_of_provider(narrator) if narrated else KIND_BUILT_IN
+    effective, line = provenance_for(kind, narrated=narrated)
+    return {"type": "provenance", "kind": effective, "narrated": narrated, "provenance": line}
+
+
 async def answer_stream(
     session: AsyncSession, question: str
 ) -> AsyncIterator[dict]:
-    """Yields dicts: {'type': 'facts'|'delta'|'done', ...}. Designed for SSE."""
+    """Yields dicts: {'type': 'facts'|'provenance'|'delta'|'done', ...}. Designed for SSE."""
     facts = await gather_facts(session, question)
     # Surface the grounding facts to the client first — this is what the UI shows
     # alongside the answer (source + timestamp + stale badges).
@@ -112,6 +146,7 @@ async def answer_stream(
 
     if not health.available or _rate_limited():
         # Deterministic fallback — no fabrication, just the verified facts.
+        yield _provenance_event()
         text = _template_answer(question, facts)
         yield {"type": "delta", "delta": text}
         yield {"type": "done", "grounded": True, "provider": "fallback",
@@ -119,6 +154,9 @@ async def answer_stream(
         return
 
     if not facts:
+        # The refusal is ENGINE text — the model was never asked. Crediting it to the configured
+        # model would credit it with a sentence it did not write.
+        yield _provenance_event()
         yield {"type": "delta", "delta": REFUSAL_NO_FACTS}
         yield {"type": "done", "grounded": True, "provider": provider.name,
                "disclaimer": DISCLAIMER}
@@ -146,6 +184,7 @@ async def answer_stream(
     answer = strip_reasoning(full)
     if not answer:
         # Model returned nothing usable (or only reasoning) → deterministic fallback.
+        yield _provenance_event()
         if error:
             # PLAIN TEXT, no markdown emphasis. Finding 3 (§11-C) removed a served string whose
             # underscores rendered literally because the answer body is text; this was the one
@@ -172,6 +211,12 @@ async def answer_stream(
         # and the second copy carried its markdown underscores literally, because the answer body
         # is rendered as text (the AI reads strings, never styling — and so, here, does the
         # reader). One served string, rendered once, in the place the client puts it.
+        #
+        # THE LEGEND SAYS BUILT-IN HERE, and this is the branch it matters most on: the model DID
+        # write something, and the reader is not seeing a word of it. An answer the validator threw
+        # away is not narration — crediting the model would describe a contribution the product
+        # deliberately discarded.
+        yield _provenance_event()
         yield {"type": "delta", "delta": _template_answer(question, facts)}
         yield {"type": "done", "grounded": True, "provider": "fallback", "validation": reason,
                "fallback_signal": FALLBACK_SIGNAL, "disclaimer": DISCLAIMER}
@@ -182,6 +227,12 @@ async def answer_stream(
     # end with it. Finding 4's option (b) named exactly this hole — "loses the disclaimer on
     # model-narrated answers where the model may omit it" — and a guarantee that depends on a model
     # complying is not a guarantee.
+    # ⚠ THE KIND COMES FROM THE PROVIDER THAT WROTE THIS, NOT FROM `kind` ABOVE. `kind` is the
+    # CONFIGURED posture; this is the only branch where a model actually produced the words on
+    # screen, and the object that produced them is the only thing that knows what it is. The first
+    # implementation used the configured kind here and the guard caught it emitting `narrated=True`
+    # beside `Built-in intelligence only — no model was used.` (§15-4).
+    yield _provenance_event(provider)
     for piece in _sentence_chunks(_with_disclaimer(answer)):
         yield {"type": "delta", "delta": piece}
     yield {"type": "done", "grounded": True, "provider": provider.name,

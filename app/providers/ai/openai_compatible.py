@@ -78,6 +78,25 @@ def _connect_detail(base_url: str, exc: Exception) -> str:
 class OpenAICompatibleProvider:
     name = "openai_compatible"
 
+    @property
+    def kind(self) -> str:
+        """§14-2 — the ONLY provider whose kind is not fixed at import time.
+
+        An OpenAI-compatible endpoint is an **on-device model** when it points at this machine and
+        an **external model** when it does not, and the same class serves both. So the kind is
+        derived from the base URL the instance was actually constructed with — never from the
+        configured provider name, which is identical in both cases and therefore cannot tell the
+        two apart. This is the distinction the whole legend turns on: whether the user's figures
+        left the device (ai-surfaces §15-4).
+        """
+        from app.ai.vocabulary import (
+            KIND_EXTERNAL_MODEL,
+            KIND_ON_DEVICE_MODEL,
+            is_local_url,
+        )
+
+        return KIND_ON_DEVICE_MODEL if is_local_url(self.base_url) else KIND_EXTERNAL_MODEL
+
     def __init__(self, base_url: str, api_key: str, model: str, timeout: int = 120):
         self.base_url = base_url.rstrip("/")
         self._key = api_key

@@ -16,6 +16,10 @@ from app.schemas.ai import AIChunk, AIRequest, HealthStatus, ModelInfo
 
 class DisabledAIProvider:
     name = "disabled"
+    #: §14-2 — nothing this provider does is narration, so an answer produced while it is in place
+    #: is built-in by construction. Declared rather than inferred: the provenance legend asks the
+    #: PROVIDER what it is, never the configuration (ai-surfaces §15-4).
+    kind = "built_in"
 
     async def health(self) -> HealthStatus:
         return HealthStatus(available=False, provider="disabled", detail="AI is disabled")

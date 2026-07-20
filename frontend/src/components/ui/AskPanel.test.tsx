@@ -25,6 +25,8 @@ const STATUS: GroundingStatus = {
   remote: false,
   no_egress: false,
   privacy_label: "On-device (local Hailo/Ollama) — portfolio facts stay on this device.",
+  kind: "on_device_model",
+  kind_label: "On-device model (Ollama-compatible)",
   last_error: null,
 };
 
@@ -38,6 +40,12 @@ const NO_EGRESS_STATUS: GroundingStatus = {
 };
 
 const DISCLAIMER = "Information only, not financial advice.";
+// §14-4's three SERVED legends. Written out here rather than imported so the test asserts the
+// STRING the panel renders, not a constant it shares with the code under test — a shared constant
+// would make both sides agree by construction and the assertion would be tautological.
+const PROV_BUILT_IN = "Built-in intelligence only — no model was used.";
+const PROV_ON_DEVICE =
+  "Facts: built-in · Narration: on-device model — nothing left this device.";
 const FALLBACK_SIGNAL = "AI answer didn't pass grounding checks — showing facts directly.";
 
 function mockStatus(status: GroundingStatus) {
@@ -62,6 +70,7 @@ const GROUNDED_RUN: ChatEvent[] = [
       { label: "Today's change", value: "1,204.10 SGD", timestamp: "2026-07-20T00:00:00Z" },
     ],
   },
+  { type: "provenance", kind: "on_device_model", narrated: true, provenance: PROV_ON_DEVICE },
   { type: "delta", delta: "Your net worth is 796,543.93 SGD." },
   { type: "done", grounded: true, provider: "openai_compatible", disclaimer: DISCLAIMER },
 ];
@@ -391,4 +400,86 @@ test("AskPanel: an answer that is ONLY the disclaimer renders no empty answer bl
   expect(visibleOccurrences(DISCLAIMER)).toBe(1);
   // The facts are still there — they ARE the answer in this state (§12-1).
   expect(await screen.findByRole("region", { name: "Facts used" })).toHaveTextContent("Net worth");
+});
+
+// --- §14-4: THE PROVENANCE LEGEND AND THE MODEL-TEXT TREATMENT -------------------------------- //
+//
+// The panel already showed WHAT an answer is built from. It never showed WHO WROTE THE SENTENCE.
+// These tests are about that second question, and they assert BOTH DIRECTIONS of the treatment,
+// because a distinction applied to everything distinguishes nothing.
+
+test("§14-4: a model-narrated answer carries the served legend AND the model-text treatment", async () => {
+  mockStream(GROUNDED_RUN);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  // The legend is rendered VERBATIM — the panel composes no claim about its own authorship, the
+  // same rule the disclaimer and the posture line follow (§0-C).
+  const legend = await screen.findByTestId("ask-provenance");
+  expect(legend.textContent).toBe(PROV_ON_DEVICE);
+
+  // The treatment is SEMANTIC: these words were written by a model.
+  const answer = screen.getByTestId("ask-answer");
+  expect(answer.dataset.narrated).toBe("true");
+  expect(answer.className).toContain("lf-ask__answer--model");
+});
+
+test("§14-4: engine-served text NEVER carries the model-text treatment", async () => {
+  mockStream(GROUNDED_RUN);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+  await screen.findByTestId("ask-provenance");
+
+  // The fact list, and the legend itself, are the ENGINE's words in the same panel as a model's.
+  // If the treatment leaked onto them the distinction would be decorative rather than semantic —
+  // which is the one thing the owner's ruling said it must not be.
+  for (const el of [
+    screen.getByRole("region", { name: "Facts used" }) as HTMLElement,
+    screen.getByTestId("ask-provenance"),
+  ]) {
+    expect(el.className).not.toContain("lf-ask__answer--model");
+    expect(el.querySelector(".lf-ask__answer--model")).toBeNull();
+  }
+});
+
+test("§14-4: a FALLBACK answer is labelled built-in, and nothing on screen is model-styled", async () => {
+  // The state the legend matters most in: a model was configured, it wrote something, the
+  // validator discarded it, and the reader is seeing none of it. Crediting the model here would
+  // describe a contribution the product deliberately threw away.
+  mockStream([
+    {
+      type: "facts",
+      facts: [{ label: "Net worth", value: "796,543.93 SGD", timestamp: "2026-07-20T00:00:00Z" }],
+    },
+    { type: "provenance", kind: "built_in", narrated: false, provenance: PROV_BUILT_IN },
+    { type: "delta", delta: DISCLAIMER },
+    {
+      type: "done", grounded: true, provider: "fallback",
+      fallback_signal: FALLBACK_SIGNAL, disclaimer: DISCLAIMER,
+    },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  const legend = await screen.findByTestId("ask-provenance");
+  expect(legend.textContent).toBe(PROV_BUILT_IN);
+  expect(document.querySelectorAll(".lf-ask__answer--model")).toHaveLength(0);
+});
+
+test("§14-4: the legend is shown on EVERY answer, so its absence is never the signal", async () => {
+  // Rendering a legend only when a model was involved would make the built-in state legible by
+  // OMISSION — the silent-fallback failure D-070 exists to prevent, reintroduced on a new field.
+  mockStream([
+    { type: "facts", facts: [{ label: "Net worth", value: "1.00 SGD" }] },
+    { type: "provenance", kind: "built_in", narrated: false, provenance: PROV_BUILT_IN },
+    { type: "delta", delta: DISCLAIMER },
+    { type: "done", grounded: true, provider: "fallback", disclaimer: DISCLAIMER },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+  expect((await screen.findByTestId("ask-provenance")).textContent).toBe(PROV_BUILT_IN);
 });
