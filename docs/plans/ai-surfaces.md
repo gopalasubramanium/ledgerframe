@@ -1264,3 +1264,66 @@ owner's look.
 cannot be cited by the narration. It **errs safe** — the failure mode is *no narration of a zero*,
 never a fabricated one — and it is a **known limit**, not a defect this milestone repairs.
 **POST-RELEASE.**
+
+---
+
+## 15. THE RULED FIXES — one delta each (2026-07-20)
+
+### 15-1. FINDING 5 — one canonical fact per figure, and no raw money in the pack
+
+**Owner ruled (c) — both halves.** Shipped in one delta because they are one defect seen twice: the
+pack merged two sources that overlap, and neither the merge nor the sources knew it.
+
+**Fail-first, on the SERVED pack** (`tests/integration/test_ai_fact_pack_canonical.py`, against the
+unfixed build — 8 failures across four overlapping questions):
+
+```
+FAIL raw money in the fact pack for "How is my portfolio performing and what's the risk?":
+       Unrealised P/L: '103907.53 SGD'
+       Realised P/L: '802.7 SGD'
+       Income (div/int): '0.0 SGD'
+FAIL the pack still serves a non-canonical alias: ['Total return %', 'Total unrealised P/L']
+```
+
+**⚠ THE GUARD IS ON THE PACK, NOT ON THE FORMATTER — and that is the whole lesson of this finding.**
+`_fmt` was never broken; it was **BYPASSED**. `performance_facts` rendered money as `f"{v} {base}"`,
+one function away from the helper it should have called. A unit test on `_fmt` would have been green
+throughout, and *was* — the 78/78 run walked straight through a screenshot showing `79326.3 SGD`.
+**A guard on a helper cannot see a caller that does not call it.**
+
+**⚠ THE CANONICAL LABEL AND THE CANONICAL VALUE CAME FROM DIFFERENT SOURCES.** This is why the fix is
+not "pick a winning source and drop the other". `GLOSSARY.md:157/161` make **Unrealised P/L** and
+**Total return** the canonical **spellings** — the `performance_facts` side — while the canonical
+**values** come from `value_portfolio`, the canonical reader, via `portfolio_facts`. **Neither source
+was wholly right.** The survivor therefore keeps the winner's **value** (first-wins, and
+`gather_facts` prepends `portfolio_facts` on every portfolio intent, so that ordering is a
+consequence of the architecture rather than luck) and is **relabelled** to the GLOSSARY spelling.
+
+**⚠ IDENTITY IS DECLARED, NEVER INFERRED FROM THE VALUE.** The cheap guard — *"no two facts render
+the same number"* — is **wrong**, and would have shipped a data-loss bug waiting for the first user
+with no liabilities: **Net worth** and **Total assets** are equal for that user, and they are two
+different figures that merely coincide. Collapsing them would delete a fact the reader asked for. So
+`FIGURE_IDENTITY` in `app/ai/tools.py` is an explicit, reviewable map, and a coincidence of values is
+never treated as a duplicate. *The obvious version of this guard was the dangerous one.*
+
+**Shipped:** `_dedupe` deduplicates by **label AND figure**, relabelling the survivor; the
+`performance_facts` money branch renders through `_fmt`. **Grounding is untouched** — the validator
+is format-insensitive (`_sig3` compares leading significant digits), so this changes what the reader
+sees without changing what the model may cite. **17/17 new; 308 passed across the AI suites.**
+
+**⊕ Found while fixing, NOT swept in:** `Income (div/int)` is a shown fact label with **no GLOSSARY
+row** — the spelling there is **Income** (`GLOSSARY.md:158`). It is not a *retired* term, so the
+deprecated-term guard cannot see it, and it is not a *collision*, so this delta's de-duplication does
+not reach it. It is the same class as §0-H (a non-canonical term in the AI's mouth) at a new site.
+**⚑ Recorded as FINDING 8, not fixed** — a label change is app-wide (page-chrome §11-4) and this
+delta is scoped to Finding 5.
+
+### 15-2. FINDING 7 — filed as **R-56**, POST-RELEASE
+
+The zero-valued-fact narration gap (§12-4) is now a ROADMAP row rather than a paragraph in a plan
+file, per the ruling. The row states the mechanism to the line (`safety.py:93`, `safety.py:133`), why
+it **errs safe** — *the product is quieter than it could be, never wronger* — and why the repair is a
+**judgement**: under a leading-significant-digits comparison a zero is genuinely indistinguishable
+from *"no significant digits"*, so the discard is correct handling applied to a value that parses
+empty legitimately. Any repair must separate those two cases **without widening what the validator
+accepts**, because the contract may not weaken (Commitment 7 / D-071).

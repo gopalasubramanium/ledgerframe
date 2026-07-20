@@ -25,6 +25,60 @@ def _fmt(value, ccy: str) -> str:
     return f"{value:,.2f} {ccy}"
 
 
+# --- FIGURE IDENTITY (AI-surfaces §14-3 / Finding 5, owner-ruled 2026-07-20) -------------------- #
+#
+# The pack is merged from sources that OVERLAP, and `_dedupe` used to deduplicate by LABEL — so
+# two labels for one figure were, to it, two facts. The 0a walk found the result on screen:
+#
+#     Total unrealised P/L   79,326.30 SGD
+#     Unrealised P/L         79326.3 SGD
+#
+# One figure, twice, one copy raw — on the one list in the product whose job is to let a reader
+# check the answer against its basis.
+#
+# ⚠ IDENTITY IS DECLARED, NEVER INFERRED FROM THE VALUE. The cheap version of this fix — "drop a
+# fact whose rendered number already appears" — is a DATA-LOSS BUG waiting for the first user with
+# no liabilities: **Net worth** and **Total assets** are then equal, and they are two different
+# figures that merely coincide. Collapsing them would delete a fact the reader asked for. A
+# coincidence of values is not an identity, so identity is written down here where it can be read
+# and argued with.
+#
+# ⚠ THE CANONICAL LABEL AND THE CANONICAL VALUE CAME FROM DIFFERENT SIDES, which is why this is a
+# map and not a choice of winning source. GLOSSARY.md:157/161 make **Unrealised P/L** and
+# **Total return** the canonical SPELLINGS — the `performance_facts` side — while the canonical
+# VALUES come from `value_portfolio`, the canonical reader, via `portfolio_facts`. Neither source
+# was wholly right. So the survivor keeps the winner's value and is RELABELLED to the canonical
+# spelling.
+#
+# Keys are lower-cased labels; values are (figure id, canonical label).
+FIGURE_IDENTITY: dict[str, tuple[str, str]] = {
+    "net worth": ("net_worth", "Net worth"),
+    "total unrealised p/l": ("unrealised_pl", "Unrealised P/L"),
+    "unrealised p/l": ("unrealised_pl", "Unrealised P/L"),
+    "total return %": ("total_return", "Total return"),
+    "total return": ("total_return", "Total return"),
+    "today's change": ("todays_change", "Today's change"),
+    "total assets": ("total_assets", "Total assets"),
+    "total liabilities": ("total_liabilities", "Total liabilities"),
+    "realised p/l": ("realised_pl", "Realised P/L"),
+}
+
+
+def figure_identity(label: str) -> str | None:
+    """The figure a fact label names, or None if the label has no declared identity.
+
+    None means "nothing to collide with" — most labels are per-instrument or per-bucket and are
+    already unique by label. Only figures a second source can also produce need declaring.
+    """
+    entry = FIGURE_IDENTITY.get(label.strip().lower())
+    return entry[0] if entry else None
+
+
+def _canonical_label(label: str) -> str:
+    entry = FIGURE_IDENTITY.get(label.strip().lower())
+    return entry[1] if entry else label
+
+
 async def portfolio_facts(session: AsyncSession) -> list[GroundingFact]:
     base = get_settings().base_currency
     val = await value_portfolio(session, base)
@@ -306,7 +360,19 @@ async def performance_facts(session: AsyncSession) -> list[GroundingFact]:
         elif kind == "count":
             value = f"{v}"
         else:
-            value = f"{v} {base}"
+            # §14-3 / Finding 5, the FORMAT half. This read `f"{v} {base}"` — no formatting at
+            # all — and shipped `79326.3 SGD` and `0.0 SGD` to a user-facing money list, directly
+            # beneath a correctly-formatted copy of the same figure (D-105: no raw numbers on a
+            # money surface).
+            #
+            # ⚠ `_fmt` was never broken; it was BYPASSED. A guard on the formatter would have been
+            # green throughout — which is why the guard for this is on the SERVED PACK
+            # (`tests/integration/test_ai_fact_pack_canonical.py`), where a caller that does not
+            # call the formatter is visible.
+            #
+            # The validator is format-insensitive (`_sig3` compares leading significant digits),
+            # so this changes what the reader sees without changing what the model may cite.
+            value = _fmt(Decimal(str(v)), base)
         if m.get("note"):
             value += f" ({m['note']})"
         facts.append(GroundingFact(label=m["label"], value=value))
@@ -455,12 +521,33 @@ async def instrument_deep_facts(session: AsyncSession, symbols: list[str], max_s
 
 
 def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
-    seen: set[str] = set()
+    """One fact per label AND one fact per FIGURE (§14-3 / Finding 5).
+
+    Label de-duplication was here already and is kept — it catches the same source running twice.
+    Figure de-duplication is the new half: it catches two DIFFERENT sources producing one figure
+    under two names, which is what shipped to the 0a screenshot.
+
+    FIRST WINS, and that ordering is not arbitrary. `gather_facts` PREPENDS `portfolio_facts` on
+    any portfolio intent, so the survivor's value comes from `value_portfolio` — the canonical
+    reader — rather than from the analytics engine's copy of the same quantity. The survivor is
+    then RELABELLED to the GLOSSARY spelling, because the canonical label and the canonical value
+    did not come from the same source (see FIGURE_IDENTITY).
+    """
+    seen_labels: set[str] = set()
+    seen_figures: set[str] = set()
     out: list[GroundingFact] = []
     for f in facts:
-        if f.label not in seen:
-            seen.add(f.label)
-            out.append(f)
+        fig = figure_identity(f.label)
+        if f.label in seen_labels or (fig is not None and fig in seen_figures):
+            continue
+        seen_labels.add(f.label)
+        if fig is not None:
+            seen_figures.add(fig)
+            canonical = _canonical_label(f.label)
+            if canonical != f.label:
+                f = f.model_copy(update={"label": canonical})
+                seen_labels.add(canonical)
+        out.append(f)
     return out[:cap]
 
 
