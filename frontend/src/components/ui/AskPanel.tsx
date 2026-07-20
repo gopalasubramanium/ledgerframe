@@ -194,6 +194,35 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
 
   const busy = phase === "loading" || phase === "streaming";
 
+  /**
+   * §12-2 (owner ruling, 2026-07-20) — the DISPLAY half of the disclaimer synthesis.
+   *
+   * Finding 4 recorded the disclaimer rendering twice: once ending the answer body, once as the
+   * served footer element. Its options (a) and (b) each dropped one of the two copies and, with
+   * it, one of two readers — (a) left the raw answer text without its own disclaimer for any
+   * export/stream/copy consumer; (b) left model-narrated answers depending on the model to emit
+   * it. The owner ruled BOTH halves instead of either option:
+   *
+   *   the answer TEXT always ends with the served constant (enforced in `grounding.py`, guarded
+   *   by `test_ask_answer_projection.py`), and the PANEL projects the body without that trailing
+   *   line, rendering the footer element ONCE.
+   *
+   * DE-DUPLICATION AT DISPLAY IS A PROJECTION, NOT A REDACTION — the same distinction Finding 1
+   * settled for the fact pack. Nothing is withheld: the line is on screen, once, in the place the
+   * client puts it, and it is still in the artifact the reader can copy out.
+   *
+   * It strips the SERVED constant, never a locally-known string. The panel composes no
+   * legal-adjacent text and recognises none it was not given — matching on a hardcoded sentence
+   * here would make this file a second source of truth for it, which is the §0-C defect.
+   */
+  const answerBody = (() => {
+    if (!disclaimer) return answer;
+    const trimmed = answer.trimEnd();
+    return trimmed.endsWith(disclaimer)
+      ? trimmed.slice(0, -disclaimer.length).trimEnd()
+      : answer;
+  })();
+
   return (
     <>
       <Button
@@ -268,9 +297,13 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
             </section>
           )}
 
-          {answer && (
+          {/* The PROJECTED body (§12-2) — the served text minus its trailing disclaimer, which the
+              footer below renders once. When the projection leaves nothing, no block renders at
+              all: in the fallback state the fact pack IS the answer (§12-1), and an empty bordered
+              box beneath it would read as "the AI said nothing", which is not what happened. */}
+          {answerBody && (
             <div className="lf-ask__answer" aria-live="polite" data-testid="ask-answer">
-              {answer}
+              {answerBody}
             </div>
           )}
 

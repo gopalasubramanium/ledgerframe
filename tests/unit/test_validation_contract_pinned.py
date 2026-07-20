@@ -187,12 +187,31 @@ async def test_clause_6_failure_falls_back_to_the_deterministic_template(monkeyp
     events = await _events(monkeypatch)
     streamed = "".join(e["delta"] for e in events if e["type"] == "delta")
     done = next(e for e in events if e["type"] == "done")
-    assert "Net worth" in streamed, (
-        "Clause 6: on failure the model text is discarded and a deterministic fact-only "
-        "answer is shown. The facts are not in the fallback."
+    # ⊕ 2026-07-20 (§12-1) — RE-READ AGAINST THE SPEC, not adjusted to fit the code.
+    #
+    # This asserted `"Net worth" in streamed`: that the fact text appears in the ANSWER BODY.
+    # Clause 6 does not say that. Its words are that the model text is **discarded** and a
+    # deterministic fact-only answer is **SHOWN** — and clause 7 says where facts are shown, as
+    # the fact pack, before the answer. With the panel rendering that pack, requiring the body to
+    # repeat it put every fact on screen TWICE, which is the display defect the owner's walk found.
+    #
+    # So the three things clause 6 actually promises are asserted as three things:
+    #   (a) the model text is gone;
+    #   (b) a fact-only answer IS shown — the facts are served, and the panel renders them;
+    #   (c) the answer ends with the disclaimer.
+    assert "You should buy" not in streamed, "Clause 6 (a): the discarded model text survived."
+    served = next(e for e in events if e["type"] == "facts")["facts"]
+    assert any(f["label"] == "Net worth" for f in served), (
+        "Clause 6 (b): no fact-only answer was shown — the fallback served no facts, so there is "
+        "nothing for the panel to render in place of the discarded model text."
     )
     assert done["provider"] == "fallback"
     assert done.get("disclaimer") == DISCLAIMER, "Clause 6: every answer ends with the disclaimer."
+    # (c) is now enforced on the TEXT as well, not just announced on the done event — §12-2.
+    assert streamed.strip().endswith(DISCLAIMER), (
+        "Clause 6 (c): 'every answer ends with the disclaimer' binds the ARTIFACT. A done-event "
+        "field announces it; only the text carries it to an export/copy consumer."
+    )
 
 
 async def test_clause_7_facts_are_shown_before_the_answer(monkeypatch):

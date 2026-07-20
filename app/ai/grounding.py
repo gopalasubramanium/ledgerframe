@@ -58,25 +58,44 @@ def _sentence_chunks(text: str) -> list[str]:
     return [p + " " for p in parts if p.strip()] or [text]
 
 
+def _with_disclaimer(body: str) -> str:
+    """Return `body` ending in EXACTLY ONE trailing DISCLAIMER (§12-2, owner ruling).
+
+    Commitment 2 binds the ARTIFACT, not the view: every export, stream and copy of an answer
+    carries the disclaimer, so the guarantee is applied HERE — at the single point every answer
+    text leaves this module — rather than trusted to each path.
+
+    It is normalised rather than merely appended-if-missing. The model is *asked* to end with the
+    line (`prompts.py`: "End with exactly: …"), and a model that complies mid-paragraph, or twice,
+    would leave the constant somewhere other than the end while a naive `in` check reported the
+    guarantee satisfied. Stripping every occurrence and appending one moves a fixed legal sentence
+    to its ruled position; it is the one string in an answer whose placement is not the model's to
+    choose.
+    """
+    stripped = body.replace(DISCLAIMER, "").rstrip()
+    return f"{stripped}\n\n{DISCLAIMER}" if stripped else DISCLAIMER
+
+
 def _template_answer(question: str, facts: list[GroundingFact]) -> str:
+    """The deterministic fallback body.
+
+    ⊕ 2026-07-20 (§12-1, architect ruling — Finding-1's principle carried one step further).
+    This used to re-list every fact under "Here is what the data shows:". The panel ALREADY
+    renders the served fact pack as a list above the answer, so that block put **every fact on
+    the screen twice** — the projection Finding 1 introduced, immediately echoed underneath.
+
+    THE PROJECTED FACT LIST IS THE DIRECT ANSWER in this state. So the body carries no facts:
+    the panel shows signal → fact list ONCE → disclaimer. Nothing is redacted — the same
+    projection, shown once — and nothing is lost to a raw-stream consumer either, because the
+    facts travel on their own `facts` event, which is where a consumer should read them from
+    rather than re-parsing them out of prose.
+
+    With NO facts there is no list to be the answer, so the refusal is the body. That asymmetry
+    is the whole rule: the body says what the screen does not already say.
+    """
     if not facts:
-        return REFUSAL_NO_FACTS
-    lines = ["Here is what the data shows:"]
-    for f in facts[:8]:
-        suffix = " (may be out of date)" if f.is_stale else ""
-        # ONE LINE PER FACT. Help facts became multi-section when the grounding pack was widened
-        # (Phase 0.9), and pasting several paragraphs into a bullet turned this list into a wall of
-        # prose — it also split one fact across many lines, so "every bullet traces to a fact"
-        # silently stopped being checkable.
-        #
-        # The FIRST PARAGRAPH is taken because it is a WHOLE UNIT: for a help fact it is the entry's
-        # body, which stands on its own. Nothing is cut mid-sentence, which is the same rule the
-        # fact pack itself follows — a caveat that stops halfway reads as complete.
-        value = " ".join(f.value.split("\n\n")[0].split())
-        lines.append(f"• {f.label}: {value}{suffix}")
-    lines.append("")
-    lines.append(DISCLAIMER)
-    return "\n".join(lines)
+        return _with_disclaimer(REFUSAL_NO_FACTS)
+    return _with_disclaimer("")
 
 
 async def answer_stream(
@@ -128,9 +147,13 @@ async def answer_stream(
     if not answer:
         # Model returned nothing usable (or only reasoning) → deterministic fallback.
         if error:
+            # PLAIN TEXT, no markdown emphasis. Finding 3 (§11-C) removed a served string whose
+            # underscores rendered literally because the answer body is text; this was the one
+            # remaining site of the same defect, unseen only because no screenshot drove the
+            # model-error path. The AI reads strings, never styling — and so, here, does the reader.
             yield {"type": "delta",
-                   "delta": f"_The AI model didn't return an answer ({error}). "
-                            "Showing the underlying data instead._\n\n"}
+                   "delta": f"The AI model didn't return an answer ({error}). "
+                            "Showing the underlying data instead.\n\n"}
         yield {"type": "delta", "delta": _template_answer(question, facts)}
         yield {"type": "done", "grounded": True, "provider": "fallback",
                "error": error, "disclaimer": DISCLAIMER}
@@ -155,7 +178,11 @@ async def answer_stream(
         return
 
     # Validated → now safe to emit, chunked by sentence for a mild streaming feel.
-    for piece in _sentence_chunks(answer):
+    # §12-2: the ARTIFACT ends with the disclaimer even when the model ignored the instruction to
+    # end with it. Finding 4's option (b) named exactly this hole — "loses the disclaimer on
+    # model-narrated answers where the model may omit it" — and a guarantee that depends on a model
+    # complying is not a guarantee.
+    for piece in _sentence_chunks(_with_disclaimer(answer)):
         yield {"type": "delta", "delta": piece}
     yield {"type": "done", "grounded": True, "provider": provider.name,
            "intent": intent.value,

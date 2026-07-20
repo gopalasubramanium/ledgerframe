@@ -111,11 +111,12 @@ async def _run(monkeypatch, mode: str):
     events = [e async for e in answer_stream(None, "how is my portfolio?")]
     text = "".join(e["delta"] for e in events if e["type"] == "delta")
     done = next(e for e in events if e["type"] == "done")
-    return text, done
+    served = next(e for e in events if e["type"] == "facts")["facts"]
+    return text, done, served
 
 
 async def test_a_validation_failure_SHOWS_the_signal_to_the_user(monkeypatch):
-    text, done = await _run(monkeypatch, "unsafe")
+    text, done, _ = await _run(monkeypatch, "unsafe")
     assert done.get("fallback_signal") == FALLBACK_SIGNAL, (
         "The answer fell back and the user was not told. This is §0-G's defect: the discard was "
         "correct and SILENT, so the product was quietly less than it appeared."
@@ -143,11 +144,25 @@ async def test_the_signal_arrives_BEFORE_the_client_can_render_the_answer(monkey
     What this test still owns: the signal must accompany the SAME response that fell back — never
     a later one — so the reason cannot drift away from the answer it explains.
     """
-    text, done = await _run(monkeypatch, "unsafe")
+    text, done, served = await _run(monkeypatch, "unsafe")
     assert done.get("fallback_signal") and done.get("validation"), (
         "the fallback response carries no signal/reason pair"
     )
-    assert "Net worth" in text, "the deterministic fallback answer did not arrive with it"
+    # ⊕ 2026-07-20 (§12-1). This line read `assert "Net worth" in text` — it asserted THE ECHO,
+    # and so pinned the duplicate in place: the fact pack had to be repeated inside the answer body
+    # for this test to pass. That is the third test this milestone found holding a defect steady
+    # (cf. R-52's retired term, and Phase 0.8's delta injection). A test that pins a behaviour
+    # nobody re-derived is how the behaviour survives review.
+    #
+    # What the test actually means — "the facts reached the user with the signal" — is unchanged;
+    # it is now asserted where the facts LIVE, on the served `facts` event, which is where the
+    # panel reads them and where a raw-stream consumer should too.
+    assert "Net worth" not in text, (
+        "the answer body echoes a fact the panel already lists above it (§12-1)"
+    )
+    assert any(f["label"] == "Net worth" for f in served), (
+        "the deterministic fallback arrived without the facts it is built from"
+    )
 
 
 async def test_a_MODEL_ERROR_does_not_claim_a_grounding_failure(monkeypatch):
@@ -157,7 +172,7 @@ async def test_a_MODEL_ERROR_does_not_claim_a_grounding_failure(monkeypatch):
     nothing was checked and nothing failed grounding — saying so would be a fabricated reason,
     which Commitment 3 forbids as squarely as a fabricated number. That path keeps its own line.
     """
-    text, done = await _run(monkeypatch, "error")
+    text, done, _ = await _run(monkeypatch, "error")
     assert FALLBACK_SIGNAL not in text, (
         "A model error was reported as a grounding-check failure. Nothing was checked — the "
         "answer never arrived."
@@ -168,6 +183,6 @@ async def test_a_MODEL_ERROR_does_not_claim_a_grounding_failure(monkeypatch):
 
 async def test_a_VALID_answer_shows_no_signal(monkeypatch):
     """Pinned against going blind: a signal on every answer would satisfy the delivery test."""
-    text, done = await _run(monkeypatch, "ok")
+    text, done, _ = await _run(monkeypatch, "ok")
     assert FALLBACK_SIGNAL not in text, "a passing answer was labelled as a fallback"
     assert "fallback_signal" not in done

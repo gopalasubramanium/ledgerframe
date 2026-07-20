@@ -311,3 +311,84 @@ test("AskPanel: in the fallback view the D-070 signal PRECEDES the fact pack", a
   // them. Clause 7 is untouched: the facts still precede the ANSWER, and the signal is not one.
   expect(signal.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });
+
+// ─── §12-2: the disclaimer is in the ARTIFACT, and on SCREEN exactly once ───────
+//
+// The owner's synthesis of Finding 4: the answer TEXT always ends with the served constant
+// (Commitment 2 binds the artifact — every export/stream/copy carries it), and the PANEL projects
+// the body without that trailing line, rendering the footer element once. These fixtures therefore
+// stream what the backend now actually streams: a body that ENDS with the disclaimer.
+
+const GROUNDED_RUN_WITH_TRAILING_DISCLAIMER: ChatEvent[] = [
+  {
+    type: "facts",
+    facts: [{ label: "Net worth", value: "796,543.93 SGD", timestamp: "2026-07-20T00:00:00Z" }],
+  },
+  { type: "delta", delta: "Your net worth is 796,543.93 SGD.\n\n" + DISCLAIMER },
+  { type: "done", grounded: true, provider: "openai_compatible", disclaimer: DISCLAIMER },
+];
+
+/** Count VISIBLE occurrences of a sentence across the whole rendered panel. */
+function visibleOccurrences(text: string): number {
+  return screen.queryAllByText((_content, el) => {
+    if (!el) return false;
+    // Leaf-ish nodes only: an ancestor contains the string too, and counting ancestors would
+    // report a duplicate that is not on screen. This is a count of what the READER sees.
+    const own = Array.from(el.childNodes)
+      .filter((n) => n.nodeType === Node.TEXT_NODE)
+      .map((n) => n.textContent ?? "")
+      .join("");
+    return own.includes(text);
+  }).length;
+}
+
+async function runAsk(events: ChatEvent[]) {
+  mockStream(events);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+  await screen.findByTestId("ask-answer").catch(() => null);
+  await waitFor(() => expect(visibleOccurrences(DISCLAIMER)).toBeGreaterThan(0));
+}
+
+test("AskPanel: the disclaimer is visible EXACTLY ONCE, though the answer text ends with it", async () => {
+  await runAsk(GROUNDED_RUN_WITH_TRAILING_DISCLAIMER);
+  expect(visibleOccurrences(DISCLAIMER)).toBe(1);
+});
+
+test("AskPanel: projecting the trailing disclaimer away does NOT truncate the answer", async () => {
+  // The guard against over-stripping. A projection removes the trailing legal line and NOTHING
+  // else — if this ever slices into the answer, the panel is redacting, not projecting, and the
+  // reader loses content while the duplicate-count test above stays green.
+  await runAsk(GROUNDED_RUN_WITH_TRAILING_DISCLAIMER);
+  expect(screen.getByTestId("ask-answer")).toHaveTextContent("Your net worth is 796,543.93 SGD.");
+});
+
+test("AskPanel: an answer that is ONLY the disclaimer renders no empty answer block", async () => {
+  // This is the fallback state after §12-1: the fact pack is the answer, so the served body is
+  // just the trailing disclaimer. Projected away, nothing is left — and an empty bordered answer
+  // box below the facts would read as "the AI said nothing", which is not what happened.
+  mockStream([
+    {
+      type: "facts",
+      facts: [{ label: "Net worth", value: "796,543.93 SGD", timestamp: "2026-07-20T00:00:00Z" }],
+    },
+    { type: "delta", delta: DISCLAIMER },
+    {
+      type: "done",
+      grounded: true,
+      provider: "fallback",
+      disclaimer: DISCLAIMER,
+      fallback_signal: FALLBACK_SIGNAL,
+    },
+  ]);
+  const user = await openPanel();
+  await user.type(screen.getByLabelText("Your question"), "how is my portfolio?");
+  await user.click(screen.getAllByRole("button", { name: "Ask" })[1]);
+
+  await screen.findByTestId("ask-fallback-signal");
+  expect(screen.queryByTestId("ask-answer")).toBeNull();
+  expect(visibleOccurrences(DISCLAIMER)).toBe(1);
+  // The facts are still there — they ARE the answer in this state (§12-1).
+  expect(await screen.findByRole("region", { name: "Facts used" })).toHaveTextContent("Net worth");
+});

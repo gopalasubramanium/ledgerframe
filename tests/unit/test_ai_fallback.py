@@ -66,24 +66,29 @@ async def _collect(monkeypatch, mode):
     events = [e async for e in grounding.answer_stream(None, "How is my portfolio?")]
     text = "".join(e["delta"] for e in events if e["type"] == "delta")
     done = next(e for e in events if e["type"] == "done")
-    return text, done
+    served = next(e for e in events if e["type"] == "facts")["facts"]
+    return text, done, served
 
 
+# ⊕ 2026-07-20 (§12-1): both assertions below read `assert "Net worth" in text` — "data fallback
+# SHOWN". The facts are still shown; they are shown in the fact pack the panel renders, not echoed
+# into the answer body underneath it. The comment said "shown" and the assertion checked "echoed",
+# and the two only looked the same while nothing rendered the pack.
 async def test_model_error_falls_back_with_reason(monkeypatch):
-    text, done = await _collect(monkeypatch, "error")
+    text, done, served = await _collect(monkeypatch, "error")
     assert "didn't return an answer" in text
-    assert "Net worth" in text  # data fallback shown
+    assert any(f["label"] == "Net worth" for f in served)  # data fallback shown
     assert done["provider"] == "fallback"
     assert done["error"]
 
 
 async def test_reasoning_only_falls_back_to_data(monkeypatch):
-    text, done = await _collect(monkeypatch, "think")
-    assert "Net worth" in text  # only-reasoning → data shown
+    text, done, served = await _collect(monkeypatch, "think")
+    assert any(f["label"] == "Net worth" for f in served)  # only-reasoning → data shown
     assert done["provider"] == "fallback"
 
 
 async def test_real_answer_passes_through(monkeypatch):
-    text, done = await _collect(monkeypatch, "normal")
+    text, done, _ = await _collect(monkeypatch, "normal")
     assert "Real answer." in text
     assert done["provider"] == "openai_compatible"
