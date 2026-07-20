@@ -117,33 +117,53 @@ deterministic answering built at AI-surfaces 0a (`ai-surfaces.md` §12-3 records
 first artifact), and **R-54 owns the posture-copy amendment** when tier-1 formally lands. Stated
 here because it is the cross-reference easiest to lose between milestones.
 
-## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7**)
+## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8**)
 
 The remaining v2.0.0 set, in sequence (**AI-surfaces is CLOSED** — see DONE; the active NEXT
-above is the **F10 delta**, then **R-54**).
+above is the **F10 delta**, then **R-54**):
+
+> **F10 → R-54 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
+> *(RD-9 Amendment 8.)*
+
 **⊕ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — the set GREW by two**, both raised by the owner
 **using the shipped Ask panel** at the 0a walk: **R-54** (deterministic answer intelligence — the
 two-tier Ask panel) and **R-55** (Help content: asset classes & corporate actions). Neither is
 started; both carry the plan-file gate standard (own plan file, survey-first, §9 one-pass, full
 loop). See `release-readiness.md` Amendment 7 and `ROADMAP.md` R-54/R-55.
 
+**⊕ RD-9 SCOPE AMENDMENT 8 (owner, 2026-07-20, chat) — the set GREW by one more: R-57** (AI model
+management, Settings › AI). Same origin as Amendment 7 — the owner asked at the close review **how a
+user configures an external endpoint**, and the answer today is **environment only**; the AI tab is
+honest about that gap and honesty is not a substitute for the surface. **Sequenced after R-54 and
+before R-55** — same surface, and R-54's posture-copy amendment lands first **so R-57 edits settled
+strings rather than moving ones** (architect sequencing under delegation, **reversible**). See
+`release-readiness.md` Amendment 8 and `ROADMAP.md` R-57.
+
 1. ~~**Help**~~ — **CLOSED 2026-07-19** (DONE above).
 2. ~~**Legal**~~ — **CLOSED 2026-07-20** (DONE above).
 3. ~~**AI-surfaces**~~ — **CLOSED 2026-07-20** (DONE above).
-4. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
+4. **F10** — the fresh-DB `get_history_cached` race (the active NEXT above; release-train blocking).
+5. **R-54** — deterministic answer intelligence, the two-tier Ask panel (RD-9 Amendment 7).
+   **Carries three intake items** (chat ruling 2026-07-20, `ROADMAP.md` R-54): the
+   **contention-robustness fix** re-assigned from AI-surfaces (`ai-surfaces.md` §19-K), **fixture
+   hygiene** in `AskPanel.test.tsx:27`, and **posture-descriptor unification** as a §9 item.
+6. **R-57** — AI model management, Settings › AI (RD-9 Amendment 8). After R-54, before R-55.
+7. **R-55** — Help content: asset classes & corporate actions (RD-9 Amendment 7). **Ships the
+   §19-J findability parity guard** (chat ruling 2026-07-20).
+8. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
    Amendment 5; egress ruling required, take together with R-44). **Verification item
    (observed 2026-07-18):** the **Home holdings-scoped headlines vs per-ticker feed
    inconsistency** — confirm/resolve in the R-45 walk (also noted in ROADMAP.md's R-45 row).
-5. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
+9. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
    suggestion: adjacent to R-39).
-6. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
-7. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
+10. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
+11. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
    carries the deferred verifications — dr-25 chart sign-off **[DONE at the R-42 close]**,
    dr-28 owner-eyes; plus the R-42-appended mixed-currency / intraday / fund-P/L checks
    and the **R-43-appended 10d–10g** — mixed-provider backfill spot-check, 6/6 trend with
    the carried note, **§20-P `LEDGERFRAME_SECRET_KEY` as a Gate-C blocker**, TWR/1Y once
    coverage fills).
-8. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
+12. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
 
 **R-41 / R-43 / R-44 — RESOLVED (RD-9 Amendment 6, owner 2026-07-18):** R-43 **IN** (with
 R-8); **R-41** (per-provider credentials — YAGNI) and **R-44** (news thumbnails —

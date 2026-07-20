@@ -1165,7 +1165,7 @@ The owner walked the 0a re-drive screenshots and ruled. **This section is the re
 below are quoted or stated in the owner's terms, and each one names what it obliges.
 
 > **→ THE 3b WALK'S RULINGS ARE IN §17, NOT HERE.** This section is the closed record of the **0a**
-> walk. A second walk's rulings appended to it would make one heading describe two events.
+> walk. A second walk's rulings appended to it would make one heading describe two events. **Placement accepted by owner (chat, 2026-07-20).**
 
 ### 14-0. 0a RENDERS RATIFIED — by looking
 
@@ -2031,7 +2031,7 @@ mechanism held under exactly the conditions that produced the original defect.*
 | **What happened** | §17-3 made `Income (div/int)` **sanctioned, shown vocabulary**. The Help entry it belongs to is titled **"Income (dividends & interest)"**, and its `keywords` did not contain the short form. A reader who saw the abbreviation in an Ask answer and searched Help for it **would have found nothing** — the term was sanctioned and unfindable at the same moment. |
 | **How it was caught** | **Not by a guard.** By asking what the GLOSSARY change *implied* for Help, under the HELP CURRENCY LAW. The parity guard shipped in the same delta checks that the short form is **recorded in the spec** and **still served by the code** — neither of which is the same as **reachable by a reader**. |
 | **The lesson** | **"RECORDED" AND "FINDABLE" ARE DIFFERENT PROPERTIES, and only the second one is what a glossary is *for*.** A vocabulary guard that measures spec↔code parity is measuring the two stores against each other, not either against the person who has to look the word up. |
-| **What turns red** | Today: nothing — and that is stated rather than glossed. The Help delta shipped (body + keywords, `444 passed, 15 skipped`), but **no guard asserts that a sanctioned short form is searchable in the Help catalogue.** ⚑ **Carried to the pre-release backlog as a named gap**, in the shape §19-E's lesson recommends: written down where the next reader will meet it, not remembered. |
+| **What turns red** | Today: nothing — and that is stated rather than glossed. The Help delta shipped (body + keywords, `444 passed, 15 skipped`), but **no guard asserts that a sanctioned short form is searchable in the Help catalogue.** ⚑ **Carried to the pre-release backlog as a named gap**, in the shape §19-E's lesson recommends: written down where the next reader will meet it, not remembered. **Guard lands at R-55 (chat ruling 2026-07-20; ROADMAP R-55 row).** |
 
 ### 19-K. FOUND POST-CLOSE — the close never reconciled its own intake
 

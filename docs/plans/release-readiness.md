@@ -2,10 +2,27 @@
 
 **Status: ⏸ GATES C–F STANDING/DORMANT. GATE A CLOSED (+ A9–A11 addendum) · GATE B CLOSED
 (owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, as REFINED by Amendment 4 and
-EXTENDED by Amendments 5 + 6, owner 2026-07-18, and by Amendment 7, owner 2026-07-20 — Voice is
-POST-RELEASE; the v2.0.0 set is enumerated below, now incl. R-45 + R-46 + R-43 (with R-8) + R-54 +
-R-55; the R-41/R-43/R-44 ruling is now RESOLVED by Amendment 6 — R-43 IN, R-41 + R-44
+EXTENDED by Amendments 5 + 6, owner 2026-07-18, by Amendment 7, owner 2026-07-20, and by
+**Amendment 8, owner 2026-07-20** — Voice is POST-RELEASE; the v2.0.0 set is enumerated below,
+now incl. R-45 + R-46 + R-43 (with R-8) + R-54 + R-55 + **R-57**; the R-41/R-43/R-44 ruling is now RESOLVED by Amendment 6 — R-43 IN, R-41 + R-44
 POST-RELEASE).**
+
+> ## ⚠ RD-9 SCOPE AMENDMENT 8 (owner, 2026-07-20, chat) — **v2.0.0 scope += R-57.** *(Filed at the AI-surfaces close review.)*
+>
+> The enumerated set grows by one — **R-57** (AI model management, Settings › AI; `ROADMAP.md` R-57).
+>
+> **Origin, and it is the same origin as Amendment 7's:** the owner asked, at the close review, **how
+> a user configures an external OpenAI-compatible endpoint** — and the answer today is
+> **environment only**. The AI tab says so in its ratified sentence (*"Model management is not
+> configurable here yet"*), so the product is **honest about a gap it does not close**. Honesty about
+> a gap is the right interim state; it is not a substitute for the surface.
+>
+> **Sequencing: after R-54, before R-55** — same surface (Settings › AI), and **R-54's posture-copy
+> amendment lands first so R-57 edits settled strings** rather than moving ones. *(Architect
+> sequencing under standing delegation, 2026-07-20 — **reversible**; it is an ordering judgement, not
+> a scope ruling.)*
+>
+> **The release gate remains FULL COMPLETION of the enumerated set (Amendment 3).**
 
 > ## ⚠ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — **v2.0.0 scope += R-54, R-55.** *(Filed at the AI-surfaces Phase-0a walk.)*
 >
