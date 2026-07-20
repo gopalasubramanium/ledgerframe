@@ -75,6 +75,22 @@ export interface AiConfig {
    * data is not the browser's to assemble (§0-C).
    */
   summary: string;
+  /**
+   * §17-4 / Finding 9 — is the OS environment setting AI config that this device's `.env` does not?
+   *
+   * When true, writing this configuration will not change what the process runs after a restart.
+   * The tab was always TRUE about what IS running and said nothing about that, so a user could
+   * save, watch the line report something else, and have nothing on screen explain why.
+   */
+  env_override: boolean;
+  /**
+   * The SERVED sentence for that state, or `null` when there is nothing to warn about.
+   *
+   * `null`, not `""`, so the absence is a value the client cannot accidentally render. Served
+   * rather than composed, for the same reason as `summary`: the browser does not author the
+   * product's claims about itself.
+   */
+  env_override_note: string | null;
 }
 
 export async function getAiConfig(): Promise<AiConfig | null> {

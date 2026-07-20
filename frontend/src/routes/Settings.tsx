@@ -627,6 +627,26 @@ function AiPanel() {
         <p className="set__aiconfig" data-testid="ai-config-summary">
           {ai === undefined ? "Loading…" : ai ? ai.summary : "AI configuration unavailable."}
         </p>
+        {/* ⊕ 2026-07-20 (AI-surfaces §17-4, Finding 9) — CONDITIONAL, and SERVED.
+
+            The line above is always TRUE: it reports what this device is actually running. What
+            it never said is that writing this configuration may not CHANGE that — an OS-env
+            override (a systemd `Environment=`, a container `-e`) outranks the `.env` file, so a
+            user could save, watch the line report something else, and find nothing on screen that
+            explains why. A true sentence beside an unexplained outcome is its own kind of
+            dishonesty: the reader concludes the save failed, or that they misread the tab.
+
+            RENDERED ONLY WHEN TRUE, and the condition is the SERVED SENTENCE's presence rather
+            than the `env_override` flag. Those come apart in exactly one case and it is the one
+            worth designing for: a server that reports an override without wording for it. Keying
+            on the flag would put this component in the position of inventing the sentence — the
+            §0-C defect, reintroduced in the branch where a helpful fallback string is most
+            tempting. No sentence, no paragraph. */}
+        {ai?.env_override_note && (
+          <p className="set__aiconfig-override" data-testid="ai-config-env-override" role="status">
+            {ai.env_override_note}
+          </p>
+        )}
         {/* ⊕ 2026-07-20 (AI-surfaces §9(b)) — the deferral note is REPLACED, not deleted.
             The dead-affordance rule (page-settings §12 (d)) cuts both ways: a note promising
             something that has now shipped is as misleading as a control that does nothing. The

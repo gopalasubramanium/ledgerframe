@@ -167,8 +167,8 @@ async def test_the_tab_never_shows_the_retired_vendor_word(app_client):
 def test_every_posture_maps_to_a_kind():
     """Coverage: a new posture branch that forgets its kind reds here rather than KeyError-ing in
     production. Same shape as the posture-copy coverage assertion (§12-3)."""
-    from app.api.v1.routes.ai import POSTURE_COPY
     from app.ai.vocabulary import POSTURE_KIND
+    from app.api.v1.routes.ai import POSTURE_COPY
 
     assert set(POSTURE_COPY) == set(POSTURE_KIND), (
         f"posture branches without a declared kind: {set(POSTURE_COPY) ^ set(POSTURE_KIND)}"
@@ -205,3 +205,176 @@ def test_every_posture_the_product_can_reach_has_a_tab_sentence():
         "two postures serve the SAME tab sentence — the tab would describe different states "
         "identically, which is the failure this copy exists to prevent."
     )
+
+
+# --- §17-4 / FINDING 9: THE TAB SAYS WHEN WRITING TO IT WOULD DO NOTHING ------------------------ #
+#
+# Finding 9 (§15-3) recorded what ruling (a) left unsaid. Under (a) the tab is always TRUE: it
+# reports what the process runs. What it never said is that a PUT writing `.env` may not change
+# that — an OS-env override outranks the file, so the user saves, the tab honestly reports
+# something else, and NOTHING ON SCREEN EXPLAINS WHY. A true sentence next to an unexplained
+# outcome is its own kind of dishonesty: the reader concludes the save failed, or that they
+# misread the tab, and neither is what happened.
+#
+# Owner ruling (§17-4, 2026-07-20) — a CONDITIONAL served sentence, rendered only when true.
+#
+# ⚠ THE DETECTION IS A DIVERGENCE, NOT A PRESENCE CHECK, and getting that wrong inverts the
+# feature. Under systemd the `.env` file is loaded AS the EnvironmentFile, so every key in the file
+# is ALSO an OS environment variable — on the perfectly ordinary install where writing `.env` works
+# exactly as promised. A presence check would fire the warning there, on every well-configured
+# deployment, and say the save will not take effect when it will. What signals an EXTERNAL setter
+# is the environment holding a value the FILE does not: a systemd `Environment=`, a container `-e`,
+# or this harness.
+
+_PUT_KEYS = (
+    "LEDGERFRAME_AI_ENABLED",
+    "LEDGERFRAME_AI_PROVIDER",
+    "LEDGERFRAME_AI_MODEL",
+    "LEDGERFRAME_HAILO_BASE_URL",
+    "LEDGERFRAME_OPENAI_BASE_URL",
+)
+
+
+async def test_the_override_note_is_SERVED_when_the_environment_outranks_the_file(
+    app_client, tmp_path, monkeypatch
+):
+    """SEEN RED before the fix: the payload carried no such field at all.
+
+    The exact shape Finding 9 describes — the file says one thing, the OS environment says
+    another, and a PUT writing the file cannot win.
+    """
+    import app.core.envfile as envfile
+    from app.core.config import reload_settings
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("LEDGERFRAME_AI_PROVIDER=hailo\n", encoding="utf-8")
+    monkeypatch.setattr(envfile, "ENV_PATH", env_file)
+    monkeypatch.setenv("LEDGERFRAME_AI_PROVIDER", "openai_compatible")
+    reload_settings()
+    try:
+        cfg = await _config(app_client)
+        assert cfg["env_override"] is True, (
+            "the OS environment holds an AI key the .env file contradicts — a PUT writing the "
+            "file will not change what this process runs after a restart — and the tab says "
+            "nothing about it (Finding 9)."
+        )
+        assert cfg["env_override_note"], "the note must be SERVED, not composed in the browser"
+        assert "environment" in cfg["env_override_note"].lower()
+    finally:
+        reload_settings()
+
+
+async def test_a_key_the_environment_sets_and_the_file_does_NOT_is_also_an_override(
+    app_client, tmp_path, monkeypatch
+):
+    """The file having no opinion is not the file agreeing.
+
+    An EnvironmentFile only sets keys the file contains, so a key present in the environment and
+    absent from the file had to come from somewhere else — and that somewhere else reasserts on
+    every restart.
+    """
+    import app.core.envfile as envfile
+    from app.core.config import reload_settings
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("# no AI keys at all\n", encoding="utf-8")
+    monkeypatch.setattr(envfile, "ENV_PATH", env_file)
+    monkeypatch.setenv("LEDGERFRAME_AI_MODEL", "set-by-systemd")
+    reload_settings()
+    try:
+        assert (await _config(app_client))["env_override"] is True
+    finally:
+        reload_settings()
+
+
+async def test_NO_note_when_the_environment_MIRRORS_the_file(app_client, tmp_path, monkeypatch):
+    """⚠ THE DIRECTION THAT MATTERS MOST — the ordinary systemd install.
+
+    The service is started with `.env` as its EnvironmentFile, so every file key is also an OS
+    environment variable **with the same value**. Writing the file works exactly as promised here.
+    A presence-based check would warn on every correctly-configured deployment that its saves do
+    nothing, which is both false and alarming — the failure mode of a conditional sentence is
+    never "it did not render", it is "it rendered when it was not true".
+    """
+    import app.core.envfile as envfile
+    from app.core.config import reload_settings
+
+    # ⊕ THE DETECTOR CAUGHT THE HARNESS FIRST, and the near-miss is worth the four lines it costs.
+    # This test failed on its first run with `env_override=True`, and the product was right:
+    # `tests/conftest.py:16` does `os.environ.setdefault("LEDGERFRAME_AI_ENABLED", "false")`, which
+    # is an external setter holding a key this fixture's `.env` did not contain — precisely what
+    # the check exists to notice. The fixture was claiming to build a MIRROR while leaving a key
+    # diverging. Cleared explicitly, so "mirrors the file" means what it says.
+    # (Same family as §16-B(4), where R-56 bit the harness rather than the product.)
+    for k in _PUT_KEYS + ("LEDGERFRAME_OPENAI_API_KEY",):
+        monkeypatch.delenv(k, raising=False)
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "LEDGERFRAME_AI_PROVIDER=openai_compatible\nLEDGERFRAME_AI_MODEL=m\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(envfile, "ENV_PATH", env_file)
+    monkeypatch.setenv("LEDGERFRAME_AI_PROVIDER", "openai_compatible")
+    monkeypatch.setenv("LEDGERFRAME_AI_MODEL", "m")
+    reload_settings()
+    try:
+        cfg = await _config(app_client)
+        assert cfg["env_override"] is False, (
+            "the environment MIRRORS the file — the ordinary systemd EnvironmentFile case, where "
+            "saving works. Warning here would tell a correctly-configured install that its saves "
+            "do nothing."
+        )
+        assert cfg["env_override_note"] is None, "no note when there is nothing to warn about"
+    finally:
+        reload_settings()
+
+
+async def test_NO_note_when_the_environment_sets_no_AI_KEYS_AT_ALL(
+    app_client, tmp_path, monkeypatch
+):
+    """Only the keys the PUT actually writes can make the PUT ineffective.
+
+    Scoped deliberately: an unrelated `LEDGERFRAME_*` override (data dir, log level) does not stop
+    a write to the AI config from taking effect, and a warning that fires on it would be
+    describing a problem the user does not have.
+    """
+    import app.core.envfile as envfile
+    from app.core.config import reload_settings
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("LEDGERFRAME_AI_PROVIDER=disabled\n", encoding="utf-8")
+    monkeypatch.setattr(envfile, "ENV_PATH", env_file)
+    for k in _PUT_KEYS + ("LEDGERFRAME_OPENAI_API_KEY",):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("LEDGERFRAME_LOG_LEVEL", "DEBUG")
+    reload_settings()
+    try:
+        cfg = await _config(app_client)
+        assert cfg["env_override"] is False
+        assert cfg["env_override_note"] is None
+    finally:
+        reload_settings()
+
+
+async def test_the_note_never_reveals_the_overriding_VALUES(app_client, tmp_path, monkeypatch):
+    """§8 — no secrets on any served surface, and the API key is one of the overridable keys.
+
+    The note explains the SITUATION, never the settings causing it. Naming the values would make a
+    warning about configuration into a channel for reading configuration back out.
+    """
+    import app.core.envfile as envfile
+    from app.core.config import reload_settings
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("LEDGERFRAME_OPENAI_API_KEY=file-value\n", encoding="utf-8")
+    monkeypatch.setattr(envfile, "ENV_PATH", env_file)
+    monkeypatch.setenv("LEDGERFRAME_OPENAI_API_KEY", "sk-super-secret-from-the-environment")
+    reload_settings()
+    try:
+        cfg = await _config(app_client)
+        assert cfg["env_override"] is True, "the API key is a key the PUT writes"
+        blob = str(cfg)
+        assert "sk-super-secret-from-the-environment" not in blob
+        assert "file-value" not in blob
+    finally:
+        reload_settings()

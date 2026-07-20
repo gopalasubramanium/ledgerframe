@@ -282,6 +282,18 @@
   color: var(--text-primary);
 }
 
+/* §17-4 (Finding 9) — the env-override caveat. `--attention` is the ESTABLISHED honesty colour in
+   this product (Portfolio's cost-basis exclusion note, Markets' warn pill, the warning toast), and
+   this line is the same kind of statement: something the user needs in order to read the line above
+   correctly. It is NOT an error tone — nothing has gone wrong, and a device configured by its
+   environment is a supported deployment, not a broken one. */
+.set__aiconfig-override {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-13);
+  line-height: var(--line-13);
+  color: var(--attention);
+}
+
 /* Feeds editor (§12st-3) — one URL per row, each with an optional test-result chip + Remove. */
 .set__feedlist {
   display: flex;

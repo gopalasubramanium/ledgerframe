@@ -377,6 +377,68 @@ AI_TAB_COPY: dict[str, str] = {
 }
 
 
+# ── FINDING 9 — THE TAB SAYS WHEN WRITING TO IT WOULD DO NOTHING (§17-4, owner-ruled 2026-07-20) ──
+#
+# Ruling (a) made this tab always TRUE — it reports what the process runs. What it never said is
+# that a PUT writing `.env` may not CHANGE that: an OS-env override outranks the file, so the user
+# saves, the tab honestly reports something else, and nothing on screen explains why. A true
+# sentence beside an unexplained outcome is its own kind of dishonesty — the reader concludes the
+# save failed, or that they misread the tab, and neither is what happened.
+#
+# RENDERED ONLY WHEN TRUE. Both directions are guarded (`test_ai_config_effective.py` §17-4),
+# because the failure mode of a conditional warning is never "it did not render", it is "it
+# rendered when it was not true" — a device told its saves do nothing, wrongly, has been given a
+# reason to stop trusting the tab entirely.
+AI_ENV_OVERRIDE_NOTE = (
+    "This device's configuration is currently set by its environment — changes written here will "
+    "not take effect until that override is removed."
+)
+
+#: The keys the PUT below writes. Only these can make the PUT ineffective; an unrelated
+#: ``LEDGERFRAME_*`` override (data dir, log level) does not, and warning on it would describe a
+#: problem the user does not have.
+_AI_ENV_KEYS = (
+    "LEDGERFRAME_AI_ENABLED",
+    "LEDGERFRAME_AI_PROVIDER",
+    "LEDGERFRAME_AI_MODEL",
+    "LEDGERFRAME_HAILO_BASE_URL",
+    "LEDGERFRAME_OPENAI_BASE_URL",
+    "LEDGERFRAME_OPENAI_API_KEY",
+)
+
+
+def _ai_env_override_in_force() -> bool:
+    """Is the OS environment setting AI config the ``.env`` file does not?
+
+    ⚠ A DIVERGENCE, NOT A PRESENCE CHECK — and getting this wrong inverts the feature. Under
+    systemd the `.env` file is loaded AS the ``EnvironmentFile``, so on a perfectly ordinary,
+    correctly-behaving install **every key in the file is also an OS environment variable**. A
+    presence check would fire this warning on every such deployment and tell it that saving does
+    nothing, when saving works exactly as promised. What signals an EXTERNAL setter is the
+    environment holding a value the FILE does not: a systemd ``Environment=``, a container ``-e``,
+    or the isolated pre-pass harness.
+
+    A key present in the environment and ABSENT from the file counts, for the same reason: an
+    EnvironmentFile only sets keys the file contains, so that value came from somewhere else — and
+    that somewhere else reasserts on every restart.
+
+    ⚠ KNOWN LIMIT, recorded rather than papered over: `apply_env` writes the file AND `os.environ`
+    together, so immediately after a save the two agree and this reads False — correctly, for the
+    running process. If the override came from a systemd ``Environment=``, it reasserts at the next
+    restart and this reads True again. The note is therefore honest about what is detectable NOW
+    and self-corrects, rather than claiming knowledge of who set an environment variable, which
+    nothing in this process can actually know.
+    """
+    import os
+
+    from app.core.envfile import read_env
+
+    file_env = read_env()
+    return any(
+        key in os.environ and os.environ[key] != file_env.get(key) for key in _AI_ENV_KEYS
+    )
+
+
 @router.get("/system/ai-config")
 async def get_ai_config() -> dict:
     """The EFFECTIVE AI configuration — what this process is actually running (Finding 6, ruled (a)).
@@ -399,6 +461,7 @@ async def get_ai_config() -> dict:
 
     s = get_settings()
     posture, kind = await resolve_posture()
+    override = _ai_env_override_in_force()
     return {
         "enabled": s.ai_enabled,
         # The internal provider id, unchanged — it is what the config API round-trips, and the
@@ -417,6 +480,14 @@ async def get_ai_config() -> dict:
         "remote": KIND_IS_REMOTE[kind],
         "no_egress": posture == "no_egress",
         "summary": AI_TAB_COPY[posture if posture in AI_TAB_COPY else kind],
+        # ── Finding 9 / §17-4 ──
+        # SERVED and conditional. `None` rather than an empty string so the absence is a value the
+        # client cannot accidentally render, and the note NEVER names the overriding keys or their
+        # values (§8: no secrets on any served surface — the API key is one of them). It explains
+        # the SITUATION; a warning that listed the configuration causing it would be a channel for
+        # reading configuration back out.
+        "env_override": override,
+        "env_override_note": AI_ENV_OVERRIDE_NOTE if override else None,
     }
 
 

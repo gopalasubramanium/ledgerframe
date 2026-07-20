@@ -33,6 +33,10 @@ vi.mock("../api/systemConfig", () => ({
     remote: false, no_egress: false,
     summary: "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
       + "Built-in answers work in every mode.",
+    // §17-4 — the DEFAULT mock is the ordinary install: no override, no note. The note's
+    // rendered case is driven by a per-test override below, so the quiet state is the one every
+    // other test in this file exercises by default.
+    env_override: false, env_override_note: null,
   })),
   getLanEnabled: vi.fn(async () => false),
   setLanAccess: vi.fn(async () => ({ ok: true })),
@@ -536,4 +540,66 @@ test("About left the System tab — it is not rendered in both places", async ()
   await screen.findByText("PIN");
   expect(screen.queryByText("The Conflict")).toBeNull();
   expect(screen.queryByAltText("Gopala Subramanium")).toBeNull();
+});
+
+// --- §17-4 / Finding 9: the tab says when writing to it would do nothing ---------------------- //
+//
+// Under ruling (a) this tab is always TRUE — it reports what the process runs. What it never said
+// is that a PUT writing `.env` may not CHANGE that: an OS-env override outranks the file, so the
+// user saves, the line honestly reports something else, and NOTHING ON SCREEN EXPLAINS WHY. A true
+// sentence beside an unexplained outcome is its own kind of dishonesty — the reader concludes the
+// save failed, or that they misread the tab, and neither is what happened.
+//
+// BOTH DIRECTIONS, because the failure mode of a conditional warning is never "it did not render",
+// it is "it rendered when it was not true". A device wrongly told its saves do nothing has been
+// given a reason to stop trusting the tab at all — which costs more than the warning was worth.
+
+const OVERRIDE_NOTE =
+  "This device's configuration is currently set by its environment — changes written here will " +
+  "not take effect until that override is removed.";
+
+test("§17-4: the override note renders when the environment outranks the file", async () => {
+  const { getAiConfig } = await import("../api/systemConfig");
+  vi.mocked(getAiConfig).mockResolvedValueOnce({
+    enabled: true, provider: "hailo", model: "llama3", has_openai_key: false,
+    kind: "on_device_model", kind_label: "On-device model (Ollama-compatible)",
+    remote: false, no_egress: false,
+    summary: "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
+      + "Built-in answers work in every mode.",
+    env_override: true, env_override_note: OVERRIDE_NOTE,
+  });
+
+  renderAt("/settings?tab=ai");
+  // SERVED and rendered VERBATIM — the browser does not author the product's claims about itself
+  // (§0-C). Asserting the exact string is what makes that a claim about the boundary rather than
+  // about this component's template.
+  const note = await screen.findByTestId("ai-config-env-override");
+  expect(note.textContent).toBe(OVERRIDE_NOTE);
+});
+
+test("§17-4: NO override note on an ordinary install — the direction that matters most", async () => {
+  // The default mock is `env_override: false`. A warning that fires here would tell a correctly
+  // configured device that saving does nothing, which is both false and alarming.
+  renderAt("/settings?tab=ai");
+  await screen.findByTestId("ai-config-summary");
+  expect(screen.queryByTestId("ai-config-env-override")).toBeNull();
+});
+
+test("§17-4: the tab renders NO note the server did not send, even if it claims an override", async () => {
+  // The anti-composition arm. `env_override: true` with no served sentence must produce silence,
+  // not a sentence this component invented to fill the gap — the §0-C defect would be reintroduced
+  // precisely here, in the branch where a helpful-looking fallback string is most tempting.
+  const { getAiConfig } = await import("../api/systemConfig");
+  vi.mocked(getAiConfig).mockResolvedValueOnce({
+    enabled: true, provider: "hailo", model: "llama3", has_openai_key: false,
+    kind: "on_device_model", kind_label: "On-device model (Ollama-compatible)",
+    remote: false, no_egress: false,
+    summary: "AI is on — on-device model (Ollama-compatible); no data leaves this device. "
+      + "Built-in answers work in every mode.",
+    env_override: true, env_override_note: null,
+  });
+
+  renderAt("/settings?tab=ai");
+  await screen.findByTestId("ai-config-summary");
+  expect(screen.queryByTestId("ai-config-env-override")).toBeNull();
 });
