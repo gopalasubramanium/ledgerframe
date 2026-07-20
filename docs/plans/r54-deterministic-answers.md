@@ -783,6 +783,21 @@ scanning. Rewritten to walk the **AST**, so only a real `Name`/`Attribute` refer
 cannot be tripped by prose, and cannot be silenced by deleting a comment. **Recorded rather than
 quietly fixed** — the near-miss is worth more than the fix.
 
+**⚠ 2026-07-21 DELTA NOTE — THIS PHASE SHIPPED A REGRESSION. See ledger row F-6 (fixed
+`7ba669f`).** The word-boundary conversion recorded above as a correctness win **also silently
+killed the stems** the substring matcher had carried for free — `perform`, `return`, `concentrat`,
+`diversif`. Under `\b(...)\b` the trailing boundary requires the word to END there, so
+*"performing"*, *"concentration"* and *"diversified"* stopped routing: **6 of 9 probe questions
+misrouted**, and **the gates below were green while it was true.**
+
+*The delta that shipped a defect should point at the record of it* — otherwise this section reads as
+an unqualified success to everyone who arrives at it, which is exactly how a lesson fails to travel.
+**What this phase's guards did NOT ask:** whether the rules still matched real questions. They
+proved the substring hazards gone and the table authoritative — both true, both about the property
+changed rather than the capability changed. **F-6 carries the standing lesson** (*a test that can
+reach its assertion by two routes cannot tell you that one of them broke*) and the **capability-probe
+step** now binding on every remaining phase.
+
 **Gates — solo, uncontended.**
 
 | Gate | Result |
