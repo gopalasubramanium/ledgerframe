@@ -1,8 +1,10 @@
 # R-54 — Deterministic answer intelligence: the two-tier Ask panel
 
-**Status: PLAN ONLY — written §0 through §9, STOPPED AT §9.** No build code. No phase beyond its
-skeleton heading. The §9 one-pass happens **in chat** with the owner; **no item below is resolved
-by this session**, and nothing in §8 starts until §9 has no open blocker.
+**Status: ✅ §9 CLOSED 2026-07-20 (owner one-pass, in chat) — BUILD AUTHORIZED.** §7 and §8 are
+completed from the resolutions; Phase 0 begins backend-first. **The §-ledger below governs the close:
+no CLOSED claim is admissible while any I-row lacks a disposition.**
+
+*History: written §0–§9 as a plan-only survey session (`ac8ea65`), then closed at the one-pass.*
 
 **Naming.** `r54-deterministic-answers.md` follows the milestone convention already on disk
 (`r43-historical-backfill.md`) — `page-*.md` is for pages, `r<N>-*.md` for ROADMAP-row milestones.
@@ -11,7 +13,7 @@ The Ask panel is not a page; it is a component mounted in the shell
 (`frontend/src/routes/InstrumentDetail.tsx:198`).
 
 **Source of scope:** `ROADMAP.md` R-54 (authoritative, incl. its CARRIED-INTO-R-54 block) ·
-`release-readiness.md` RD-9 Amendments 7–9 · `ai-surfaces.md` §12-3 (the tier-1 seed), §13, §14,
+`release-readiness.md` RD-9 Amendments 7–9 (**and 10**, filed from this §9) · `ai-surfaces.md` §12-3 (the tier-1 seed), §13, §14,
 §17 · `docs/audit/DECISIONS.md` R-22 AMENDMENT · `GLOSSARY.md` (the three kinds of intelligence).
 
 ---
@@ -26,10 +28,16 @@ row lacks a disposition.** This plan is the rule's first user.*
 |---|---|---|---|---|
 | **I-1** | Intake | **Contention-robustness fix** — `tests/integration/test_ai_facts_routing.py:34` (`test_performance_question_pulls_risk_metrics`) fails only under machine contention, passes solo | `r43-historical-backfill.md` §18-F7d → re-assigned post-close, `ai-surfaces.md` §19-K → `ROADMAP.md` R-54 (i) | **OPEN** |
 | **I-2** | Intake | **Fixture hygiene** — `frontend/src/components/ui/AskPanel.test.tsx:27` mocks `privacy_label` with a **live served string**; make it obviously synthetic | `ROADMAP.md` R-54 (ii) — **⚠ premise corrected, see §0-K** | **OPEN** |
-| **I-3** | §9 | **Posture-descriptor unification** — "OpenAI-compatible endpoint" vs "Ollama-compatible" | `ROADMAP.md` R-54 (iii); decision-shaped, so §9-G not intake | **OPEN — §9** |
+| **I-3** | §9 | **Posture-descriptor unification** — "OpenAI-compatible endpoint" vs "Ollama-compatible" | `ROADMAP.md` R-54 (iii); decision-shaped, so §9-G not intake | ✅ **DISPOSITIONED 2026-07-20 — UNIFY** (§9-G). One user-facing descriptor, **"Ollama-compatible"**; "Hailo" leaves served copy. **The ruling is closed; the STRINGS ratify at 0a by looking** — the ledger distinguishes the two |
 
 *Rows F-n (walk findings) are appended below this table as the milestone runs. **The CLOSED claim
 enumerates I-rows, F-rows and lettered sub-findings alike.***
+
+**⊕ 2026-07-20, at the §9 close — I-1 and I-2 remain OPEN and carry into Phase 0.** Stated here
+rather than left to be noticed: §9 closing is **not** the ledger closing, and the milestone that
+mechanised this rule is the last one that should blur them. **I-1** is this milestone's by
+re-assignment (`ai-surfaces.md` §19-K) and its reproduction follows the **F10 blindness-pin /
+vacuous-green** technique; **I-2** carries §9-H's convention plus the second instance §0-K found.
 
 ---
 
@@ -582,40 +590,257 @@ Stated now only where they follow from ratified rules and do not presuppose a §
 
 ---
 
-## §9. NEEDS DECISION — ⚑ THE ONE-PASS LIST
+## §9. NEEDS DECISION — **CLOSED 2026-07-20** (owner one-pass, in chat)
 
-*Nothing below is resolved by this session. Ten items.*
+*All ten items plus the carried intake row resolved in one pass. **The owner's rationale lines are
+recorded VERBATIM**, as his acceptance in his own words — never paraphrased. Two rows were filed
+from the dead-affordance findings (below), and one dated amendment was written back onto an earlier
+ruling's own record (§9-B).*
 
-| # | Item | Why it blocks | What the survey established |
-|---|---|---|---|
-| **9-A** | **Intent taxonomy vs open matcher — and what happens to the TWO routers already shipped** | Tier 1's whole claim is determinism. A matcher that guesses is a model by another name | **§0-A.** `classify_intent` (closed 16-enum, ordered regex, `intent.py:15-52`) and `gather_facts` (open additive substring flags, `tools.py:558-635`) **do not share code and can disagree**. The question is not which to build — it is which of two shipped things becomes tier-1's router, and what becomes of the other. Sub-question: **how a tier-1 MISS fails honestly** — the ratified empty-fallback shape, never an approximate answer |
-| **9-B** | **Per-term figure resolution: the registry's shape and WHERE IT LIVES** | One source of truth for one fact (the F6 lesson) | **§0-E.** No term→endpoint registry exists. Two partial maps do: `FIGURE_IDENTITY` (`tools.py:53-63`, 9 entries, term→fact key) and `term_id` on stats metrics (`analytics.py:186-208`, 13 metrics→help entry, pointing the opposite way). 29 `term-*` Help entries are the spine. **Extend one, or build a third?** — and a third is two sources for one fact unless it subsumes them |
-| **9-C** | **Where a tier-1 figure gets its DISPLAY STRING** | The frontend never computes or formats money; the DS requires served display strings | **§0-D.** Headline figures are served **raw** (`to_display` returns `float`, `money.py:80`; `portfolio.py:138-157`), while D-105 formatters exist and are used elsewhere (`money.py:25,38,47`). The AI pack already formats **for itself** (`_fmt`, `tools.py:25`) — a second formatting site, acceptable for a prompt, **a decision the moment it renders an answer** |
-| **9-D** | **Deep-link registry: served or frontend-owned?** | Same one-source question, for links | **§0-F.** Settings tabs (7), Help `?topic=`, Holdings `?account=` exist. `nav/holdingsLink.ts:10-12` is the ratified one-builder precedent. Served would let the backend name link targets in answers; frontend-owned keeps route knowledge where routes live |
-| **9-E** | **Two guards, and what turns red for each** | *A hard rule without a guard is a request* | (a) **Panel-explains/page-acts** — §0-M gives the shape (`check-ui-primitives.mjs`: narrow scan, named owner, **blindness pin**), and the boundary is **currently held**, so the guard must be proven RED on a deliberate specimen. (b) **Every registered link resolves** — non-trivial: an unknown `?topic=` is a **silent no-op** (`Help.tsx:302,309`) and topics validate against the **served** catalogue (`:334`), so the guard must reach it. **Also owed: what a deep link does in unaccepted (451) / locked states** — §0-H found this unestablished |
-| **9-F** | **Tier declaration within the ratified legend's grammar** | The reader cannot currently tell tier-1-answered from tier-2-failed | **§0-G.** Both collapse to *"Built-in intelligence only — no model was used."* (`vocabulary.py:139`). Any new treatment needs a **free axis** — colour is taken, slant is taken (`DESIGN-SYSTEM.md:1175`). **Carries §0-I**: tier 1 shares the fallback branch with the **rate limiter** (`grounding.py:147`), which by construction cannot apply to it. **Carries §5**: if a new term is needed it is spec-first |
-| **9-G** | **⚑ CARRIED (I-3): posture-descriptor unification, and the full amendment enumeration** | R-54 owns posture copy; R-57 is sequenced next **to edit settled strings** | **§0-J.** The Ask line says *"local OpenAI-compatible endpoint"* (`ai.py:59`); Settings/GLOSSARY say *"Ollama-compatible"* (`vocabulary.py:52-56`). **Both ratified, both true.** Unify or keep. **And the enumeration is wider than the brief listed:** `POSTURE_DISABLED` (`ai.py:58`) says *"fact-only answers"*, which **tier 1 makes false**; plus `AI_TAB_COPY` (`system.py:356-378`) — leaving that half-amended is a handoff defect into R-57 |
-| **9-H** | **I-2's fixture convention** | The file duplicates served strings **on purpose** (`AskPanel.test.tsx:43-45`) so assertions aren't tautological | **§0-K.** Needed: the naming convention for *obviously synthetic* copy (the ROADMAP suggests `"POSTURE LINE (TEST FIXTURE)"`). Per-literal classification stays with **I-2**. **⚠ And the row's premise needs correcting on the record: the string is LIVE (`ai.py:61`), not retired** |
-| **9-I** | **The Help delta this milestone owes, named up front** | Help Currency Law | **§0-L.** At minimum the `ask` entry (`help.py:626`). Any new sanctioned term is **spec-first**: `GLOSSARY.md` → both code stores, carried by `test_glossary_parity.py`. Given the panel gains behaviour, *"no Help impact"* would carry the burden of proof |
-| **9-J** | **Is tier-1 output subject to the validation contract?** | Not asked by the brief; the survey forced it | Clause 2 requires every significant figure to trace to a fact (`safety.py:131-142`). A tier-1 answer's figure **comes from the canonical endpoint, not necessarily via the fact pack** — so it could be **rejected for being too authoritative**. Related known limits, both recorded and erring safe: `_sig3("0.00") → ""` (R-56) and a timestamp's digits reading as an unsupported figure (ai-surfaces §15-4). **Applying the contract unchanged, exempting tier 1, or something narrower is an owner call** |
+### 9-A ✅ RESOLVED — ONE ROUTER, A CLOSED TAXONOMY, AND AN HONEST MISS
+
+**Ruled.** `classify_intent`'s **closed enum is the single intent authority**. `gather_facts`' eight
+substring flags (`tools.py:561-576`) become **derivations of it — one table**, not a second opinion.
+Matching becomes **word-boundary**, retiring the `"los"`/`"own"` substring hazards (§0-A). A **miss
+routes to the ratified empty-fallback shape** — tier-1 **never guesses**.
+
+> *Owner:* "Accepted. (Industry best practice: A single source of truth for intent resolution
+> prevents contradictory states; deterministic matching is superior to probabilistic guessing for
+> core navigation)."
+
+**What this resolves that the brief could not have known to ask:** §0-A found the choice was never
+between two hypotheticals — the product **shipped both** a closed enum and an open additive matcher,
+neither authoritative. The ruling does not pick a design; it **collapses two shipped routers into
+one**, which is a Phase-0 refactor with a fail-first obligation.
+
+**What turns red:** the two routers can no longer disagree **because there is only one** — a
+structural guarantee, not a test. The tests that must exist: word-boundary matching (the substring
+hazards as RED specimens) and the miss path returning the empty-fallback shape.
+
+### 9-B ✅ RESOLVED — ONE BACKEND REGISTRY TABLE, PARITY-GUARDED; the term-field widening ratified as a DATED AMENDMENT
+
+**Ruled — the registry.** **One backend table**: `term-id` → **declared fact identity** (the F5
+identity, §0-E) → **canonical endpoint**. `FIGURE_IDENTITY` (`tools.py:53-63`) **absorbs it** rather
+than sitting beside it. Analytics' `term_id` (`analytics.py:186-208`) becomes the **derived reverse
+index of the same table** — not a second store. **Three-store glossary parity extends to it.**
+
+**Ruled — the term-field widening.** For the **Glossary category**: `what` + `why` **unconditional**,
+`improves` + `example` **budgeted**. This is the **same intent** as the owner's Phase-0.9 ruling —
+the entry's MEANING is unconditional, structural extras are budgeted — applied to a **corrected
+census**, not a re-opened decision.
+
+> *Owner:* "Accepted (with 9-B amendment). (Industry best practice: Centralizing fact identity into
+> a single parity-guarded backend table prevents drift and ensures robust reverse-indexing for
+> analytics)."
+
+**⊕ THE DATED AMENDMENT IS WRITTEN ON THE PHASE-0.9 RULING'S OWN RECORD, NOT ONLY HERE.** That
+ruling's canonical home is the **`docs/plans/CURRENT.md` "Needs decision" resolved block** — *"✅
+RESOLVED 2026-07-20 (owner) — the grounding fact pack is WIDENED, SCOPED. (AI-surfaces Phase 0.9.)"*
+— which is the **only** place it lives in full (`ai-surfaces.md:650,1107` reference it; neither
+records it). The amendment is filed **there**, dated, citing this §9-B. *Why that matters and is not
+bookkeeping:* the defect was that the ruling's census **never measured the Glossary category**, so a
+correction filed only against the milestone that found it would leave **the next reader of the
+ruling believing the wrong census** — the same failure shape as §19-K, one document over.
+
+**What turns red:** three-store parity extended to the registry; and a guard comparing the tier
+lists against the **actual Glossary schema**, so a field added to one and not the other cannot go
+quiet again (§0-C had **nothing**).
+
+### 9-C ✅ RESOLVED — TIER-1 FIGURES FLOW **ONLY** THROUGH THE FACT-PACK PROJECTION
+
+**Ruled.** A tier-1 figure reaches the reader **only** via the fact-pack projection — **never** a
+`to_display` float (`money.py:80`), **never** a raw endpoint value. **If a figure is not reachable
+through the pack, the pack is extended** — the frontend is never the place the gap is closed.
+Registry rows exist **only for shipped figures**: **no CAGR row** (D-086, `PRODUCT-SPEC.md:152`).
+
+> *Owner:* "Accepted. (Industry best practice: Enforcing strict data projection pipelines—where
+> figures only flow through verified fact-packs—prevents raw data leaks and UI formatting
+> inconsistencies)."
+
+**This dissolves the §0-D posture collision rather than arbitrating it.** The question was which of
+two coexisting postures (raw floats vs D-105 display strings) tier-1 should adopt; the answer is
+**neither directly** — the pack's own formatter (`_fmt`, `tools.py:25`) is already the one path, and
+routing tier-1 through it means the raw/display split on `/portfolio/summary` **is not tier-1's
+problem to solve**. It stays a live inconsistency on the contract, owned by nobody here, and is
+**not** silently inherited.
+
+**What turns red:** a tier-1 render path that reads an endpoint field directly instead of a
+projected fact.
+
+### 9-D ✅ RESOLVED — SERVED SEMANTIC LINK IDs, FRONTEND-OWNED ID→ROUTE REGISTRY, BIDIRECTIONAL GUARD
+
+**Ruled.** The **backend serves semantic link IDs**; the **frontend owns the ID→route registry**.
+A **bidirectional resolution guard**: every **served ID is registered**, and every **registered ID
+resolves** against the live route/topic catalogue.
+
+> *Owner:* "Accepted. (Industry best practice: Strict separation of concerns—backend issues semantic
+> IDs, frontend maps them to routes—coupled with a bidirectional resolution guard eliminates silent
+> dead-link failures)."
+
+**Two corrections ship inside this milestone, both on accepted surfaces:**
+
+1. **The `setParams` sibling-param drop** — `Settings.tsx:110` calls `setParams({tab: v})` with a
+   fresh object and **drops any sibling param**. Fixed here, under the **guard-REDs-an-accepted-
+   surface rite** (CLAUDE.md): a **dated delta note in `page-settings.md` + that page's pre-pass
+   re-run, in the same delta**. Flagging it in a close report is explicitly not sufficient.
+2. **The stale `AppRoutes.tsx:59` comment** — *"four URL-addressable tabs"* against an
+   implementation with **seven** — corrected in the same commit, under the records-truth bar.
+
+**Why the guard is the whole ruling.** §0-F found an unknown `?topic=` is a **silent no-op**
+(`Help.tsx:302,309`) and topics validate against the **served** catalogue (`:334`) — so a registry
+entry pointing at a retired id fails **invisibly**. Bidirectionality is what closes it: a
+one-directional check would let a served ID name a route nobody registered.
+
+### 9-E ✅ RESOLVED — BOTH GUARDS, IN THE `check:primitives` SHAPE (§0-M)
+
+**Ruled.**
+
+1. **The panel-explains/page-acts guard.** The answer body **may contain links and nothing
+   interactive besides**. **A control rendered inside the panel turns red.**
+2. **The 9-D bidirectional resolution guard** (above).
+3. **Plus a spec sentence with a representative test:** a deep link **never bypasses the acceptance
+   gate or the PIN** — **the server refuses regardless.**
+
+> *Owner:* "Accepted. (Industry best practice: Enforcing a strict boundary between conversational UI
+> (informational) and page UI (actionable) prevents unintended state changes and security bypasses)."
+
+**Item 3 closes the §0-H gap by inverting it.** The survey asked *"what does a deep link do in
+unaccepted/locked states?"* and treated it as a UI question. The ruling answers it as a **server**
+question: a link is a navigation, and navigation confers no authority — the 451/PIN layers
+(`deps.py:217-244`) refuse whatever the URL says. **The client is not where this is enforced**, so
+the test is a representative one, not a matrix.
+
+**Both guards take the `check:primitives` shape** (§0-M): narrow scan, named owner, **blindness
+pin** — exit 1 rather than pass vacuously if the subject disappears. **And both must be proven RED
+on a deliberate specimen**, since §0-M found the boundary is **currently held** and no live
+violation exists to catch them.
+
+### 9-F ✅ RESOLVED — NO FOURTH LEGEND AXIS; TIER-1 **IS** THE NO-NARRATION STATE
+
+**Ruled.** **No fourth axis is added to the legend.** Tier-1 **is** the no-narration state — the
+ratified *"Built-in intelligence only — no model was used."* is **already true of it**. Tier-1 prose
+is **fixed served sentences under the §17-2 truth bar** (a fixed sentence may not cite UI that does
+not render); copy adjustments are **PROPOSED strings for 0a**.
+
+**And tier-1 never routes through the rate-limit fallback branch.** A **rate-limited tier-2 falls
+back TO tier-1** — the limiter becomes a reason to reach tier-1, never a reason tier-1 is withheld.
+
+> *Owner:* "Accepted. (Industry best practice: Deterministic, local, zero-call operations must
+> mathematically bypass network-centric rate limiters to ensure UI responsiveness and architectural
+> honesty)."
+
+**What turns red:** a test that **produces tier-1 answers with the limiter exhausted**. This is the
+§0-I finding converted into a guard — the two conditions sharing one `if` (`grounding.py:147`) is
+exactly what that test forbids from recurring.
+
+**On the distinguishability the survey raised:** §0-G worried a reader cannot tell *tier-1 answered*
+from *tier-2 failed*. The ruling declines to solve it with a legend axis — the **answer's own
+content** is the tell (tier-1 explains and points; a tier-2 fallback shows facts and the D-070
+signal), and adding a fourth semantic axis would spend a scarce channel on a distinction the prose
+already makes.
+
+### 9-G ✅ RESOLVED — PRINCIPLES CONFIRMED; **THE STRINGS ARE RATIFIED AT 0a BY LOOKING** *(carries intake I-3)*
+
+**Ruled, three principles:**
+
+1. **The retirement governs.** **"Hailo" leaves served copy.** `POSTURE_LOCAL_NPU` (`ai.py:61`) is
+   **re-worded in the three-kinds vocabulary**, with a **dated note on the pinned table**
+   (ai-surfaces §12-3) — AC-L3 parity carries the change into the product, and **both versions are
+   true in their time**. The **deprecated-term guard's corpus extends to all served AI strings** —
+   which is what makes the retirement real rather than declared (the §14-2 lesson, recurring:
+   *retiring a term without a parity guard is retiring it in one place*).
+2. **One user-facing descriptor: "Ollama-compatible" everywhere**, on GLOSSARY's own
+   name-the-standard rationale. **Both local providers are one user-facing kind.**
+3. **One locality phrasing** — *"data stays on this device"*. **`POSTURE_DISABLED`'s "fact-only
+   answers" is re-cut when tier-1 formally lands** — the §0-J finding that tier-1 makes that string
+   false, accepted.
+
+**The full recut five-string table is a PROPOSED 0a SPECIMEN. The owner ratifies the strings by
+looking** — not from this file.
+
+> *Owner:* "Accepted (principles confirmed; strings at 0a). (Industry best practice: Consistent,
+> unified terminology for system posture across all surfaces is mandatory for maintaining user trust
+> in privacy guarantees)."
+
+**I-3 is hereby dispositioned: UNIFY.** The §-ledger row closes on this ruling; the *strings* remain
+open until 0a, and the ledger distinguishes the two.
+
+### 9-H ✅ RESOLVED — FIXTURES OBVIOUSLY SYNTHETIC, **NEVER BYTE-IDENTICAL TO SERVED COPY**
+
+**Ruled.** Test fixtures are **obviously synthetic** and **never byte-identical to served copy**.
+Applies to **`AskPanel.test.tsx:27`** *and* the **second instance** (`NO_EGRESS_STATUS`, `:37-39`)
+that §0-K found and the intake row had not named.
+
+> *Owner:* "Accepted. (Industry best practice: Synthetic test fixtures must be textually distinct
+> from production strings to ensure test validity and reliable codebase debugging via search)."
+
+**What turns red: NOTHING TODAY beyond the recorded convention — stated, not promised.** This is the
+honest answer the "what turns red?" discipline demands, and it is written as such rather than
+softened into an implied guard.
+
+**⚠ Carries the dated premise correction** — filed on `ROADMAP.md` R-54 (A-3): *"(ii) retired real
+string"* was **wrong**; the string is **live** (`POSTURE_LOCAL_NPU`, `ai.py:61`). The hazard is
+**byte-identity with served copy**, not retirement.
+
+**Note the constraint the fix must respect** (§0-K): `AskPanel.test.tsx:43-45` records that several
+literals are **deliberately duplicated rather than imported, so assertions are not tautological**.
+Synthetic copy is correct where the test needs *a* string; assertions that must pin *the* served
+string keep pinning it. That per-literal classification is **I-2's** work.
+
+### 9-I ✅ RESOLVED — THE HELP DELTA, NAMED UP FRONT
+
+**Ruled.** The **`ask` entry** (`help.py:626`) is **rewritten for two tiers**, including **the
+owner's zero-egress call-out** — the product value he named at the 0a walk: *a clear statement of
+what the built-in intelligence can do without egress is worth having in itself.* **GLOSSARY is
+spec-first** for any newly sanctioned term. **The currency suite runs at close.**
+
+> *Owner:* "Accepted. (Industry best practice: System documentation must strictly mirror the shipped
+> reality of multi-tiered capabilities and explicitly state zero-egress guarantees)."
+
+**"No Help impact" is not available to this milestone** — the panel gains behaviour, so the delta is
+owed by default (§0-L).
+
+### 9-J ✅ RESOLVED — **CONFIRM READING**: tier-1 output does NOT pass the model-output validator
+
+**Ruled.** Tier-1 output **does not pass through the model-output validator**. It satisfies the
+contract **BY CONSTRUCTION**: registry resolution **produces facts**; the fact list **is the
+showing**; every rendered figure **is a displayed fact**; tier-1 prose meets the **served-copy truth
+bar**. **The validator remains the model's gate.**
+
+> *Owner:* "Accepted (Confirm reading). (Industry best practice: Running deterministic, static
+> served constants through an LLM validator is a circular anti-pattern; correctness by construction
+> is the proper architectural approach)."
+
+**The clause-6 precedent is honoured** (ai-surfaces §19-G): this was raised as a **reading of a
+ratified clause**, not resolved by the surveying session, and escalated for the owner to confirm —
+which is the shape that lesson prescribes.
+
+**Why the question was real and not pedantry** (§0-J): clause 2 requires every significant figure to
+trace to a fact (`safety.py:131-142`), and a tier-1 figure comes from its **canonical endpoint** —
+so an unamended reading could have **rejected a tier-1 answer for being too authoritative**. The two
+recorded validator limits that err safe — `_sig3("0.00") → ""` (R-56) and a timestamp's digits
+reading as an unsupported figure (ai-surfaces §15-4) — are **model-gate limits and stay there**.
+
+---
 
 ### ⛔ DEAD-AFFORDANCE FINDINGS — would-be ROADMAP rows, NOT links
 
-Per the DEAD-AFFORDANCE RULE. **Neither is filed by this session**; both are named so §9-D is
-decided knowing what does not exist.
+Per the DEAD-AFFORDANCE RULE. **⊕ BOTH FILED 2026-07-20** at the §9 one-pass, with the owner's
+ruling on each. The rule worked exactly as written: a target the survey found missing became a
+ROADMAP row, never a link.
 
 | Would-be row | Finding | Blocks |
 |---|---|---|
-| **R-59 — URL-addressable entity-creation dialogs** | The **add-holding form is not URL-reachable**: `useState` (`Holdings.tsx:107`), modal `:527-533`. Siblings `importOpen`/`purgeOpen`/`tagsFor`/`editTxn` (`:108-111`) share it | **The owner's tier-1 example (b) exactly** — *"how do I add a holding"* + a deep link to the add form |
-| **R-60 — control-level deep linking within a Settings tab** | The **theme control is not addressable**, only its tab (`Settings.tsx:232-243`; tabs `:83-84`). Also `setParams({tab:v})` (`:110`) uses a fresh object and **drops sibling params** — R-60 must fix that first | **The owner's tier-1 example (c)** — *"toggle the theme"* → the control. Tab-level pointing may satisfy *explains-and-points*: **§9-D** |
+| **R-59 — FILED ⚡ v2.0.0** (RD-9 **Amendment 10**; sequenced after R-54, before R-58) | The **add-holding form is not URL-reachable**: `useState` (`Holdings.tsx:107`), modal `:527-533`. Siblings `importOpen`/`purgeOpen`/`tagsFor`/`editTxn` (`:108-111`) share it | **The owner's tier-1 example (b) exactly** — *"how do I add a holding"* + a deep link to the add form |
+| **R-60 — FILED, POST-RELEASE** (tab-level addressing ruled **sufficient** for v2.0.0) | The **theme control is not addressable**, only its tab (`Settings.tsx:232-243`; tabs `:83-84`). Also `setParams({tab:v})` (`:110`) uses a fresh object and **drops sibling params** — R-60 must fix that first | **The owner's tier-1 example (c)** — *"toggle the theme"* → the control. Tab-level pointing may satisfy *explains-and-points*: **§9-D** |
 
 ### "What turns red?" — asked of every constraint this plan states
 
 | Constraint | What turns red |
 |---|---|
-| Tier 1 makes zero network calls | **Nothing today.** Guard owed with §9-A |
-| The panel never embeds a control | **Nothing today** — the boundary is held by habit (§0-M). Guard owed, §9-E(a) |
-| Every registered deep link resolves | **Nothing today**, and an unknown `?topic=` is a **silent no-op** (§0-F). Guard owed, §9-E(b) |
+| Tier 1 makes zero network calls | **Guard owed, ruled at §9-A/§9-F.** Incl. the limiter test: tier-1 answers still produced with the limiter exhausted |
+| The panel never embeds a control | **Guard ruled, §9-E(a)** — `check:primitives` shape + blindness pin; **proven RED on a deliberate specimen** (the boundary is currently held, §0-M) |
+| Every registered deep link resolves | **Guard ruled, §9-D/§9-E(b)** — **bidirectional**: every served ID registered, every registered ID resolves against the live catalogue |
 | Posture strings stay ratified | ✅ `tests/unit/test_posture_copy_ratified.py`, incl. **coverage** |
 | The legend matches the generation path | ✅ `tests/integration/test_ai_provenance.py` (9 assertions) |
 | Model text carries the treatment, facts do not | ✅ both directions (`DESIGN-SYSTEM.md:1202-1203`) |
@@ -624,12 +849,13 @@ decided knowing what does not exist.
 | The 451 gate covers AI paths | ✅ `test_ai_acceptance_gate.py` — **only for paths listed in `AI_SURFACES`** (§0-H) |
 | Help claims match live product strings | ✅ `tests/unit/test_help_content_accuracy.py` |
 | Every user input uses a ratified primitive | ⚠ **Partly** — `check:primitives` covers **raw checkboxes only** (`check-ui-primitives.mjs:66`) |
-| Tier-1 answers are not rate-limited | **Nothing today** — shares the branch (§0-I). Carried, §9-F |
-| Glossary entries reach the fact pack whole | **Nothing today** — `body` only, and no guard compares the tier lists to the Glossary schema (§0-C). Raised, §9-B |
+| Tier-1 answers are not rate-limited | **Guard ruled, §9-F** — a test producing tier-1 answers with the limiter exhausted. A rate-limited tier-2 falls back **to** tier-1 |
+| Glossary entries reach the fact pack whole | **Ruled, §9-B** — `what`+`why` unconditional, `improves`+`example` budgeted; guard compares the tier lists to the **actual Glossary schema**. Dated amendment filed on the Phase-0.9 ruling's own record (`CURRENT.md`) |
 
 ---
 
-**Sign-off to start build:** §9 has no open blocker · §3b deltas approved · no §4 amendment
-unresolved · **I-1/I-2/I-3 have dispositions.**
+**Sign-off to start build:** ✅ **§9 CLOSED 2026-07-20** — no open blocker · §3b resolved (below) ·
+no §4 amendment unresolved · **I-3 dispositioned (§9-G: UNIFY); I-1 and I-2 carry into Phase 0 and
+must be dispositioned before any CLOSED claim.**
 
-**STOP — §9 reached. The one-pass happens in chat.**
+**⊕ BUILD AUTHORIZED. §7 and §8 are completed from these resolutions; Phase 0 begins backend-first.**

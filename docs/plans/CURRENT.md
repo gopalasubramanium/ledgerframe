@@ -94,11 +94,19 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — R-54 kickoff (deterministic answer intelligence, the two-tier Ask panel) — **PLAN ONLY, STOP AT §9**
+## NEXT — R-54 (deterministic answer intelligence, the two-tier Ask panel) — **§9 CLOSED, BUILD AUTHORIZED**
 
 **⊕ 2026-07-20 — F10 is SHIPPED (`63ec86a`, see DONE above); the release train moves to R-54.**
 
-RD-9 Amendment 7 scope. **Not started.** Carries the plan-file gate standard: own plan file,
+**⊕ 2026-07-20 — §9 CLOSED (owner one-pass, in chat).** All ten items plus the carried intake ruled;
+`r54-deterministic-answers.md` §9 carries each resolution with the owner's verbatim rationale. **Build
+is authorized**, backend-first from Phase 0. Two rows filed from the §0-F dead-affordance findings:
+**R-59** (add-holding form URL-addressable — ⚡ v2.0.0, RD-9 **Amendment 10**) and **R-60**
+(control-level Settings deep linking — post-release). The plan's §-ledger carries **I-1** (contention
+robustness), **I-2** (fixture hygiene) and **I-3** (posture descriptors, resolved as §9-G); **no CLOSED
+claim is admissible until each has a disposition.**
+
+RD-9 Amendment 7 scope. Carries the plan-file gate standard: own plan file,
 survey-first, §9 one-pass, full loop. **Its tier-1 SEED already shipped** — the no-egress
 deterministic answering built at AI-surfaces 0a (`ai-surfaces.md` §12-3 records the string as its
 first artifact), and **R-54 owns the posture-copy amendment** when tier-1 formally lands. Stated
@@ -109,8 +117,9 @@ here because it is the cross-reference easiest to lose between milestones.
 The remaining v2.0.0 set, in sequence (**AI-surfaces is CLOSED** and **F10 is SHIPPED** — see DONE;
 the active NEXT above is the **R-54 kickoff**):
 
-> **R-54 → R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
-> *(RD-9 Amendment 8, extended by **Amendment 9** — R-58 sequenced after R-54.)*
+> **R-54 → R-59 → R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
+> *(RD-9 Amendment 8, extended by **Amendment 9** — R-58 after R-54 — and by **Amendment 10** —
+> R-59 phase 1 inserted immediately after R-54, before R-58.)*
 
 **⊕ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — the set GREW by two**, both raised by the owner
 **using the shipped Ask panel** at the 0a walk: **R-54** (deterministic answer intelligence — the
@@ -131,32 +140,39 @@ strings rather than moving ones** (architect sequencing under delegation, **reve
 3. ~~**AI-surfaces**~~ — **CLOSED 2026-07-20** (DONE above).
 4. ~~**F10**~~ — the fresh-DB `get_history_cached` race — **SHIPPED 2026-07-20** (DONE above).
 5. **R-54** — deterministic answer intelligence, the two-tier Ask panel (RD-9 Amendment 7).
-   **Carries three intake items** (chat ruling 2026-07-20, `ROADMAP.md` R-54): the
-   **contention-robustness fix** re-assigned from AI-surfaces (`ai-surfaces.md` §19-K), **fixture
-   hygiene** in `AskPanel.test.tsx:27`, and **posture-descriptor unification** as a §9 item.
-6. **R-58** — the `settings.key` check-then-insert race at the **four filed sites outside
+   **§9 CLOSED 2026-07-20** (owner one-pass, in chat); build authorized. **Carries three intake
+   items as numbered §-ledger rows** (chat ruling 2026-07-20, `ROADMAP.md` R-54): **I-1** the
+   **contention-robustness fix** re-assigned from AI-surfaces (`ai-surfaces.md` §19-K), **I-2**
+   **fixture hygiene** in `AskPanel.test.tsx:27` (⚠ premise corrected — the string is **live**, not
+   retired; r54 §0-K), and **I-3** **posture-descriptor unification**, resolved as §9-G.
+6. **R-59** — **URL-addressable add-holding form, phase 1** (RD-9 **Amendment 10**, from R-54's
+   §0-F dead-affordance finding). Completes the owner's tier-1(b) example, which is **unbuildable
+   until this route exists**. Delta-scale; Holdings is closed, so it ships under the
+   **guard-REDs-an-accepted-surface rite** (dated delta note in `page-holdings.md` + that page's
+   pre-pass re-run, same delta). The general entity-dialog pattern stays **post-release**.
+7. **R-58** — the `settings.key` check-then-insert race at the **four filed sites outside
    `get_history_cached`** (RD-9 **Amendment 9**, from the F10 census). `briefing.py:201–207` **first**
    (a generic helper — widest blast radius), then `feeds.py:72–78`, `settings.py:131–135`,
    `system.py:617–621`; `seed/demo.py:327` is an **adjacent variant**, not a fifth site. **Not
    release-train blocking** — none sits on a guaranteed-concurrent path — but the fix is F10's
    already-tested `_claim_marker` primitive. **Fail-first with a blindness pin is mandatory.**
-7. **R-57** — AI model management, Settings › AI (RD-9 Amendment 8). After R-54, before R-55.
-8. **R-55** — Help content: asset classes & corporate actions (RD-9 Amendment 7). **Ships the
+8. **R-57** — AI model management, Settings › AI (RD-9 Amendment 8). After R-54, before R-55.
+9. **R-55** — Help content: asset classes & corporate actions (RD-9 Amendment 7). **Ships the
    §19-J findability parity guard** (chat ruling 2026-07-20).
-9. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
+10. **R-45** — per-instrument + default news coverage (pulled into v2.0.0, RD-9
    Amendment 5; egress ruling required, take together with R-44). **Verification item
    (observed 2026-07-18):** the **Home holdings-scoped headlines vs per-ticker feed
    inconsistency** — confirm/resolve in the R-45 walk (also noted in ROADMAP.md's R-45 row).
-10. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
+11. **R-46** — Home summary cards (pulled into v2.0.0, RD-9 Amendment 5; sequencing
    suggestion: adjacent to R-39).
-11. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
-12. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
+12. **chrome-sidebar-refresh (R-39)** — the **FINAL pre-release** milestone.
+13. **Pre-release owner walk** — `docs/plans/pre-release-walk.md` (the thorough capstone;
    carries the deferred verifications — dr-25 chart sign-off **[DONE at the R-42 close]**,
    dr-28 owner-eyes; plus the R-42-appended mixed-currency / intraday / fund-P/L checks
    and the **R-43-appended 10d–10g** — mixed-provider backfill spot-check, 6/6 trend with
    the carried note, **§20-P `LEDGERFRAME_SECRET_KEY` as a Gate-C blocker**, TWR/1Y once
    coverage fills).
-13. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
+14. **Gates C→F clear** (`release-readiness.md`) → **tag v2.0.0.**
 
 **R-41 / R-43 / R-44 — RESOLVED (RD-9 Amendment 6, owner 2026-07-18):** R-43 **IN** (with
 R-8); **R-41** (per-provider credentials — YAGNI) and **R-44** (news thumbnails —
@@ -181,6 +197,23 @@ owed · **R-40** (Alpha Vantage premium feed expansion) — parked, definition o
   (Commitment 7). **Fail-first proof, as ruled:** *"why do I have to accept terms"* was RED
   (`['Help · Legal', 'Help · Help']`, not one containing the word "accept") and now retrieves the
   ruled answer, declining included.
+
+  > **⊕ AMENDMENT, 2026-07-20 (owner, R-54 §9-B one-pass) — THE WIDENING NEVER REACHED THE GLOSSARY
+  > CATEGORY, AND THE CENSUS IS NOW CORRECTED.** The ruling above shipped as
+  > `_HELP_FACT_CORE = ("body", "interpret")` + `_HELP_FACT_EXTRA = ("outputs", "inputs")`
+  > (`app/ai/tools.py:211-212`). R-54's §0-C survey **executed the corpus** and found the tiers were
+  > named from **page-entry** field names only: **all 29 `term-*` Glossary entries carry
+  > `what`/`why`/`improves`/`example` and NONE carries `interpret`, `outputs` or `inputs`** — so
+  > every glossary term projected **`body` alone**, which is *this ruling's own defect, surviving in
+  > the one category it never measured*. **Ruled: `what` + `why` join the unconditional core and
+  > `improves` + `example` join the budgeted tail, for the Glossary category** — the **same intent
+  > as the ruling above** (the entry's MEANING is unconditional; structural extras are budgeted),
+  > applied to a **corrected census** rather than a re-opened decision. *Owner:* "Accepted (with 9-B
+  > amendment). (Industry best practice: Centralizing fact identity into a single parity-guarded
+  > backend table prevents drift and ensures robust reverse-indexing for analytics)." Ships in R-54
+  > Phase 0. *Why it is recorded HERE:* this block is the ruling's canonical home, and an amendment
+  > filed only against the milestone that found it would leave the next reader of this entry
+  > believing a census that was wrong. Cross-ref: `r54-deterministic-answers.md` §0-C, §9-B.
 
 - **✅ RESOLVED 2026-07-20 (owner, option (b)) — R-22 vs the shipped egress gate.** *(AI-surfaces §9-BIS; found at
   Phase 0.5. **Blocks one of three ruled posture states in the Ask panel; does not block the

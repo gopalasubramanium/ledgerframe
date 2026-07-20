@@ -3,9 +3,40 @@
 **Status: ⏸ GATES C–F STANDING/DORMANT. GATE A CLOSED (+ A9–A11 addendum) · GATE B CLOSED
 (owner-ratified). RELEASE REQUIRES FULL COMPLETION (RD-9 Amendment 3, as REFINED by Amendment 4 and
 EXTENDED by Amendments 5 + 6, owner 2026-07-18, by Amendment 7, owner 2026-07-20, by
-Amendment 8, owner 2026-07-20, and by **Amendment 9, owner 2026-07-20** — Voice is POST-RELEASE; the v2.0.0 set is enumerated below,
-now incl. R-45 + R-46 + R-43 (with R-8) + R-54 + R-55 + R-57 + **R-58**; the R-41/R-43/R-44 ruling is now RESOLVED by Amendment 6 — R-43 IN, R-41 + R-44
+Amendment 8, owner 2026-07-20, by Amendment 9, owner 2026-07-20, and by **Amendment 10, owner
+2026-07-20** — Voice is POST-RELEASE; the v2.0.0 set is enumerated below,
+now incl. R-45 + R-46 + R-43 (with R-8) + R-54 + R-55 + R-57 + R-58 + **R-59 (phase 1)**; the R-41/R-43/R-44 ruling is now RESOLVED by Amendment 6 — R-43 IN, R-41 + R-44
 POST-RELEASE).**
+
+> ## ⚠ RD-9 SCOPE AMENDMENT 10 (owner, 2026-07-20, chat — **R-54 §9 one-pass**) — **v2.0.0 scope += R-59 phase 1.**
+>
+> The enumerated set grows by one — **R-59 phase 1** (the URL-addressable **add-holding form**;
+> `ROADMAP.md` R-59).
+>
+> **Origin — a dead affordance, found by survey.** R-54's §0-F deep-link inventory went looking for
+> the target of the owner's own tier-1(b) example (*"how do I add a holding"* → Help steps **plus a
+> deep link to the actual add form**) and found **there is no such target**: the form is a `useState`
+> modal (`Holdings.tsx:107`, rendered `:527`), with no route and no `?add=` param. Under the
+> **dead-affordance rule** a missing target becomes a ROADMAP row, **never a link** — so the owner's
+> example was, as stated, unbuildable.
+>
+> *Owner's ruling, verbatim:* "Accepted. (Industry best practice: Prioritizing URL-addressability for
+> core transactional flows (Add Holding) pre-release drives critical user value, while deferring
+> generic settings deep-links prevents milestone scope creep)."
+>
+> **Scope is phase 1 only.** The add-holding dialog becomes URL-addressable; the **general
+> entity-dialog pattern** (import/purge/tags/edit-txn) stays **POST-RELEASE** in the same row. The
+> sibling row **R-60** (control-level Settings deep linking) is **POST-RELEASE** — tab-level
+> addressing is complete and ruled sufficient.
+>
+> **Sequencing: immediately after R-54, before R-58** *(architect sequencing under standing
+> delegation, 2026-07-20 — **reversible**; an ordering judgement, not a scope ruling)*. Rationale:
+> it completes the owner's tier-1(b) example **while the registry context is hot**; the work is
+> **delta-scale frontend**; and the R-54→R-59 ordering is enforced **mechanically** rather than by
+> memory — R-54's **bidirectional resolution guard** reds if the link registry names an ID whose
+> route does not yet resolve, so the form's ID cannot be registered before the route ships.
+>
+> **The release gate remains FULL COMPLETION of the enumerated set (Amendment 3).**
 
 > ## ⚠ RD-9 SCOPE AMENDMENT 9 (owner, 2026-07-20, chat) — **v2.0.0 scope += R-58.** *(Filed from the F10 census.)*
 >
