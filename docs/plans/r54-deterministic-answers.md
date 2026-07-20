@@ -32,7 +32,7 @@ row lacks a disposition.** This plan is the rule's first user.*
 
 | **F-1** | Finding | **`Total liabilities` is not a GLOSSARY term** — GLOSSARY has **Liability** (`:67`, singular, an asset-class concept) and uses "Liabilities" only inside Net worth's definition prose (`:65`); neither sanctions it as a **figure label**, yet `networth_facts` (`tools.py:330-332`) serves it to users | Found at Phase 0-2a (`0d19a5a`) building the registry — by the first guard ever to measure the **AI's fact labels** against GLOSSARY | ✅ **RATIFIED + CLOSED 2026-07-20** (owner: *GLOSSARY catch-up*). Verifying the reading made it stronger than the finding — **D-032** and **D-054** already ratify **Liabilities** by name, `NetWorth.tsx:204` has **shipped** that label, and `:208` renders *"…− Liabilities (GLOSSARY)"*, **citing a spec entry that did not exist**. The defect was the **missing row**. `GLOSSARY.md` gained **Liabilities** spec-first (`2c0016d`), the registry's canonical label follows it, and **the carve-out is deleted — an ordinary row, zero exceptions** (`fa7b656`). Sibling `Total assets` → `Gross assets` applied at 0-2a |
 
-| **F-2** | Finding | **Allocation weights omit three shipped asset classes** — `key_stats`' four buckets are `weight(...)` over hardcoded names (`analytics.py:94-97`); **`bond`, `other` and `retirement` are in NO bucket**, so the weights do not sum to 100% | Found at Phase 0-2b (`fa7b656`) from ruling ②'s *principle* — its stated precondition (a *dynamic* `key_stats` path) **does not exist**; the metrics are static literals | **⚑ OPEN — OWNER RULING OWED.** **Proven live on the SHIPPED DEMO DATA: 6.2 + 4.4 + 1.0 + 80.5 = 92.1, a 7.9-POINT SHORTFALL** on an accepted surface (D-048), caught by nothing. **Not fixed:** the repair changes **what the Portfolio page displays** — a product-content decision, not a refactor — and would break 0-2b's byte-identity proof for a reason unrelated to the derivation. The ruled fix (*derive from the `AssetClass` enum, one source*) is the likely shape, and it lands with the **page-portfolio pre-pass + dated delta note** per the rite |
+| **F-2** | Finding | **Allocation weights omit three shipped asset classes** — `key_stats`' four buckets are `weight(...)` over hardcoded names (`analytics.py:94-97`); **`bond`, `other` and `retirement` are in NO bucket**, so the weights do not sum to 100% | Found at Phase 0-2b (`fa7b656`) from ruling ②'s *principle* — its stated precondition (a *dynamic* `key_stats` path) **does not exist**; the metrics are static literals | **⚑ OPEN — OWNER RULING OWED.** **Proven live on the SHIPPED DEMO DATA: 6.2 + 4.4 + 1.0 + 80.5 = 92.1, a 7.9-POINT SHORTFALL** on an accepted surface (D-048), caught by nothing. **Not fixed:** the repair changes **what the Portfolio page displays** — a product-content decision, not a refactor — and would break 0-2b's byte-identity proof for a reason unrelated to the derivation. **⊕ SCHEDULED 2026-07-20/21 (owner): its OWN delta in the Phase-1 window, no silent drop.** **Survey the ratified stats spec FIRST** — four-bucket vs per-class. **Governing principle either way:** every class in a **labelled** bucket · weights **sum to 100** · the census **derived from the `AssetClass` enum** (D-082 generalised). If the four-bucket grouping is ratified, **explicit assignments for `bond` / `other` / `retirement` come back to chat**. **Fail-first on the 92.1% sum with REAL-SHAPED data**; **page-portfolio pre-pass re-run + dated note**; any new labels **GLOSSARY-first** |
 
 *Rows F-n (walk findings) are appended below this table as the milestone runs. **The CLOSED claim
 enumerates I-rows, F-rows and lettered sub-findings alike.***
@@ -1057,6 +1057,114 @@ structural guards. Stated so the drop is not read as coverage lost.
 **Help currency:** `GLOSSARY.md` gained the **Liabilities** row (spec-first, `2c0016d`). The served
 fact label moves from `"Total liabilities"` to the ratified `"Liabilities"` — **onto** the spec
 rather than away from it. Milestone Help delta still owed at close (§9-I).
+
+---
+
+### Phase 0-3 — THE GLOSSARY CATEGORY REACHES THE PACK (`77d063b`) — DONE
+
+**The §0-C repair**, per the dated amendment on the Phase-0.9 ruling's own record (`CURRENT.md`).
+Carries the owner-ratified **Positions** GLOSSARY catch-up in the same phase.
+
+#### FAIL-FIRST — a census, not a specimen
+
+```
+29 glossary entries still project `body` alone:
+['term-valuation-method', 'term-entitlement-stale', 'term-data-confidence',
+ 'term-xirr-twr', 'term-drift']…
+```
+
+The guard is **the shape of the defect**, not a hand-picked example: *no glossary entry may project
+`body` alone.* A specimen would have proven one entry fixed; the census proves the category is.
+
+#### The fix — TIERS ARE PER-CATEGORY, because the corpus has two schemas
+
+| Category | Core (unconditional) | Extra (budgeted) |
+|---|---|---|
+| `Glossary` | `body` · **`what`** · **`why`** | `improves` · `example` |
+| everything else (unchanged) | `body` · `interpret` | `outputs` · `inputs` |
+
+**The split is identical in both** — core is the entry's MEANING, extra is structural detail — and
+only the field **names** differ, because the two categories are written to different schemas. That
+is the whole of §0-C: the Phase-0.9 ruling was right and its **census** was incomplete, having been
+named from page-entry fields only. The owner **amended** it rather than re-opening it.
+
+#### Budget adherence and the ratified size pins, RE-PROVEN with the widened tiers
+
+| Pin | Measured after widening |
+|---|---|
+| Largest rendered **glossary** fact ≤ 4000 | **1,499** (`term-attribution`) |
+| Largest rendered fact, **any** category ≤ 4000 | **3,254** (`page-legal`) |
+| Per-question help portion ≤ 12000 | asserted on the **SERVED pack**, three term questions |
+| `_HELP_FACT_BUDGET == 3600` | unchanged |
+
+A widening is exactly the change that could breach these, so they are re-proven **here** rather than
+left to the corpus test written for the old projection.
+
+#### ⚠ A PIN THAT HAD GONE HALF-BLIND, REPOINTED
+
+`test_ai_grounding_corpus.py` asserted `_HELP_FACT_CORE == ("body", "interpret")` and called that
+**"the core grounding tier"**. After this delta there are **two** tier sets, and that assertion
+would have kept passing **while saying nothing whatever about the Glossary category** — a guard
+reading as complete while covering half of its subject. *That is §0-C's own failure mode, one
+abstraction level up: an unnoticed category.* It now pins **both** tuples explicitly, each with the
+reason its fields are unconditional.
+
+#### ⊕ POSITIONS — the F-1 pattern, applied a second time
+
+**Owner-ratified as a GLOSSARY catch-up. Spec-first (`32fef65`), ahead of the registry row.**
+
+**The derivation was verified BEFORE the definition was written, as ruled — and it changed the
+definition.** The obvious wording (*"how many positions you own"*) is **wrong**:
+
+```
+Positions metric      = 14
+/holdings rows total  = 14
+  positive value      = 13
+  negative (liability)=  1
+```
+
+It is `len(value_portfolio(...).holdings)`: soft-deleted excluded (`portfolio.py:647`), **liabilities
+INCLUDED**, and holdings that failed valuation included as *Unavailable* (`:663-676`). So it counts
+**rows in the ledger, not assets owned** — 13 assets and one mortgage report **14**. The GLOSSARY row
+states that and marks the distinction from **Gross assets**, which counts value and excludes
+liabilities.
+
+*Writing the definition from the LABEL rather than the DERIVATION is the F5 defect — identity is
+DECLARED, never inferred — and here it would have shipped a spec that disagreed with the number
+printed beside it.* **No exemption class for counts:** an ordinary GLOSSARY term and an ordinary
+registry row.
+
+#### ⚠ MUTATION TESTING FOUND TWO BLIND SPOTS IN THIS DELTA'S OWN GUARDS
+
+Recorded as process, because the outcome alone would misrepresent how it was reached.
+
+1. **Two mutations appeared not to fire** — I had run them against the wrong file. They *are*
+   caught, by the tier-configuration pin. **The verification was incomplete, not the guards.**
+   Reported rather than silently re-run, because "the mutation didn't fire" and "I didn't look
+   where it fires" are indistinguishable in a report that only shows the second attempt.
+2. **The "unconditional" test was really a PRESENCE test** — and presence is exactly what a budget
+   also provides, right up until an entry grows. Rewritten with a synthetic entry… which **still
+   did not fire**, because a *short* core field fits the budget whether it is core or budgeted.
+   **The discriminating property is SIZE, not position.** Corrected a second time — oversized core
+   fields, so only a field never charged to the budget can survive — and demoting `why` now reds it.
+
+*Both blind spots were found by mutating and neither by reading.* The test's docstring carries the
+history so the next reader knows why it is shaped so awkwardly.
+
+#### Gates — solo, uncontended
+
+| Gate | Result |
+|---|---|
+| Backend, **ordered** | **2006 passed, 15 skipped** — exit 0 |
+| Backend, **randomized** | `**2006 passed, 15 skipped** — exit 0` |
+| `make lint` | **PASS** |
+| Contract | **141 / 71 unchanged, no regen** |
+
+1996 → 2006; the +10 are this delta's widening guards.
+
+**Help currency:** `GLOSSARY.md` gained **Positions** (spec-first, `32fef65`). No served string
+changed by the widening — it changes what the **model is given**, not what the user is shown. The
+milestone's Help delta remains owed at close (§9-I).
 
 ---
 
