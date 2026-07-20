@@ -60,6 +60,23 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ## NEXT — AI-surfaces (D-067 / D-068)
 
+**⊕ 2026-07-20 — PHASE 0a RE-DRIVEN, AWAITING THE OWNER'S LOOK. 78/78, both themes, 0 console
+errors.** The owner walked the 0a screenshots in chat; that walk produced two roadmap filings
+(R-54, R-55 — RD-9 Amendment 7) and five deltas, all shipped: the fallback **echo** removed
+(§12-1), the disclaimer bound to the **artifact** while the panel projects it once (§12-2), the
+**shipped** no-egress posture string ratified over the drafted one and **pinned** (§12-3), the
+**passing narration** state photographed for the first time (§12-4), and the long-owed
+**page-settings §15st-1 pre-pass** run and discharged (§12-5, `page-settings.md` §15st-2).
+
+**⚑ THREE FINDINGS ARE RECORDED AND NOT FIXED — they need the owner, not a commit.**
+(a) the fact pack ships the **same figure twice**, one copy **unformatted** money (§13-B);
+(b) the Settings AI tab can name a **provider that is not the one answering** (§13-C);
+(c) a **zero-valued fact can never be narrated** — it traces to nothing under `_sig3` (§12-4).
+Plus one flag: **clause 6 was RE-READ** against SECURITY-BASELINE §5, not changed (§12-1).
+
+**The milestone does NOT close on these gates.** 0a closes when the owner ratifies by looking.
+
+
 **⚠ INTAKE CROSS-NOTE — READ BEFORE THE GROUNDING REVIEW** (page-help §9-9 ruling, 2026-07-19):
 the **help knowledge base was REWRITTEN in the Help milestone**. `app/services/help.py` is not just
 the Help page's content — **`app/ai/tools.py:145` pulls it into the grounded fact pack**, so it is
@@ -107,9 +124,14 @@ DS amendment (i), and two spec inconsistencies found en route (j).
 - **A HARD RULE WITHOUT A GUARD IS A REQUEST** (CLAUDE.md, added at the Legal close): ask of every
   constraint this milestone states, *what turns red?*
 
-## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6)
+## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7**)
 
-The remaining v2.0.0 set, in sequence (**AI-surfaces** is the active NEXT above):
+The remaining v2.0.0 set, in sequence (**AI-surfaces** is the active NEXT above).
+**⊕ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — the set GREW by two**, both raised by the owner
+**using the shipped Ask panel** at the 0a walk: **R-54** (deterministic answer intelligence — the
+two-tier Ask panel) and **R-55** (Help content: asset classes & corporate actions). Neither is
+started; both carry the plan-file gate standard (own plan file, survey-first, §9 one-pass, full
+loop). See `release-readiness.md` Amendment 7 and `ROADMAP.md` R-54/R-55.
 
 1. ~~**Help**~~ — **CLOSED 2026-07-19** (DONE above).
 2. ~~**Legal**~~ — **CLOSED 2026-07-20** (DONE above).

@@ -1179,11 +1179,41 @@ ship, so the tab tells the truth about **today** in both directions.
 now pins the new one **plus** the Ask reference, with the reason written at the assertion — a test
 that pins copy is fine; a test that pins copy *nobody rechecked* is how stale strings survive.
 
-**⚠ PRE-PASS RE-RUN: OWED, NOT YET RUN.** This changes **rendered copy on an accepted page**, so
-the rule's trigger is met and a Settings pre-pass re-run is required — unlike `page-legal` §14-D
-and §14-E, where nothing rendered moved and the omission was a stated judgement. It is **not
-skipped and not waived**: it runs as part of the AI-surfaces **Phase-0a specimen**, which drives
-the browser across the AI surfaces on the isolated instance. **Until that run lands, this delta is
-recorded as incomplete.**
+**~~⚠ PRE-PASS RE-RUN: OWED, NOT YET RUN.~~ ✅ RUN AND GREEN — 2026-07-20** (see the delta below).
+This changes **rendered copy on an accepted page**, so the rule's trigger is met and a Settings
+pre-pass re-run is required — unlike `page-legal` §14-D and §14-E, where nothing rendered moved and
+the omission was a stated judgement. It was **not skipped and not waived**: it ran as part of the
+AI-surfaces **Phase-0a specimen**, which drives the browser across the AI surfaces on the isolated
+instance.
+
+### 15st-2. ⊕ DATED DELTA — the §15st-1 pre-pass re-run, DISCHARGED (2026-07-20)
+
+**It was owed twice before this.** The AI-surfaces 0a specimen and its first re-drive both stated
+the debt honestly and both closed without paying it: each drove **the AI surfaces**, and the tab
+whose copy actually moved is **Settings → AI**. Naming a thing as owed is not the same as running
+it, and two consecutive closes proved that. This run drove it **by name**.
+
+**Result — both themes, on the isolated instance, 0 console errors:**
+
+```
+PASS  settings-ai/light|dark: §15st-1's NEW note renders
+PASS  settings-ai/light|dark: the note names what DID ship (Ask)
+PASS  settings-ai/light|dark: the OLD deferral note is gone
+PASS  settings-ai/light|dark: the note is ON SCREEN — 307-325 of 900
+```
+
+The last assertion is **geometry, not presence** (Finding 1's lesson, ai-surfaces §11-A): a note
+present in the DOM and below the fold is a note the reader does not have. Screenshots:
+`docs/plans/assets/ai-0a-settings-ai-tab-{light,dark}.png`.
+
+**⚑ FOUND AT THIS RUN, NOT FIXED — the line ABOVE the note may be false.** The tab rendered *"AI is
+on — provider **hailo**, model (default)"* while the same install served `openai_compatible` /
+`stub-narrator` from `/ai/grounding-status`. `/system/ai-config` reads the repo-root **`.env`
+file**; OS environment **overrides** `.env` in pydantic settings, so the **configured** and
+**effective** providers are two sources of truth that diverge silently. §15st-1's ratified note
+promises *"this line reflects the **served** configuration only"* — under a systemd `Environment=`
+or a container `-e`, that sentence is false. **Recorded for the owner as ai-surfaces §13-C**; the
+fix is a ruling (report configured vs effective), and if the answer is "configured", the §15st-1
+copy itself needs the amendment.
 
 **Gates at this delta:** `npm run check` — 387 frontend tests (Settings 29), 361 Playwright.

@@ -981,3 +981,160 @@ the product; edit the product alone and the guard goes red. **Only the no-egress
 explicitly**; the other four are the shipped set, presented at this walk and ratified by the look.
 The guard also asserts **coverage** — a new posture branch that forgets to register its string reds
 rather than shipping unratified copy on the one surface built to be honest about posture.
+
+### 12-4. PASSING NARRATION — the panel's primary state, finally on camera
+
+**Every previous 0a drive photographed a product that had fallen back.** The grounded, validated,
+model-narrated answer — the state the panel exists FOR — had never been captured, because no
+provider was configured that could produce one. **A specimen missing its primary state is not a
+specimen of the product.**
+
+**Shipped for the drive (test double, never committed, never in a gate):** an OpenAI-compatible
+stub that answers **strictly from the fact pack** — it parses the `FACTS` block out of the prompt
+it is handed and re-states those exact values. That is not "a model that behaves well"; it is the
+**only narrow path** through the validator: clause 2 (every significant figure must trace to a
+fact), clause 3 (no ticker outside the facts/question), clause 4 (no recommendation language).
+Echoing the pack satisfies all three by construction.
+
+Served live at the re-drive, `provider: openai_compatible`, validation **passed**:
+
+> *"Your net worth is 772,126.26 SGD. Your total unrealised p/l is 79,326.30 SGD. Your total return
+> % is 11.45%. These figures come from the facts shown above, as of the timestamps listed there."*
+
+**⚑ FOUND WHILE BUILDING THE STUB — a zero-valued fact can never be narrated.**
+`safety._sig3()` takes the first three **significant** digits, so `"0.00"` reduces to `""`, and the
+empty string is then **discarded** from the traceable-fact set (`fact_sigs.discard("")`). A
+legitimately zero figure — *"Today's change: 0.00 SGD"*, true and useful — therefore **traces to
+nothing**, and any answer quoting it **fails clause 2** and falls back. This is why the first three
+narration attempts fell back with `unsupported figure '0.00' not in the facts`.
+
+**Not fixed — recorded.** It **errs safe** (the product falls back rather than fabricating), it is
+outside the five ruled fixes, and the correct handling is a judgement: a zero is genuinely
+indistinguishable from "no significant digits" under a leading-digits comparison. **⚑ For the
+owner.** The stub simply avoids zero facts so the narrated state could be photographed at all.
+
+### 12-5. The OWED page-settings §15st-1 pre-pass — RUN, and GREEN
+
+**Owed since the AI tab's note changed; owed again after the last re-drive**, because both previous
+drives covered the AI surfaces and **not the Settings tab whose rendered copy moved**. Run **by
+name** this time, both themes:
+
+```
+PASS  settings-ai/light|dark: §15st-1's NEW note renders
+PASS  settings-ai/light|dark: the note names what DID ship (Ask)
+PASS  settings-ai/light|dark: the OLD deferral note is gone
+PASS  settings-ai/light|dark: the note is ON SCREEN — 307-325 of 900
+```
+
+Screenshots: `ai-0a-settings-ai-tab-{light,dark}.png`. **§15st-1's "PRE-PASS RE-RUN: OWED, NOT YET
+RUN" is discharged** — a dated note lands on `page-settings.md` with this delta.
+
+---
+
+## 13. PHASE 0a — THE RE-DRIVE (2026-07-20)
+
+**78/78 driver assertions · both themes · ZERO console errors** (excluding the ~100 expected `451`s
+on the unaccepted install, which are the acceptance gate working). Six states, each shot in light
+and dark: **451 gate · grounded PASSING narration · fallback (echo-free, signal leading) ·
+no-egress deterministic · instrument explainer · Settings AI tab (§15st-1)**.
+
+**Reset per run, deliberately.** The 451 state only reproduces on an **unaccepted** install and the
+run itself accepts the terms — so the drive begins by wiping the isolated data dir and re-seeding.
+The first two attempts silently skipped the gate state for exactly this reason; the reset is now
+part of the run rather than a thing to remember.
+
+### 13-A. The assertions that carry the rulings
+
+```
+grounded/light|dark   PASS  a NARRATED answer is present          PASS  no fallback signal
+                      PASS  disclaimer visible exactly once — saw 1
+                      PASS  no fact label echoed in the answer body — echoed []
+fallback/light|dark   PASS  the rejected model text never reached the reader
+                      PASS  the fabricated figure never reached the reader
+                      PASS  D-070 signal LEADS the fact pack (341 < 385)
+                      PASS  signal visible exactly once — saw 1
+                      PASS  no empty answer block — the fact pack IS the answer (§12-1)
+no-egress/light|dark  PASS  the RATIFIED posture string is served
+explainer/light|dark  PASS  opens with a SEEDED, scoped question — "Explain AAPL — …"
+                      PASS  NOTHING was sent on open — no answer until the reader asks
+```
+
+The explainer assertions are worth naming: they check that the panel **did not fire on mount** —
+no answer, **and no fact pack either**. An explainer that answered on open would spend the user's
+device on a question they never asked, and under a metered provider that is their money.
+
+### 13-B. ⚑ FINDING 5 — the fact pack ships the SAME figure twice, one copy unformatted
+
+**Found by looking at the screenshot; the 78/78 run passed straight through it.** The *"What this
+is built from"* list — the panel's trust surface, the product showing its working — renders:
+
+| Label | Value |
+|---|---|
+| Total unrealised P/L | **79,326.30 SGD** |
+| Unrealised P/L | **79326.3 SGD** |
+| Total return % | 11.45% |
+| Total return | 11.45% |
+
+**The same figure, twice, under two labels — and one copy is raw.** `79326.3 SGD` has no thousands
+separator and one decimal place, on a **money** surface, directly beneath a correctly-formatted copy
+of itself. `Income (div/int): 0.0 SGD` is the same defect.
+
+**Mechanism, so the finding is actionable:** the pack is merged from two sources.
+`tools.portfolio_facts()` formats money through `_fmt(value, base)`; `tools.performance_facts()`
+(the analytics `key_stats` path) renders it as **`f"{v} {base}"`** — no formatting at all — and the
+two sources **overlap** on unrealised P/L and total return.
+
+**Why it matters more here than elsewhere:** this list exists so the reader can check the answer
+against its basis. A basis list that shows one number twice, spelled two ways, reads as a product
+that does not know its own figures — on the one surface built to demonstrate that it does.
+
+**NOT FIXED — ⚑ owner's call.** The de-duplication half is a **scoping** decision on a pack the
+owner ruled at Phase 0.9 ("WIDENED, scoped"), not a typo. Options, no recommendation: **(a)**
+de-duplicate at merge (one label per figure, canonical wins); **(b)** format `performance_facts`
+through `_fmt` and leave the duplication (fixes the ugly half, leaves the confusing half);
+**(c)** both. **(a) and (c) change what the MODEL sees**, which is why this is not a quiet fix —
+though note the validator is format-insensitive (`_sig3` compares leading significant digits), so
+formatting alone cannot break grounding.
+
+### 13-C. ⚑ FINDING 6 — the Settings AI tab can name a provider that is not the one answering
+
+**Found by looking at the §15st-1 screenshot** — at the line **above** the note the pre-pass was
+checking. The tab read:
+
+> *"AI is on — provider **hailo**, model (default)."*
+
+while `/ai/grounding-status`, on the same instance at the same moment, served
+**`openai_compatible` / `stub-narrator`** — and that was the provider actually answering.
+
+**Mechanism.** `/system/ai-config` builds its answer from **`read_env()`** — the repo-root `.env`
+**file** — falling back to settings. But **pydantic settings let OS environment override `.env`**,
+so the **effective** provider (what `get_ai_provider()` constructs, what `grounding-status`
+reports) and the **configured** provider (what `.env` says, what Settings displays) are **two
+sources of truth for the same fact**, and they diverge whenever OS env is set.
+
+**Stated honestly: this drive INDUCED the divergence.** OS-env overrides are exactly how the
+isolated harness configures itself (prepass method), so this is not proof the owner's install is
+misreporting. **What it does prove is that the two can disagree and the tab cannot tell** — and
+the very note §15st-1 ratified promises *"this line reflects the **served** configuration only."*
+Under a systemd `Environment=` or a container `-e`, that sentence would be false.
+
+**This is the milestone's own defect class** — a served string that misdescribes the product's own
+state — found on the surface that promises to reflect it. **NOT FIXED, ⚑ owner's call**, because
+choosing between *report the CONFIGURED value* and *report the EFFECTIVE value* is a ruling, not a
+repair: **(a)** serve the effective settings (what is running); **(b)** keep `.env` and change the
+note to say "configured", which is a §15st-1 copy amendment; **(c)** serve both and show a drift
+warning when they differ.
+
+### 13-D. Isolation
+
+Owner's `:8321`/`:5173` **verified still listening and untouched** before and after · `.env`
+**verified byte-identical** (`2fc668e5…` both ends, `diff` clean) · isolated stack (`:8399` backend,
+`:8402` stub, `:5199` vite) **confirmed fully down** at teardown · throwaway driver, vite config and
+stub **deleted** · `SMOKE_ALLOW_LIVE` **never set** · every write landed in a temp data dir that was
+wiped between runs.
+
+### 13-E. Still owed / carried
+
+- **⚑ Findings 5 and 6 above** — recorded, not fixed, awaiting the owner's ruling.
+- **⚑ The zero-fact narration gap** (§12-4) — recorded, errs safe.
+- **⚑ Clause 6's reading** (§12-1) — flagged: a normative clause was re-read, not changed.

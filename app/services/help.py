@@ -629,14 +629,24 @@ HELP: list[dict] = [
              "built from a fact pack that is shown to you BEFORE the answer, so you can see what "
              "it rests on whether or not you read the rest. The facts are the only source of "
              "numbers: the AI never computes a figure and never fetches one. Nothing you ask and "
-             "nothing you are told is stored anywhere.",
+             "nothing you are told is stored anywhere. "
+             "If the AI's wording does not pass the grounding checks it is discarded and you are "
+             "told so — the facts are then shown on their own, and they are the answer.",
      "keywords": "ask ai question answer chat panel fact pack grounding disclaimer privacy "
                  "no-egress local remote model help",
      "inputs": ["**Your question** — up to 500 characters, about your data or how the app works",
                 "**Ask** — send the question"],
+     # ⊕ 2026-07-20 (ai-surfaces §12-1/§12-2, THE HELP CURRENCY LAW). Two of these three lines were
+     # made imprecise by the same milestone that wrote them, which is exactly what the Law exists to
+     # catch. "The answer" was listed unconditionally, but when the grounding checks reject the
+     # model's wording there is NO separate answer block — the fact pack IS the answer, and listing
+     # a block that does not render is the dead-affordance rule broken in prose. The disclaimer line
+     # now says "once", because it used to render twice and a reader who saw two copies had no way
+     # to know which was the product and which was the defect.
      "outputs": ["The facts the answer is built from, shown first, with staleness where it applies",
-                 "The answer",
-                 "The fixed information-only disclaimer, on every answer"],
+                 "The answer — or, if the AI's wording was discarded, a note saying so and the "
+                 "facts on their own",
+                 "The fixed information-only disclaimer, once, on every answer"],
      "interpret": "The panel states what this device is doing with your data, every time it is "
                   "open, above the box you type into. Read it before you ask.\n\n"
                   "- The answer is checked before you see any of it. If a check fails — a figure "
