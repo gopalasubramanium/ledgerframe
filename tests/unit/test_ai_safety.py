@@ -124,8 +124,20 @@ def test_grounded_allows_ticker_from_question():
 # --- §8: local/remote URL detection ----------------------------------------- #
 
 def test_is_local_url():
-    from app.api.v1.routes.ai import _is_local_url
+    """⊕ 2026-07-20 (ai-surfaces §15-3): moved from `routes/ai.py` to `app/ai/vocabulary.py`.
+
+    ⚠ THE SOLO FULL-SUITE RUN IS WHAT CAUGHT THIS, and nothing smaller would have. The §15-3
+    delta collapsed two posture resolvers into one and ran every AI-, Settings- and posture-named
+    suite green; this test lives in `test_ai_safety.py`, whose name matches none of the surfaces
+    that changed, and it broke on an IMPORT PATH rather than on behaviour. *A targeted re-run
+    tests the code you were thinking about — the full suite tests the code you were not.*
+
+    The check itself is unchanged and is deliberately still asserted at this level: it decides
+    whether an OpenAI-compatible endpoint is an on-device model or an external one, which is the
+    distinction the whole provenance legend turns on (§15-4).
+    """
+    from app.ai.vocabulary import is_local_url
     for local in ("http://127.0.0.1:8000", "http://localhost:11434/v1", "http://[::1]:8000"):
-        assert _is_local_url(local)
+        assert is_local_url(local)
     for remote in ("https://api.openai.com/v1", "http://192.168.0.12:11434/v1", "https://openrouter.ai/api/v1"):
-        assert not _is_local_url(remote)
+        assert not is_local_url(remote)
