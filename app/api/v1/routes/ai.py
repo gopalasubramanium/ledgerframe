@@ -38,6 +38,40 @@ async def ai_facts(q: str = Query(min_length=1, max_length=500),
     }
 
 
+# ── RATIFIED POSTURE COPY (§9 (f): "strings stay PROPOSED until 0a"; ratified 2026-07-20) ──
+#
+# The one sentence on the Ask panel that states what the DEVICE is doing. It is served, never
+# composed client-side, for the reason §0-C exists: a posture sentence assembled in the browser is
+# a second source of truth for a claim the product makes about itself.
+#
+# Named constants rather than inline literals so the ratified wording can be PINNED
+# (`tests/unit/test_posture_copy_ratified.py`, the AC-L3 spec<->code parity pattern). Inline
+# literals in a route body cannot be bound to a record without grepping a function, and a string
+# nobody can bind is a string that drifts.
+#
+# ⚠ NO_EGRESS carries a divergence found at the 0a walk — see ai-surfaces.md §12-3. The drafted
+# copy said no-egress meant no AI at all; what SHIPPED says answers are still built, from the
+# user's data, without narration. The shipped sentence is the true one, and R-54 (tier-1
+# deterministic answering) owns the amendment when that capability formally lands.
+POSTURE_NO_EGRESS = ("No-egress is on — this device makes no outbound calls, so answers are built "
+                     "from your data only, with no AI narration.")
+POSTURE_DISABLED = "Deterministic — fact-only answers; nothing is sent anywhere."
+POSTURE_LOCAL_OPENAI = "On-device (local OpenAI-compatible endpoint) — data stays on this device."
+POSTURE_REMOTE = "Remote — prompts (incl. portfolio facts) are sent to the configured provider."
+POSTURE_LOCAL_NPU = "On-device (local Hailo/Ollama) — portfolio facts stay on this device."
+
+#: Every posture string the product can serve. The guard iterates THIS, so a new posture branch
+#: that forgets to add its string here is caught by a coverage assertion rather than shipping
+#: unratified copy on the one surface built to be honest about posture.
+POSTURE_COPY = {
+    "no_egress": POSTURE_NO_EGRESS,
+    "disabled": POSTURE_DISABLED,
+    "local_openai": POSTURE_LOCAL_OPENAI,
+    "remote": POSTURE_REMOTE,
+    "local_npu": POSTURE_LOCAL_NPU,
+}
+
+
 def _is_local_url(url: str) -> bool:
     """True if the URL points at this device (localhost), so nothing leaves it."""
     u = (url or "").lower()
@@ -71,21 +105,16 @@ async def ai_grounding_status() -> dict:
     no_egress = not await egress_allowed()
 
     if no_egress:
-        # PROPOSED copy — posture strings are ratified at the 0a specimen (§9 (f)).
-        mode, remote = "deterministic", False
-        privacy = ("No-egress is on — this device makes no outbound calls, so answers are built "
-                   "from your data only, with no AI narration.")
+        mode, remote, privacy = "deterministic", False, POSTURE_NO_EGRESS
     elif not s.ai_enabled or s.ai_provider == "disabled":
-        mode, remote, privacy = "deterministic", False, "Deterministic — fact-only answers; nothing is sent anywhere."
+        mode, remote, privacy = "deterministic", False, POSTURE_DISABLED
     elif s.ai_provider == "openai_compatible" and s.openai_base_url:
         local = _is_local_url(s.openai_base_url)
         remote = not local
         mode = "local" if local else "remote"
-        privacy = ("On-device (local OpenAI-compatible endpoint) — data stays on this device."
-                   if local else
-                   "Remote — prompts (incl. portfolio facts) are sent to the configured provider.")
+        privacy = POSTURE_LOCAL_OPENAI if local else POSTURE_REMOTE
     else:  # hailo / ollama (local NPU)
-        mode, remote, privacy = "local", False, "On-device (local Hailo/Ollama) — portfolio facts stay on this device."
+        mode, remote, privacy = "local", False, POSTURE_LOCAL_NPU
 
     return {
         "grounded": True,

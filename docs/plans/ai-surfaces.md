@@ -847,3 +847,137 @@ updated to name it.
 deterministic answering that already shipped at this 0a is tier-1's SEED**, not a separate thing to
 be reconciled later — §12-3 records the string as its first artifact, and R-54 **owns the
 posture-copy amendment** when tier-1 formally lands.
+
+### 12-1. The fallback echo — the projected fact list IS the answer
+
+**Architect ruling, Finding-1's principle carried one step further.** Finding 1 established that
+the fact pack is **projected** for display. The deterministic template then **re-listed those same
+facts** under *"Here is what the data shows:"* — so the projection Finding 1 introduced was
+immediately **echoed underneath it**, and every fact appeared on screen **twice**.
+
+**Fail-first** (`tests/unit/test_ask_answer_projection.py`, against the unfixed build):
+
+```
+FAIL [down] the answer body repeats the fact LABEL 'Net worth', which the panel already
+            renders in the fact list above it
+FAIL [down] the duplicate block's header survived: "Here is what the data shows:"
+```
+
+Asserted across **all three fallback paths** — provider down, validator rejection, empty model
+reply — because they reach the template for **different reasons**, and a fix that cleaned one and
+left the others is exactly the shape this guard exists to catch.
+
+**Shipped:** the fallback body carries **no facts**. Panel = **signal → fact list once →
+disclaimer**. **Nothing is redacted** — the same projection, shown once — and nothing is lost to a
+raw-stream consumer, because the facts travel on their own `facts` event, which is where a consumer
+should read them rather than re-parsing them out of prose. With **no** facts there is no list to be
+the answer, so the refusal **is** the body; that asymmetry is the rule itself: *the body says what
+the screen does not already say.*
+
+**⚠ FOUR TESTS PINNED THE ECHO IN PLACE.** `test_d070_fallback_signal` asserted `"Net worth" in
+text`; `test_ai_fallback` asserted it twice, under a comment reading *"data fallback **shown**"*;
+`test_validation_contract_pinned` asserted it **as clause 6**. The comment said *shown* and the
+assertion checked *echoed* — **indistinguishable until something actually rendered the fact pack.**
+That is now four tests this milestone found holding a defect steady (cf. R-52's retired term).
+
+**⚠ CLAUSE 6 WAS RE-READ AGAINST THE SPEC — not adjusted to fit the code.** This is flagged for the
+owner because it is a reading of a **normative** clause. `SECURITY-BASELINE.md` §5(6) says the model
+text is **discarded** and a deterministic fact-only answer is **SHOWN**. It does **not** say the
+answer *body* contains the facts; **clause 7 says where facts are shown** — the fact pack, before
+the answer. The architect's ruling is therefore a **reading** of clause 6, not a change to it. The
+test now asserts clause 6's **three actual promises separately**: the model text is gone, the facts
+are served, and the text ends with the disclaimer. **The third is enforced on the TEXT for the
+first time** — previously a model omitting the line broke clause 6 and **nothing went red**.
+
+**⊕ Found while fixing:** the model-error preamble still carried **markdown underscores**
+(`_The AI model didn't return an answer…_`). The **same defect as Finding 3**, at the one remaining
+site, unseen only because no screenshot ever drove the model-error path. Now plain text.
+
+### 12-2. The disclaimer — the owner's synthesis of Finding 4
+
+Finding 4 recorded three options and **no recommendation**, because (a) and (b) traded **the same
+guarantee against two different readers**. The owner ruled **neither option, but both halves**:
+
+> the answer **TEXT** always ends with the served `DISCLAIMER` constant — **Commitment 2 binds the
+> ARTIFACT**, so every export, stream and copy carries it — and the **PANEL** projects the body
+> **without** the trailing line and renders the footer element **once**.
+
+**De-duplication at display is a PROJECTION, not a redaction.** Same distinction Finding 1 settled
+for the fact pack, now applied to the sentence Commitment 2 fixes.
+
+**Fail-first, and the first attempt was TOO WEAK TO COUNT — recorded because the near-miss is the
+lesson.** With a stub that emitted the disclaimer, both assertions passed on the unfixed build: the
+stub was **complying**, which is precisely what Finding 4's option (b) warned could not be relied
+on. A guard whose fixture supplies the property under test is **circular** — the same failure mode
+`page-help` §9-bis-9(d) recorded for the Help accuracy corpus. Adding a valid answer that simply
+**omits** the line:
+
+```
+FAIL [ok_no_disclaimer] the disclaimer appears 0× in the answer text; exactly one trailing
+     instance is the guarantee
+```
+
+**Shipped:** `_with_disclaimer()` normalises at the single point every answer text leaves the
+module — every occurrence stripped, one appended. **Not append-if-missing:** a model complying
+*mid-paragraph*, or twice, would leave the constant somewhere other than the end while an `in`
+check reported the guarantee satisfied.
+
+**Display half** (`AskPanel.tsx`): the body is projected without the trailing **served** constant —
+never a hardcoded one, since matching a legal sentence locally would make the component a second
+source of truth for it — and when the projection leaves nothing, **no answer block renders at all**.
+An empty bordered box beneath the facts reads as *"the AI said nothing"*, which is not what
+happened. Fail-first: `expected ask-answer to be null, received a div containing only "Information
+only, not financial advice."`
+
+### 12-3. ⚑ NO-EGRESS POSTURE COPY — the SHIPPED string ratified over the drafted one
+
+**Owner ruling, 2026-07-20.** The §9 (f) ruling left posture strings **PROPOSED until 0a**. At 0a
+the owner ratified **what shipped**, in preference to the drafted two-state wording:
+
+> **RATIFIED:** *"No-egress is on — this device makes no outbound calls, so answers are built from
+> your data only, with no AI narration."*
+
+**This is recorded as a DIVERGENCE FOUND AT 0a, not as a tidy-up.** The (b) ruling (§9) collapsed
+three posture states to two on the finding that *no-egress + local provider* and *no-egress + no
+provider* **are the same state**, and the copy drafted from it said, in effect, **that no-egress
+means no AI answering at all**:
+
+> *(drafted)* *"No-egress is on — AI runs on this device only"* → re-worded toward *AI is off,
+> answers are deterministic fact-only*
+
+**What shipped says something materially different and truer:** answers are **still built** — from
+the user's own data — with the **narration** removed. Both statements describe zero outbound calls;
+only one of them describes what the user actually gets.
+
+**Why the shipped string is legitimate rather than a drift to be reverted.** The deterministic
+answering it describes makes **zero network calls BY CONSTRUCTION** — it never reaches
+`egress_client` at all — so it is squarely inside the R-22 amendment (option (b)) rather than an
+exception to it. **No egress question can arise about a code path that cannot make a call.**
+
+**⟶ THIS IS R-54 TIER-1'S SEED.** The capability the ratified sentence describes *is* deterministic
+answering, shipped narrow (the template over the fact pack) and named in the posture copy before
+the tier exists as an architecture. **The shipped banner string is tier-1's first artifact**, and
+**R-54 owns the posture-copy amendment** when tier-1 formally lands — dated notes on these ratified
+strings, with the accuracy guards holding **both versions true in their time**.
+
+#### The ratified set, in full
+
+The guard binds **every** served posture string to this table, so it is the record, not an
+illustration. **Only the no-egress row was ruled explicitly**; the other four are the shipped set,
+presented at this walk and ratified by the look.
+
+| Posture | Ratified string |
+|---|---|
+| **no-egress** ⚑ *ruled explicitly* | No-egress is on — this device makes no outbound calls, so answers are built from your data only, with no AI narration. |
+| **disabled / AI off** | Deterministic — fact-only answers; nothing is sent anywhere. |
+| **local OpenAI-compatible** | On-device (local OpenAI-compatible endpoint) — data stays on this device. |
+| **remote provider** | Remote — prompts (incl. portfolio facts) are sent to the configured provider. |
+| **local NPU (Hailo/Ollama)** | On-device (local Hailo/Ollama) — portfolio facts stay on this device. |
+
+**PINNED.** The five served posture strings are now named constants (`app/api/v1/routes/ai.py`) and
+bound to this section by `tests/unit/test_posture_copy_ratified.py` — the **AC-L3 spec↔code parity
+pattern** the fallback signal already uses: edit this record and the guard carries the change into
+the product; edit the product alone and the guard goes red. **Only the no-egress string was ruled
+explicitly**; the other four are the shipped set, presented at this walk and ratified by the look.
+The guard also asserts **coverage** — a new posture branch that forgets to register its string reds
+rather than shipping unratified copy on the one surface built to be honest about posture.
