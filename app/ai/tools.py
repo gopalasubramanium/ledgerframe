@@ -201,8 +201,31 @@ async def news_facts(session: AsyncSession, limit: int = 6) -> list[GroundingFac
 # `page-legal` — the largest one, and the exact entry whose missing interpretation caused the
 # ruling. A budget that discards the most important field first is worse than no budget: it
 # succeeds quietly. So the core tier is unconditional and the budget governs only the tail.
-_HELP_FACT_CORE = ("body", "interpret")
-_HELP_FACT_EXTRA = ("outputs", "inputs")
+#
+# ⊕ R-54 Phase 0-3 — THE TIERS ARE PER-CATEGORY, because the corpus has two schemas and the
+# original tiers were named from only one of them. §0-C's census: all 29 `category: "Glossary"`
+# entries carry `what`/`why`/`improves`/`example` and NONE carries `interpret`/`outputs`/`inputs`,
+# so every glossary term projected `body` ALONE — the very failure this widening was ruled to fix,
+# landing on the one category tier-1(a) ("what is XIRR") is built from. The ruling was right and
+# its census was incomplete; the owner amended it (dated note on the ruling's own record in
+# `docs/plans/CURRENT.md`) rather than re-opening the decision.
+#
+# The SPLIT IS THE SAME IN BOTH: core = the entry's MEANING, unconditional; extra = structural
+# detail, budgeted. Only the field NAMES differ, because the two categories are written to
+# different schemas.
+_HELP_FACT_TIERS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    "Glossary": (("body", "what", "why"), ("improves", "example")),
+}
+_HELP_FACT_DEFAULT = (("body", "interpret"), ("outputs", "inputs"))
+
+# Retained as the default-category names so existing readers/tests keep their meaning.
+_HELP_FACT_CORE = _HELP_FACT_DEFAULT[0]
+_HELP_FACT_EXTRA = _HELP_FACT_DEFAULT[1]
+
+
+def _tiers_for(entry: dict) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """(core, extra) field names for an entry's category — the one place tiering is decided."""
+    return _HELP_FACT_TIERS.get(entry.get("category", ""), _HELP_FACT_DEFAULT)
 
 # Budget for the OPTIONAL tail only. Whole fields — a field is included entire or not at all, and
 # NEVER truncated mid-text. Cutting help prose at a character count would eventually cut a caveat
@@ -229,9 +252,10 @@ def _render_help_fact(entry: dict) -> str:
             return ""
         return text if field == "body" else f"{field.capitalize()}: {text}"
 
-    parts = [c for c in (rendered(f) for f in _HELP_FACT_CORE) if c]
+    core, extra = _tiers_for(entry)
+    parts = [c for c in (rendered(f) for f in core) if c]
     used = sum(len(c) for c in parts)
-    for field in _HELP_FACT_EXTRA:
+    for field in extra:
         chunk = rendered(field)
         if chunk and used + len(chunk) <= _HELP_FACT_BUDGET:
             parts.append(chunk)

@@ -122,6 +122,13 @@ REGISTRY: tuple[Figure, ...] = (
     Figure("concentration_top5", "Top 5 concentration", _STATS, "Top 5 concentration",
            term_id="term-concentration"),
 
+    # ⊕ R-54 Phase 0-3 — owner-ratified as a GLOSSARY CATCH-UP, the F-1 pattern applied a second
+    # time: a figure the engine serves must have a row. **No exemption class for counts** — it is
+    # an ordinary row and an ordinary GLOSSARY term. Its derivation was verified BEFORE the spec
+    # row was written, and that changed the definition: it counts every non-soft-deleted Holding
+    # INCLUDING liabilities, so 13 assets and one mortgage report 14.
+    Figure("positions", "Positions", _STATS, "Positions", term_id=None),
+
     # ── Allocation buckets. Their labels are MASTER-DATA asset-class names, not GLOSSARY terms;
     #    the shared `term-allocation-weight` entry explains what a weight IS. ──
     Figure("alloc_cash_deposits", "Cash & deposits", _STATS, "Cash & deposits",

@@ -139,13 +139,23 @@ def test_the_ai_receives_the_STRUCTURED_help_projection():
     search-result contract (`test_help.py` pins its four keys). Widening the AI's view was never a
     reason to change what the page's type-ahead receives.
     """
-    from app.ai.tools import _HELP_FACT_CORE, _render_help_fact
+    from app.ai.tools import _HELP_FACT_DEFAULT, _HELP_FACT_TIERS, _render_help_fact
     from app.services.help import HELP, strip_markup
 
-    assert _HELP_FACT_CORE == ("body", "interpret"), (
-        f"the core grounding tier changed to {_HELP_FACT_CORE}. Both fields are unconditional by "
-        "ruling: dropping `interpret` under a budget is what hid the acceptance answer from the "
-        "AI in the first place."
+    # ⊕ R-54 Phase 0-3 — THIS PIN NOW COVERS BOTH TIER SETS, AND IT DID NOT BEFORE.
+    # It asserted `_HELP_FACT_CORE == ("body", "interpret")` and called that "the core grounding
+    # tier". After 0-3 there are TWO — the corpus has two schemas — and that assertion would have
+    # kept passing while saying nothing about the Glossary category, i.e. a guard half-blind while
+    # reading as complete. §0-C is precisely what an unnoticed category costs.
+    assert _HELP_FACT_DEFAULT == (("body", "interpret"), ("outputs", "inputs")), (
+        f"the DEFAULT (page/orientation) tiers changed to {_HELP_FACT_DEFAULT}. `body` and "
+        "`interpret` are unconditional by ruling: dropping `interpret` under a budget is what hid "
+        "the acceptance answer from the AI in the first place."
+    )
+    assert _HELP_FACT_TIERS.get("Glossary") == (("body", "what", "why"), ("improves", "example")), (
+        f"the GLOSSARY tiers changed to {_HELP_FACT_TIERS.get('Glossary')}. `what` and `why` are "
+        "unconditional by the 2026-07-20 amendment to the Phase-0.9 ruling — without them every "
+        "term entry projects `body` alone, which is the §0-C defect."
     )
 
     legal = next(e for e in HELP if e["id"] == "page-legal")
@@ -164,7 +174,9 @@ def test_the_widened_pack_stays_within_its_pinned_size():
     """"Scoped" is a size claim, so the size is asserted rather than trusted.
 
     The ruling widened the pack DELIBERATELY and BOUNDED. These numbers are measured against the
-    corpus as it stands (largest rendered fact 3,254 chars, on `page-legal`). If a future entry
+    corpus as it stands. **Re-proven after the R-54 Phase 0-3 Glossary widening**, which is exactly
+    the kind of change that could breach them — a widening that quietly blew its own ceiling would
+    make "scoped" a word rather than a property. If a future entry
     pushes past them, that is a content decision to take knowingly — a prompt is a budget, and an
     unbounded fact pack crowds out the question it is supposed to answer.
     """
