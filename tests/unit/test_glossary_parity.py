@@ -232,3 +232,82 @@ def test_REPORT_the_tier3_marked_but_unserved_count():
         f"  post-release per ROADMAP R-51; deferral ruled acceptable BECAUSE this stays visible.\n"
         + "".join(f"    - {t}\n" for t in unserved)
     )
+
+
+# ---------------------------------------------------------------------------
+# §17-3 — SANCTIONED SHORT FORMS (owner ruling, 2026-07-20 — Finding 8)
+#
+# `Income (div/int)` ships as a shown label in the AI fact pack and the analytics KPI strip. It is
+# NOT the canonical term — GLOSSARY.md:159 spells it **Income** — and it slipped past every guard
+# above for a structural reason worth naming: it is neither a RETIRED term (so the deprecated-
+# wording guard cannot see it) nor an ALIAS COLLISION (so §15-1's de-duplication cannot), and it
+# lives in neither of the two code stores those guards read. It is a fourth thing: an ABBREVIATION,
+# reaching the user through a route nothing was measuring.
+#
+# THE RULING IS "SANCTION IT", NOT "RENAME IT". A rename would reach every page that shows income,
+# for a problem that exists only where a row is too narrow to say "(dividends & interest)". So the
+# abbreviation stays, is recorded in GLOSSARY.md FIRST, and is guarded here — which converts it
+# from a habit into a decision. The distinction matters: one sanctioned short form is a vocabulary,
+# a tolerance for abbreviating is how a vocabulary stops being one.
+#
+# ⚠ THE GUARD RUNS BOTH WAYS, and the second way is the one that matters. Asserting only that the
+# spec records the short form would go green forever on a spec paragraph describing a label the
+# code had stopped using — a record protecting nothing, which is the failure mode CLAUDE.md's
+# pinning rule names.
+# ---------------------------------------------------------------------------
+
+#: short form → (canonical GLOSSARY term, the files that may serve it)
+SANCTIONED_SHORT_FORMS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "Income (div/int)": ("Income", ("app/services/analytics.py", "app/ai/tools.py")),
+}
+
+
+@pytest.mark.parametrize("short,canonical_and_sites", sorted(SANCTIONED_SHORT_FORMS.items()))
+def test_a_shown_short_form_is_recorded_in_the_spec_on_its_canonical_row(
+    short: str, canonical_and_sites: tuple[str, tuple[str, ...]]
+):
+    """GLOSSARY-FIRST: the abbreviation must be recorded, and recorded ON the term it abbreviates.
+
+    Row-scoped on purpose. A short form recorded in some other paragraph of the spec would satisfy
+    a naive substring check while leaving a reader of the **Income** row with no idea that
+    `Income (div/int)` is the same figure — which is the entire question the abbreviation raises.
+    """
+    canonical, _sites = canonical_and_sites
+    spec = SPEC.read_text(encoding="utf-8")
+
+    row = next((ln for ln in spec.splitlines() if ln.startswith(f"| **{canonical}** |")), None)
+    assert row is not None, (
+        f"the canonical term **{canonical}** has no GLOSSARY.md row — the short form {short!r} "
+        f"cannot be sanctioned against a term that is not there."
+    )
+    assert short in row, (
+        f'{short!r} is SHOWN to users but is not recorded on the **{canonical}** row of '
+        f"docs/specs/GLOSSARY.md. A short form is vocabulary: record it in the SPEC first "
+        f"(CLAUDE.md — every term shown to users exists in GLOSSARY.md with that exact spelling), "
+        f"or stop shipping the abbreviation."
+    )
+
+
+@pytest.mark.parametrize("short,canonical_and_sites", sorted(SANCTIONED_SHORT_FORMS.items()))
+def test_a_sanctioned_short_form_is_still_actually_served(
+    short: str, canonical_and_sites: tuple[str, tuple[str, ...]]
+):
+    """THE ANTI-BLIND ARM — pinned against protecting nothing (CLAUDE.md).
+
+    If `Income (div/int)` is ever renamed away, this reds and the spec sanction is removed with it.
+    Without this the pair degenerates into a permanent paragraph about a label nobody serves, and
+    the next reader takes it for live vocabulary.
+    """
+    _canonical, sites = canonical_and_sites
+    found = [s for s in sites if short in (REPO / s).read_text(encoding="utf-8")]
+    assert found, (
+        f"{short!r} is sanctioned in GLOSSARY.md but no longer appears in any of {list(sites)}. "
+        f"Either the label moved (update the site list) or it was retired — in which case remove "
+        f"the sanction from the spec, because a sanctioned short form nothing serves is a record "
+        f"that protects nothing."
+    )
+
+
+def test_the_short_form_register_is_not_empty():
+    """Both parametrized tests above VANISH on an emptied register rather than failing."""
+    assert SANCTIONED_SHORT_FORMS, "no sanctioned short forms registered — the pair guards nothing"
