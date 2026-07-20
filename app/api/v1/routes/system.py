@@ -340,8 +340,9 @@ _AI_PROVIDERS = {"hailo", "openai_compatible", "disabled"}
 
 # ── THE AI TAB'S SENTENCE — SERVED (§14-3, owner-ruled 2026-07-20) ──
 #
-# ⚑ PROPOSED. These strings are drafts pending the owner's 3b look; the on-device line is the
-# owner's own register example, quoted from the ruling, and the other three are drawn to match it.
+# ⊕ RATIFIED 2026-07-20 — owner, by looking, at the 3b walk (AI-surfaces §17). The on-device line is
+# the owner's own register example, quoted from the ruling; the other three were drawn to match it
+# and ratified with it, having been photographed on the tab in each posture (§16-F).
 #
 # SERVED, never composed in the browser, for the reason §0-C exists: a sentence about what the
 # device is doing with the user's data, assembled client-side, is a second source of truth for a

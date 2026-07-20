@@ -364,8 +364,10 @@ naming one product, because the endpoint is OpenAI-compatible and works with Oll
 lookalikes**. A label that names a single implementation becomes false the moment a second one is
 what is actually running — which is the same defect as a Settings tab naming a provider that is not
 the one answering (AI-surfaces §14-3). *Retired:* **hailo** as a user-facing word — see
-[Deprecated terms](#deprecated-terms). *(PROPOSED 2026-07-20, AI-surfaces §14-2 — ratify at the 3b
-walk.)*
+[Deprecated terms](#deprecated-terms). *(**RATIFIED 2026-07-20** — owner, by looking, at the
+AI-surfaces 3b walk; AI-surfaces §14-2 / §17. The vocabulary was ratified with the three provenance
+legends and the four AI-tab sentences that spend it, which is the right order: a vocabulary is
+ratified by reading the sentences it produces, not the definitions in isolation.)*
 
 ---
 

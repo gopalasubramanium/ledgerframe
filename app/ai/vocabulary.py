@@ -78,7 +78,9 @@ POSTURE_KIND: dict[str, str] = {
 
 # --- THE PROVENANCE LEGEND (§14-4, owner ruling 2026-07-20 — the walk's centrepiece) ------------ #
 #
-# ⚑ PROPOSED until the owner's 3b look.
+# ⊕ RATIFIED 2026-07-20 — owner, by looking, at the 3b walk (AI-surfaces §17). The three legends
+# were ratified ON CAMERA in all three of their states, both themes (§16-A), which is the only way
+# a claim about authorship can be checked: read on screen, next to the answer it attributes.
 #
 # WHY THIS EXISTS, in the owner's framing: the panel already showed the reader WHAT AN ANSWER IS
 # BUILT FROM. It never showed WHO WROTE THE SENTENCE. Those are different questions, and the second

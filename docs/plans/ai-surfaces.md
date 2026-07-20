@@ -1258,8 +1258,8 @@ came from their own ledger.
 
 **Guards, fail-first, both directions:** the legend **must match the generation path** — a
 built-in-only legend on a narrated answer is **RED** — and **model text carries the treatment while
-facts do not**. Strings **served**, never composed client-side (§0-C). **All PROPOSED** until the
-owner's look.
+facts do not**. Strings **served**, never composed client-side (§0-C). ~~**All PROPOSED** until the
+owner's look.~~ **⊕ ALL RATIFIED 2026-07-20** — owner, by looking, at the 3b walk (§17).
 
 ### 14-5. FINDING 7 — the zero-valued-fact narration gap (POST-RELEASE)
 
@@ -1387,8 +1387,8 @@ override is in force — `reload_settings()` re-reads, and the override still wi
 the tab honestly reports something else, and nothing explains why. Surfacing that is **option (c)**
 (serve both, warn on drift), which **the owner did not rule**. ⚑ **For the owner.**
 
-**Strings PROPOSED until the 3b look:** the four `AI_TAB_COPY` sentences and the amended static
-note.
+~~**Strings PROPOSED until the 3b look:** the four `AI_TAB_COPY` sentences and the amended static
+note.~~ **⊕ BOTH RATIFIED 2026-07-20** — owner, by looking, at the 3b walk (§17).
 
 ### 15-4. THE PROVENANCE LEGEND — the walk's centrepiece
 

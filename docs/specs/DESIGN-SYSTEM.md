@@ -1151,7 +1151,7 @@ cannot render its exit from.
 
 ---
 
-## §5 AMENDMENT — MODEL-TEXT TREATMENT (⚑ PROPOSED 2026-07-20, AI-surfaces §14-4; ratify at the 3b walk)
+## §5 AMENDMENT — MODEL-TEXT TREATMENT (**RATIFIED 2026-07-20**, owner, at the AI-surfaces 3b walk; AI-surfaces §14-4 / §17)
 
 **The owner's ruling, in his words:** model-generated text renders in a **distinct treatment** —
 **italic** — and it is **semantic, not decorative**. **Engine-served facts never carry it.**
@@ -1194,5 +1194,11 @@ by a model**. Two consequences the guards enforce (`AskPanel.test.tsx`, §14-4):
    from the branch that actually produced the words (§15-4). A client-side inference would make
    the browser the author of a claim about authorship.
 
-**⚑ PROPOSED.** Ratify at the 3b walk, with the treatment visible on a narrated answer and absent
-from the fact list in the same screenshot.
+**⊕ RATIFIED 2026-07-20 — owner, by looking**, on the 3a evidence re-driven for the 3b walk: the
+treatment visible on a narrated answer and absent from the fact list **in the same screenshot**,
+both themes, which is the condition this amendment set for itself.
+
+**The ratification rests on a MEASUREMENT, not on an eyeball.** `getComputedStyle` at the pre-pass
+read the answer `italic`, the fact value `normal` and the legend `normal`, **both directions, both
+themes** (§16-A) — because *"the italics look right"* is exactly the kind of judgement a screenshot
+invites and cannot settle.
