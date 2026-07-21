@@ -2563,6 +2563,63 @@ Every §7 row that names a guard. **Each proven RED first**, on a specimen that 
 - **Driven across BOTH egress states and BOTH acceptance states** — a matrix, not a happy path.
 - **`npm run check` exit code stated, run from `frontend/`.** **No known-red left on trunk.**
 
+#### Phase 2 execution (2026-07-22) — the guard audit + the net-new egress×acceptance matrix
+
+**THE §7 GUARD AUDIT (this session, fan-out).** Every §7 acceptance row that names a guard was
+mapped to its standing test: **19/19 exist** — 17 dedicated, 2 structural/composed — each with a
+blindness pin or an explicit FAIL-FIRST note. **Most were already built at Phase 0/1** and needed
+no new work: `test_intent_routing_table.py` (one router, flags-as-derivation + blindness pin) ·
+`test_intent_word_boundary.py` + `test_intent_stem_probes.py` (the §0-A substring specimens,
+SEEN-RED) · `test_tier1_miss_split.py` (honest-miss shape, two-truths) · `test_answer_mode.py`
+(tier-1 never consults the limiter; rate-limited tier-2 falls back **to tier-1**) ·
+`test_figure_registry.py` (ONE table, no CAGR row, `term_id` as derived reverse index) ·
+`test_pack_reachability.py` (projection-only, canonical-page cross-check, enum-complete allocation) ·
+`test_ai_grounding_corpus.py` (tier lists pinned to the **actual Glossary schema**, §0-C) ·
+`test_served_link_ids.py` + `frontend/src/nav/askLinks.test.ts` (bidirectional resolution; every
+served ID registered, every registered ID resolves against the **served** catalogue) ·
+`frontend/scripts/check-ask-boundary.mjs` (the §9-E panel-explains/page-acts guard, `check:primitives`
+shape + blindness pin) · `test_ai_acceptance_gate.py` (451 at the seven AI paths, path-exists-first) ·
+`test_ai_provenance.py` (no fourth legend axis) · `test_stub_narration_sentences.py` (§17-2 truth
+bar) · `test_posture_copy_ratified.py` (the five strings + **coverage** assertion + the
+retired-vendor-word "hailo" guard over all served posture strings) · `test_ai_served_shapes.py`
+(the `/ai/facts` + `facts`/`provenance` SSE shape pins).
+
+**NET-NEW — THE EGRESS × ACCEPTANCE MATRIX** (`test_tier1_egress_acceptance_matrix.py`, `097fa34`). §8's
+"a matrix, not a happy path": the two axes were each driven, but **never CROSSED for AI** — the default
+suite runs only the *(accepted, model-unavailable, no-egress-OFF)* cell. Four cells now driven, each
+with a blindness pin against a vacuous pass:
+- **tier-1 identical across egress states** — the *zero-calls-by-construction* proof. Compared on a
+  **coverage-stable** question (net worth rides the live valuation, never the date-aware series): a
+  settings write fires a **`§12-R3` wrong-instrument candle purge** that flips date-aware coverage — a
+  data-state side effect **orthogonal to egress** that churns the coverage-gated perf pack (this also
+  corroborates I-1's live-instance covered→uncovered decay, 0a-ii Recon-3, on a second surface). Pin:
+  facts non-empty.
+- **tier-1 under no-egress constructs NO http client** — fills the audit's ONE behavioural gap: the
+  zero-calls property was proven structurally (import-scan gate) and at the provider, but **never at the
+  served `/ai/chat` path**. `forbid_http` tripwire; the panel goes **local, not dark** (R-22 amendment).
+- **the gate refuses tier-1 regardless of egress** (parametrized both egress states) — 451 unaccepted;
+  anti-blind: re-accepting **UNLOCKS** (200), so 451-everywhere cannot pass it.
+
+**GAPS — declined / deferred with rationale (no silent drop):**
+- *Literal 141/71 count pin* — **DECLINED.** The drift check (`test_openapi_contract`) pins the **full
+  committed spec** (every path AND schema), a **stronger** guarantee than a count; **141/71 confirmed
+  current** this session. §7-E's "pinned" is met by a superset.
+- *A single "all AI strings served" enumeration guard* and *a re-runnable check-ask-boundary RED
+  specimen fixture* — **DEFERRED to the pre-release backlog.** Distributed served-string coverage
+  (miss/posture/tab tests) + the standing blindness pin already hold; neither is release-blocking.
+
+**GATES.** `npm run check` (from `frontend/`): **exit 0** — vitest **429** (I-2 is fixture-only, no
+count change), Playwright **361**, lint + `check:primitives` + `check:ask-boundary` +
+`check:internal-copy` green. Backend suite **solo, ordered**: **2107 passed / 15 skipped**, exit 0 (18:43). CPU-contended by the
+owner's idle dev stack (`uvicorn :8321 --reload`) — **isolated temp DBs, no state-sharing pytest**, the
+acceptable-contention case per the loop-2 clarification. **Randomized pass NOT run** — `pytest-randomly`
+is not installed and adding it is an **ADR-gated dependency** (CLAUDE.md); the ordering-dependence concern
+is covered instead by per-test isolation (`_fresh_engine_per_test` + per-test temp SQLite + `ratelimit`/
+`metrics`/`fx` resets) and by the two new tests passing **standalone**. Suite reconciliation: **2102 → 2107,
++5** — `test_tier1_egress_acceptance_matrix.py` (**+4**: identity · zero-http-client · gate×2-egress) +
+`test_key_stats_recovers…` (**+1**, I-1); vitest/Playwright unchanged (the matrix is backend-only).
+**§3b untyped-shape caveat unchanged; no contract delta (141/71).** No known-red left on trunk.
+
 ### Phase 3a — SCRIPTED PRE-PASS *(reset + isolated; green BEFORE the walk)*
 
 Owner-independent, live app + real backend, reset instance, both themes across the breakpoints,
