@@ -17,6 +17,14 @@ afterEach(() => {
 // nothing is persisted — rather than about the panel "working". A panel that works and quietly
 // composes its own disclaimer would pass a functional review and break Commitment 2.
 
+// ⊕ R-54 I-2 (§9-H) — `privacy_label` is a MOCK INPUT the panel echoes; the tests below assert the
+// panel renders whatever posture string it is served (the D-067 verbatim-rendering path), not any
+// specific copy. So these are OBVIOUSLY SYNTHETIC and never byte-identical to served copy: a grep for
+// a served posture string must never land in a test file, and a specimen must never mistake fixture
+// copy for product copy. (The originals were byte-identical to the ratified posture table AND, after
+// the §9-G recut, carried the retired vendor word "Hailo".) The served posture strings are pinned
+// where they belong — `test_posture_copy_ratified.py` (the AC-L3 spec↔code parity guard). Contrast the
+// DISCLAIMER/PROV_*/FALLBACK_SIGNAL literals below, which DELIBERATELY pin *the* served string.
 const STATUS: GroundingStatus = {
   grounded: true,
   narration: "openai_compatible",
@@ -25,9 +33,13 @@ const STATUS: GroundingStatus = {
   mode: "local",
   remote: false,
   no_egress: false,
-  privacy_label: "On-device (local Hailo/Ollama) — portfolio facts stay on this device.",
+  privacy_label: "TEST-FIXTURE posture — on-device stand-in, never served.",
   kind: "on_device_model",
-  kind_label: "On-device model (Ollama-compatible)",
+  // A THIRD byte-identical served string this hygiene pass found in the same fixture object (the row
+  // named the two privacy_labels; §9-H's own scope already grew once when §0-K found the second). Same
+  // hazard class — unasserted here, but a grep for the served kind_label would land in this test — so
+  // it is made synthetic too. `kind` (the enum the provenance legend actually keys on) stays real.
+  kind_label: "TEST-FIXTURE kind label — never served.",
   last_error: null,
 };
 
@@ -35,9 +47,7 @@ const NO_EGRESS_STATUS: GroundingStatus = {
   ...STATUS,
   mode: "deterministic",
   no_egress: true,
-  privacy_label:
-    "No-egress is on — this device makes no outbound calls, so answers are built from your " +
-    "data only, with no AI narration.",
+  privacy_label: "TEST-FIXTURE posture — no-egress stand-in, never served.",
 };
 
 const DISCLAIMER = "Information only, not financial advice.";
