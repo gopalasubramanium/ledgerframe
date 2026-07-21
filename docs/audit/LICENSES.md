@@ -16,7 +16,7 @@ rubber stamp that outlives what it stamped is worse than no stamp.
 **RUNTIME** = what a user receives and runs (the scope a distribution claim is about).
 **dev** = build/test tooling; it does not ship, and is listed for completeness.
 
-- packages: **381** (41 runtime, 340 dev)
+- packages: **382** (41 runtime, 341 dev)
 - **unadjudicated** (blocks the release): **0 runtime, 0 dev**
 - adjudicated (recorded owner ruling): **4**
 - stale rulings: **0** · rejected: **0**
@@ -278,6 +278,7 @@ rubber stamp that outlives what it stamped is worse than no stamp.
 | dev | python | `pytest` | 9.1.1 | MIT | ok |
 | dev | python | `pytest-asyncio` | 1.4.0 | Apache-2.0 | ok |
 | dev | python | `pytest-cov` | 7.1.0 | MIT | ok |
+| dev | python | `pytest-randomly` | 4.1.0 | MIT | ok |
 | dev | python | `PyYAML` | 6.0.3 | MIT License | ok |
 | dev | npm | `react-is` | 17.0.2 | MIT | ok |
 | dev | npm | `react-refresh` | 0.17.0 | MIT | ok |
