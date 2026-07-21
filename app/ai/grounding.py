@@ -16,9 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.intent import classify_intent
 from app.ai.prompt_builder import build_messages
-from app.ai.prompts import REFUSAL_NO_FACTS, strip_reasoning
+from app.ai.prompts import REFUSAL_NO_FACTS, REFUSAL_UNROUTABLE, strip_reasoning
 from app.ai.safety import validate_grounded_answer
-from app.ai.tools import AnswerMode, gather_facts
+from app.ai.tools import AnswerMode, classify_miss, gather_facts
 from app.core.config import get_settings
 from app.core.disclaimer import DISCLAIMER
 from app.providers.ai import get_ai_provider
@@ -174,12 +174,18 @@ async def answer_stream(
     yield {"type": "facts", "facts": [f.model_dump(mode="json") for f in facts]}
 
     if mode is AnswerMode.DETERMINISTIC:
-        # Tier 1 — no model narrates. The template renders the fact pack, or the ratified refusal
-        # when the deterministic route came back empty (the honest miss). Never rate-limited: the
-        # mode already folded the limiter in (§9-F), so this branch cannot be a throttled tier-2
-        # in disguise.
+        # Tier 1 — no model narrates. With facts, the projected list IS the answer (§12-1). With
+        # none, it is an honest MISS — and there are TWO truths (R-54 W-6, owner 2026-07-22): an
+        # unroutable question ("nothing I can answer") and a routed-but-no-data question ("refresh
+        # the data"). `classify_miss` picks which, and the two strings never cross-render (guard).
+        # Never rate-limited: the mode already folded the limiter in (§9-F), so this branch cannot
+        # be a throttled tier-2 in disguise.
         yield _provenance_event()
-        text = _template_answer(question, facts)
+        if facts:
+            text = _template_answer(question, facts)
+        else:
+            kind = await classify_miss(session, question)
+            text = _with_disclaimer(REFUSAL_UNROUTABLE if kind == "unroutable" else REFUSAL_NO_FACTS)
         yield {"type": "delta", "delta": text}
         yield {"type": "done", "grounded": True, "provider": "fallback",
                "disclaimer": DISCLAIMER}

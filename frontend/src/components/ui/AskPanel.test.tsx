@@ -633,3 +633,75 @@ test("AskPanel: following a pointer closes the ephemeral panel — it points, th
   // close() runs on navigate: the dialog unmounts, so its composer is gone.
   await waitFor(() => expect(screen.queryByLabelText("Your question")).toBeNull());
 });
+
+// ── W-4: THE ANSWER MUST VISIBLY POINT (owner ruling 2026-07-22, DS §5.5 second variant) ─────────
+// A tier-1 ACTION/NAV answer is scoped (backend) to a SINGLE page-linked help fact, so its pointer
+// is a LABELED LINK LINE — "→ Open Holdings" / "→ Open Appearance settings" — not a floating arrow
+// tucked under "Show more". Every other pack keeps the ratified trailing arrows. Still a LINK, never
+// a control (§9-E, still links only).
+const ACTION_RUN: ChatEvent[] = [
+  {
+    type: "facts",
+    facts: [
+      { label: "Help · Holdings", value: "The one place to add, edit and delete positions.\nMore.",
+        timestamp: "2026-07-20T00:00:00Z", link_id: "page:/holdings" },
+    ],
+  },
+  { type: "provenance", kind: "built_in", narrated: false, provenance: PROV_BUILT_IN },
+  { type: "done", grounded: true, provider: "fallback", disclaimer: DISCLAIMER },
+];
+
+const NAV_RUN: ChatEvent[] = [
+  {
+    type: "facts",
+    facts: [
+      { label: "Help · Settings", value: "Preferences across seven tabs.\nAppearance is theme.",
+        timestamp: "2026-07-20T00:00:00Z", link_id: "page:/settings?tab=appearance" },
+    ],
+  },
+  { type: "provenance", kind: "built_in", narrated: false, provenance: PROV_BUILT_IN },
+  { type: "done", grounded: true, provider: "fallback", disclaimer: DISCLAIMER },
+];
+
+test("AskPanel W-4: a scoped action answer POINTS with a labeled link line (not a bare arrow)", async () => {
+  await runAskRouted(ACTION_RUN);
+  const line = await screen.findByTestId("ask-linkline");
+  expect(line).toHaveTextContent("Open Holdings");
+  expect(line.tagName).toBe("A"); // a LINK, never a control (§9-E)
+  expect(line.getAttribute("href")).toContain("/holdings");
+  // The orphaned trailing arrow is GONE on the action answer — the labeled line is the pointer.
+  expect(screen.queryByTestId("ask-pointer")).toBeNull();
+});
+
+test("AskPanel W-4: the labeled line names a Settings TAB destination (askLinkLabel vocabulary)", async () => {
+  await runAskRouted(NAV_RUN);
+  const line = await screen.findByRole("link", { name: "Open Appearance settings" });
+  expect(line.getAttribute("href")).toContain("tab=appearance");
+});
+
+test("AskPanel W-4: following the labeled line closes the ephemeral panel", async () => {
+  const user = await runAskRouted(ACTION_RUN);
+  await user.click(await screen.findByRole("link", { name: "Open Holdings" }));
+  await waitFor(() => expect(screen.queryByLabelText("Your question")).toBeNull());
+});
+
+test("AskPanel W-4: a page-linked help fact in a MULTI-fact pack keeps its trailing arrow (discriminator)", async () => {
+  // Not a scoped action answer (two facts) → no labeled line; the page-linked help fact keeps the
+  // ratified trailing pointer, so ratified multi-fact frames (allocation/ratio/term) are untouched.
+  const MIXED: ChatEvent[] = [
+    {
+      type: "facts",
+      facts: [
+        { label: "Help · Portfolio", value: "Investment analytics.\nMore.",
+          timestamp: "2026-07-20T00:00:00Z", link_id: "page:/portfolio" },
+        { label: "Net worth", value: "796,543.93 SGD", timestamp: "2026-07-20T00:00:00Z", link_id: "page:/net-worth" },
+      ],
+    },
+    { type: "provenance", kind: "built_in", narrated: false, provenance: PROV_BUILT_IN },
+    { type: "done", grounded: true, provider: "fallback", disclaimer: DISCLAIMER },
+  ];
+  await runAskRouted(MIXED);
+  await screen.findByText("Help · Portfolio");
+  expect(screen.queryByTestId("ask-linkline")).toBeNull();
+  expect(screen.getAllByTestId("ask-pointer").length).toBeGreaterThanOrEqual(1);
+});

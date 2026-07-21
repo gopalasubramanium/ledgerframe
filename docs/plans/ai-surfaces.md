@@ -999,15 +999,20 @@ them and the owner can object to wording early.**
 
 | Posture | R-54 recut string (served; ratified live at 0a-ii) |
 |---|---|
-| **no-egress** ⚑ | No-egress is on — this device makes no outbound calls, so answers are built on this device from your data and the app's own explanations, with no AI narration. |
+| **no-egress** ⚑ | No-egress is on — this device makes no outbound calls, so answers are built on this device from your data and the app's own explanations, with no model narration. |
 | **disabled / model AI off** | Model AI is off — answers use built-in intelligence: your data and the app's own explanations, on this device. |
 | **local OpenAI-compatible** | On-device (local, Ollama-compatible) — data stays on this device. |
 | **local NPU** | On-device (local, Ollama-compatible) — data stays on this device. |
 | **remote provider** | External model — prompts (incl. your portfolio facts) are sent to the configured provider. |
 
+**⊕ W-7(ii) (owner 2026-07-22, 0a-ii loop-1):** the no-egress string's *"no AI narration"* → *"no MODEL
+narration"* (row above updated to match the served constant; the parity guard binds them). AI is the whole
+surface; the thing withheld under no-egress is the **model**, and the sibling narration strings already
+say "model" (*"no model was used"*, *"External model"*). Re-cut on camera at 0a-ii loop-2.
+
 The **local pair is deliberately identical** (§9-G(2) / item-6a — one user-facing kind; the distinctness
 guard carves it out by name and reds if it ever diverges). `no_egress` keeps "answers are built" and
-"no AI narration" (still pinned); it only gains the tier-1 "explanations" clause. **"Hailo" is gone
+"no model narration" (pinned); it only gains the tier-1 "explanations" clause. **"Hailo" is gone
 from served copy**, and the deprecated-term guard now covers ALL served AI strings (POSTURE_COPY +
 KIND_LABEL), not just the tab summary — the §14-2 one-place gap, closed.
 

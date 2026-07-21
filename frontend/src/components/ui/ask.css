@@ -95,6 +95,30 @@
   outline-offset: var(--focus-offset);
 }
 
+/* THE LABELED LINK LINE — R-54 W-4 (DESIGN-SYSTEM §5.5, second PROPOSED variant). The primary
+   pointer of an action/nav answer: same free axis as the trailing pointer (an `--accent` LINK, no
+   colour/slant, no control), given the prominence of a call to action. It sits on its own line
+   under the help prose so "the answer visibly points". */
+.lf-ask__linkline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2);
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+.lf-ask__linkline:hover {
+  background: var(--surface);
+  text-decoration: underline;
+}
+.lf-ask__linkline:focus-visible {
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
 /* D-070's served fallback signal. Deliberately NOT error-styled. */
 .lf-ask__signal {
   margin: 0;

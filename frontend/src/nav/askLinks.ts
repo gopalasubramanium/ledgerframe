@@ -68,16 +68,36 @@ export function resolveAskLink(linkId: string | null | undefined): string | null
   return null; // unknown kind → no destination (honest, never a guess)
 }
 
+/** Settings tab → human label (R-54 W-4, owner 2026-07-22). A `page:/settings?tab=<x>` pointer is
+ *  named for the TAB it opens — "Appearance settings", not the bare "Settings" — so a labeled link
+ *  line ("→ Open Appearance settings") says exactly where it lands. Mirrors the ratified tab-label
+ *  vocabulary in `Settings.tsx` (general|appearance|privacy|data-feeds|ai|system|about); a tab this
+ *  map does not know falls back to the plain page label rather than inventing a name. */
+const SETTINGS_TAB_LABEL: Readonly<Record<string, string>> = {
+  general: "General settings",
+  appearance: "Appearance settings",
+  privacy: "Privacy settings",
+  "data-feeds": "Data feed settings",
+  ai: "AI settings",
+  system: "System settings",
+  about: "About",
+};
+
 /**
  * The human label for a resolved link's DESTINATION — the pointer affordance's accessible name
- * (R-54 delta 4b). A `page:` link is named by its nav label (the query notwithstanding); a `help:`
- * link is named for the Help page it opens. A link the resolver refuses gets `null` — no label, so
- * no dangling arrow to a destination that does not exist.
+ * (R-54 delta 4b; W-4 tab-labels). A `page:` link is named by its nav label; a `page:/settings`
+ * link with a `?tab=` is named for the TAB it opens (W-4); a `help:` link is named for the Help
+ * page it opens. A link the resolver refuses gets `null` — no label, so no dangling arrow to a
+ * destination that does not exist.
  */
 export function askLinkLabel(linkId: string | null | undefined): string | null {
   const to = resolveAskLink(linkId);
   if (!to) return null;
   if (to.startsWith("/help")) return "Help";
-  const path = to.split("?", 1)[0];
+  const [path, query] = to.split("?");
+  if (path === "/settings" && query) {
+    const tab = new URLSearchParams(query).get("tab");
+    if (tab && SETTINGS_TAB_LABEL[tab]) return SETTINGS_TAB_LABEL[tab];
+  }
   return NAV_LABEL_BY_PATH.get(path) ?? null;
 }

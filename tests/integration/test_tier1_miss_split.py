@@ -67,14 +67,41 @@ async def test_tier1_miss_returns_the_honest_empty_shape_not_the_last_resort(app
 async def test_tier1_miss_body_is_the_refusal_not_an_approximate_answer(app_client):
     """The miss BODY is the served refusal — never an approximate answer (§7-A).
 
-    With no facts there is no fact list to be the answer, so `_template_answer` returns
-    `REFUSAL_NO_FACTS`. The panel goes to its honest-miss state, not a nearest match.
+    ⊕ W-6 (owner 2026-07-22): an UNROUTABLE question gets the UNROUTABLE truth — "I can't match
+    that to anything I can answer" — NOT the no-data line. Telling a reader whose question the
+    product cannot answer to "refresh market data" is false (there is nothing to refresh).
+    FAIL-FIRST: on the pre-W-6 build this body was `REFUSAL_NO_FACTS` ("don't have the data
+    needed"), the wrong truth for an unroutable question — seen RED here.
     """
     events = await _events(app_client, _UNROUTABLE[0])
     body = "".join(e["delta"] for e in events if e.get("type") == "delta")
-    assert "don't have the data needed" in body
+    assert "can't match that to anything I can answer" in body, (
+        f"an unroutable tier-1 miss must carry the UNROUTABLE truth, got: {body!r}"
+    )
+    assert "Try asking about your holdings, net worth, allocation" in body
+    # The wrong-truth cross-render reds: the no-data line must NOT appear on an unroutable miss.
+    assert "don't have the data needed" not in body
     done = next(e for e in events if e.get("type") == "done")
     assert done["provider"] == "fallback"  # tier-1 deterministic, no model
+
+
+# ── W-6: TWO MISSES, TWO TRUTHS (owner 2026-07-22) ───────────────────────────────────────────────
+# `classify_miss` decides WHICH honest-miss truth applies, purely from ROUTING (does the question
+# reach a fact source / symbol / help entry at all?) — so it is seed-independent: a routed question
+# is "no_data" whether or not the data happens to be present, an unmatched one is "unroutable".
+async def test_classify_miss_pins_each_class_to_its_truth(session):
+    from app.ai.prompts import REFUSAL_NO_FACTS, REFUSAL_UNROUTABLE
+    from app.ai.tools import classify_miss
+
+    # UNROUTABLE — no source, no symbol, no help entry.
+    for q in _UNROUTABLE:
+        assert await classify_miss(session, q) == "unroutable", q
+    # NO-DATA — the question ROUTED (a real fact source), even on an empty book.
+    for q in ["what is in the news today", "what is my net worth", "how are the markets"]:
+        assert await classify_miss(session, q) == "no_data", q
+    # The two truths are DISTINCT strings — a cross-render is visibly wrong, not a synonym slip.
+    assert REFUSAL_UNROUTABLE != REFUSAL_NO_FACTS
+    assert "can't match" in REFUSAL_UNROUTABLE and "don't have the data" in REFUSAL_NO_FACTS
 
 
 async def test_tier1_ROUTABLE_question_still_carries_its_facts(app_client):

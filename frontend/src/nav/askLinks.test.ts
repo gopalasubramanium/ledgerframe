@@ -108,10 +108,15 @@ describe("askLinks — the frontend ID→route registry (R-54 §9-D)", () => {
   // so a renamed page renames the pointer automatically and a served link the resolver refuses
   // gets no label (null → no affordance, never a dangling arrow).
   describe("askLinkLabel — the pointer's destination name", () => {
-    test("a page: link is named by its nav label, the query notwithstanding", () => {
+    test("a page: link is named by its nav label; a Settings TAB link by its tab (W-4)", () => {
       expect(askLinkLabel("page:/net-worth")).toBe("Net worth");
       expect(askLinkLabel("page:/holdings")).toBe("Holdings");
-      expect(askLinkLabel("page:/settings?tab=appearance")).toBe("Settings");
+      // ⊕ W-4 (owner 2026-07-22): a `page:/settings?tab=<x>` pointer is named for the TAB it opens
+      // — "Appearance settings", not the bare "Settings" — so "→ Open Appearance settings" says
+      // exactly where it lands. A plain `/settings` (no tab) keeps the page label.
+      expect(askLinkLabel("page:/settings?tab=appearance")).toBe("Appearance settings");
+      expect(askLinkLabel("page:/settings?tab=privacy")).toBe("Privacy settings");
+      expect(askLinkLabel("page:/settings")).toBe("Settings");
     });
 
     test("a help: link is named for the Help page it opens", () => {

@@ -60,11 +60,15 @@ async def ai_facts(q: str = Query(min_length=1, max_length=500),
 # but the AC-L3 parity guard binds code↔record throughout, so the recut wording is recorded in
 # `ai-surfaces.md` §12-3 with a dated note ("both versions true in their time").
 #
-# ⚠ NO_EGRESS keeps "answers are built" and "no AI narration" (both pinned by
-# `test_the_no_egress_string_is_the_one_the_owner_RULED`, §12-3): it only GAINS the tier-1 clause —
+# ⚠ NO_EGRESS keeps "answers are built" (pinned by
+# `test_the_no_egress_string_is_the_one_the_owner_RULED`, §12-3): it GAINS the tier-1 clause —
 # answers are now built from your data AND the app's own explanations, not "from your data only".
+# ⊕ W-7(ii) (owner 2026-07-22, 0a-ii loop-1): "no AI narration" → "no MODEL narration" — the two
+# other narration surfaces already say "model" ("no model was used", "…External model…"), and AI is
+# the whole surface, not the thing this line withholds. The pin was updated deliberately with a dated
+# §12-3 note; ratified by looking at 0a-ii loop-2.
 POSTURE_NO_EGRESS = ("No-egress is on — this device makes no outbound calls, so answers are built "
-                     "on this device from your data and the app's own explanations, with no AI "
+                     "on this device from your data and the app's own explanations, with no model "
                      "narration.")
 # item-6b: names its CAUSE in GLOSSARY vocabulary ("built-in intelligence"), no "deterministic" jargon.
 POSTURE_DISABLED = ("Model AI is off — answers use built-in intelligence: your data and the app's "

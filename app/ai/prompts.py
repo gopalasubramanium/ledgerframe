@@ -64,9 +64,27 @@ Output ONLY the final answer — no reasoning or <think> tags.
 End with exactly: """ + DISCLAIMER + """
 """
 
+# ── TWO MISSES, TWO TRUTHS (R-54 W-6, owner ruling 2026-07-22) ──────────────────────────────────
+# A tier-1 answer that comes back empty has TWO distinct honest reasons, and telling one truth for
+# both is a lie half the time. `classify_miss` (`tools.py`) decides which reason applies and the
+# grounding path emits the matching string; the guard (`test_tier1_miss_split.py`) pins each miss
+# class to its own copy and reds on a cross-render (an unroutable question wearing the no-data line,
+# or vice versa). Both are PROPOSED — ratified by looking at 0a-ii loop-2.
+#
+# NO-DATA — the question routed to a real fact source (a holding, the market, the watchlist) but
+# the data behind it is absent. The honest next step is about the DATA.
 REFUSAL_NO_FACTS = (
     "I don't have the data needed to answer that right now. "
     "Try refreshing market data or check that the relevant holdings exist. "
+    + DISCLAIMER
+)
+
+# UNROUTABLE — the question matched no fact source, instrument or help entry at all. Telling this
+# reader to "refresh market data" is false: there is nothing to refresh, the question simply is not
+# one the product answers. The honest next step is about WHAT CAN be asked.
+REFUSAL_UNROUTABLE = (
+    "I can't match that to anything I can answer. "
+    "Try asking about your holdings, net worth, allocation, or how a page works. "
     + DISCLAIMER
 )
 

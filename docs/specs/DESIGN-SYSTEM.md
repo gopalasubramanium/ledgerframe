@@ -1238,6 +1238,25 @@ The **navigation accent** (`--accent`, D-098's established "this links elsewhere
 `.idp__link` / SummaryLink use) is the free axis: it says *"this goes somewhere"* without valuing the
 number or claiming authorship. A link is not a judgement about the fact; it is a door next to it.
 
-**PROPOSED — ratified at 0a-ii by looking, rendered live**, both themes, alongside the recut posture
-table and the tier-1 answer specimens. Phase 1 delta 4b builds it PROPOSED; 0a-ii is where *"ratified
-at 0a by looking"* happens for it (the resolution of the §8 circularity).
+~~**PROPOSED — ratified at 0a-ii by looking**~~ → **RATIFIED 2026-07-22 (owner, 0a-ii walk, ruling 1d):
+the trailing-arrow affordance is ratified FOR VALUE ROWS.** Phase 1 delta 4b built it PROPOSED; the
+0a-ii specimens put it before the owner, live, both themes, and it is accepted on value/figure facts.
+
+### ⊕ SECOND VARIANT — the LABELED LINK LINE (PROPOSED 2026-07-22, R-54 W-4; ratify at 0a-ii loop-2)
+
+**The owner's ruling (0a-ii walk, W-4 — "THE ANSWER MUST VISIBLY POINT"):** a tier-1 **action/nav**
+answer is scoped (backend, W-5) to a single help fact whose destination is a **page**, and there its
+pointer must be *prominent*, not a floating arrow the reader has to hunt for under "Show more". So the
+DS gains a **second variant of the same affordance**:
+
+| | |
+|---|---|
+| **Applies to** | A **scoped action/nav answer** only — the pack is exactly ONE page-linked help fact (`AskPanel.tsx::actionNav`). "how do I add a holding" → Holdings; "how do I change the theme" → Appearance settings |
+| **Renders as** | A full **labeled link line** on its own row under the help prose — an **ArrowUpRight** + the text **"Open &lt;destination&gt;"** (`Open Holdings`, `Open Appearance settings`), named from `askLinkLabel` (the nav model + the Settings tab-label vocabulary) |
+| **Replaces** | The trailing bare arrow **on that fact** — a scoped action answer POINTS with the labeled line, so there is no orphaned ↗. Every OTHER pack is unchanged: value rows and prose facts in multi-fact answers keep the ratified trailing arrow |
+| **Never** | Same boundary — a **link**, never a control (§9-E, `check:ask-boundary`; the AskPanel W-4 tests pin it renders an `<a>`, navigates, closes, and carries no control) |
+| **Class** | `.lf-ask__linkline` |
+
+Same **free axis** as the trailing arrow — the `--accent` navigation tone, no data colour, no slant —
+just given the **prominence a call-to-action needs**; it is the *primary* affordance of an action answer
+rather than an adornment of a figure. **PROPOSED — ratified at 0a-ii loop-2 by looking, both themes.**

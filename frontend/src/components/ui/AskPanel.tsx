@@ -104,7 +104,35 @@ function FactPointer({ fact, onNavigate }: { fact: GroundingFactDTO; onNavigate:
   );
 }
 
-function FactRow({ fact, onNavigate }: { fact: GroundingFactDTO; onNavigate: () => void }) {
+/**
+ * THE LABELED LINK LINE — R-54 W-4 (owner 2026-07-22), DESIGN-SYSTEM §5.5 second PROPOSED variant.
+ * "The answer must visibly point." When a tier-1 ACTION/NAV answer is scoped to a single help fact
+ * whose canonical destination is a PAGE (W-5), the pointer is not a floating arrow tucked under
+ * "Show more" — it is the answer's call to action, a full labeled link: "→ Open Holdings",
+ * "→ Open Appearance settings". Same free axis as the trailing pointer (a `--accent` LINK, never a
+ * colour or a slant, never a control — §9-E), just given the prominence an action answer needs.
+ */
+function FactLinkLine({ fact, onNavigate }: { fact: GroundingFactDTO; onNavigate: () => void }) {
+  const to = resolveAskLink(fact.link_id);
+  const dest = askLinkLabel(fact.link_id);
+  if (!to || !dest) return null;
+  return (
+    <Link
+      className="lf-ask__linkline"
+      to={to}
+      onClick={onNavigate}
+      data-testid="ask-linkline"
+    >
+      <ArrowUpRight aria-hidden size={14} />
+      <span>Open {dest}</span>
+    </Link>
+  );
+}
+
+function FactRow(
+  { fact, onNavigate, actionNav = false }:
+  { fact: GroundingFactDTO; onNavigate: () => void; actionNav?: boolean },
+) {
   const [expanded, setExpanded] = useState(false);
   const help = isHelpFact(fact);
 
@@ -135,7 +163,11 @@ function FactRow({ fact, onNavigate }: { fact: GroundingFactDTO; onNavigate: () 
           {expanded ? "Show less" : "Show more"}
         </Button>
       )}
-      <FactPointer fact={fact} onNavigate={onNavigate} />
+      {/* W-4: an action/nav answer POINTS with a labeled link line; every other prose fact keeps
+          the ratified trailing arrow. (Value rows keep theirs unconditionally, below.) */}
+      {actionNav
+        ? <FactLinkLine fact={fact} onNavigate={onNavigate} />
+        : <FactPointer fact={fact} onNavigate={onNavigate} />}
     </li>
   );
 }
@@ -156,6 +188,19 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
   const [status, setStatus] = useState<GroundingStatus | null>(null);
 
   const streamRef = useRef<{ cancel: () => void } | null>(null);
+
+  // W-4/W-5 (owner 2026-07-22): a tier-1 ACTION/NAV answer is scoped BY THE BACKEND to a single
+  // help fact whose destination is a PAGE — the pointer IS the answer. That exact shape (one help
+  // fact, a page link) renders the labeled link line; every other pack keeps the ratified trailing
+  // arrows on its value rows and prose facts. Detected here, not guessed per-row, so a multi-fact
+  // pack that merely happens to lead with a page-linked help entry is never mistaken for one.
+  const actionNav =
+    facts.length === 1 &&
+    isHelpFact(facts[0]) &&
+    (() => {
+      const to = resolveAskLink(facts[0].link_id);
+      return !!to && !to.startsWith("/help");
+    })();
 
   // D-067: the privacy-mode label is ALWAYS VISIBLE. Fetched when the panel opens rather than
   // cached at mount, because the no-egress toggle can move in Settings while the app is running —
@@ -357,7 +402,8 @@ export function AskPanel({ label = "Ask", seedQuestion }: AskPanelProps = {}) {
               <h3 className="lf-ask__facts-title">What this is built from</h3>
               <ul className="lf-ask__fact-list">
                 {facts.map((f) => (
-                  <FactRow key={`${f.label}-${f.value}`} fact={f} onNavigate={close} />
+                  <FactRow key={`${f.label}-${f.value}`} fact={f} onNavigate={close}
+                           actionNav={actionNav} />
                 ))}
               </ul>
             </section>

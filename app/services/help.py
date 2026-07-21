@@ -806,7 +806,7 @@ HELP: list[dict] = [
      "body": "XIRR is a money-weighted return (accounts for the size and timing of your "
              "cash flows). TWR is time-weighted (removes the effect of deposits/withdrawals, "
              "for comparing to a benchmark). Both are shown only where the cash-flow/price "
-             "history supports them — 'not applicable' otherwise.",
+             "history supports them — 'unavailable' otherwise.",
      "keywords": "xirr twr return money-weighted time-weighted",
      "what": "Two return measures. XIRR is money-weighted: it accounts for the size and timing of "
              "your cash flows. TWR is time-weighted: it removes the effect of deposits and "
@@ -814,8 +814,8 @@ HELP: list[dict] = [
      "why": "They answer different questions — XIRR reflects the return you actually experienced "
             "given when you added or withdrew money, while TWR isolates investment performance for "
             "benchmark comparison. The two can differ substantially.",
-     "improves": "Both need enough dated cash-flow and price history to compute, and show 'not "
-                 "applicable' where history is insufficient. Recording accurate transaction dates "
+     "improves": "Both need enough dated cash-flow and price history to compute, and show "
+                 "'unavailable' where history is insufficient. Recording accurate transaction dates "
                  "and keeping prices current is what lets them be calculated.",
      "level": "Core",
      "example": "Sample — 10,000 invested in January and 90,000 more in December, in a year that rose "

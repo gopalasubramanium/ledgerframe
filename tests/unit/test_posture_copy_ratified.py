@@ -66,8 +66,12 @@ def test_the_no_egress_string_is_the_one_the_owner_RULED():
     narration. Both describe zero outbound calls — only one describes what the user gets. The
     owner ratified the shipped one, and it is R-54 tier-1's seed.
     """
-    assert "answers are built" in POSTURE_NO_EGRESS and "no AI narration" in POSTURE_NO_EGRESS, (
-        f"The no-egress posture string no longer says that answers are STILL BUILT without "
+    # ⊕ W-7(ii) (owner 2026-07-22, 0a-ii loop-1): "no AI narration" → "no MODEL narration", updated
+    # here DELIBERATELY (the pin carries the ruled change; it never drifts on its own). AI is the
+    # whole surface; the thing withheld under no-egress is the MODEL, and the sibling narration
+    # strings already say "model" ("no model was used", "External model").
+    assert "answers are built" in POSTURE_NO_EGRESS and "no model narration" in POSTURE_NO_EGRESS, (
+        f"The no-egress posture string no longer says that answers are STILL BUILT without model "
         f"narration.\n  served: {POSTURE_NO_EGRESS!r}\n"
         "Reverting toward 'AI is off' would re-introduce the drafted wording the owner ruled "
         "against at 0a — it is not what the product does under no-egress (§12-3)."

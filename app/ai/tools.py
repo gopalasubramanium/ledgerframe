@@ -955,6 +955,14 @@ async def gather_facts(
             or _re_help.search(r"\b(how (do|can|to|does)|what (is|are|does)|where (do|is|can)|explain|what's|help( me)?)\b", q)):
         hf = help_facts(question)
         if hf:
+            # W-5 (owner 2026-07-22): a SETTINGS/how-do-I question that names a Settings control
+            # ("theme" → appearance) is a Settings question — the page-settings entry is its
+            # canonical answer, so it LEADS. A fuzzy search match (Heatmap ranks on "colour") must
+            # not outrank the explicit settings-tab signal, or the tier-1 pointer below would point
+            # at the wrong page. Reorder only (stable), never inject; gated on SETTINGS_HELP so a
+            # data question that merely contains a tab word ("currency allocation") is untouched.
+            if intent is Intent.SETTINGS_HELP and _settings_tab_for(question):
+                hf = sorted(hf, key=lambda f: 0 if (f.link_id or "").startswith("page:/settings") else 1)
             # R-54 delta 4a / R2: a TERM question surfaces the term's own canonical figure(s)
             # beside the explanation. Scoped to the TOP-RANKED help hit — search_help's #1 is what
             # the question is most about, so an action question whose top hit is a PAGE gathers no
@@ -962,6 +970,13 @@ async def gather_facts(
             # `figures_for_term` returns () for a non-registry term (e.g. cash runway), a clean
             # no-op. Both tiers: surfacing the figure is grounding, honest in tier 2 too.
             top = hf[0].link_id or ""
+            # W-5 (owner 2026-07-22): a tier-1 ACTION/NAV answer (SETTINGS_HELP whose top hit is a
+            # PAGE) is SCOPED to that one hit + its labeled link — no headline figures, no second
+            # help fact. The pointer IS the answer (W-4). MODE-scoped, never global: tier-2 keeps the
+            # full pack below so a model still narrates from everything. Guard:
+            # `test_tier1_action_nav_scope` reds if such an answer ever carries a portfolio headline.
+            if mode is AnswerMode.DETERMINISTIC and intent is Intent.SETTINGS_HELP and top.startswith("page:"):
+                return [hf[0]]
             tf = (await term_figure_facts(session, {top.split(":", 1)[1]})
                   if top.startswith("help:term-") else [])
             facts = hf + tf + facts
@@ -979,3 +994,34 @@ async def gather_facts(
     elif portfolio_intent or (not external_only and not symbols):
         facts = await portfolio_facts(session) + facts
     return _dedupe(facts)
+
+
+_MISS_HELP_SHAPE = re.compile(
+    r"\b(how (do|can|to|does)|what (is|are|does)|where (do|is|can)|explain|what's|help( me)?)\b")
+
+
+async def classify_miss(session: AsyncSession, question: str) -> str:
+    """Which honest-miss TRUTH applies when a tier-1 answer gathered nothing (R-54 W-6, owner
+    2026-07-22). Returns ``"unroutable"`` or ``"no_data"``.
+
+    * ``"no_data"`` — the question DID route to a real fact source, instrument or help entry; the
+      data behind it is simply absent. The honest next step is about the data.
+    * ``"unroutable"`` — the question matched no source, symbol or help entry at all. There is
+      nothing to refresh; the honest next step is about what CAN be asked.
+
+    Cold path (only a miss reaches it), so re-deriving the routing signals is cheap and keeps
+    `gather_facts` byte-identical for its callers rather than widening its return shape.
+    """
+    from app.ai.intent import Intent, classify_intent, fact_sources
+
+    intent = classify_intent(question)
+    if fact_sources(intent):
+        return "no_data"
+    if await _resolve_symbols(session, question):
+        return "no_data"
+    help_shaped = (intent in (Intent.SETTINGS_HELP, Intent.EXPLANATION_OF_METRIC,
+                              Intent.UNKNOWN_GENERAL_QUESTION)
+                   or bool(_MISS_HELP_SHAPE.search(question.lower())))
+    if help_shaped and help_facts(question):
+        return "no_data"
+    return "unroutable"
