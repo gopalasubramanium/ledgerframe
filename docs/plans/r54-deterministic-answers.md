@@ -39,7 +39,7 @@ row lacks a disposition.** This plan is the rule's first user.*
 | **F-4** | Finding | **Watchlist fact fidelity** — `watchlist_quote_facts` read `wl.items[:8]` over a relationship with **no `order_by`** (`models/__init__.py:492`), so facts followed **insertion order** and could slice away the rows the user put at the top | Found at Phase 0-4 while building the F-3 fixture; **filed by owner ruling 2026-07-21 item 4** | ✅ **FIXED 2026-07-21** (`7ba669f`). **It was the one-line ORDER BY it appeared to be** — and in the **AI path**, not the model: `watchlists.py:34` already sorts explicitly, so the **page was right and only the AI's view of it was wrong**. Fixed in `tools.py` so no shipped surface moves. *Grounding that does not mirror what the user sees is a **fidelity** defect, not a cosmetic one* |
 | **F-5** | Finding | **`pct` / `ratio` / `count` are still rendered INLINE in `tools.py`** (`f"{round(float(v), 2)}%"` and siblings) — F-3's *"no rendering logic outside `money.py`"* was **scoped to `_fmt`** and these three survived it | Found at Phase 0-4, exposed by a **false positive** in the raw-float guard (it fired on `Return / volatility = 11.82`, a legitimately unitless ratio) | ✅ **RULED 2026-07-21 — the F-3 precedent applies WHOLESALE; own delta immediately after 0-5, BEFORE 0a's specimens are cut.** (a) registry gains **`value_kind`** (money/pct/ratio/count) as a **declared column** — rendering dispatches on kind, **never inferred from the value** (the F5-identity lesson applied to units); (b) `money.py` owns **per-kind named variants**, no inline formatting survives anywhere; (c) blast radius proven **the F-3 way** — byte-identity for every unaffected rendering, movers enumerated by ruled class; (d) **0a gains one fact per kind**, rounding changes ratified **by looking**, dated notes on any moved ratified rendering; (e) **the false-positive lesson rides the record** — `Return / volatility` stays a **unitless ratio**. ✅ **FIXED 2026-07-21 (`a8c89f5`).** `value_kind` is a declared registry column dispatched on (never inferred); `money.py` owns `format_pct_display` (unsigned, 2dp HALF_UP) + `format_ratio_display` + `format_fact_by_kind`; the inline `round(float(v),2)` dispatch is gone from `performance_facts` **and** from `total_return`'s WINNING render (`portfolio_facts` — the first-wins dedupe bypass, the F-3 "formatter exists but is bypassed" lesson recurring at the dedupe layer). Count declared on Positions, **no renderer** (Q2), tripwire armed. ✅ **RATIFIED at 0a-i 2026-07-21** (owner, by looking): `Income yield 0.00%` and `Top 5 concentration 94.60%` (trailing-zero movers, fixed 2dp) on camera (`2e9104e`); **the RATIO kind (`Return / volatility`) is DEFERRED to 0a-ii** — coverage-gated on a fresh instance, unit-tested meanwhile (item 3). **⊕ CLAUSE (b) DATED SCOPE ANNOTATION (Q1 ruling 2026-07-21):** *"no rendering logic outside `money.py` — **completed for value_kind-dispatched registry-figure renders** (incl. `total_return`@`portfolio_facts`); **per-item annotations = F-7.**"* An absolute claim with five known exceptions is the §19-K shape; the claim is **re-scoped, not carried as a lie**. Original finding: The architecture holds for **money** and not yet for the rest. `round(float(v), 2)` is float-based, carrying the **same banker's-rounding class as F-3(ii)**. **Filed not fixed:** it is the same ratified-rendering question F-3 was, on three more value kinds, so it wants a ruling rather than a judgement call inside a delta |
 | **F-6** | Finding | **⛔ A REGRESSION THIS MILESTONE SHIPPED.** Phase 0-1's word-boundary conversion **silently killed the stems** written for the substring matcher (`perform`, `return`, `concentrat`, `diversif`): under `\b(...)\b` the trailing boundary requires the word to END there, so *"performing"*, *"concentration"* and *"diversified"* stopped routing. **6 of 9 probes misrouted** | Found at Phase 0-4 **by accident**, asking whether XIRR reached the pack — **not by any gate**, and not by the delta that introduced it | ✅ **FIXED 2026-07-21** (`7ba669f`) — stems carry `\w*`; **0/16 misrouted**; pinned by `test_intent_stem_probes.py` through **inflected** forms, with a blindness pin that caught `liabilit` unprobed on its first run. **⚑ THE LESSON, and it is new: A TEST THAT CAN REACH ITS ASSERTION BY TWO ROUTES CANNOT TELL YOU THAT ONE OF THEM BROKE** — the 1982-test suite stayed green because the one performance test's question also contains *"risk"*. Phase 0-1's guards were sound about what they measured and **none asked whether the rules still matched real questions**: the property was verified, the capability was not |
-| **F-7** | Finding | **Per-item annotation rendering is still inline** — 5 sites in `tools.py` format a pct annotation inline and are NOT registry figures (no declared `value_kind`): allocation weight `.1f%` (`:118`), market/instrument quote change `+.2f%` (`:171,499`), holdings weight `.1f%` (`:425`), series change `+.1f%` (`:516`) | Filed at the F-5 delta (Q1 ruling 2026-07-21) — the residue of scoping F-5 to value_kind-dispatched registry figures; the ruled mechanism (registry `value_kind` dispatch) structurally cannot apply to a quantity with no `figure_id`. **⊕ WIDENED by W-2 (owner's 0a-i look, 2026-07-21):** the 0a-i frame showed `Largest position 80.55%` beside its annotation `(80.6%)` — the two-faces question live on ONE frame — and `Allocation (asset_class)` **leaks an internal token** into user copy | **⚑ OPEN — REQUIRED SURVEY BEFORE ANY RULING (r2 + W-2).** For each annotated quantity, compare against the **canonical page's rendering of the SAME quantity** on **BOTH axes: precision AND label vocabulary** — the real question is not *"which file owns the f-string"* but whether the same figure **wears two faces** (the F-3 species) and whether the label is the **canonical page's** term or an internal token (`asset_class`); bespoke precisions/labels may be deliberate or drift, and only the survey table can say. **Byte-identity asserted for all five sites at the F-5 delta** (`test_allocation_weight_annotation_is_unchanged` pins the one-decimal `.1f` weight form on the served pack). Not release-blocking; own delta after F-5 |
+| **F-7** | Finding | **Per-item annotation rendering is still inline** — 5 sites in `tools.py` format a pct annotation inline and are NOT registry figures (no declared `value_kind`): allocation weight `.1f%` (`:118`), market/instrument quote change `+.2f%` (`:171,499`), holdings weight `.1f%` (`:425`), series change `+.1f%` (`:516`) | Filed at the F-5 delta (Q1 ruling 2026-07-21) — the residue of scoping F-5 to value_kind-dispatched registry figures; the ruled mechanism (registry `value_kind` dispatch) structurally cannot apply to a quantity with no `figure_id`. **⊕ WIDENED by W-2 (owner's 0a-i look, 2026-07-21):** the 0a-i frame showed `Largest position 80.55%` beside its annotation `(80.6%)` — the two-faces question live on ONE frame — and `Allocation (asset_class)` **leaks an internal token** into user copy | **⚑ OPEN — REQUIRED SURVEY BEFORE ANY RULING (r2 + W-2).** For each annotated quantity, compare against the **canonical page's rendering of the SAME quantity** on **BOTH axes: precision AND label vocabulary** — the real question is not *"which file owns the f-string"* but whether the same figure **wears two faces** (the F-3 species) and whether the label is the **canonical page's** term or an internal token (`asset_class`); bespoke precisions/labels may be deliberate or drift, and only the survey table can say. **Byte-identity asserted for all five sites at the F-5 delta** (`test_allocation_weight_annotation_is_unchanged` pins the one-decimal `.1f` weight form on the served pack). Not release-blocking; own delta after F-5. ✅ **SURVEYED + RULED + FIXED 2026-07-22** (owner, chat — five ruling items). **Q1** sites 1/4/5 → **2dp** via money.py (two-faces ends; site 4's `largest_position` collision dissolves — pack `Allocation — Property 80.55%` == registry `Largest position 80.55%`, proven live). **Q2** site 1 → **`Allocation — <served class label>`** via `label_for` (the `(asset_class)` token + raw enum gone; `label_for` covers every AssetClass value → no STOP-for-chat). **Q3** sites 2/3/5 → the canonical **signed-% variant (U+2212, explicit sign)**; site 3 keeps `" today"`. **Q4** sites 4/5 KEPT + **DECLARED**: `PackContext` tier (WEIGHT/CHANGE) + `format_pack_context`, **census guard** `test_no_ambient_pct_fstring_survives_in_the_pack` (no ambient annotation f-string survives — registry = named/term-resolvable tier, pack-context = declared second tier). **THE RITE**: F-5 pin updated deliberately + dated note; dated notes in `page-portfolio.md`/`page-markets.md`/`page-instrument-detail.md`; movers enumerated by class; **formal movers-on-camera owed at 0a-ii**. Shipped as its own commit pair; delta 5 proceeds next |
 
 *Rows F-n (walk findings) are appended below this table as the milestone runs. **The CLOSED claim
 enumerates I-rows, F-rows and lettered sub-findings alike.***
@@ -2232,6 +2232,64 @@ chrome; no served answer copy or vocabulary moved. The currency suite ran inside
 Phase-1 delta sequence continues with **delta 5** (accepted-surface corrections: `setParams`
 sibling-param fix under the Settings rite, the F-2 census own delta, the `AppRoutes.tsx:59` comment).
 The **F-7 survey** stays STOP-for-chat; **0a-ii PREP** is the HARD STOP.
+
+#### Phase 1 F-7 delta — THE PACK-CONTEXT ANNOTATION TIER, DECLARED (`46a9d05`) — DONE
+
+**Per the F-7 ruling (owner, chat 2026-07-22, five items).** The survey found five inline pct
+annotations in `tools.py` — not registry figures — drifting from their canonical pages on **precision**
+(1dp vs 2dp, the two-faces W-2 caught live) and **vocabulary** (`Allocation (asset_class) — equity`).
+This delta conforms them and DECLARES a second tier. **Its own commit pair (ruling item 6).**
+
+**What shipped.**
+
+| Change | File |
+|---|---|
+| **`PackContext` tier + `format_pack_context`** — the DECLARED second tier: WEIGHT → `format_pct_display` (2dp unsigned), CHANGE → `format_signed_pct_display` (2dp, **U+2212**, explicit sign). money.py owns the rendering, this owns only the kind→variant dispatch (as the registry owns `value_kind`) | `app/ai/tools.py` |
+| **Q1 — sites 1/4/5 → 2dp**: allocation weight, holdings weight, ~6-month change all render through the WEIGHT/CHANGE variants. The two-faces ends — pack `Allocation — Property 80.55%` == registry `Largest position 80.55%` (proven live) | `app/ai/tools.py` |
+| **Q2 — site 1 label** → `Allocation — {label_for("asset_class", k)}` (asset_class) / `Allocation — {code}` (currency), via `_alloc_bucket_label`. `label_for` is the **same served /refdata truth** the donut's `labelFor` reads; it covers every `AssetClass` value → **no missing label, no STOP-for-chat** | `app/ai/tools.py` |
+| **Q3 — sites 2/3/5** → the canonical signed-% variant (U+2212, explicit sign); **site 3 keeps `" today"`** (period context is honesty in a context-free line) | `app/ai/tools.py` |
+| **Q4 — the CENSUS GUARD** `test_no_ambient_pct_fstring_survives_in_the_pack` (AST): no f-string in `tools.py` formats a float and appends `%`. Registry figures were the F-5 census; this is the second-tier census — no ambient annotation f-string survives in either | `test_fact_pack_kinds.py` |
+
+**Corollary on the record (ruling Q4):** the figure registry is the **named / term-resolvable tier**
+(a `figure_id`, a canonical page, often a Help term); pack-context annotations are the **declared
+second tier** — kept for grounding, but enumerated and census-guarded, never ambient.
+
+**FAIL-FIRST — four RED on the real cause:** the census guard reds naming the exact five sites
+(`[155, 208, 588, 662, 679]`); the two conformance probes red on the `.1f` form and the
+`Allocation (asset_class) — <enum>` label; the tier import reds (no `PackContext`). Then GREEN.
+
+**MOVERS, enumerated by ruled class (rite):**
+- **Label (site 1), always:** `Allocation (asset_class) — equity` → `Allocation — Equity` (every bucket, via `label_for`).
+- **Weight → 2dp (sites 1, 4), always:** `(45.6%)` → `(45.60%)`; `(80.6%)` → `(80.55%)`.
+- **Change → U+2212 (sites 2, 3), negatives only:** `(-2.35%)` → `(−2.35%)`; **byte-identical on positive changes** (already 2dp, explicit `+`).
+- **Change → 2dp + U+2212 (site 5), always:** `+7.9%` → `+7.93%`, `-2.1%` → `−2.13%`.
+
+**THE RITE, in full (ruling item 5):**
+- **F-5 byte-identity pin updated DELIBERATELY** — `test_allocation_weight_annotation_is_unchanged` →
+  `..._conforms_to_2dp_and_the_served_class_label`, with a **dated note** in `test_fact_pack_kinds.py`
+  (the pre-F-7 one-decimal/raw-enum ratification is superseded 2026-07-22).
+- **Dated delta notes** in `page-portfolio.md` (allocation weight), `page-markets.md` (quote change),
+  `page-instrument-detail.md` (quote + period change) — each records the pack conformed TO the page and
+  the **page itself did NOT change** (records-truth). Stale comment in `figure_registry.py` corrected.
+- **Camera-over-green (in-delta pre-pass):** isolated stack (owner's stack untouched, `.env` restored),
+  `/ai/facts` served every bucket as `Allocation — <human>` at 2dp, the Ask panel rendered them live
+  with **0 console errors**, and pack `80.55%` == the page's largest concentration. **Formal
+  movers-on-camera owed at 0a-ii** (owner's look, both themes).
+
+**Gates.** Backend **2096 passed / 15 skipped, ordered AND randomized**, exit 0; `make lint` PASS;
+contract **141/71 unchanged** (no path/schema — rendering + labels only). Suite reconciliation:
+**2093 → 2096, +3** this delta's own (census + holdings-weight conformance + tier-declared), with
+`test_allocation_weight_annotation_is_unchanged` **renamed in place** to `..._conforms_to_2dp_and_the_
+served_class_label` (a flipped assertion, not a count change) and `test_intent_word_boundary._allocation`
+updated to the new label (a mover, not a new test). **⚠ The owner's live stack (`:8321`/`:5173`) was
+running during both gate passes** — an idle dev server, not a competing pytest, and the gate's fixture DB
+never touches it; ordered==randomized (2096) corroborates no contention.
+
+**⚠ Untyped-shape caveat (§3b):** the `facts` event **content** moved — allocation labels and every
+weight/change annotation — an untyped served string the contract cannot see; the served-shape pins and
+the census guard are what see it. **Help currency: no Help/GLOSSARY entry changed** — the served class
+labels come from the existing `/refdata` MASTER-DATA vocabulary (`label_for`), not new copy;
+guard-corroborated.
 
 ### Phase 2 — TESTS AND GUARDS
 
