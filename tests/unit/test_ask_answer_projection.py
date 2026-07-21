@@ -85,7 +85,7 @@ class _Provider:
 async def _run(monkeypatch, mode: str, facts: list[GroundingFact] | None = None):
     from app.ai import grounding
 
-    async def fake_facts(session, question):
+    async def fake_facts(session, question, *, mode=None):
         return list(FACTS if facts is None else facts)
 
     monkeypatch.setattr(grounding, "gather_facts", fake_facts)

@@ -38,7 +38,7 @@ class _FakeProvider:
 
 @pytest.fixture(autouse=True)
 def _patch(monkeypatch):
-    async def fake_facts(session, question):
+    async def fake_facts(session, question, *, mode=None):
         return [GroundingFact(label="Net worth", value="100 SGD")]
 
     monkeypatch.setattr(grounding, "gather_facts", fake_facts)

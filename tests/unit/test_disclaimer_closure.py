@@ -112,7 +112,7 @@ class _FakeProvider:
 
 
 async def _done_event(monkeypatch, mode: str, *, facts: bool = True) -> dict:
-    async def fake_facts(session, question):
+    async def fake_facts(session, question, *, mode=None):
         return [GroundingFact(label="Net worth", value="100 SGD")] if facts else []
 
     monkeypatch.setattr(grounding, "gather_facts", fake_facts)

@@ -18,7 +18,7 @@ from app.ai.intent import classify_intent
 from app.ai.prompt_builder import build_messages
 from app.ai.prompts import REFUSAL_NO_FACTS, strip_reasoning
 from app.ai.safety import validate_grounded_answer
-from app.ai.tools import gather_facts
+from app.ai.tools import AnswerMode, gather_facts
 from app.core.config import get_settings
 from app.core.disclaimer import DISCLAIMER
 from app.providers.ai import get_ai_provider
@@ -50,6 +50,31 @@ def _rate_limited() -> bool:
         return True
     _request_times.append(now)
     return False
+
+
+def _answer_mode(health) -> AnswerMode:
+    """Declare which tier answers THIS request (R-54 §9-A/§9-F, Phase 1 delta 2).
+
+    Tier 1 (``DETERMINISTIC``) whenever no model will narrate:
+
+    * the model is unavailable — disabled, no-egress, or simply down. All three collapse to
+      ``health.available is False`` (`DisabledAIProvider.health()` returns it directly; a live
+      provider's health probe fails closed under the egress gate), so ONE check covers them.
+    * the model is available but the in-process limiter is exhausted. §9-F: a rate-limited
+      tier-2 request **falls back TO tier 1** — the limiter is a reason to REACH the deterministic
+      tier, never a reason to withhold it — so it degrades to a real answer, not a bare fact list.
+
+    The limiter is consulted (and its request recorded) ONLY when the model is available. So a
+    tier-1 POSTURE never touches it and can never be rate-limited — which is what makes "tier 1
+    makes zero network calls, by construction" also mean "tier 1 is never throttled" (§0-I: the
+    two conditions that used to share one `if` at the old fallback branch are now resolved into
+    one declared mode, so their difference stops being invisible).
+    """
+    if not health.available:
+        return AnswerMode.DETERMINISTIC
+    if _rate_limited():
+        return AnswerMode.DETERMINISTIC
+    return AnswerMode.GROUNDING
 
 
 def _sentence_chunks(text: str) -> list[str]:
@@ -136,16 +161,23 @@ async def answer_stream(
     session: AsyncSession, question: str
 ) -> AsyncIterator[dict]:
     """Yields dicts: {'type': 'facts'|'provenance'|'delta'|'done', ...}. Designed for SSE."""
-    facts = await gather_facts(session, question)
+    # Resolve the tier BEFORE gathering facts — the mode decides the miss behaviour of
+    # `gather_facts` itself (R-54 §9-A: tier 1's last-resort is suppressed, so an unroutable
+    # question comes back empty and takes the honest-miss shape below).
+    provider = get_ai_provider()
+    health = await provider.health()
+    mode = _answer_mode(health)
+
+    facts = await gather_facts(session, question, mode=mode)
     # Surface the grounding facts to the client first — this is what the UI shows
     # alongside the answer (source + timestamp + stale badges).
     yield {"type": "facts", "facts": [f.model_dump(mode="json") for f in facts]}
 
-    provider = get_ai_provider()
-    health = await provider.health()
-
-    if not health.available or _rate_limited():
-        # Deterministic fallback — no fabrication, just the verified facts.
+    if mode is AnswerMode.DETERMINISTIC:
+        # Tier 1 — no model narrates. The template renders the fact pack, or the ratified refusal
+        # when the deterministic route came back empty (the honest miss). Never rate-limited: the
+        # mode already folded the limiter in (§9-F), so this branch cannot be a throttled tier-2
+        # in disguise.
         yield _provenance_event()
         text = _template_answer(question, facts)
         yield {"type": "delta", "delta": text}
@@ -153,6 +185,7 @@ async def answer_stream(
                "disclaimer": DISCLAIMER}
         return
 
+    # Tier 2 — a model is available and the limiter has room; narration follows.
     if not facts:
         # The refusal is ENGINE text — the model was never asked. Crediting it to the configured
         # model would credit it with a sentence it did not write.

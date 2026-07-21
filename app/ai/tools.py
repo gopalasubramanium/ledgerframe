@@ -8,6 +8,7 @@ providers directly and never computes values itself.
 
 from __future__ import annotations
 
+import enum
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -21,6 +22,29 @@ from app.schemas.ai import GroundingFact
 from app.services.figure_registry import canonical_label, figure_for_label
 from app.services.market import get_cached_quote
 from app.services.portfolio import top_movers, value_portfolio
+
+
+class AnswerMode(str, enum.Enum):
+    """Which tier is answering — the R-54 §9-A/§9-F boundary, DECLARED not inferred.
+
+    The kickoff framed tier 1 vs tier 2 as a design to invent; the survey (§0-A/§0-B) found the
+    product already had both, unreconciled and un-named. This enum is the name: the serving path
+    (`grounding.answer_stream`) declares the mode from provider health + the limiter, and every
+    tier-sensitive branch reads THIS rather than re-deriving the tier from ambient state.
+
+    * ``GROUNDING`` (tier 2) — a model WILL narrate. An unroutable question still gets the
+      last-resort ``portfolio_facts + movers_facts`` pack, so the model has something to ground
+      on. This is the historical behaviour and the default, so every existing caller and fake is
+      byte-identical without change.
+    * ``DETERMINISTIC`` (tier 1) — no model narrates, by construction (no-egress / disabled) or
+      because the model is down or the limiter is exhausted. An unroutable question is a **MISS**:
+      the last-resort is NOT applied; the pack comes back empty and the serving path renders the
+      ratified honest-miss shape (§9-A: tier 1 never guesses).
+    """
+
+    DETERMINISTIC = "deterministic"
+    GROUNDING = "grounding"
+
 
 # ⊕ R-54 F-3 — `_fmt` IS GONE. It was `f"{value:,.2f} {ccy}"`, a second home for rendering logic,
 # and it rendered a sub-cent token as `0.00 USD` — precisely what D-105 exists to prevent
@@ -608,8 +632,16 @@ def _dedupe(facts: list[GroundingFact], cap: int = 20) -> list[GroundingFact]:
 # (by ticker OR company name, held or not) and gathers the RIGHT data — instrument
 # deep-dive, markets, news, net worth, performance/risk, allocation, movers,
 # holdings or watchlist — so the model has a rich, relevant, grounded dataset.
-async def gather_facts(session: AsyncSession, question: str) -> list[GroundingFact]:
+async def gather_facts(
+    session: AsyncSession, question: str, *, mode: AnswerMode = AnswerMode.GROUNDING
+) -> list[GroundingFact]:
     """Gather the grounded fact pack for a question.
+
+    ``mode`` selects the tier's miss behaviour (R-54 §9-A, Phase 1 delta 2). It defaults to
+    ``GROUNDING`` (tier 2), so every caller that does not opt in — `GET /ai/facts`, and every
+    test — keeps the historical behaviour BYTE-FOR-BYTE. Only ``answer_stream`` passes the
+    resolved mode; in ``DETERMINISTIC`` the last-resort at the end is skipped and an unroutable
+    question returns empty (the honest miss). See ``AnswerMode``.
 
     R-54 §9-A — THIS FUNCTION NO LONGER ROUTES. It used to compute eight booleans from its own
     substring word lists, which made it a SECOND intent router that did not share code with
@@ -700,7 +732,14 @@ async def gather_facts(session: AsyncSession, question: str) -> list[GroundingFa
 
     external_only = (is_market or is_news) and not (portfolio_intent or symbols)
     if not facts:
-        facts = await portfolio_facts(session) + await movers_facts(session)
+        # THE TIER-1/TIER-2 MISS SPLIT (R-54 §9-A, ruled at 0a-i item 4). The last-resort — hand
+        # the reader SOMETHING when nothing routed — is a TIER-2 GROUNDING behaviour only: its
+        # purpose is to give the model a pack to narrate from. In TIER 1 (deterministic) an
+        # unroutable question is a MISS; it returns empty and `answer_stream` renders the ratified
+        # honest-miss shape rather than guessing at portfolio+movers. Guard:
+        # `test_tier1_miss_split.py` reds if a tier-1 miss ever carries facts.
+        if mode is AnswerMode.GROUNDING:
+            facts = await portfolio_facts(session) + await movers_facts(session)
     elif portfolio_intent or (not external_only and not symbols):
         facts = await portfolio_facts(session) + facts
     return _dedupe(facts)
