@@ -34,10 +34,10 @@ row lacks a disposition.** This plan is the rule's first user.*
 
 | **F-2** | Finding | **Allocation weights omit three shipped asset classes** — `key_stats`' four buckets are `weight(...)` over hardcoded names (`analytics.py:94-97`); **`bond`, `other` and `retirement` are in NO bucket**, so the weights do not sum to 100% | Found at Phase 0-2b (`fa7b656`) from ruling ②'s *principle* — its stated precondition (a *dynamic* `key_stats` path) **does not exist**; the metrics are static literals | **⚑ OPEN — OWNER RULING OWED.** **Proven live on the SHIPPED DEMO DATA: 6.2 + 4.4 + 1.0 + 80.5 = 92.1, a 7.9-POINT SHORTFALL** on an accepted surface (D-048), caught by nothing. **Not fixed:** the repair changes **what the Portfolio page displays** — a product-content decision, not a refactor — and would break 0-2b's byte-identity proof for a reason unrelated to the derivation. **⊕ SCHEDULED 2026-07-20/21 (owner): its OWN delta in the Phase-1 window, no silent drop.** **Survey the ratified stats spec FIRST** — four-bucket vs per-class. **Governing principle either way:** every class in a **labelled** bucket · weights **sum to 100** · the census **derived from the `AssetClass` enum** (D-082 generalised). If the four-bucket grouping is ratified, **explicit assignments for `bond` / `other` / `retirement` come back to chat**. **Fail-first on the 92.1% sum with REAL-SHAPED data**; **page-portfolio pre-pass re-run + dated note**; any new labels **GLOSSARY-first** |
 
-| **F-3** | Finding | **The fact pack has its OWN money formatter, and it destroys sub-cent prices.** `_fmt` (`tools.py:25`) is `f"{value:,.2f} {ccy}"`; the D-105 formatters (`money.py:25,38,47`) are the product's. Three differences, one of them live | Found at Phase 0-4 by the ruled survey (1a), **before** any unification — which is what the survey-first ordering was for | ✅ **RULED + FIXED 2026-07-21** (`33f57bf`) — `_fmt` deleted, `money.py` owns all rendering, `format_fact_display` is the named pack variant. **Pending the 0a look** (specimen obligation below). Original finding, for the record: **⚑ (ruling 1c: STOP, change nothing).** **(i) LIVE — sub-cent destruction:** a crypto quote of `0.00004567` renders **`0.00 USD`** through `_fmt`, while `format_price_display(…, "crypto")` gives `0.00004567`. `money.py:19-20` states the D-105 intent **verbatim**: *"crypto → up to 6 significant digits (so sub-cent tokens aren't truncated to `0.00`)"* — **the pack does exactly what D-105 exists to prevent.** Compounds with **R-56**: `_sig3("0.00") → ""` is discarded, so such a fact **cannot be narrated either** — fact list shows `0.00`, model falls back. Invisible on the demo set (BTC is high-priced): a **real-shaped-data** case. **(ii) LATENT — rounding mode:** `_fmt` uses Python's default (**banker's/HALF_EVEN** — `2.005 → 2.00`), D-105 uses **HALF_UP** (`→ 2.01`). **Not reachable on headline money today**, because `portfolio.py:577` cent-quantizes each holding first — latent, not live. **(iii) LATENT — `None`:** `_fmt(None)` **raises `TypeError`**; the D-105 formatters pass `None` through (Guarantee 3, never a fabricated 0). **⚠ NOT a pure refactor either way:** D-105's crypto path also drops thousands grouping and trims trailing zeros (`68000.50 → 68000.5`), so unification **changes ratified fact-list rendering** (ratified at AI-surfaces 0a) and needs a ruling + dated note. The R-54 0a specimens will put it in front of the owner regardless |
+| **F-3** | Finding | **The fact pack has its OWN money formatter, and it destroys sub-cent prices.** `_fmt` (`tools.py:25`) is `f"{value:,.2f} {ccy}"`; the D-105 formatters (`money.py:25,38,47`) are the product's. Three differences, one of them live | Found at Phase 0-4 by the ruled survey (1a), **before** any unification — which is what the survey-first ordering was for | ✅ **RULED + FIXED 2026-07-21** (`33f57bf`) — `_fmt` deleted, `money.py` owns all rendering, `format_fact_display` is the named pack variant. **Pending 0a-i** (the fact-rendering look; specimen obligation below). Original finding, for the record: **⚑ (ruling 1c: STOP, change nothing).** **(i) LIVE — sub-cent destruction:** a crypto quote of `0.00004567` renders **`0.00 USD`** through `_fmt`, while `format_price_display(…, "crypto")` gives `0.00004567`. `money.py:19-20` states the D-105 intent **verbatim**: *"crypto → up to 6 significant digits (so sub-cent tokens aren't truncated to `0.00`)"* — **the pack does exactly what D-105 exists to prevent.** Compounds with **R-56**: `_sig3("0.00") → ""` is discarded, so such a fact **cannot be narrated either** — fact list shows `0.00`, model falls back. Invisible on the demo set (BTC is high-priced): a **real-shaped-data** case. **(ii) LATENT — rounding mode:** `_fmt` uses Python's default (**banker's/HALF_EVEN** — `2.005 → 2.00`), D-105 uses **HALF_UP** (`→ 2.01`). **Not reachable on headline money today**, because `portfolio.py:577` cent-quantizes each holding first — latent, not live. **(iii) LATENT — `None`:** `_fmt(None)` **raises `TypeError`**; the D-105 formatters pass `None` through (Guarantee 3, never a fabricated 0). **⚠ NOT a pure refactor either way:** D-105's crypto path also drops thousands grouping and trims trailing zeros (`68000.50 → 68000.5`), so unification **changes ratified fact-list rendering** (ratified at AI-surfaces 0a) and needs a ruling + dated note. The R-54 0a specimens will put it in front of the owner regardless |
 
 | **F-4** | Finding | **Watchlist fact fidelity** — `watchlist_quote_facts` read `wl.items[:8]` over a relationship with **no `order_by`** (`models/__init__.py:492`), so facts followed **insertion order** and could slice away the rows the user put at the top | Found at Phase 0-4 while building the F-3 fixture; **filed by owner ruling 2026-07-21 item 4** | ✅ **FIXED 2026-07-21** (`7ba669f`). **It was the one-line ORDER BY it appeared to be** — and in the **AI path**, not the model: `watchlists.py:34` already sorts explicitly, so the **page was right and only the AI's view of it was wrong**. Fixed in `tools.py` so no shipped surface moves. *Grounding that does not mirror what the user sees is a **fidelity** defect, not a cosmetic one* |
-| **F-5** | Finding | **`pct` / `ratio` / `count` are still rendered INLINE in `tools.py`** (`f"{round(float(v), 2)}%"` and siblings) — F-3's *"no rendering logic outside `money.py`"* was **scoped to `_fmt`** and these three survived it | Found at Phase 0-4, exposed by a **false positive** in the raw-float guard (it fired on `Return / volatility = 11.82`, a legitimately unitless ratio) | ✅ **RULED 2026-07-21 — the F-3 precedent applies WHOLESALE; own delta immediately after 0-5, BEFORE 0a's specimens are cut.** (a) registry gains **`value_kind`** (money/pct/ratio/count) as a **declared column** — rendering dispatches on kind, **never inferred from the value** (the F5-identity lesson applied to units); (b) `money.py` owns **per-kind named variants**, no inline formatting survives anywhere; (c) blast radius proven **the F-3 way** — byte-identity for every unaffected rendering, movers enumerated by ruled class; (d) **0a gains one fact per kind**, rounding changes ratified **by looking**, dated notes on any moved ratified rendering; (e) **the false-positive lesson rides the record** — `Return / volatility` stays a **unitless ratio**. ✅ **FIXED 2026-07-21 (`a8c89f5`).** `value_kind` is a declared registry column dispatched on (never inferred); `money.py` owns `format_pct_display` (unsigned, 2dp HALF_UP) + `format_ratio_display` + `format_fact_by_kind`; the inline `round(float(v),2)` dispatch is gone from `performance_facts` **and** from `total_return`'s WINNING render (`portfolio_facts` — the first-wins dedupe bypass, the F-3 "formatter exists but is bypassed" lesson recurring at the dedupe layer). Count declared on Positions, **no renderer** (Q2), tripwire armed. **⊕ CLAUSE (b) DATED SCOPE ANNOTATION (Q1 ruling 2026-07-21):** *"no rendering logic outside `money.py` — **completed for value_kind-dispatched registry-figure renders** (incl. `total_return`@`portfolio_facts`); **per-item annotations = F-7.**"* An absolute claim with five known exceptions is the §19-K shape; the claim is **re-scoped, not carried as a lie**. Original finding: The architecture holds for **money** and not yet for the rest. `round(float(v), 2)` is float-based, carrying the **same banker's-rounding class as F-3(ii)**. **Filed not fixed:** it is the same ratified-rendering question F-3 was, on three more value kinds, so it wants a ruling rather than a judgement call inside a delta |
+| **F-5** | Finding | **`pct` / `ratio` / `count` are still rendered INLINE in `tools.py`** (`f"{round(float(v), 2)}%"` and siblings) — F-3's *"no rendering logic outside `money.py`"* was **scoped to `_fmt`** and these three survived it | Found at Phase 0-4, exposed by a **false positive** in the raw-float guard (it fired on `Return / volatility = 11.82`, a legitimately unitless ratio) | ✅ **RULED 2026-07-21 — the F-3 precedent applies WHOLESALE; own delta immediately after 0-5, BEFORE 0a's specimens are cut.** (a) registry gains **`value_kind`** (money/pct/ratio/count) as a **declared column** — rendering dispatches on kind, **never inferred from the value** (the F5-identity lesson applied to units); (b) `money.py` owns **per-kind named variants**, no inline formatting survives anywhere; (c) blast radius proven **the F-3 way** — byte-identity for every unaffected rendering, movers enumerated by ruled class; (d) **0a gains one fact per kind**, rounding changes ratified **by looking**, dated notes on any moved ratified rendering; (e) **the false-positive lesson rides the record** — `Return / volatility` stays a **unitless ratio**. ✅ **FIXED 2026-07-21 (`a8c89f5`).** `value_kind` is a declared registry column dispatched on (never inferred); `money.py` owns `format_pct_display` (unsigned, 2dp HALF_UP) + `format_ratio_display` + `format_fact_by_kind`; the inline `round(float(v),2)` dispatch is gone from `performance_facts` **and** from `total_return`'s WINNING render (`portfolio_facts` — the first-wins dedupe bypass, the F-3 "formatter exists but is bypassed" lesson recurring at the dedupe layer). Count declared on Positions, **no renderer** (Q2), tripwire armed. **Pending 0a-i** (the fact-rendering look). **⊕ CLAUSE (b) DATED SCOPE ANNOTATION (Q1 ruling 2026-07-21):** *"no rendering logic outside `money.py` — **completed for value_kind-dispatched registry-figure renders** (incl. `total_return`@`portfolio_facts`); **per-item annotations = F-7.**"* An absolute claim with five known exceptions is the §19-K shape; the claim is **re-scoped, not carried as a lie**. Original finding: The architecture holds for **money** and not yet for the rest. `round(float(v), 2)` is float-based, carrying the **same banker's-rounding class as F-3(ii)**. **Filed not fixed:** it is the same ratified-rendering question F-3 was, on three more value kinds, so it wants a ruling rather than a judgement call inside a delta |
 | **F-6** | Finding | **⛔ A REGRESSION THIS MILESTONE SHIPPED.** Phase 0-1's word-boundary conversion **silently killed the stems** written for the substring matcher (`perform`, `return`, `concentrat`, `diversif`): under `\b(...)\b` the trailing boundary requires the word to END there, so *"performing"*, *"concentration"* and *"diversified"* stopped routing. **6 of 9 probes misrouted** | Found at Phase 0-4 **by accident**, asking whether XIRR reached the pack — **not by any gate**, and not by the delta that introduced it | ✅ **FIXED 2026-07-21** (`7ba669f`) — stems carry `\w*`; **0/16 misrouted**; pinned by `test_intent_stem_probes.py` through **inflected** forms, with a blindness pin that caught `liabilit` unprobed on its first run. **⚑ THE LESSON, and it is new: A TEST THAT CAN REACH ITS ASSERTION BY TWO ROUTES CANNOT TELL YOU THAT ONE OF THEM BROKE** — the 1982-test suite stayed green because the one performance test's question also contains *"risk"*. Phase 0-1's guards were sound about what they measured and **none asked whether the rules still matched real questions**: the property was verified, the capability was not |
 | **F-7** | Finding | **Per-item annotation rendering is still inline** — 5 sites in `tools.py` format a pct annotation inline and are NOT registry figures (no declared `value_kind`): allocation weight `.1f%` (`:118`), market/instrument quote change `+.2f%` (`:171,499`), holdings weight `.1f%` (`:425`), series change `+.1f%` (`:516`) | Filed at the F-5 delta (Q1 ruling 2026-07-21) — the residue of scoping F-5 to value_kind-dispatched registry figures; the ruled mechanism (registry `value_kind` dispatch) structurally cannot apply to a quantity with no `figure_id` | **⚑ OPEN — REQUIRED SURVEY BEFORE ANY RULING (r2).** For each annotated quantity, compare the pack's precision against the **canonical page's rendering of the SAME quantity** — the real question is not *"which file owns the f-string"* but whether the same figure **wears two faces** (the F-3 species); bespoke precisions may be deliberate conventions or drift, and only the survey table can say. **Byte-identity asserted for all five sites at the F-5 delta** (`test_allocation_weight_annotation_is_unchanged` pins the one-decimal `.1f` weight form on the served pack). Not release-blocking; own delta after F-5 |
 
@@ -1690,37 +1690,85 @@ remains owed at close (§9-I).
 
 ---
 
-### Phase 0a — THE SPECIMEN, RATIFIED BY LOOKING *(isolated instance; expect 1–3 revision loops)*
+### Phase 0a — THE SPECIMEN, RATIFIED BY LOOKING
+
+**⊕ DATED SEQUENCING CORRECTION (owner ruling 2026-07-21) — 0a SPLITS INTO 0a-i AND 0a-ii.** Recorded
+here as a correction, not a silent restructure. The §8 sketch (conveyed 2026-07-20) ordered Phase 0a
+**wholly before Phase 1**; the 0a specimen-prep survey (2026-07-21) found **3 of the 6 specimens are
+Phase-1-dependent** — they render nothing until the panel is assembled — and item 5 is **circular**
+(Phase 1 builds the link affordance *"only as ratified at 0a"*). The split resolves both:
+
+- **Phase 0a-i — the FACT-RENDERING look, NOW** *(this state; the Phase-0 backend is complete)*:
+  the F-3 and F-5 renderings + the honest miss (originally items **3, 4, 6**). Real served renders,
+  reset/isolated, both themes.
+- **Phase 0a-ii — the ASSEMBLY look, AFTER Phase 1**: the posture recut, tier-1 answer specimens,
+  and the link-affordance DS entry (originally items **1, 2, 5**). Item 5's circularity resolves by
+  the standing DS rule read correctly — **Phase 1 builds the affordance as PROPOSED, and 0a-ii is
+  where *"ratified at 0a by looking"* happens for it, rendered live.**
+
+**⚠ NO MOCKED SPECIMENS, now or ever (owner, 2026-07-21).** A specimen of an unbuilt surface asks the
+owner to ratify a drawing, and Phase 1 "building to the drawing" is camera-over-green territory. The
+0a-ii items wait for the real surface; they are **not** mocked into 0a-i.
 
 Reset + isolated per the harness convention; **both themes**; zero console errors (excluding expected
-`451`s on an unaccepted install).
+`451`s on an unaccepted install). **Revision loops are expected and are the point** — the ai-surfaces
+0a took four. **The owner closes each sub-phase; it is never self-certified.**
 
-**PROPOSED for the owner's look — the ratification surface of this milestone:**
+#### Phase 0a-i — PROPOSED for the owner's look *(fact-rendering; this state)*
 
-1. **The recut five-string posture table** (§9-G) — "Hailo" gone, **"Ollama-compatible"** throughout,
-   one locality phrasing, `POSTURE_DISABLED`'s *"fact-only answers"* re-cut now tier-1 has landed.
-2. **Tier-1 answer specimens, one per category** — (a) term + the user's own figure, (b) action +
-   Help steps + a deep link, (c) navigation/settings + a deep link.
 3. **⚑ OWED BY F-3 (owner ruling 2026-07-21, item 4) — A SUB-CENT TOKEN FACT AND AN UNPRICED
    FACT.** The corrected renderings are **user-visible** and are ratified **by looking**, not by
    the blast-radius pin. The fact-pack rendering pin carries the change with a **dated note**:
    *"the 2026-07 ratification exhibited no sub-cent case."* **The 2026-07 ratification could not
    have covered this — the demo set has no sub-cent instrument**, which is precisely why the
-   defect survived a walk.
+   defect survived a walk. **F-3 ledger row: pending 0a-i.**
 4. **⚑ OWED BY F-5 (ruling 2026-07-21, item 1d) — ONE FACT PER `value_kind`**: money, pct, ratio
    — **count DROPPED, reason recorded (Q2 ruling 2026-07-21):** *no count fact is pack-reachable
    (Positions is `pack_reachable=False`), so no count specimen can be cut; the specimen is owed when
    a count fact becomes reachable, and the tripwire announces that moment.* The per-kind rounding
    changes are **user-visible** and are ratified **by looking**; any ratified rendering that moves
-   carries a **dated note**. **⊕ F-5 SHIPPED (`a8c89f5`), so this look now has real specimens** — a
+   carries a **dated note**. **⊕ F-5 SHIPPED (`a8c89f5`), so this look has real specimens** — a
    fixed-2dp pct (`Income yield 0.00%`, and every trailing-zero/half-cent mover), a ratio
-   (`Return / volatility`, no `%`).
-5. **Any PROPOSED DS entry** for the link affordance (§4) — *ratified at 0a by looking, never
-   assumed*, and on a **free axis**: colour and slant are both taken.
-6. **The honest-miss render.**
+   (`Return / volatility`, no `%`). **F-5 ledger row: pending 0a-i.**
+6. **The honest-miss render.** An unroutable question returns the ratified empty-fallback shape —
+   the panel goes to its idle/miss state, not an approximate answer.
 
-**Revision loops are expected and are the point** — the ai-surfaces 0a took four. **The owner closes
-this phase; it is never self-certified.**
+#### Phase 0a-ii — owed AFTER Phase 1 assembly *(not cuttable now; NOT mocked)*
+
+1. **The recut five-string posture table** (§9-G) — "Hailo" gone, **"Ollama-compatible"** throughout,
+   one locality phrasing, `POSTURE_DISABLED`'s *"fact-only answers"* re-cut now tier-1 has landed.
+   **Owed at 0a-ii, rendered live.** The PROPOSED strings are **drafted below now** (copy, not
+   assembly — no reason to improvise them mid-Phase-1), so the owner can object to wording early;
+   **formal ratification stays at 0a-ii.**
+2. **Tier-1 answer specimens, one per category** — (a) term + the user's own figure, (b) action +
+   Help steps + a deep link, (c) navigation/settings + a deep link. **Owed at 0a-ii** (needs the
+   Phase-1 panel wiring + ID→route registry).
+5. **The PROPOSED DS entry** for the link affordance (§4) — *ratified at 0a by looking, never
+   assumed*, and on a **free axis**: colour and slant are both taken. **Owed at 0a-ii** (Phase 1
+   builds it PROPOSED; 0a-ii ratifies it live — the resolution of the circularity above).
+
+##### PROPOSED recut posture table (§9-G) — DRAFT for early objection; formal ratification at 0a-ii
+
+Applying §9-G's three principles: **(1)** "Hailo" leaves served copy; **(2)** one user-facing
+descriptor — **"Ollama-compatible"** — for both local kinds; **(3)** one locality phrasing —
+*"data stays on this device"* — and `POSTURE_DISABLED`'s *"fact-only answers"* re-cut now tier-1
+explains terms (not only figures). Current → PROPOSED, keyed as `POSTURE_COPY` (`ai.py:66-72`):
+
+| Key | Current (ratified 2026-07-20) | PROPOSED recut (§9-G) |
+|---|---|---|
+| `no_egress` | "No-egress is on — this device makes no outbound calls, so answers are built from your data only, with no AI narration." | "No-egress is on — this device makes no outbound calls, so answers are built on this device from your data and the app's own explanations, with no model narration." |
+| `disabled` | "Deterministic — fact-only answers; nothing is sent anywhere." | "Deterministic — answers are built on this device from your data and the app's own explanations; nothing is sent anywhere." |
+| `local_openai` | "On-device (local OpenAI-compatible endpoint) — data stays on this device." | "On-device (local, Ollama-compatible) — data stays on this device." |
+| `local_npu` | "On-device (local Hailo/Ollama) — portfolio facts stay on this device." | "On-device (local, Ollama-compatible) — data stays on this device." |
+| `remote` | "Remote — prompts (incl. portfolio facts) are sent to the configured provider." | *(unchanged — remote, no locality/Hailo issue)* |
+
+**⚠ Two wording choices flagged for the owner to settle now:** **(a)** the recut makes `local_openai`
+and `local_npu` **identical** — the literal reading of §9-G(2) *"both local providers are one
+user-facing kind"*; if the owner wants them distinguishable, the axis must be something other than the
+retired "OpenAI/Hailo" split. **(b)** `no_egress` and `disabled` now read very similarly (both
+deterministic, on-device) — which is faithful to the R-22 amendment's *"two no-egress posture states,
+not three"*, but the owner may want `disabled` to name the AI-off state more distinctly. **These are
+copy, ratified by looking at 0a-ii; the draft exists so the objection is cheap and early.**
 
 ### Phase 1 — ASSEMBLY
 
