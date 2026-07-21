@@ -1789,7 +1789,9 @@ F-5's moved renderings:** the pct trailing-zero movers (`Income yield 0.00%`, `T
    **formal ratification stays at 0a-ii.**
 2. **Tier-1 answer specimens, one per category** — (a) term + the user's own figure, (b) action +
    Help steps + a deep link, (c) navigation/settings + a deep link. **Owed at 0a-ii** (needs the
-   Phase-1 panel wiring + ID→route registry).
+   Phase-1 panel wiring + ID→route registry). **⊕ (a) puts BOTH figure states on camera** —
+   **covered** (the live figure beside the explanation) and **uncovered** (the null state), per
+   R2 below, so the null-state rendering is ratified by looking, not defaulted.
 5. **The PROPOSED DS entry** for the link affordance (§4) — *ratified at 0a by looking, never
    assumed*, and on a **free axis**: colour and slant are both taken. **Owed at 0a-ii** (Phase 1
    builds it PROPOSED; 0a-ii ratifies it live — the resolution of the circularity above).
@@ -1841,6 +1843,46 @@ pre-pass re-run, in the same delta — flagging them in the close report is expl
 **Phase 1 delta sequence (owner-confirmed 2026-07-21): 1 posture amendment · 2 tier-1 miss split ·
 3 frontend ID→route registry · 4 tier-1 composition + link affordance (PROPOSED DS) · 5 accepted-
 surface corrections (setParams, F-2 census own delta, AppRoutes comment).**
+
+##### ⊕ DELTA 4 COMPOSITION RULING (owner, chat 2026-07-22) — read BEFORE building delta 4
+
+The delta-4 **survey** (this session) drove the three §9 category questions through the served pack
+and found: the pack already grounds each category, but the tier-1 ANSWER does not yet **point**, and
+one figure gap. Both design questions were put to the owner; the ruling, verbatim in effect:
+
+- **R1 — action/navigation answers link to the PAGE/TAB WHERE YOU ACT** (owner selected "the page/tab
+  where you act"). *"how do I add a holding"* → **`page:/holdings`** (the page; the add-form ID waits
+  for R-59, the ordering the bidirectional guard enforces mechanically). *"how do I change the theme"*
+  → **`page:/settings?tab=appearance`** — **tab-level**, which §9-D already ruled sufficient (R-60,
+  control-level, stays post-release). The Help CONTENT is already shown inline as a fact, so the
+  pointer's value is going where the action happens, not re-opening the same entry.
+  **Build consequences, enumerated:** (i) a `page-<route>` help fact's pointer targets `/<route>`, not
+  `help:page-<route>`; (ii) a small **question→Settings-tab** map is needed (theme/density/contrast →
+  `appearance`; PIN/lock → `privacy`; provider/feed → `data-feeds`; model → `ai`; …) — product content,
+  GLOSSARY/tab-label vocabulary, not free-text; (iii) **`resolveAskLink` (delta 3) must be EXTENDED to
+  accept a query on a `page:` route** (`page:/settings?tab=appearance` → validate `/settings` ∈
+  KNOWN_PAGE_ROUTES, preserve `?tab=appearance`) — today it rejects any route with a query. That is a
+  delta-3 surface change, so it ships with its own guard extension and the frontend `askLinks.test.ts`
+  round-trip widened.
+- **R2 — surface the term's named figure (a), null-state is an in-delta design call as a PROPOSED
+  served string, BOTH states on camera at 0a-ii** (owner note, verbatim intent): *"Null-state
+  rendering: the survey found two shipped patterns (watchlist renders 'unavailable'; performance_facts
+  omits None metrics). For an uncovered-XIRR term answer, choose in-delta following the closest
+  ratified pattern, as a PROPOSED served string — and put BOTH states on camera at 0a-ii (covered and
+  uncovered) so the choice is ratified by looking, not by default."* So: extend gather so a term
+  question pulls that term's registry figures (`figures_for_term`) into the pack when live; when the
+  figure is **null/uncovered** (XIRR is date-aware — the same coverage gate that deferred the ratio
+  kind at 0a-i), render an **"unavailable"-style PROPOSED served string** rather than omitting it
+  silently (§7-B: *"a term with no live figure explains the term and says so"* — the "says so" wants a
+  visible statement, so the watchlist/GLD `unavailable` pattern is the closest, not `performance_facts`'
+  silent omit). **0a-ii item 2 now cuts (a) TWICE** — covered and uncovered — added to that list above.
+
+**Sequencing note for the builder:** R1(iii) means delta 4 re-opens `askLinks.ts`; consider a **4a
+(backend composition: figure surfacing + question→tab map + page/tab link semantics) / 4b (frontend
+affordance + §9-E guard + the resolver query extension)** split, mirroring the 0-2a/0-2b and
+0-4-part1/proper pattern. The null-state served string is spec-first if it introduces a sanctioned term
+(§0-L). Deep links inherit the gate/PIN (§9-E item 3 representative test). W-1 named-deixis binds any
+Help body the composition pulls.
 
 #### Phase 1 delta 1 — POSTURE-COPY AMENDMENT (`c5c13f6`) — DONE
 
