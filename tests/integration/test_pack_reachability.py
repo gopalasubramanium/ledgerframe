@@ -104,6 +104,67 @@ async def test_xirr_and_twr_actually_appear_in_a_performance_pack(app_client):
     )
 
 
+# ── R-54 delta 4a / R2 — a term question surfaces the term's own figure (owner ruling 2026-07-22)
+#
+# The composition ruling: "extend gather so a term question pulls that term's registry figures
+# (figures_for_term) into the pack when live; when the figure is null/uncovered, render an
+# 'unavailable'-style served string rather than omitting it silently." The perf-pack test above
+# walks the PERFORMANCE question; these walk the TERM/explanation question, which gathered no figure
+# source at all (EXPLANATION_OF_METRIC → frozenset()), so the pack carried the explanation alone.
+
+
+async def test_a_term_question_surfaces_the_terms_own_figures(app_client):
+    """R2 (covered state): 'what is XIRR' — the TERM question, not the perf question — surfaces the
+    term's canonical figures beside the explanation.
+
+    FAIL-FIRST: RED before delta 4a — the dump showed `help:term-xirr-twr` alone, no XIRR/TWR figure.
+
+    REDUNDANT-ROUTE AUDIT: distinct from `test_xirr_and_twr_actually_appear_in_a_performance_pack`,
+    which reaches the figures through the PERFORMANCE intent. This asserts the composition path R2
+    builds — a term explanation carrying its own figures — so a regression in either is
+    distinguishable from the other.
+    """
+    facts = await _pack_labels(app_client, "what is XIRR")
+    figs = {figure_for_label(f["label"]).figure_id for f in facts if figure_for_label(f["label"])}
+    assert {"xirr", "twr"} <= figs, (
+        f"'what is XIRR' did not surface both XIRR and TWR; figures present were {sorted(figs)}"
+    )
+
+
+async def test_a_null_term_figure_renders_unavailable_not_silently_omitted(app_client, monkeypatch):
+    """R2 (null state): a term's uncovered figure renders an 'unavailable'-style served fact — the
+    watchlist/GLD pattern (`tools.py:180`) — NEVER a silent omit (§7-B: a term with no live figure
+    'explains the term and says so'; 'says so' wants a visible statement).
+
+    FORCED NULL, DETERMINISTICALLY. TWR is date-aware and nulls on a fresh instance, but the demo
+    seed happens to cover it — so the null is induced by withholding TWR from performance_facts,
+    exactly the coverage-null shape. The RULE (present, not omitted) is what turns red; the
+    'unavailable' STRING itself is PROPOSED and ratified by looking at 0a-ii (covered AND uncovered).
+
+    FAIL-FIRST: on the pre-delta build `term_figure_facts` does not exist and the null figure was
+    omitted entirely; RED as an AttributeError, then as a missing fact.
+    """
+    from app.ai import tools as T
+    from app.db.base import get_sessionmaker
+
+    real_perf = T.performance_facts
+
+    async def _withhold_twr(session):
+        return [f for f in await real_perf(session) if "TWR" not in f.label]
+
+    monkeypatch.setattr(T, "performance_facts", _withhold_twr)
+    async with get_sessionmaker()() as s:
+        facts = await T.term_figure_facts(s, {"term-xirr-twr"})
+
+    by_label = {f.label: f.value for f in facts}
+    assert by_label.get("Money-weighted return (XIRR)"), (
+        f"the covered figure did not carry a value; facts were {by_label}"
+    )
+    assert by_label.get("Time-weighted return (TWR)") == "unavailable", (
+        f"the null figure was omitted or mis-rendered instead of 'unavailable'; facts were {by_label}"
+    )
+
+
 # ── (3) THE BOUNDARY GUARD — tier-1 may never name an unreachable figure ─────────────────────
 
 def test_no_tier1_term_resolves_to_an_unreachable_figure():

@@ -56,6 +56,14 @@ def _registered_routes() -> set[str]:
     return {("/" if p == "/" else "/" + p.lstrip("/")) for p in paths}
 
 
+def _settings_tab_ids() -> set[str]:
+    """The Settings tab ids the app registers — parsed from `Settings.tsx`'s TAB_IDS literal."""
+    src = (REPO / "frontend" / "src" / "routes" / "Settings.tsx").read_text(encoding="utf-8")
+    m = re.search(r"TAB_IDS:\s*TabId\[\]\s*=\s*\[([^\]]*)\]", src)
+    assert m, "could not find TAB_IDS in Settings.tsx — the parser drifted, this guard is blind"
+    return set(re.findall(r'"([^"]+)"', m.group(1)))
+
+
 # ── Well-formedness and kind ─────────────────────────────────────────────────────────────────
 
 async def test_every_served_link_id_is_wellformed_and_of_a_known_kind(app_client):
@@ -231,3 +239,101 @@ async def test_a_fact_with_no_canonical_destination_carries_no_link(app_client):
         f"every fact carried a link — the None path is unexercised and this guard is vacuous; "
         f"labels were {[f['label'] for f in facts]}"
     )
+
+
+# ── R-54 delta 4a / R1 — a help fact POINTS WHERE YOU ACT (owner ruling 2026-07-22) ───────────
+#
+# The composition ruling: an action/navigation answer links to the PAGE/TAB where the user acts,
+# not back at the same help entry — the help CONTENT is already shown inline as the fact, so the
+# pointer's value is going where the action happens. A `page-<route>` help fact therefore targets
+# `page:/<route>`, and a Settings help fact carries the tab for the topic asked.
+
+
+async def test_a_page_help_fact_points_at_the_page_not_back_at_itself(app_client):
+    """R1(i): a `page-<route>` help fact targets `page:/<route>`, NOT `help:page-<route>`.
+
+    FAIL-FIRST: RED before delta 4a — `help_facts` stamped `help:{id}` uniformly, so the
+    Help·Holdings fact linked to `help:page-holdings`, re-opening the entry already shown inline.
+
+    REDUNDANT-ROUTE AUDIT: asserting that SOME page: link exists would pass on the figure facts
+    (Net worth → page:/net-worth) already in this pack. The Help·Holdings fact is targeted by its
+    own label, so this is about the HELP fact's retargeting, not a figure's.
+    """
+    by_label = {f["label"]: f.get("link_id") for f in await _facts(app_client, "how do I add a holding")}
+    assert by_label.get("Help · Holdings") == "page:/holdings", (
+        f"the page-holdings help fact did not point at its page; links were {by_label}"
+    )
+
+
+async def test_a_settings_topic_question_points_at_the_relevant_tab(app_client):
+    """R1(ii): a Settings help fact carries a tab-scoped link for the topic asked — 'change the
+    theme' → the Appearance tab, the ruling's own worked example.
+
+    FAIL-FIRST: RED before delta 4a (no `?tab=`, and the link was `help:page-settings`).
+
+    REDUNDANT-ROUTE AUDIT: asserting only `page:/settings` (tab-less) would pass without the tab
+    refinement. The EXACT `?tab=appearance` is asserted, so a missing or wrong tab is
+    distinguishable from a bare settings link.
+    """
+    by_label = {f["label"]: f.get("link_id") for f in await _facts(app_client, "how do I change the theme")}
+    assert by_label.get("Help · Settings") == "page:/settings?tab=appearance", (
+        f"the settings help fact did not carry the Appearance tab; links were {by_label}"
+    )
+
+
+def test_every_pages_help_entry_maps_to_a_registered_route():
+    """R1(i), the invariant behind the retarget: the `page-<slug>` → `/<slug>` derivation is exact,
+    not hopeful. EVERY Pages-category help entry resolves to a route AppRoutes registers, so a slug
+    that stops matching a route reds HERE rather than serving a dead `page:` link in the panel.
+
+    Blindness pin: an empty Pages set (store renamed the category, or the derivation stopped
+    recognising `page-*`) fails loudly rather than passing by checking nothing.
+    """
+    from app.ai.tools import _page_help_route
+    from app.services.help import HELP
+
+    routes = _registered_routes()
+    pages = [e for e in HELP if e.get("category") == "Pages"]
+    assert pages, "no Pages-category help entries found — the store/derivation drifted, guard is blind"
+    for e in pages:
+        route = _page_help_route(e["id"])
+        assert route and route in routes, (
+            f"{e['id']!r} derives route {route!r}, which AppRoutes does not register — the "
+            f"page-<slug> → /<slug> invariant broke and this entry would serve a dead link"
+        )
+
+
+def test_every_settings_tab_the_map_emits_is_a_real_tab():
+    """R1(ii): every tab the question→Settings-tab map can emit is a real tab id (`Settings.tsx`
+    TAB_IDS). A link to a tab that does not exist is a dead affordance; the map is pinned to the
+    ratified tab vocabulary so a renamed/removed tab reds rather than shipping a broken deep link."""
+    from app.ai.tools import _SETTINGS_TAB_RULES
+
+    valid = _settings_tab_ids()
+    assert valid, "no tab ids parsed from Settings.tsx — the parser drifted, this guard is blind"
+    emitted = {tab for tab, _ in _SETTINGS_TAB_RULES}
+    assert emitted, "the tab map is empty — R1(ii) refines nothing and this guard is vacuous"
+    assert emitted <= valid, (
+        f"the question→tab map emits ids not in Settings.tsx TAB_IDS: {sorted(emitted - valid)}"
+    )
+
+
+async def test_every_served_page_link_names_a_route_the_app_registers(app_client):
+    """The served half of §9-D for `page:` links now that help facts serve them too: the PATH part
+    (before any `?tab=` query) is a route AppRoutes registers. A dead page target reds HERE.
+
+    The `?tab=` query is preserved as a link but is not part of the route — the frontend resolver's
+    query handling and the full round-trip are delta 4b (`resolveAskLink`). This guards only that
+    the destination page exists, closing the bidirectional loop's served half for query links.
+    """
+    routes = _registered_routes()
+    assert routes, "no routes parsed from AppRoutes.tsx — the parser drifted, guard is blind"
+    for question in ("how do I add a holding", "how do I change the theme", "What is my net worth?"):
+        for f in await _facts(app_client, question):
+            link = f.get("link_id")
+            if link and link.startswith("page:"):
+                path = link[len("page:"):].split("?", 1)[0]
+                assert path in routes, (
+                    f"{f['label']!r} served {link!r}, whose page {path!r} AppRoutes does not "
+                    f"register — a link may only target a route that exists today"
+                )

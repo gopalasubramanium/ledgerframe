@@ -46,8 +46,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 # Canonical endpoints, named once so a typo cannot make two rows disagree about the same surface.
-_SUMMARY = "GET /api/v1/portfolio/summary"
-_STATS = "GET /api/v1/portfolio/stats"
+# Public aliases: R-54 delta 4a's term-figure surfacing branches on the DECLARED endpoint to pick
+# the canonical producer, so it reads these constants rather than re-guessing a route substring.
+SUMMARY_ENDPOINT = "GET /api/v1/portfolio/summary"
+STATS_ENDPOINT = "GET /api/v1/portfolio/stats"
+_SUMMARY = SUMMARY_ENDPOINT
+_STATS = STATS_ENDPOINT
 
 
 @dataclass(frozen=True)

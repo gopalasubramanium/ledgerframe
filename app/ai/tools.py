@@ -9,6 +9,7 @@ providers directly and never computes values itself.
 from __future__ import annotations
 
 import enum
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -19,7 +20,13 @@ from app.core.config import get_settings
 from app.core.money import format_fact_by_kind, format_fact_display, format_pct_display
 from app.models import Watchlist
 from app.schemas.ai import GroundingFact
-from app.services.figure_registry import canonical_label, figure_for_label
+from app.services.figure_registry import (
+    STATS_ENDPOINT,
+    SUMMARY_ENDPOINT,
+    canonical_label,
+    figure_for_label,
+    figures_for_term,
+)
 from app.services.market import get_cached_quote
 from app.services.portfolio import top_movers, value_portfolio
 
@@ -303,6 +310,77 @@ def _render_help_fact(entry: dict) -> str:
     return "\n\n".join(parts)
 
 
+# ── R-54 delta 4a / R1 — A HELP FACT POINTS WHERE YOU ACT (owner ruling 2026-07-22) ───────────
+#
+# The composition ruling: an action/navigation answer links to the PAGE/TAB where the user acts,
+# not back at the same help entry. The help CONTENT is already shown inline as the fact, so the
+# pointer's value is going where the action happens — *"how do I add a holding"* points at
+# `/holdings`, not at `help:page-holdings`, which would re-open the paragraph already on screen.
+#
+# The Pages-category invariant makes the id→route map exact rather than guessed: every `page-*`
+# entry's title IS its nav label and the nav label IS the route (`help.py:87`). So `page-<slug>`
+# names `/<slug>`, with Home the one special case (`/`, not `/home`). Guarded end-to-end by
+# `test_every_served_page_link_names_a_route_the_app_registers` — a slug that stops matching a
+# registered route reds there rather than serving a dead link.
+def _page_help_route(entry_id: str) -> str | None:
+    """The route a Pages-category help entry (`page-<slug>`) names, or None for any other entry."""
+    if not entry_id.startswith("page-"):
+        return None
+    slug = entry_id[len("page-"):]
+    return "/" if slug == "home" else f"/{slug}"
+
+
+# R-54 delta 4a / R1(ii). A Settings help fact points at the TAB that holds the control the user
+# asked about. This is NOT AN INTENT ROUTER — it selects no facts, gathers nothing; it refines ONE
+# link target, from the ratified tab-label vocabulary (`Settings.tsx:84`:
+# general|appearance|privacy|data-feeds|ai|system|about). Ordered, word-boundary matched (the same
+# discipline the intent rules follow); returns None → the plain `/settings` page when nothing
+# specific matches.
+#
+# ⚠ SURVEY CORRECTION recorded on the record: the composition ruling's ILLUSTRATIVE map said
+# "PIN/lock → privacy", but PIN and auto-lock live on the SYSTEM tab (`Settings.tsx:84`; the
+# `page-settings` body: *"System covers your PIN, auto-lock, network access and data controls"*).
+# Privacy holds no-egress and API tokens. Each class is mapped to the tab that actually holds its
+# control — pointing where the action happens is the ruling's own principle, so this corrects the
+# example against verified UI rather than deviating from it.
+_SETTINGS_TAB_RULES: list[tuple[str, re.Pattern]] = [
+    ("appearance", re.compile(
+        r"\b(theme|dark mode|light mode|density|compact|comfortable|high.?contrast|contrast|"
+        r"reduced motion|appearance|colou?r scheme)\b", re.I)),
+    ("data-feeds", re.compile(
+        r"\b(provider|market data|data feeds?|feeds?|api key|routing|sync|master data|news feed)\b", re.I)),
+    ("ai", re.compile(r"\b(ai model|model|ollama|narrat\w*|endpoint)\b", re.I)),
+    ("privacy", re.compile(r"\b(no.?egress|egress|privacy|api tokens?|tokens?)\b", re.I)),
+    ("system", re.compile(r"\b(pin|auto.?lock|lock|lan|network access|reset|wipe)\b", re.I)),
+    ("general", re.compile(
+        r"\b(base currency|reporting currency|currency|timezone|time zone|long.?term)\b", re.I)),
+]
+
+
+def _settings_tab_for(question: str) -> str | None:
+    """The Settings tab a question is about, or None — a link refinement, never a fact source."""
+    for tab, pat in _SETTINGS_TAB_RULES:
+        if pat.search(question or ""):
+            return tab
+    return None
+
+
+def _help_link_id(entry_id: str, question: str) -> str:
+    """The link a help fact points at (R-54 delta 4a / R1).
+
+    A PAGE help entry points at the page where the user acts (with the topic's tab for Settings);
+    every other entry keeps its own Help topic link, which resolves against the SERVED catalogue on
+    arrival. A `page:` link with a `?tab=` query is a delta-3 surface the frontend resolver is
+    extended to accept at delta 4b; the served half (the page exists) is guarded here.
+    """
+    route = _page_help_route(entry_id)
+    if route is None:
+        return f"help:{entry_id}"
+    if route == "/settings" and (tab := _settings_tab_for(question)):
+        return f"page:{route}?tab={tab}"
+    return f"page:{route}"
+
+
 def help_facts(question: str) -> list[GroundingFact]:
     """Relevant in-app help entries as grounding facts, so the AI can answer 'how do I…' /
     'what is…' questions from the real product help (no fabrication).
@@ -323,7 +401,7 @@ def help_facts(question: str) -> list[GroundingFact]:
         if value:
             facts.append(GroundingFact(label=f"Help · {hit['title']}", value=value,
                                        source="help", fact_type="help",
-                                       link_id=f"help:{hit['id']}"))
+                                       link_id=_help_link_id(hit["id"], question)))
     return facts
 
 
@@ -433,6 +511,69 @@ async def performance_facts(session: AsyncSession) -> list[GroundingFact]:
             value += f" ({m['note']})"
         facts.append(GroundingFact(label=m["label"], value=value))
     return facts
+
+
+async def term_figure_facts(session: AsyncSession, term_ids: set[str]) -> list[GroundingFact]:
+    """The canonical figure(s) a term explains — R-54 delta 4a / R2 (owner ruling 2026-07-22).
+
+    Tier-1(a) shows *"what is XIRR"* as the explanation AND the user's own XIRR beside it. This
+    surfaces those figures for the term(s) asked about, through the registry's reverse index
+    (`figures_for_term`), so a term answer POINTS at a real number rather than only defining one.
+
+    ONE DERIVATION, never a second. The values are not recomputed here — they are read from the
+    SAME canonical producers `gather_facts` already uses (`performance_facts` for the stats metrics,
+    `portfolio_facts`/`networth_facts` for the summary figures), matched back to the wanted figures
+    by declared identity. The producer is chosen from the figure's DECLARED endpoint, not guessed.
+
+    ⚠ NULL IS SAID, NOT SWALLOWED. A reachable figure whose value is null (XIRR/TWR are date-aware
+    and null on an uncovered window — the coverage gate that deferred the ratio kind at 0a-i)
+    renders an **"unavailable"-style served fact**, the watchlist/GLD pattern (`:180`) — NOT a
+    silent omission the way `performance_facts` drops a None metric. §7-B: a term with no live
+    figure *"explains the term and SAYS SO"*, and "says so" wants a visible statement. The string
+    itself is PROPOSED and ratified by looking at 0a-ii (both states on camera).
+
+    UNREACHABLE figures are skipped, not marked unavailable: `pack_reachable=False` means the pack
+    structurally does not serve the figure (its page does), which is a different fact from a null
+    value — so the four allocation buckets (deferred to F-2) yield no fact here, not an
+    "unavailable" one.
+    """
+    # Wanted = the reachable figures the term(s) explain, deduped, in registry order.
+    wanted: list = []
+    for term_id in term_ids:
+        for fig in figures_for_term(term_id):
+            if fig.pack_reachable and fig not in wanted:
+                wanted.append(fig)
+    if not wanted:
+        return []
+
+    endpoints = {f.endpoint for f in wanted}
+    produced: list[GroundingFact] = []
+    if STATS_ENDPOINT in endpoints:
+        produced += await performance_facts(session)
+    if SUMMARY_ENDPOINT in endpoints:
+        produced += await portfolio_facts(session)
+        produced += await networth_facts(session)
+
+    # Index produced facts by declared figure identity; first-wins keeps the canonical value (e.g.
+    # portfolio_facts' summary copy over a stats duplicate), mirroring `_dedupe`'s ordering.
+    by_fig: dict[str, GroundingFact] = {}
+    for f in produced:
+        fig = figure_for_label(f.label)
+        if fig and fig.figure_id not in by_fig:
+            by_fig[fig.figure_id] = f
+
+    now = datetime.now(UTC)
+    out: list[GroundingFact] = []
+    for fig in wanted:
+        hit = by_fig.get(fig.figure_id)
+        if hit is not None:
+            # The survivor keeps its value and wears the canonical GLOSSARY spelling.
+            out.append(hit if hit.label == fig.canonical_label
+                       else hit.model_copy(update={"label": fig.canonical_label}))
+        else:
+            out.append(GroundingFact(label=fig.canonical_label, value="unavailable",
+                                     entitlement="unavailable", timestamp=now))
+    return out
 
 
 async def holdings_facts(session: AsyncSession, n: int = 8) -> list[GroundingFact]:
@@ -728,7 +869,16 @@ async def gather_facts(
             or _re_help.search(r"\b(how (do|can|to|does)|what (is|are|does)|where (do|is|can)|explain|what's|help( me)?)\b", q)):
         hf = help_facts(question)
         if hf:
-            facts = hf + facts
+            # R-54 delta 4a / R2: a TERM question surfaces the term's own canonical figure(s)
+            # beside the explanation. Scoped to the TOP-RANKED help hit — search_help's #1 is what
+            # the question is most about, so an action question whose top hit is a PAGE gathers no
+            # figures, and a low-rank term hit on an unrelated question injects no noise.
+            # `figures_for_term` returns () for a non-registry term (e.g. cash runway), a clean
+            # no-op. Both tiers: surfacing the figure is grounding, honest in tier 2 too.
+            top = hf[0].link_id or ""
+            tf = (await term_figure_facts(session, {top.split(":", 1)[1]})
+                  if top.startswith("help:term-") else [])
+            facts = hf + tf + facts
 
     external_only = (is_market or is_news) and not (portfolio_intent or symbols)
     if not facts:
