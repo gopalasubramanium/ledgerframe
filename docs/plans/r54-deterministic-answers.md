@@ -1965,6 +1965,75 @@ close (§9-I).
 does change what an *unroutable* tier-1 question returns. I-1 remains OPEN, owed in the Phase-2/close
 window with its recorded date-aware/seed-state hypothesis intact.
 
+#### Phase 1 delta 3 — THE FRONTEND ID→ROUTE REGISTRY (`51ede7d`) — DONE
+
+**§9-D's other half.** Phase 0-5 shipped the **served** half (the backend issues `<kind>:<key>` link
+IDs; `test_served_link_ids.py` proves each is well-formed, of a known kind, and names a real
+route/Help entry). This delta ships the **frontend-owned ID→route registry** and closes the
+**bidirectional resolution guard**. No app code changed — the frontend gains a pure module, the
+backend gains three test-only closures.
+
+**The registry — `frontend/src/nav/askLinks.ts`.** `resolveAskLink(linkId)` is the ONE place a served
+ID becomes a destination: `help:<id>` → `/help?topic=<id>` (URL-encoded), `page:<route>` → the route,
+**restricted to the BUILT NAV PAGES** (`KNOWN_PAGE_ROUTES`, derived from the one `nav.ts` model, not
+hand-listed twice — the `holdingsLink.ts` single-builder principle). Anything it cannot map — unknown
+kind, unbuilt/unknown route, malformed ID — returns **`null`**: tier-1 declines rather than inventing a
+destination (*a link that resolves to nothing is a dead affordance with extra steps*, §0-F). It returns
+a react-router `to`, never a hand-built hash. `help:` topic **validity** is deliberately not re-checked
+here — it resolves against the SERVED catalogue on arrival (`Help.tsx:334`) and the backend guard binds
+served `help:` IDs to real entries; a static topic list here would be a **second source of truth** for a
+served fact (the §0-C mistake).
+
+**The bidirectional closure — where each leg lives, and why.**
+
+| Leg | Guard | Home |
+|---|---|---|
+| resolver **semantics** (round-trip, refuse specimens, capability probes, kind list) | `askLinks.test.ts` (7 vitest, **pure**) | frontend |
+| **forward** — every served `canonical_page` ∈ the resolver's accepted set (nav pages) | `test_every_canonical_page_resolves_in_the_frontend_registry` | backend |
+| **registered → live** — every nav route ∈ the routes AppRoutes registers | `test_every_frontend_nav_route_is_a_route_the_router_registers` | backend |
+| **kind parity** — served `KNOWN_KINDS` == frontend `KNOWN_LINK_KINDS` | `test_the_served_kinds_and_the_frontend_resolver_kinds_are_the_SAME_set` | backend |
+
+**Why the file-parsing legs are in Python, not vitest.** The first cut read `AppRoutes.tsx`/`nav.ts`
+with `node:fs` inside the vitest file; **`tsc -b` failed** — the frontend `src` project has no node
+types, and there is no precedent (no frontend test reads a source file). Rather than add `@types/node`
+to a UI tsconfig (a config change for a test-parsing convenience), the file-parsing closures moved to
+`test_served_link_ids.py`, which **already** parses `AppRoutes.tsx` in Python and now parses `nav.ts`
+and `askLinks.ts` too. The frontend half stays pure and the backend half owns the cross-file truth —
+the same served-half/registered-half division §9-D describes, mapped onto the language that reads files.
+
+**The gap the forward closure catches — proven, not asserted.** The pre-existing route guard checked
+`canonical_page ⊆ AppRoutes routes`. But the resolver only accepts **nav** pages — a strict subset
+(AppRoutes also carries `/kitchen-sink`, redirects, `/instrument/:symbol`). So a `canonical_page` that
+is a real route but **not a nav page** passed every prior check and still resolved to `null` in the
+panel — a silent dead link. **Mutation proof:** pointing a row's `canonical_page` at `/kitchen-sink`
+left the **old** AppRoutes-route guard GREEN while the **new** frontend-resolution guard went RED —
+the new guard catches exactly the leg the old one missed. All three closures were mutation-proven
+(`/kitchen-sink`, a `/ghost-page` nav route, an extra `ghost` frontend kind), each reverted.
+
+**⚠ A FULL-SUITE FLAKE, DIAGNOSED NOT BLAMED.** The first `npm run check` reported `Settings.test.tsx >
+routing matrix` RED — a 1 s `waitFor` timeout on a test this delta does not touch (3 files, none
+`Settings.*`). A stray `npm run dev` (a leaked Playwright/dev webServer) was starving the timer under
+full-suite CPU. Killed it; `Settings.test.tsx` then passed **32/32 in isolation** and the full gate
+passed clean. *An order/load-dependent failure that blames an innocent file is the worst kind to debug*
+(the same lesson `test_ai_fallback.py:49-59` records) — recorded so the next reader does not re-chase it.
+
+**Gates.**
+
+| Gate | Result |
+|---|---|
+| Frontend `npm run check` (from `frontend/`) | **exit 0** — vitest **415 passed** (42 files; +7 askLinks), Playwright **361 passed** |
+| Backend, **ordered** (`-p no:randomly`) | **2085 passed, 15 skipped** — exit 0 |
+| Backend, **randomized** | **2085 passed, 15 skipped** — exit 0 |
+| `make lint` | **PASS** |
+| Contract | **141 / 71 unchanged, no regen** (no path, no schema) |
+
+**Suite reconciliation: backend 2082 → 2085, +3 = this delta's own** (forward + registered-live + kind
+parity); **vitest 408 → 415, +7 = this delta's own** (askLinks semantics). No other test moved.
+
+**Help currency: no Help/GLOSSARY entry changed** — the registry is navigation plumbing, no user-facing
+vocabulary. The link **affordance** (how a resolved link renders in the panel) is delta 4, PROPOSED and
+ratified at 0a-ii. The milestone's Help delta remains owed at close (§9-I).
+
 ### Phase 2 — TESTS AND GUARDS
 
 Every §7 row that names a guard. **Each proven RED first**, on a specimen that reproduces the defect.
