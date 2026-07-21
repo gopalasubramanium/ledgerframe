@@ -27,7 +27,7 @@ row lacks a disposition.** This plan is the rule's first user.*
 | # | Kind | Item | Origin | Disposition |
 |---|---|---|---|---|
 | **I-1** | Intake | **Contention-robustness fix** — `tests/integration/test_ai_facts_routing.py:34` (`test_performance_question_pulls_risk_metrics`) fails only under machine contention, passes solo | `r43-historical-backfill.md` §18-F7d → re-assigned post-close, `ai-surfaces.md` §19-K → `ROADMAP.md` R-54 (i) | **OPEN — ⊕ root-cause HYPOTHESIS recorded at Phase 0-1 (`88c5ce4`):** the failure is likely a **date-aware coverage / seed-state dependency, NOT machine contention** — `performance_facts` skips `None`-valued metrics (`tools.py:352-353`) and every metric the assertion can be satisfied by is `value if da_computable else None` (`analytics.py:205-210`), so an uncovered window nulls **all** of them at once. Its delta must also account for Phase 0-1 **changing this question's routing** (now `RISK_CONCENTRATION → {perf, alloc}`) against the 20-fact cap |
-| **I-2** | Intake | **Fixture hygiene** — `frontend/src/components/ui/AskPanel.test.tsx:27` mocks `privacy_label` with a **live served string**; make it obviously synthetic | `ROADMAP.md` R-54 (ii) — **⚠ premise corrected, see §0-K** | **OPEN** |
+| **I-2** | Intake | **Fixture hygiene** — `frontend/src/components/ui/AskPanel.test.tsx:27` mocks `privacy_label` with a **live served string**; make it obviously synthetic | `ROADMAP.md` R-54 (ii) — **⚠ premise corrected, see §0-K** | **OPEN — ⊕ SHARPENED by Phase 1 delta 1 (`c5c13f6`, 2026-07-21):** the posture recut RETIRED the strings `AskPanel.test.tsx:27` (`Hailo/Ollama`) and `:37-39` (no-egress) mock, so those fixtures now mock **retired** copy, not merely live-byte-identical — worse than the original finding. Delta 1 left them (they are test doubles, not served copy — §9-G scope; no frontend test breaks, the mock is self-consistent). I-2's per-literal synthetic-vs-pin classification (§9-H) now MUST also drop the retired vendor word from these two fixtures |
 | **I-3** | §9 | **Posture-descriptor unification** — "OpenAI-compatible endpoint" vs "Ollama-compatible" | `ROADMAP.md` R-54 (iii); decision-shaped, so §9-G not intake | ✅ **DISPOSITIONED 2026-07-20 — UNIFY** (§9-G). One user-facing descriptor, **"Ollama-compatible"**; "Hailo" leaves served copy. **The ruling is closed; the STRINGS ratify at 0a by looking** — the ledger distinguishes the two |
 
 | **F-1** | Finding | **`Total liabilities` is not a GLOSSARY term** — GLOSSARY has **Liability** (`:67`, singular, an asset-class concept) and uses "Liabilities" only inside Net worth's definition prose (`:65`); neither sanctions it as a **figure label**, yet `networth_facts` (`tools.py:330-332`) serves it to users | Found at Phase 0-2a (`0d19a5a`) building the registry — by the first guard ever to measure the **AI's fact labels** against GLOSSARY | ✅ **RATIFIED + CLOSED 2026-07-20** (owner: *GLOSSARY catch-up*). Verifying the reading made it stronger than the finding — **D-032** and **D-054** already ratify **Liabilities** by name, `NetWorth.tsx:204` has **shipped** that label, and `:208` renders *"…− Liabilities (GLOSSARY)"*, **citing a spec entry that did not exist**. The defect was the **missing row**. `GLOSSARY.md` gained **Liabilities** spec-first (`2c0016d`), the registry's canonical label follows it, and **the carve-out is deleted — an ordinary row, zero exceptions** (`fa7b656`). Sibling `Total assets` → `Gross assets` applied at 0-2a |
@@ -1837,6 +1837,47 @@ pre-pass re-run, in the same delta — flagging them in the close report is expl
   pre-pass re-run.
 - **`AppRoutes.tsx:59`'s stale "four tabs" comment** → corrected in the same commit (records-truth
   bar; no plan-file note owed — a comment, not a surface).
+
+**Phase 1 delta sequence (owner-confirmed 2026-07-21): 1 posture amendment · 2 tier-1 miss split ·
+3 frontend ID→route registry · 4 tier-1 composition + link affordance (PROPOSED DS) · 5 accepted-
+surface corrections (setParams, F-2 census own delta, AppRoutes comment).**
+
+#### Phase 1 delta 1 — POSTURE-COPY AMENDMENT (`c5c13f6`) — DONE
+
+**Owner item-6 direction (2026-07-21).** The 5 `POSTURE_COPY` strings recut per §9-G; **"Hailo" leaves
+served copy**; the strings are **PROPOSED — formal ratification by LOOKING at 0a-ii, rendered live** —
+recorded in `ai-surfaces.md` §12-3 (both versions true in their time) so the AC-L3 parity guard binds.
+
+| Key | Recut (item 6) |
+|---|---|
+| `no_egress` | keeps "answers are built" + "no AI narration" (both still pinned); GAINS the tier-1 "…and the app's own explanations" clause |
+| `disabled` | "Model AI is off — answers use built-in intelligence: your data and the app's own explanations, on this device." (item 6b — names its cause, GLOSSARY vocab, no "deterministic" jargon) |
+| `local_openai` / `local_npu` | both "On-device (local, Ollama-compatible) — data stays on this device." (item 6a — **identical**, one user-facing kind) |
+| `remote` | "External model — prompts (incl. your portfolio facts) are sent to the configured provider." (item 6c) |
+
+**Guards.** **(a) Distinctness exception** — the local pair carved out **by name with the item-6a
+reason**, all-same vacuity catch retained, and it **reds as UNNEEDED if the pair diverges** (the 0-2b
+unnecessary-carve-out lesson: a hole with a reason cannot outlive the reason). **(b) Deprecated-vendor
+guard EXTENDED** — `test_no_served_posture_string_carries_the_retired_vendor_word` now scans **all
+served AI copy** (`POSTURE_COPY` + `KIND_LABEL`), closing the **§14-2 one-place gap** (the tab-summary
+guard never covered `POSTURE_LOCAL_NPU`). **§11-I boundary:** the corpus is SERVED strings only —
+provider class names (`HailoOllamaProvider`) and internal docstrings stay, the `.env` `hailo` id stays.
+
+**FAIL-FIRST — both RED on the real cause, reverted by the recut:** the deprecated guard RED on
+`POSTURE_LOCAL_NPU`'s `"Hailo"`; the distinctness exception RED as *"unneeded — the pair has diverged"*
+(the pair was not yet identical).
+
+**⊕ I-2 SHARPENED (not fixed here).** The recut retired the strings `AskPanel.test.tsx:27`/`:37-39`
+mock, so those fixtures now mock **retired** copy. Left to I-2's delta (test doubles, not served copy —
+§9-G scope; no frontend test breaks). Ledger row updated.
+
+**Gates — solo, uncontended.** Backend **2073 passed / 15 skipped**, ordered AND randomized; `make
+lint` PASS; contract **141/71 unchanged**. **Suite reconciliation: 2072 → 2073, +1** (the new
+deprecated-vendor guard; the distinctness test was rewritten in place). No other test moved.
+**Untyped-shape caveat:** the served `privacy_label` (`/ai/grounding-status`) and `summary`
+(`/system/ai-config`) **content** moved — untyped dict shapes the contract cannot see. **Help currency:
+no Help/GLOSSARY entry changed** (no Help entry quotes the posture strings; the `ask`-entry rewrite is
+§9-I's own delta). Formal ratification of the strings is owed at **0a-ii**, rendered live.
 
 ### Phase 2 — TESTS AND GUARDS
 
