@@ -32,7 +32,7 @@ row lacks a disposition.** This plan is the rule's first user.*
 
 | **F-1** | Finding | **`Total liabilities` is not a GLOSSARY term** — GLOSSARY has **Liability** (`:67`, singular, an asset-class concept) and uses "Liabilities" only inside Net worth's definition prose (`:65`); neither sanctions it as a **figure label**, yet `networth_facts` (`tools.py:330-332`) serves it to users | Found at Phase 0-2a (`0d19a5a`) building the registry — by the first guard ever to measure the **AI's fact labels** against GLOSSARY | ✅ **RATIFIED + CLOSED 2026-07-20** (owner: *GLOSSARY catch-up*). Verifying the reading made it stronger than the finding — **D-032** and **D-054** already ratify **Liabilities** by name, `NetWorth.tsx:204` has **shipped** that label, and `:208` renders *"…− Liabilities (GLOSSARY)"*, **citing a spec entry that did not exist**. The defect was the **missing row**. `GLOSSARY.md` gained **Liabilities** spec-first (`2c0016d`), the registry's canonical label follows it, and **the carve-out is deleted — an ordinary row, zero exceptions** (`fa7b656`). Sibling `Total assets` → `Gross assets` applied at 0-2a |
 
-| **F-2** | Finding | **Allocation weights omit three shipped asset classes** — `key_stats`' four buckets are `weight(...)` over hardcoded names (`analytics.py:94-97`); **`bond`, `other` and `retirement` are in NO bucket**, so the weights do not sum to 100% | Found at Phase 0-2b (`fa7b656`) from ruling ②'s *principle* — its stated precondition (a *dynamic* `key_stats` path) **does not exist**; the metrics are static literals | **⚑ OPEN — OWNER RULING OWED.** **Proven live on the SHIPPED DEMO DATA: 6.2 + 4.4 + 1.0 + 80.5 = 92.1, a 7.9-POINT SHORTFALL** on an accepted surface (D-048), caught by nothing. **Not fixed:** the repair changes **what the Portfolio page displays** — a product-content decision, not a refactor — and would break 0-2b's byte-identity proof for a reason unrelated to the derivation. **⊕ SCHEDULED 2026-07-20/21 (owner): its OWN delta in the Phase-1 window, no silent drop.** **Survey the ratified stats spec FIRST** — four-bucket vs per-class. **Governing principle either way:** every class in a **labelled** bucket · weights **sum to 100** · the census **derived from the `AssetClass` enum** (D-082 generalised). If the four-bucket grouping is ratified, **explicit assignments for `bond` / `other` / `retirement` come back to chat**. **Fail-first on the 92.1% sum with REAL-SHAPED data**; **page-portfolio pre-pass re-run + dated note**; any new labels **GLOSSARY-first** |
+| **F-2** | Finding | **Allocation weights omit three shipped asset classes** — `key_stats`' four buckets are `weight(...)` over hardcoded names (`analytics.py:94-97`); **`bond`, `other` and `retirement` are in NO bucket**, so the weights do not sum to 100% | Found at Phase 0-2b (`fa7b656`) from ruling ②'s *principle* — its stated precondition (a *dynamic* `key_stats` path) **does not exist**; the metrics are static literals | **⚑ OPEN — OWNER RULING OWED.** **Proven live on the SHIPPED DEMO DATA: 6.2 + 4.4 + 1.0 + 80.5 = 92.1, a 7.9-POINT SHORTFALL** on an accepted surface (D-048), caught by nothing. **Not fixed:** the repair changes **what the Portfolio page displays** — a product-content decision, not a refactor — and would break 0-2b's byte-identity proof for a reason unrelated to the derivation. **⊕ SCHEDULED 2026-07-20/21 (owner): its OWN delta in the Phase-1 window, no silent drop.** **Survey the ratified stats spec FIRST** — four-bucket vs per-class. **Governing principle either way:** every class in a **labelled** bucket · weights **sum to 100** · the census **derived from the `AssetClass` enum** (D-082 generalised). If the four-bucket grouping is ratified, **explicit assignments for `bond` / `other` / `retirement` come back to chat**. **Fail-first on the 92.1% sum with REAL-SHAPED data**; **page-portfolio pre-pass re-run + dated note**; any new labels **GLOSSARY-first**. ✅ **SURVEYED + RULED + FIXED 2026-07-22** (architect under delegation; options 1+3, option 2 rejected). **Premise correction:** the four buckets rendered on NO accepted surface — the ratified allocation is the per-class donut (sums to 100). **The dead grouping DELETES** (4 `key_stats` metrics + `weight()` gone; contract regen — **141/71 unchanged**, the untyped-`dict` §3b situation, stated). **The registry RE-POINTS** to per-class enum-derived rows (`_alloc_figures`, endpoint = the existing `allocation_by_class`, labels via `label_for` — no recompute, no coinage). **The deferral LIFTS** (`pack_reachable=True`, `DEFERRED_TO_F2` + its tripwire deleted; `term-allocation-weight` pulls per-class, unheld class OMITTED not "unavailable"). Fail-firsts: census enum-complete + sums-to-100 (the 92.1% set), dead-buckets absence. Rite: page-portfolio dated note + pre-pass (donut unchanged, 0 errors); movers on camera at 0a-ii. Shipped as its own commit pair |
 
 | **F-3** | Finding | **The fact pack has its OWN money formatter, and it destroys sub-cent prices.** `_fmt` (`tools.py:25`) is `f"{value:,.2f} {ccy}"`; the D-105 formatters (`money.py:25,38,47`) are the product's. Three differences, one of them live | Found at Phase 0-4 by the ruled survey (1a), **before** any unification — which is what the survey-first ordering was for | ✅ **RULED + FIXED 2026-07-21** (`33f57bf`) — `_fmt` deleted, `money.py` owns all rendering, `format_fact_display` is the named pack variant. ✅ **RATIFIED at 0a-i 2026-07-21** (owner, by looking): `SHIBX 0.00004567 USD` (sub-cent) and `GLD unavailable` (unpriced) on camera (`2e9104e`, re-cut honest per W-3/item-2). Original finding, for the record: **⚑ (ruling 1c: STOP, change nothing).** **(i) LIVE — sub-cent destruction:** a crypto quote of `0.00004567` renders **`0.00 USD`** through `_fmt`, while `format_price_display(…, "crypto")` gives `0.00004567`. `money.py:19-20` states the D-105 intent **verbatim**: *"crypto → up to 6 significant digits (so sub-cent tokens aren't truncated to `0.00`)"* — **the pack does exactly what D-105 exists to prevent.** Compounds with **R-56**: `_sig3("0.00") → ""` is discarded, so such a fact **cannot be narrated either** — fact list shows `0.00`, model falls back. Invisible on the demo set (BTC is high-priced): a **real-shaped-data** case. **(ii) LATENT — rounding mode:** `_fmt` uses Python's default (**banker's/HALF_EVEN** — `2.005 → 2.00`), D-105 uses **HALF_UP** (`→ 2.01`). **Not reachable on headline money today**, because `portfolio.py:577` cent-quantizes each holding first — latent, not live. **(iii) LATENT — `None`:** `_fmt(None)` **raises `TypeError`**; the D-105 formatters pass `None` through (Guarantee 3, never a fabricated 0). **⚠ NOT a pure refactor either way:** D-105's crypto path also drops thousands grouping and trims trailing zeros (`68000.50 → 68000.5`), so unification **changes ratified fact-list rendering** (ratified at AI-surfaces 0a) and needs a ruling + dated note. The R-54 0a specimens will put it in front of the owner regardless |
 
@@ -2314,48 +2314,61 @@ incl. `check:ask-boundary`); no backend change. Suite reconciliation: **vitest 4
 sibling-param test). **Help currency: no Help entry changed** — a param-plumbing fix + a comment;
 guard-corroborated.
 
-#### Phase 1 F-2 delta — ALLOCATION CENSUS — ⚑ SURVEYED → STOP FOR CHAT (2026-07-22)
+#### Phase 1 F-2 delta — ALLOCATION CENSUS: dead grouping deleted, registry re-points per-class (`125cac5`) — DONE
 
-**The owner's F-2 ruling: "STOP for chat if the four-bucket grouping proves ratified; no-silent-drop
-governs regardless."** The survey follows; **no code changed**. The four-bucket grouping's status is
-the crux, and the survey found a **premise correction** worth the owner's eyes.
+**⊕ RULED 2026-07-22 (architect under delegation) — options 1+3, option 2 rejected by name.** The
+survey (recorded below) found the four-bucket grouping **unratified, rendered nowhere, incomplete**
+(92.1%) — a premise correction on *"live on an accepted surface"*. The ruling: **delete the dead
+grouping, re-point the registry to the existing per-class derivation** (no recompute).
 
-**The four `key_stats` buckets** (`analytics.py:116-119`) — `weight("cash","fixed_deposit")` →
-*Cash & deposits*, `weight("equity","etf","mutual_fund")` → *Equities & ETFs*, `weight("crypto")` →
-*Crypto*, `weight("commodity","property","private")` → *Alternatives* — **omit `bond`, `retirement`
-and `other`** (and `liability`, correctly, as negatives are excluded). On the demo set they sum to
-**92.14%** (`6.20 + 4.35 + 1.04 + 80.55`); the **7.9-pt shortfall is `bond 2.50` + `retirement 5.34`**.
+**What shipped.**
 
-**⊕ PREMISE CORRECTION — the four buckets render on NO accepted surface.** The finding read *"on an
-accepted surface (D-048)"*; the survey (frontend, exhaustive) finds **no consumer**: Portfolio takes
-only `term-concentration` metrics (`:318`) plus named return/risk metrics; Home and Net worth render
-allocation from **`allocation_by_class`** (per-class, from `/portfolio/summary`), **not** these four
-`key_stats` metrics; the AI pack's `performance_facts` `want` set excludes them. The four buckets are
-**computed and served in `/portfolio/stats`, rendered by nobody.** The **RATIFIED** allocation is the
-**per-class donut** (D-033/D-048) — which is enum-complete and **sums to 100** — and the AI pack's
-per-class `allocation_facts` (F-7-conformed).
+| Change | File |
+|---|---|
+| **Ruling 1 — the dead grouping DELETES.** The four hardcoded buckets + `weight()` + the four `/portfolio/stats` metrics removed. A **deliberate contract change** — regen same-commit | `app/services/analytics.py` |
+| **Ruling 2 — the registry RE-POINTS, not recomputes.** The four `alloc_*` rows → **per-class, enum-derived** (`_alloc_figures`: one row per positive `AssetClass`), endpoint = the EXISTING `allocation_by_class` (the donut's source, `/portfolio/summary`), labels via `label_for` (F-7 reuse). Enum-complete + sums-to-100 by construction. Stale three-bucket exemptions removed; per-class exemptions generated from the same rows | `app/services/figure_registry.py` |
+| **Ruling 3 — the deferral LIFTS.** Rows → `pack_reachable=True`; `term-allocation-weight` pulls the per-class figures. `term_figure_facts` gains `allocation_facts` as the alloc producer (SUMMARY-endpoint but not a headline figure), and an **unheld class is OMITTED, not "unavailable"** — allocation is a census, absence = not-held, not a coverage gap | `app/ai/tools.py` |
+| **`DEFERRED_TO_F2` exemption DELETED**; `test_the_f2_deferral_list_is_not_stale` (built to red at this moment) removed; reverse-index count 4 → 12; the four-bucket parity assertion flipped to absence; the analytics-metric blindness pin 19 → 15 | tests |
 
-**So the four-bucket grouping does NOT prove ratified** (no spec defines it; no page renders it; the
-only declarations are the four `alloc_*` registry rows, `pack_reachable=False`, `DEFERRED_TO_F2`). By
-the owner's ruling that means the *"explicit bucket assignments"* STOP is **not triggered on
-ratification** — but the survey turned up that the finding's premise (live on an accepted page) is
-false, which changes F-2's SHAPE, and *"no-silent-drop governs regardless."* **The fix shape is now a
-product+architecture decision, so it STOPs for chat.** Options, for the owner's ruling:
+**FAIL-FIRST (ruling item 5).** (a) `test_the_allocation_census_is_enum_complete_and_sums_to_100` — RED
+on enum-completeness (registry had four coarse rows, not per-class); GREEN after (12 per-class rows,
+served weights sum to 100). (b) `test_the_dead_four_buckets_no_longer_reach_the_stats_response` — RED
+before removal, GREEN after. A live-diagnosed regression fixed in-flight: the now-reachable alloc
+figures collided at the dedupe layer (`term_figure_facts` emitted 12 "unavailable" that clobbered the
+real weights) — caught by the census guard, fixed by producing them from `allocation_facts`.
 
-1. **Per-class, enum-derived** *(recommended)* — replace the four hardcoded buckets with a census
-   derived from the `AssetClass` enum (every class its own bucket), matching the ratified donut. Covers
-   every class and sums to 100 **by construction** (the D-082-generalised principle, verbatim); the four
-   `alloc_*` registry rows become per-class rows; no bucket-assignment decision needed.
-2. **Complete the four buckets** — keep the coarse grouping and assign `bond` / `retirement` / `other`
-   to buckets (e.g. a new *Fixed income* bucket? `retirement` → ?). **This is the explicit-assignments
-   case the ruling flagged** — product content, back to chat per bucket.
-3. **Delete the dead grouping** — the four buckets render nowhere; remove them + the four `alloc_*`
-   registry rows, leaving the ratified per-class donut/pack as the sole allocation census.
+**THE RITE.** **`page-portfolio` pre-pass re-run + dated note** — the Portfolio "By class" donut is
+**exactly the per-class census the registry now points to** (Cash 2.05% · … · Property 80.55%, sums to
+100), driven clean at 1366×950, **0 console errors, unchanged** (the deleted metrics rendered nowhere).
+**Formal movers-on-camera** (the AI answer now pulling per-class figures) **owed at 0a-ii**. Labels via
+`label_for` — no coinage.
 
-**No option taken; no code changed. The `DEFERRED_TO_F2` exemption in `test_pack_reachability` stays
-until the ruling.** Whichever way, the fix is its own delta with a fail-first on the 92.1% sum
-(real-shaped data), a `page-portfolio` pre-pass re-run + dated note, and any new label GLOSSARY/
-MASTER-DATA-first.
+**Gates.** Backend **2097 passed / 15 skipped, ordered AND randomized**, exit 0; `make lint` PASS. Suite
+reconciliation: **2096 → 2097, +1 net** — +2 new census guards (enum-complete/sums-to-100, dead-buckets
+absence) − 1 deleted (`test_the_f2_deferral_list_is_not_stale`, its tripwire fired). Movers by class: every
+allocation label `Allocation — <label>` now resolves to a per-class registry figure; `term-allocation-weight`
+reverse-indexes 4 → 12; the analytics metrics list 19 → 15.
+
+**Contract: 141/71 UNCHANGED, stated not silent (ruling item 1).** The four metrics lived in the untyped
+`/portfolio/stats -> dict` `metrics` list, not a typed schema, so the same-commit regen produced **no
+diff**. The ruling flagged this as the one place the delta *may* move 141/71; it did not, and the reason
+(untyped shape, the §3b situation) is on the record rather than left as silence.
+
+**⚠ Untyped-shape caveat (§3b):** the `/portfolio/stats` `metrics` content moved (four fewer entries)
+and the AI `facts` event gains per-class allocation figures for `term-allocation-weight` — untyped
+served shapes the contract cannot see; the census guard and the served-shape pins are what see them.
+**Help currency: no Help/GLOSSARY entry changed** — the per-class labels reuse the existing `/refdata`
+MASTER-DATA vocabulary (`label_for`); guard-corroborated.
+
+---
+
+**THE SURVEY (recorded for the ruling; the premise correction).** The four `key_stats` buckets
+(`analytics.py`) omitted `bond`/`retirement`/`other` — 92.14% on demo. **They rendered on NO accepted
+surface**: Portfolio takes only `term-concentration` metrics; Home/Net worth use per-class
+`allocation_by_class`; the AI pack excluded them. The **ratified** allocation is the per-class donut
+(D-033/D-048), enum-complete, sums to 100. So the four-bucket grouping did **not** prove ratified; the
+premise (*"live on an accepted surface"*) was false, and the fix shape was ruled: delete + re-point
+per-class (options 1+3); option 2 (invent a coarse taxonomy for a grouping nobody renders) rejected.
 
 ### Phase 2 — TESTS AND GUARDS
 
