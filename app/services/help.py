@@ -673,7 +673,7 @@ HELP: list[dict] = [
                   "- Whichever kind answered, the numbers are the same numbers. A model never "
                   "supplies a figure — it only puts words around the facts listed above it.\n"
                   "- With no-egress on, this device makes no outbound calls at all, so there is "
-                  "no AI narration and answers are assembled from your figures alone. They are "
+                  "no model narration and answers are assembled from your figures alone. They are "
                   "still complete answers, and still built from the same facts.\n"
                   "- Nothing is kept. Closing the panel discards the question and the answer, and "
                   "there is no history to return to — that is a commitment the product makes, "
