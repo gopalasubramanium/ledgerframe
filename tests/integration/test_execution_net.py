@@ -104,3 +104,25 @@ async def test_head_success_does_not_fire_the_net(session, monkeypatch):
     r = await market.refresh_quote_detailed(session, "AAPL")
     assert r.fetched and r.priced_by == "alphavantage"
     assert calls == [], "the net fetched a fallback even though the head priced the instrument"
+
+
+async def test_refresh_outcome_carries_typed_failure_state(session, monkeypatch):
+    """§9-2: when the head is throttled and no fallback can price, the refresh OUTCOME carries the
+    typed state (THROTTLED) — 'distinct failures, never one none' reaches the refresh layer."""
+    from app.schemas.common import FailureState
+
+    class _Throttled(_FailingHead):
+        async def get_quote(self, symbol, exchange=None):
+            return Quote(symbol=symbol.upper(), price=None, currency="USD", source="alphavantage",
+                         entitlement=EntitlementStatus.UNAVAILABLE,
+                         failure_state=FailureState.THROTTLED,
+                         received_at=datetime.now(UTC), is_stale=True)
+
+    monkeypatch.setattr(market, "provider_availability", lambda: {
+        "alphavantage": ProviderAvailability("alphavantage", True, True, True)})
+    monkeypatch.setattr(market, "get_provider", lambda: _Throttled())
+    monkeypatch.setattr("app.providers.market.build_provider", lambda name: None)  # no fallback builds
+
+    r = await market.refresh_quote_detailed(session, "AAPL")
+    assert r.outcome == "no_data" and not r.fetched
+    assert r.failure_state is FailureState.THROTTLED

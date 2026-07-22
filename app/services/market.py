@@ -22,7 +22,7 @@ from app.core.money import format_price_display, pct_change
 from app.models import Instrument
 from app.models import Quote as QuoteRow
 from app.providers.market import get_provider
-from app.schemas.common import EntitlementStatus, Quote, ValuationMethod
+from app.schemas.common import EntitlementStatus, FailureState, Quote, ValuationMethod
 
 log = logging.getLogger(__name__)
 
@@ -640,6 +640,9 @@ class QuoteRefresh(NamedTuple):
     # a fallback lane — carried so Pricing Health / the refresh report can be honest about it.
     route_head: str | None = None
     priced_by: str | None = None
+    # §9-2: the TYPED reason there is no price (throttled/empty/errored/parse_error from a provider,
+    # or unmapped/no_key/unsupported from routing) — never a flat "none". None when priced.
+    failure_state: FailureState | None = None
 
     @property
     def fetched(self) -> bool:
@@ -690,10 +693,16 @@ async def refresh_quote_detailed(
         return QuoteRefresh(refetched, "fetched")
     active = getattr(provider, "name", "mock")
     owner = head or "no configured source"
+    # §9-2: name WHY routing itself couldn't price this (no live fetch was possible).
+    routing_state = (FailureState.UNMAPPED if diag.mapping_required
+                     else FailureState.NO_KEY if diag.auth_required
+                     else FailureState.UNSUPPORTED if head is None
+                     else None)
     return QuoteRefresh(
         await get_cached_quote(session, symbol, exchange), "not_owned",
         diag.reason or f"served from cache — {owner} owns this price, not the active "
-                       f"provider ({active})")
+                       f"provider ({active})",
+        route_head=head, failure_state=routing_state)
 
 
 async def _refresh_via_net(
@@ -714,6 +723,7 @@ async def _refresh_via_net(
     active_name = getattr(get_provider(), "name", "mock")
     candidates = fetch_chain(diag, ac, provider_availability())
     last_reason: str | None = None
+    last_state: FailureState | None = None
 
     for name in candidates:
         # Reuse the cached active provider; build any other lane fresh (None → skip, never mock).
@@ -724,10 +734,13 @@ async def _refresh_via_net(
             q = await prov.get_quote(instrument.symbol, exchange)
         except Exception as exc:  # noqa: BLE001 — a lane that errors is skipped; the net walks on
             last_reason = f"{name}: {str(exc)[:120]}"
+            last_state = FailureState.ERRORED
             log.warning("net: %s could not price %s: %s", name, instrument.symbol, exc)
             continue
         if q.price is None:
+            # §9-2: keep the lane's OWN typed reason (throttled/empty/parse_error), not a flat "none".
             last_reason = f"no data from {name}"
+            last_state = q.failure_state or FailureState.EMPTY
             continue
         priced_by = q.source or name
         values = {
@@ -749,10 +762,12 @@ async def _refresh_via_net(
         return QuoteRefresh(q, "fetched", reason, route_head=head, priced_by=priced_by)
 
     # Head and every fallback failed → honest no-data (last cached, never a null/fabricated price).
+    # Carry the last lane's TYPED reason so the refresh outcome names throttled/empty/errored.
     return QuoteRefresh(
         await get_cached_quote(session, instrument.symbol, exchange), "no_data",
         last_reason or f"no configured source could price {instrument.symbol}",
-        route_head=head, priced_by=None)
+        route_head=head, priced_by=None,
+        failure_state=last_state or (FailureState.UNSUPPORTED if not candidates else None))
 
 
 async def get_cached_quote(

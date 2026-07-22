@@ -27,6 +27,7 @@ from app.providers.market.mock import MockMarketDataProvider
 from app.schemas.common import (
     Candle,
     EntitlementStatus,
+    FailureState,
     FxRate,
     Instrument,
     MarketStatus,
@@ -123,6 +124,14 @@ class ExternalMarketDataProvider:
         # from the first index response: None = unknown (attempt once), True =
         # premium (use real indices), False = free (don't waste calls — proxies only).
         self._index_entitled: bool | None = None
+        # R-63 §9-2 (I-4, two-premiums): the QUOTE entitlement is a DIFFERENT product from the
+        # Index Data one. We learn it from the GLOBAL_QUOTE envelope key AV actually returns —
+        # a decorated "… DATA DELAYED BY 15 MINUTES" proves a delayed market-data entitlement,
+        # a plain "Global Quote" is the free end-of-day tier. None until the first quote reply.
+        self._quote_entitlement: str | None = None
+        # R-63 §9-9 (I-7): when we were last rate-limited, so Pricing Health can say
+        # "throttled — will retry" honestly rather than reading a throttle as "no price".
+        self._last_throttled_at: datetime | None = None
 
     @property
     def supports_indices(self) -> bool:
@@ -134,6 +143,39 @@ class ExternalMarketDataProvider:
     def av_tier(self) -> str:
         """'premium' | 'free' | 'unknown' — based on learned Index Data entitlement."""
         return {None: "unknown", True: "premium", False: "free"}[self._index_entitled]
+
+    @property
+    def quote_entitlement(self) -> str | None:
+        """VERIFIED quote entitlement learned from the GLOBAL_QUOTE envelope AV returned
+        ('delayed' / 'real-time' / 'end-of-day'), or None if no quote has been parsed yet.
+        Distinct from :attr:`av_tier` (Index Data) — the two-premiums fix (I-4): a tier label
+        must reflect what was VERIFIED per product, not a coarse config claim."""
+        return self._quote_entitlement
+
+    @property
+    def last_throttled_at(self) -> datetime | None:
+        return self._last_throttled_at
+
+    def _note_quote_entitlement(self, raw: dict) -> None:
+        """Learn the quote entitlement from the (possibly decorated) GLOBAL_QUOTE key."""
+        for k in raw:
+            kl = k.lower()
+            if kl.startswith("global quote"):
+                self._quote_entitlement = (
+                    "real-time" if ("real-time" in kl or "realtime" in kl)
+                    else "delayed" if "delayed" in kl
+                    else "end-of-day")
+                return
+
+    def _no_quote(self, symbol: str, exchange: str | None, now: datetime,
+                  state: FailureState, reason: str) -> Quote:
+        """Build an UNAVAILABLE quote that NAMES why (R-63 §9-2) — never a bare 'none'."""
+        log.warning("AV quote unavailable for %s: %s (%s)", symbol, reason, state.value)
+        return Quote(
+            symbol=symbol.upper(), exchange=exchange, price=None,
+            currency=currency_for_symbol(symbol, exchange) or "USD", source=self.name,
+            entitlement=EntitlementStatus.UNAVAILABLE, failure_state=state,
+            received_at=now, is_stale=True)
 
     async def _get(self, params: dict) -> dict:
         # F-4 (owner on-stack confirmation): the working premium call carries entitlement=delayed —
@@ -178,11 +220,14 @@ class ExternalMarketDataProvider:
         except Exception as exc:  # noqa: BLE001 — never fabricate; fall back to proxy
             # A "not yet entitled to index data" notice ⇒ free key; remember it so we
             # stop attempting indices (rate-limit notices don't prove the tier).
-            if "entitle" in str(exc).lower():
+            not_entitled = "entitle" in str(exc).lower()
+            if not_entitled:
                 self._index_entitled = False
             log.warning("AV index unavailable for %s: %s", sym, exc)
             return Quote(symbol=sym, exchange=exchange, price=None, currency="USD",
                          source=self.name, entitlement=EntitlementStatus.UNAVAILABLE,
+                         failure_state=(FailureState.UNSUPPORTED if not_entitled
+                                        else FailureState.ERRORED),
                          received_at=now, is_stale=True)
 
     async def get_quote(self, symbol: str, exchange: str | None = None) -> Quote:
@@ -200,38 +245,51 @@ class ExternalMarketDataProvider:
                     source=self.name, entitlement=EntitlementStatus.DELAYED,
                     market_time=now, received_at=now,
                 )
+            except RateLimited as exc:
+                self._last_throttled_at = now
+                return self._no_quote(sym, exchange, now, FailureState.THROTTLED, str(exc))
+            except ValueError as exc:  # _raw_fx raises this on an empty/unsupported pair
+                return self._no_quote(sym, exchange, now, FailureState.EMPTY, str(exc))
             except Exception as exc:  # noqa: BLE001
-                log.warning("AV crypto quote unavailable for %s: %s", sym, exc)
-                return Quote(symbol=sym, exchange=exchange, price=None, currency="USD",
-                             source=self.name, entitlement=EntitlementStatus.UNAVAILABLE,
-                             received_at=now, is_stale=True)
+                return self._no_quote(sym, exchange, now, FailureState.ERRORED, str(exc))
+        # R-63 §9-2 — classify the failure distinctly instead of one collapsed "empty quote
+        # (unknown symbol or rate limited)". NEVER fabricate a price: a failed fetch returns an
+        # UNAVAILABLE quote that NAMES why (throttled / errored / empty / parse_error).
         try:
-            data = _global_quote(await self._get({"function": "GLOBAL_QUOTE", "symbol": symbol}))
-            px = data.get("05. price")
-            if not px:
-                raise ValueError("empty quote (unknown symbol or rate limited)")
-            # AV returns the price in the listing's local currency but doesn't
-            # label it — derive it from the symbol suffix (e.g. .BSE -> INR).
-            ccy = currency_for_symbol(symbol, exchange) or "USD"
-            return Quote(
-                symbol=symbol.upper(), exchange=exchange,
-                price=price(px),
-                previous_close=price(data["08. previous close"]) if data.get("08. previous close") else None,
-                change=price(data.get("09. change") or 0),
-                change_pct=D((data.get("10. change percent") or "0").rstrip("%")),
-                currency=ccy, source=self.name,
-                entitlement=EntitlementStatus.DELAYED, market_time=now, received_at=now,
-            )
-        except Exception as exc:  # noqa: BLE001
-            # NEVER fabricate a price for a live provider — return UNAVAILABLE so the
-            # UI shows "—" and the user knows the live feed isn't delivering (e.g. the
-            # Alpha Vantage daily limit was hit), not a misleading demo number.
-            log.warning("AV quote unavailable for %s: %s", symbol, exc)
-            return Quote(
-                symbol=symbol.upper(), exchange=exchange, price=None,
-                currency=currency_for_symbol(symbol, exchange) or "USD", source=self.name,
-                entitlement=EntitlementStatus.UNAVAILABLE, received_at=now, is_stale=True,
-            )
+            raw = await self._get({"function": "GLOBAL_QUOTE", "symbol": symbol})
+        except RateLimited as exc:
+            self._last_throttled_at = now
+            return self._no_quote(symbol, exchange, now, FailureState.THROTTLED, str(exc))
+        except Exception as exc:  # noqa: BLE001 — a network/HTTP/JSON error reaching AV
+            return self._no_quote(symbol, exchange, now, FailureState.ERRORED, str(exc))
+
+        self._note_quote_entitlement(raw)  # I-4: learn the VERIFIED quote entitlement (property)
+        data = _global_quote(raw)
+        px = data.get("05. price")
+        if px:
+            try:
+                # AV returns the price in the listing's local currency but doesn't label it —
+                # derive it from the symbol suffix (e.g. .BSE -> INR).
+                ccy = currency_for_symbol(symbol, exchange) or "USD"
+                return Quote(
+                    symbol=symbol.upper(), exchange=exchange,
+                    price=price(px),
+                    previous_close=price(data["08. previous close"]) if data.get("08. previous close") else None,
+                    change=price(data.get("09. change") or 0),
+                    change_pct=D((data.get("10. change percent") or "0").rstrip("%")),
+                    currency=ccy, source=self.name,
+                    entitlement=EntitlementStatus.DELAYED, market_time=now, received_at=now,
+                )
+            except Exception as exc:  # noqa: BLE001 — a malformed numeric field is a parse error
+                return self._no_quote(symbol, exchange, now, FailureState.PARSE_ERROR, str(exc))
+        # No price. Distinguish a GENUINE empty (a Global Quote* key IS present, the provider just
+        # has no price for this symbol — the exonerated .BSE class, probe #5) from an UNRECOGNISED
+        # response (a shape we can't interpret — a real parse_error).
+        if any(k.lower().startswith("global quote") for k in raw):
+            return self._no_quote(symbol, exchange, now, FailureState.EMPTY,
+                                  "empty quote — provider had no price for this symbol")
+        return self._no_quote(symbol, exchange, now, FailureState.PARSE_ERROR,
+                              f"unrecognised response keys: {list(raw)[:3]}")
 
     async def get_history(self, instrument_id: str, interval: str, start: datetime, end: datetime) -> list[Candle]:
         try:

@@ -24,7 +24,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from app.providers.market.external import ExternalMarketDataProvider, _global_quote
+from app.providers.market.external import (
+    ExternalMarketDataProvider,
+    RateLimited,
+    _global_quote,
+)
+from app.schemas.common import FailureState
 
 _FX = Path(__file__).parents[1] / "fixtures"
 _ENTITLED = json.loads((_FX / "av_global_quote_entitled.json").read_text())
@@ -94,3 +99,85 @@ async def test_plain_envelope_still_parses(monkeypatch):
     monkeypatch.setattr(p, "_get", fake_get)
     q = await p.get_quote("TSLA")
     assert q.price is not None and float(q.price) == 378.93
+
+
+# --- R-63 Phase 2: the failure-state taxonomy (§9-2) — distinct causes, never one "none" --- #
+
+# The real AV throttle message, captured verbatim from the owner's live log (line 13605).
+_REAL_BURST = ("Burst pattern detected. Please consider spreading out your API requests more "
+               "evenly across a 1-minute window and query no more than 5 requests per second.")
+
+
+async def test_priced_quote_has_no_failure_state(monkeypatch):
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+    monkeypatch.setattr(p, "_get", lambda params: _mk(_ENTITLED))
+    q = await p.get_quote("TSLA")
+    assert q.price is not None and q.failure_state is None
+
+
+async def test_genuine_empty_classifies_as_empty(monkeypatch):
+    """The canonical pair (owner §9-2): probe #5 genuine-empty → EMPTY (a Global Quote key IS
+    present; the provider simply had no price), NOT parse_error."""
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+    monkeypatch.setattr(p, "_get", lambda params: _mk(_EMPTY))
+    q = await p.get_quote("ZZZZINVALID")
+    assert q.price is None
+    assert q.failure_state is FailureState.EMPTY
+
+
+async def test_unrecognised_shape_classifies_as_parse_error(monkeypatch):
+    """The other half of the canonical pair: a response with NO recognisable quote key is a
+    parse_error — distinct from empty, so a real 'we could not read this' never reads as 'no price'."""
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+    monkeypatch.setattr(p, "_get", lambda params: _mk({"Meta": {"note": "unexpected"}}))
+    q = await p.get_quote("TSLA")
+    assert q.price is None
+    assert q.failure_state is FailureState.PARSE_ERROR
+
+
+async def test_throttle_classifies_as_throttled_and_records_time(monkeypatch):
+    """A rate-limit (the REAL burst-pattern message) → THROTTLED, and the time is recorded so
+    Pricing Health can say 'throttled — will retry' rather than 'no price' (§9-9, I-7)."""
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+
+    async def boom(params):
+        raise RateLimited(_REAL_BURST)
+
+    monkeypatch.setattr(p, "_get", boom)
+    assert p.last_throttled_at is None
+    q = await p.get_quote("TSLA")
+    assert q.price is None
+    assert q.failure_state is FailureState.THROTTLED
+    assert p.last_throttled_at is not None
+
+
+async def test_network_error_classifies_as_errored(monkeypatch):
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+
+    async def boom(params):
+        raise ConnectionError("dns failure")
+
+    monkeypatch.setattr(p, "_get", boom)
+    q = await p.get_quote("TSLA")
+    assert q.price is None
+    assert q.failure_state is FailureState.ERRORED
+
+
+async def test_two_premiums_quote_entitlement_learned_from_envelope(monkeypatch):
+    """I-4 (two-premiums): the VERIFIED quote entitlement is learned from the envelope AV actually
+    returns — the decorated 'DATA DELAYED BY 15 MINUTES' key proves delayed market-data, separate
+    from the Index Data tier (av_tier)."""
+    p = ExternalMarketDataProvider("alphavantage", "testkey")
+    assert p.quote_entitlement is None
+    monkeypatch.setattr(p, "_get", lambda params: _mk(_ENTITLED))
+    await p.get_quote("TSLA")
+    assert p.quote_entitlement == "delayed"       # verified from the real decorated envelope
+    assert p.av_tier == "unknown"                 # index tier is a DIFFERENT product, still unlearned
+
+
+async def _mk_impl(data):
+    return data
+
+
+def _mk(data):
+    return _mk_impl(data)

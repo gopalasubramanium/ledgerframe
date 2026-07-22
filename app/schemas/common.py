@@ -18,6 +18,25 @@ class EntitlementStatus(str, enum.Enum):
     UNAVAILABLE = "unavailable"
 
 
+class FailureState(str, enum.Enum):
+    """WHY a quote could not be priced — the distinct causes R-63 §9-2 refuses to collapse into
+    one flat "none". Set on a Quote whose ``price is None`` (or carried by a refresh outcome) so
+    Pricing Health can name the real reason instead of a single misleading message. Two origins:
+
+    * from the PROVIDER (a fetch was attempted) — ``throttled`` / ``empty`` / ``errored`` /
+      ``parse_error``;
+    * from ROUTING (no fetch was possible) — ``unmapped`` / ``no_key`` / ``unsupported``.
+    """
+
+    THROTTLED = "throttled"      # the provider rate-limited us (transient; will retry)
+    EMPTY = "empty"              # the provider responded but had NO price for this symbol
+    PARSE_ERROR = "parse_error"  # the provider returned data we could not interpret
+    ERRORED = "errored"          # a network / HTTP error reaching the provider
+    UNMAPPED = "unmapped"        # needs an identifier mapping first (fund → AMFI, crypto → id)
+    NO_KEY = "no_key"            # the lane needs a credential this instance does not hold
+    UNSUPPORTED = "unsupported"  # no configured source can price this instrument
+
+
 class MarketState(str, enum.Enum):
     OPEN = "open"
     CLOSED = "closed"
@@ -67,6 +86,10 @@ class Quote(MoneyModel):
     market_time: datetime | None = None
     received_at: datetime
     is_stale: bool = False
+    # R-63 §9-2: WHY there is no price, when there is none. Set by a provider adapter (throttled/
+    # empty/errored/parse_error) or the refresh path (unmapped/no_key/unsupported); None on a
+    # priced quote. Distinct causes must never collapse into one "none".
+    failure_state: FailureState | None = None
 
 
 class Candle(MoneyModel):
