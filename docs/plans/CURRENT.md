@@ -151,6 +151,16 @@ alphavantage,eodhd,csv,manual]`; user override wins but keeps the net) · **§9-
 **R-64** (post-release umbrella, filed in ROADMAP). **Build underway: Phase 0 — the parse-miss RED on
 the real probe-#1 envelope, first.**
 
+**⊕ 2026-07-23 — R-65 FILED (owner ruling, chat): "Test-suite runtime — measure, then
+parallelize" (TEST-INFRA, non-blocking).** Phase 1 = cheap survey delta (`pytest --durations`
+census · real-sleep debt census · `pytest-xdist` feasibility vs the F-10 `RESET_REGISTRY` census
++ per-worker isolation) — runs at the next natural boundary, must not displace R-63 build. Phase 2
+quality-invariant by construction: clock-mock incidental time only (behavioral keeps real clocks or
+gains a mocked variant alongside; unclassifiable → behavioral); xdist is inner-loop only —
+**gate/close verdicts stay solo, ordered AND randomized**; promoting parallel to verdict status
+needs a paired-run equivalence baseline + a separate chat ruling (doubt → slow path). See
+`ROADMAP.md` R-65. **R-63 build proceeds unblocked.**
+
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8** + **9** + **10** + **11**)
 
 The remaining v2.0.0 set, in sequence (**R-54 is CLOSED** — see DONE; the active NEXT above is **R-63**):
