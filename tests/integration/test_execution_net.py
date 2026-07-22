@@ -170,3 +170,33 @@ async def test_refresh_persists_then_clears_failure_state(session, monkeypatch):
     row = await session.get(QuoteRow, instr.id)
     await session.refresh(row)
     assert row.last_failure_state is None and row.last_failure_at is None
+
+
+async def test_override_wins_over_free_first_but_keeps_the_net(session, monkeypatch):
+    """§9-6 + §9-1: an explicit override to a PAID provider WINS over free-first (the head is the
+    override, not the free lane that now leads the chain) — but it KEEPS the net: when the paid
+    head fails, the fallback still reaches yahoo. Proven by observing yahoo's fetch."""
+
+    # Seed a US equity with an explicit override to alphavantage (paid), while the chain is
+    # free-first (yahoo leads). The route must pick the OVERRIDE as head, not yahoo.
+    instr = await market._get_or_create_instrument(session, "AAPL", None)
+    instr.source_override = "alphavantage"
+    instr.listing_country = "US"
+    await session.flush()
+
+    diag = await market.route_for_instrument(session, instr)
+    assert diag.source_selected == "alphavantage", "override did not win over free-first"
+    assert diag.route_rule == "override"
+    assert diag.priority_chain[0] == "yahoo", "chain should be free-first even when overridden"
+
+    # Now prove the net still catches: the overridden (paid) head fails → yahoo prices it.
+    calls: list = []
+    monkeypatch.setattr(market, "provider_availability", lambda: {
+        "alphavantage": ProviderAvailability("alphavantage", True, True, True)})
+    monkeypatch.setattr(market, "get_provider", lambda: _FailingHead())
+    monkeypatch.setattr("app.providers.market.build_provider",
+                        lambda name: _YahooSpy(calls) if name == "yahoo" else None)
+
+    r = await market.refresh_quote_detailed(session, "AAPL")
+    assert ("yahoo", "AAPL") in calls, "override removed the fallback net"
+    assert r.route_head == "alphavantage" and r.priced_by == "yahoo"

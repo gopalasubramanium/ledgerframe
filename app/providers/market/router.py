@@ -146,14 +146,21 @@ class ProviderAvailability:
 # Default source priority policy by asset "lane". :func:`route` selects through this
 # per instrument (and it's shown in Pricing Health). Entries are provider names in
 # order; only *configured & capable* providers are actually used, then honest fallback.
+# R-63 §9-6 (owner ruling 2026-07-23, FREE-FIRST): free/keyless sources sit BEFORE key-gated/paid
+# ones, WITHIN capability — "a user's money is a routing cost dimension; core function never
+# requires payment." Keyless: yahoo · coingecko · amfi_nav · ecb_fx · csv (local). Paid/keyed:
+# alphavantage · eodhd · kite. This orders the CHAIN (the execution net's fallback order); the
+# HEAD is still the user's explicit choice — an override/matrix cell or the active provider — which
+# WINS over free-first but keeps the net (§9-1, pin-head-keep-net). So no core price REQUIRES a paid
+# key (the keyless lanes always catch), while an explicit paid choice is still honoured as head.
 DEFAULT_PRIORITY: dict[str, list[str]] = {
-    "in_equity": ["kite", "eodhd", "alphavantage", "yahoo", "csv", "manual"],
-    "sg_equity": ["eodhd", "alphavantage", "yahoo", "csv", "manual"],
-    "us_equity": ["eodhd", "alphavantage", "yahoo", "csv", "manual"],
+    "in_equity": ["yahoo", "kite", "alphavantage", "eodhd", "csv", "manual"],
+    "sg_equity": ["yahoo", "alphavantage", "eodhd", "csv", "manual"],
+    "us_equity": ["yahoo", "alphavantage", "eodhd", "csv", "manual"],
     "in_mutual_fund": ["amfi_nav", "statement", "manual"],
-    "global_fund": ["eodhd", "alphavantage", "statement", "manual"],
-    "crypto": ["coingecko", "alphavantage", "yahoo", "csv", "manual"],
-    "fx": ["alphavantage", "yahoo", "ecb_fx", "cache"],
+    "global_fund": ["yahoo", "eodhd", "alphavantage", "statement", "manual"],
+    "crypto": ["coingecko", "yahoo", "alphavantage", "csv", "manual"],
+    "fx": ["ecb_fx", "yahoo", "alphavantage", "cache"],
     "bond": ["eodhd", "statement", "manual", "accrual"],
     "deposit": ["statement", "accrual", "manual"],
     "retirement": ["amfi_nav", "statement", "manual"],

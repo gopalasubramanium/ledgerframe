@@ -636,14 +636,21 @@ async def _display_symbols(session: AsyncSession) -> list[str]:
     from app.api.v1.routes.markets import _DEFAULT_OVERVIEW, global_market_symbols
     from app.models import Holding, Instrument, WatchlistItem
 
-    ids = {
-        *(await session.execute(select(Holding.instrument_id)  # §3.5 R12: skip soft-deleted holdings
-                                .where(Holding.instrument_id.isnot(None)).where(Holding.deleted_at.is_(None)))).scalars().all(),
-        *(await session.execute(select(WatchlistItem.instrument_id))).scalars().all(),
+    # R-63 §9-6 budget order: HOLDINGS FIRST, then watchlist, then the curated market/global proxies.
+    # The refresh budget (`refresh_data`) walks this list in order and stops when the time budget is
+    # reached — so a user's OWN holdings are always refreshed before a call is spent on an overview
+    # proxy. (Holdings and watchlist were previously merged into one set, leaving their order — and
+    # thus the budget priority between them — undefined.)
+    holding_ids = (await session.execute(
+        select(Holding.instrument_id)  # §3.5 R12: skip soft-deleted holdings
+        .where(Holding.instrument_id.isnot(None), Holding.deleted_at.is_(None)))).scalars().all()
+    watch_ids = (await session.execute(select(WatchlistItem.instrument_id))).scalars().all()
+    prioritised_ids = list(dict.fromkeys([*holding_ids, *watch_ids]))  # holdings first, dedup, ordered
+    id_to_sym = {
+        i.id: i.symbol for i in (await session.execute(
+            select(Instrument).where(Instrument.id.in_(prioritised_ids or [-1])))).scalars()
     }
-    instr_syms = (
-        await session.execute(select(Instrument.symbol).where(Instrument.id.in_(ids or [-1])))
-    ).scalars().all()
+    instr_syms = [id_to_sym[i] for i in prioritised_ids if id_to_sym.get(i)]
     ordered: list[str] = []
     for sym in [*instr_syms, *_DEFAULT_OVERVIEW, *global_market_symbols()]:
         if sym not in ordered:

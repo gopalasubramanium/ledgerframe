@@ -83,5 +83,6 @@ def test_annotation_does_not_change_routing():
     """§18-F7b #2 — chain membership never selects a provider; annotating it changes nothing."""
     with_av = _route(symbol="SBICARD.BSE", listing_country="IN", availability=_keyed_alphavantage())
     assert with_av.source_selected == "alphavantage"
+    # R-63 §9-6 free-first order (keyless yahoo leads; kite the India specialist before the other paid).
     assert with_av.priority_chain == [
-        "kite", "eodhd", "alphavantage", "yahoo", "csv", "manual"]
+        "yahoo", "kite", "alphavantage", "eodhd", "csv", "manual"]
