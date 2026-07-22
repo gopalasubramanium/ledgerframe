@@ -139,8 +139,17 @@ TSLA/SBICARD.BSE/RELIANCE.BSE all price fine **without** the param; **`.BSE` is 
 quota, not entitlement absence (the key IS entitled to delayed data). Compounding findings: no
 fetch-time fallback net (the priority chain is display-only, never walked — yahoo is never
 called); all failures collapsed into one message; free-first ordering (f) would keep the keyless
-lanes carrying load. **Next: owner rules §9 (r63-pricing-routing.md), then build backend-first,
-fail-first.** AV reference committed to the tree at `docs/reference/` (`b88adbe`).
+lanes carrying load. AV reference committed to the tree at `docs/reference/` (`b88adbe`).
+
+**⊕ 2026-07-23 — §9 CLOSED (owner one-pass, in chat; all twelve items RESOLVED with verbatim
+rationales).** §7 acceptance criteria (AC-1..AC-18) and §8 build phases (0..6) authored; §-ledger
+seeded (I-1..I-7). Key rulings: **§9-0** BOTH (tolerant `Global Quote*` parse + `entitlement` audit;
+REDs use captured real envelopes) · **§9-1** pin-head-keep-net (execution net built first; provenance
+head=X/priced-by=Y) · **§9-2** seven-state taxonomy + two-premiums fix · **§9-4** provider doctor
+on-demand only, ≤1 egress/lane, redacted · **§9-6** free-first within capability (`us_equity:[yahoo,
+alphavantage,eodhd,csv,manual]`; user override wins but keeps the net) · **§9-10** (g) fenced to
+**R-64** (post-release umbrella, filed in ROADMAP). **Build underway: Phase 0 — the parse-miss RED on
+the real probe-#1 envelope, first.**
 
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8** + **9** + **10** + **11**)
 

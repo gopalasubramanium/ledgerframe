@@ -199,97 +199,207 @@ decision (copy hygiene: name a fact, never an endpoint).
   (its intent — request delayed data — stays; its **parse** must tolerate the entitled envelope).
 - Commitments: never fabricate a number; money math backend-only.
 
-## 7. ACCEPTANCE CRITERIA (seed — completed after §9)
+## 7. ACCEPTANCE CRITERIA (completed from the §9 one-pass — every row answers "what turns red?")
 
-- [ ] TSLA / SBICARD.BSE / AARK price on the live chain (fail-first: a test that RED-reproduces
-  the decorated-envelope parse-miss, then greens).
-- [ ] Distinct failure states render distinctly on Pricing Health (throttled ≠ empty ≠ unmapped).
-- [ ] A pinned rule never removes the fallback net — an execution fallback exists and is proven
-  (fail-first: AV forced to fail, yahoo serves the price).
-- [ ] Provider doctor gives per-provider verdicts, **redacted**, and would have caught this bug.
-- [ ] Free-first ordering holds; no core price requires a paid key.
-- [ ] **Blindness pins** on every new guard (a guard that protects nothing must fail loudly).
-- [ ] Help Currency Law: Pricing Health + Settings routing copy deltas shipped, or guard-
-  corroborated "no impact".
-- [ ] Accepted-surface rite discharged for Pricing Health **and** Settings (dated delta note +
-  pre-pass re-run each).
+**Parse + fixtures (§9-0).**
+- [ ] **AC-1** A test RED-reproduces the decorated-envelope parse-miss on the **captured real
+  probe-#1 envelope** (`"Global Quote - DATA DELAYED BY 15 MINUTES"`), then greens after the
+  tolerant `Global Quote*` parse. *Red when:* the parser regresses to `data["Global Quote"]` only.
+- [ ] **AC-2** A test asserts the **genuine-empty** case (captured real probe-#5 envelope,
+  `{"Global Quote": {}}`) resolves to `empty`, **distinct** from `parse_error`. *Red when:* the two
+  collapse to one state again.
+- [ ] **AC-3** The `entitlement` audit: a guard enumerates every AV call site and asserts each
+  either omits `entitlement` or parses the entitled envelope. *Red when:* a new call site sends
+  `entitlement` into a non-tolerant parse.
 
-## 8. BUILD PHASES (seed — gated on §9)
+**Execution net + provenance (§9-1).**
+- [ ] **AC-4** With AV forced to fail (real probe-#1 fixture), the fetch **walks the chain** and
+  **yahoo serves the price** — for both a matrix cell and an explicit override (pin-head-keep-net).
+  *Red when:* the fetch stops at the pinned head and returns cache/none. (This is the canonical
+  **capability-vs-property** case — a 200-with-data that parses empty; cite the TEMPLATE lesson.)
+- [ ] **AC-5** On a net catch, Pricing Health shows **head=X, priced-by=Y** (provenance rider).
+  *Red when:* the rendered source hides that a fallback fired.
+- [ ] **AC-6** `no_key` lanes are **skipped** in the walk (never "stalled on"). *Red when:* an
+  unkeyed lane is attempted and errors.
 
-0 survey (this file) → **§9 one-pass STOP** → 1 backend: envelope parse + failure taxonomy +
-execution fallback (fail-first each) → 2 provider doctor + preflight → 3 free-first ordering →
-4 Pricing Health + Settings surface deltas (accepted-surface rite) → walk → close. Both suite
-verdicts (ordered AND randomized, declared seeds); UTF-8-safe edits; NO PUSH; KB-sync from diff.
+**Taxonomy + confidence (§9-2, §9-9).**
+- [ ] **AC-7** All seven states (`parse_error · throttled · unmapped · errored · empty · no_key ·
+  unsupported`) are distinguishable in the per-holding diagnostics drawer; the summary chip uses the
+  coarser served vocabulary. *Red when:* any two are indistinguishable in the drawer.
+- [ ] **AC-8** `throttled` surfaces "last throttled at T — will retry". *Red when:* a throttle
+  reads as `empty`/`none`.
+- [ ] **AC-9** Tier labels reflect **verified capability per product** (quotes vs index), never the
+  coarse config claim (two-premiums fix). *Red when:* Settings shows "premium" while a product is
+  unverified/unentitled.
+
+**Free-first + budget (§9-6).**
+- [ ] **AC-10** `DEFAULT_PRIORITY` orders free/keyless before key-gated within capability
+  (`us_equity: [yahoo, alphavantage, eodhd, csv, manual]` et al.); **no core price requires a paid
+  key**. *Red when:* a keyless-capable lane sits below a paid one.
+- [ ] **AC-11** An explicit matrix/override **wins** over free-first but **keeps the net**
+  (§9-1). *Red when:* an override disables the fallback.
+- [ ] **AC-12** The refresh budget spends **holdings before overview proxies**. *Red when:* proxy
+  refresh can starve a holding of its one daily call.
+
+**Doctor (§9-4).**
+- [ ] **AC-13** Provider doctor is an **on-demand button**, spends **≤1 egress call per lane per
+  run**, **counts calls on screen**, verdicts **redacted** (key presence / reachability /
+  known-symbol resolve — never the key, never a holding value). *Red when:* it auto-runs, exceeds
+  the budget, or leaks a secret/value.
+- [ ] **AC-14** The doctor **would have caught this bug** — a lane returning 200-with-data that
+  parses empty reports **FAIL (parse)**, not PASS. *Red when:* a parse-empty lane reports healthy.
+
+**Standing.**
+- [ ] **AC-15** **Blindness pins** on every new guard (a guard that protects nothing fails loudly).
+- [ ] **AC-16** Help Currency Law: Pricing Health + Settings routing copy deltas shipped, or
+  guard-corroborated "no impact".
+- [ ] **AC-17** Accepted-surface **rite** discharged for **Pricing Health** and **Settings**
+  (dated delta note + pre-pass re-run each — §9-7).
+- [ ] **AC-18** Both suite verdicts (ordered AND randomized, declared seeds); UTF-8-safe edits.
+
+## 8. BUILD PHASES (authored from the §9 one-pass — backend-first, fail-first each)
+
+- **Phase 0 — the parse-miss RED + fix (the root cause).** Capture the real envelopes as
+  committed fixtures (probe #1 decorated, probe #5 genuine-empty). Write the RED that would have
+  caught this the day F-4 shipped (AC-1), on the real fixture → fix the AV quote parser to tolerate
+  the `Global Quote*` key family (the `_find_time_series` pattern) → green → assert the
+  genuine-empty distinction (AC-2). Audit every `entitlement` use (AC-3). *This is the delta that
+  makes TSLA/SBICARD.BSE/AARK price again.*
+- **Phase 1 — the execution net (§9-1).** Make the priority chain **real at fetch time**: on the
+  selected source failing, walk to the next **capable, keyed** lane (skip `no_key`), for both
+  matrix and override (pin-head-keep-net). Provenance: carry head=X / priced-by=Y (AC-4/5/6).
+  Fail-first: AV forced to fail → yahoo serves (the capability-vs-property lesson).
+- **Phase 2 — the failure taxonomy + confidence integration (§9-2/§9-9).** The seven states from
+  adapter → refresh → pricing-health row (typed field, §3b). `throttled` carries last-throttle/retry.
+  Two-premiums fix: verified-capability tier labels (AC-7/8/9).
+- **Phase 3 — free-first ordering + budget (§9-6).** Reorder `DEFAULT_PRIORITY` (free/keyless
+  before paid, within capability); refresh budget spends holdings before overview proxies; explicit
+  user cell/override wins but keeps the net (AC-10/11/12).
+- **Phase 4 — surface deltas under the RITE (§9-7).** Pricing Health: taxonomy drawer +
+  head/priced-by provenance. Settings: recut the routing sentence (`Settings.tsx:1417-1418`) so it
+  is **true**, and the "Market data provider" card's meaning shift (single source → preferred head).
+  **Dated delta note + pre-pass re-run** for `page-pricing-health.md` AND `page-settings.md`.
+- **Phase 5 — the provider doctor (§9-4).** On-demand button; ≤1 egress/lane/run; calls counted
+  on screen; redacted verdicts; known-symbol set (proposed below). Must report a parse-empty lane as
+  FAIL (AC-13/14).
+- **Phase 6 — 0a specimens** incl. PROPOSED failure-state copy (GLOSSARY-first, §9-3) and the recut
+  Settings sentences → **tests both postures** (egress on / no-egress: a fallback NEVER calls under
+  no-egress) → **3a** scripted pre-pass → **owner 3b on his LIVE symptoms** (TSLA/SBICARD.BSE/AARK) →
+  **close** (§-ledger CLOSED, strike-check, Help currency, KB-sync).
+
+*Proposed provider-doctor known symbols (owner ratifies at 0a):* yahoo→`AAPL`, alphavantage→`IBM`,
+eodhd→`AAPL.US`, coingecko→`bitcoin`, amfi_nav→a live scheme code, ecb_fx→`EUR/USD`, kite→`INFY`.
+
+*Proposed free-first `DEFAULT_PRIORITY` (owner ratifies at build):*
+`us_equity/sg_equity: [yahoo, alphavantage, eodhd, csv, manual]` ·
+`in_equity: [yahoo, kite, alphavantage, eodhd, csv, manual]` ·
+`crypto: [coingecko, yahoo, alphavantage, csv, manual]` ·
+`fx: [ecb_fx, yahoo, alphavantage, cache]` · `global_fund: [yahoo, eodhd, alphavantage, statement,
+manual]`. (Mutual-fund/bond/deposit/derivative lanes unchanged — no free market-quote source applies.)
+
+Standing: two-commit records · both suite verdicts (declared seeds) · UTF-8-safe edits · never the
+owner's live stack · NO PUSH · KB-sync from actual diff · normative questions STOP for chat.
 
 ---
 
-## 9. NEEDS DECISION — **STOP. Owner one-pass before any code.**
+## §-LEDGER (intake seeded at build time — TEMPLATE §8 / ai-surfaces §19-K)
 
-Phase A is diagnosis; every item below is a normative choice the fix's shape depends on. Intake
-rows for §0-A/§0-B findings enter the §-ledger at build time (TEMPLATE §8 / ai-surfaces §19-K).
+A ledger may not claim CLOSED while any intake row lacks a disposition. Intake from Phase A:
 
-**§9-0 — The root-cause fix (near-mechanical, but confirm the shape).** The dominant failure is
-the decorated-envelope parse-miss. Two shapes: **(A)** make the quote parser tolerant of the
-`"Global Quote*"` key family (mirrors `_find_time_series`), keeping `entitlement=delayed`; **(B)**
-stop sending `entitlement=delayed` for `GLOBAL_QUOTE` (probe #2 shows the plain key works) and
-send it only where it demonstrably helps. *Recommendation: (A) — the key IS entitled to delayed
-(fresher) data, so keep requesting it and parse it correctly; (B) would silently drop 15-min-
-delayed for end-of-day.* **Owner: A, B, or both (tolerant parse + audit every `entitlement` use)?**
+| Row | Source | Item | Disposition |
+| --- | --- | --- | --- |
+| I-1 | §0-A / §0-B(i,ii) | AV entitlement-envelope parse-miss (root cause) collapsed into one "empty" message | OPEN → Phase 0 |
+| I-2 | §0-B(iii) | No fetch-time fallback net — priority chain is display-only, never walked; yahoo never called | OPEN → Phase 1 |
+| I-3 | §0-B(ii) | Distinct failures collapsed at three layers (adapter / refresh / cache) | OPEN → Phase 2 |
+| I-4 | §0-B(i) | Two-premiums conflation — `av_tier` learns only from INDEX_DATA; Settings "premium" is a coarse config claim | OPEN → Phase 2 |
+| I-5 | §0-A fan-out rider | 19-call refresh fan-out (overview proxies) vs AV per-sec/daily budget; free-first + holdings-first mitigates | OPEN → Phase 3 |
+| I-6 | §9-i | Duplicate TSLA instrument (id 22 / id 23) — **invariant question**: did the product permit the duplicate? If so, that is an architectural finding (root-cause it); owner cleans his live data via the UI once the cause is known | OPEN → Phase 1 (invariant probe) |
+| I-7 | §0-A log 13605 | Genuine transient throttle ("Burst pattern … 5 req/sec") — secondary contributor; surfaces as `throttled` | OPEN → Phase 2 |
 
-**§9-1 — Override semantics: pin-head vs pin-only.** Today an override *pins and returns*
-(`router.py:344`). Under (a) a rule must pin the chain's **head** and keep the net. **Ruling
-needed:** does an explicit per-instrument override (i) pin the head then fall through on failure
-(recommended — makes the sentence true), or (ii) remain an absolute pin (and then the shipped
-sentence must be reworded for overrides specifically)? Same question for a **matrix** cell.
+---
 
-**§9-2 — The failure-state taxonomy.** Confirm the distinct states to name and surface:
-`parse_error` · `throttled` · `unmapped` · `errored` · `empty` · `no_key` · `unsupported`
-(vs collapsing to "none"). Which are **user-facing** on Pricing Health vs internal-only?
+## 9. NEEDS DECISION — **CLOSED 2026-07-23 (owner one-pass, in chat).**
 
-**§9-3 — Served vocabulary (GLOSSARY-first).** Each user-facing failure state needs an exact
-GLOSSARY term before it is served (Help Currency Law). **Owner ratifies wording** — e.g.
-"throttled" → *"the provider is rate-limiting; will retry"* vs "empty" → *"the provider had no
-price for this symbol"*. Draft copy proposed at build; owner rules the words.
+All twelve items resolved. Each disposition cites **"Chat ruling 2026-07-23 (§9 one-pass)"**; the
+*Owner:* lines are his acceptance **verbatim** (his words, recorded, not paraphrased).
 
-**§9-4 — Provider doctor: scope.** A live-chain test on Pricing Health with per-provider
-verdicts, **redacted** (key **presence**, reachability, a known-symbol end-to-end resolve — never
-the key, never a real holding's value). **Ruling:** on-demand button only, or also a preflight
-that gates routing? How many egress calls may it spend (budget honesty)? Which known symbol per
-provider lane?
+**§9-0 RESOLVED — BOTH: tolerant `Global Quote*` parse (the `_find_time_series` pattern) AND an
+audit of every `entitlement` use.** Delayed data kept (entitled, fresher). **Rider:** fail-first
+REDs use the **captured real envelopes** as committed fixtures — probe #1 (decorated) and probe #5
+(genuine empty) — never hand-mocked. Chat ruling 2026-07-23 (§9 one-pass). *Owner:* "Accepted.
+(Industry best practice: Utilizing captured, real-world API payloads as test fixtures prevents
+blind spots caused by synthetic mocks; tolerant parsing ensures resilience against upstream schema
+additions or entitlement flags)."
 
-**§9-5 — Cache staleness honesty for forming bars (e).** A still-forming bar / intra-session
-quote is not a settled price. **Ruling:** surface "forming" distinctly from "stale", or fold into
-the existing Stale state? (Interacts with R-42 intraday.)
+**§9-1 RESOLVED — (i) pin-head-keep-net, overrides AND matrix cells.** The execution fallback is
+built **first** (the chain becomes real at fetch time; `no_key` lanes skipped). **Provenance
+rider:** on a net catch, Pricing Health shows head=X, priced-by=Y. Chat ruling 2026-07-23 (§9
+one-pass). *Owner:* "Accepted. (Industry best practice: Graceful degradation via fallback routing
+is essential for resilience, provided strict data provenance is maintained so the user always sees
+the true source of the rendered data)."
 
-**§9-6 — Free-first chain ordering (f, owner-ruled intent).** Reorder `DEFAULT_PRIORITY` so
-free/keyless sources (yahoo, coingecko, amfi, ecb) sit **before** key-gated/paid (eodhd,
-alphavantage, kite) — *within* capability. **Ruling needed:** the exact per-lane order. E.g.
-`us_equity: [yahoo, alphavantage, eodhd, csv, manual]` (free yahoo leads) vs today's
-`[eodhd, alphavantage, yahoo, csv, manual]`. Does a user-set matrix cell / override **override**
-free-first (yes — explicit user intent wins, but still keeps the net per §9-1)?
+**§9-2 RESOLVED — all seven states confirmed** (`parse_error · throttled · unmapped · errored ·
+empty · no_key · unsupported`): full taxonomy in the per-holding diagnostics drawer; coarser served
+chip vocabulary at summary level. **Two-premiums fix included:** tier labels reflect **verified
+capability per product**, never the coarse config claim. Chat ruling 2026-07-23 (§9 one-pass).
+*Owner:* "Accepted. (Industry best practice: Granular observability and surfacing mathematically
+verified capabilities rather than static configuration claims prevents false confidence)."
 
-**§9-7 — Provider doctor on an accepted page = the rite.** Pricing Health is accepted; adding the
-doctor + taxonomy is a delta on it. Confirm the **guard-REDs-an-accepted-surface rite** applies
-(dated delta note in `page-pricing-health.md` + a Pricing Health pre-pass re-run) and equally to
-`page-settings.md` for the routing-sentence change. (Standing convention; confirming, not asking
-permission to skip.)
+**§9-3 RESOLVED — PROPOSED copy at build, owner ratifies at the 0a look, GLOSSARY-first.** Chat
+ruling 2026-07-23 (§9 one-pass). *Owner:* "Accepted. (Industry best practice: Glossary-driven
+development ensures ubiquitous language across the codebase and user interface, eliminating semantic
+drift)."
 
-**§9-8 — Symbol-mapping ownership per provider.** Should each provider own its symbol mapping
-(e.g. AV `SYMBOL_SEARCH`, the `.BSE` suffix convention) explicitly, or stay in the shared
-`currency_for_symbol`/identifier layer? Scope guard: mapping *correctness* is in R-63; a full
-mapping subsystem is **not**.
+**§9-4 RESOLVED — provider doctor: on-demand button ONLY**; ≤1 egress call per lane per run, calls
+counted on screen, verdicts redacted (key presence, reachability, known-symbol resolve — never the
+key, never a holding's value); known-symbol set proposed in the plan (§8). **No network preflight
+gates routing; the free `no_key` check DOES inform chain-walking.** Chat ruling 2026-07-23 (§9
+one-pass). *Owner:* "Accepted. (Industry best practice: For privacy-first architectures, explicit
+user consent for egress, strict rate-limiting, and redaction of sensitive telemetry are
+non-negotiable security baselines)."
 
-**§9-9 — Call-budget honesty surfaced.** Rate-limit awareness (the 5/sec burst, any daily cap)
-should be **visible**, not hidden. **Ruling:** surface a per-provider budget/last-throttle note on
-Pricing Health, or keep internal with only the failure-state chip? (The one caught "Burst pattern"
-line argues for at least a "throttled — will retry" surface.)
+**§9-5 RESOLVED — fold into Stale; "forming" defers to R-42.** Chat ruling 2026-07-23 (§9
+one-pass). *Owner:* "Accepted. (Industry best practice: Strict milestone boundary management and
+scope containment prevent delivery delays caused by adjacent feature creep)."
 
-**§9-10 — Scope fence for (g).** Confirm AV's non-pricing capabilities (news, fundamentals,
-corporate actions, symbol-search) are **ROADMAP candidates only** (§0-E), explicitly **out** of
-R-63. Recommended: yes — one lane fixed well beats scope creep.
+**§9-6 RESOLVED — free-first within capability**; pattern ruled `us_equity: [yahoo, alphavantage,
+eodhd, csv, manual]`; full per-lane tables PROPOSED in the plan (§8); explicit user matrix/override
+wins over free-first BUT keeps the net (§9-1). **Riders:** refresh budget spends holdings before
+overview proxies; the Settings "Market data provider" card's meaning shifts (single source →
+preferred head) — its sentence changes under the rite. Chat ruling 2026-07-23 (§9 one-pass).
+*Owner:* "Accepted. (Industry best practice: Optimizing API consumption by defaulting to free
+tiers—while strictly respecting user-defined overrides and maintaining the fallback net—is the
+standard for cost-efficient data orchestration)."
 
-**§9-i (housekeeping, not normative):** the duplicate TSLA instrument (id 22 / id 23) — fold a
-dedupe into R-63, or file separately? Flagging; owner's call.
+**§9-7 RESOLVED — the rite confirmed** for `page-pricing-health.md` AND `page-settings.md` (dated
+delta notes + pre-pass re-runs). Chat ruling 2026-07-23 (§9 one-pass). *Owner:* "Accepted.
+(Industry best practice: Adhering to established governance rites ensures zero regressions when
+modifying previously ratified, stable surfaces)."
 
-**Sign-off to start build:** §9 has no open blocker · §3b deltas approved · the fail-first RED
-for the parse-miss is written first.
+**§9-8 RESOLVED — shared identifier layer stays**; provider-specific transforms isolated at the
+boundary only where demanded; `SYMBOL_SEARCH` mapping = ROADMAP candidate. Chat ruling 2026-07-23
+(§9 one-pass). *Owner:* "Accepted. (Industry best practice: Implementing the Adapter Pattern to
+maintain a unified internal domain model while isolating provider-specific transforms at the system
+boundary)."
+
+**§9-9 RESOLVED — surface it**: the `throttled` state + "last throttled at T — will retry" in
+diagnostics; numeric budget meters deferred with the (g) candidates. Chat ruling 2026-07-23 (§9
+one-pass). *Owner:* "Accepted. (Industry best practice: Transparently surfacing rate-limit
+exhaustion and expected retry intervals prevents user confusion and duplicate requests)."
+
+**§9-10 RESOLVED — fence confirmed.** §0-E files as ONE umbrella POST-RELEASE ROADMAP row (**R-64**
+— next free R-number): "AV capability leverage — NEWS_SENTIMENT, fundamentals, corporate actions,
+SYMBOL_SEARCH — decomposed when taken", citing §0-E + the committed reference doc. Chat ruling
+2026-07-23 (§9 one-pass). *Owner:* "Accepted. (Industry best practice: Enforcing strict feature
+freezes for current milestones and aggressively pushing non-critical enhancements to the
+post-release roadmap)."
+
+**§9-i RESOLVED — investigate the CAUSE in-build** (duplicate instruments as an invariant question:
+if the product permitted id 22/23, that is a finding — ledger row I-6); the owner's live-data
+cleanup is HIS, via the product UI, guided once the cause is known. Chat ruling 2026-07-23 (§9
+one-pass). *Owner:* "Accepted. (Industry best practice: Treating invariant violations (duplicate
+instruments) as critical architectural findings requiring root-cause analysis, while relying on
+standard UI tools for user-side data remediation)."
+
+**Sign-off: §9 CLOSED, no open blocker. Build begins at Phase 0 — the parse-miss RED on the real
+probe-#1 envelope, first.**
