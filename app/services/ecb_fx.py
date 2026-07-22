@@ -32,6 +32,16 @@ def _set_cache(rates: dict[str, Decimal], as_of: str | None) -> None:
     _ASOF = as_of
 
 
+def clear() -> None:
+    """Drop the in-process reference-rate cache (the `_RATES`/`_ASOF` process globals).
+
+    The public reset the test-isolation autouse fixture calls, mirroring `fx.clear_cache()` (R-54
+    F-10 Class B): without it a test that loaded ECB reference rates leaves them resident for the
+    next test, and a later test that expects an unpopulated reference set (the cost-FX 'unavailable'
+    backfill tests) then resolves a rate it should have had to flag missing."""
+    _set_cache({}, None)
+
+
 async def refresh(session: AsyncSession, xml_text: str) -> dict:
     """Parse the ECB daily XML, upsert the cache table, and refresh the in-process map."""
     as_of, rates = parse_ecb_daily(xml_text)

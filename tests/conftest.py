@@ -42,6 +42,52 @@ async def _fresh_engine_per_test():
     await dispose_engine()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _shared_db_schema_baseline():
+    """R-54 F-10 Class A — guarantee the shared test DB has the schema BEFORE any test runs.
+
+    The suite shares ONE SQLite file (`LEDGERFRAME_DATA_DIR`, set once above). Some unit tests read
+    the DB transitively — e.g. `openai_compatible.health()` runs the egress-posture check, which does
+    `SELECT ... FROM settings WHERE key='privacy_mode'` — WITHOUT requesting a schema-creating fixture.
+    They passed only because an earlier `session`/`app_client` test happened to leave the schema in the
+    shared file; under `pytest-randomly` one of them can be scheduled first and hit `no such table:
+    settings`. (A test that passes because an earlier test leaked schema is order-dependent even when
+    nobody wrote it that way — the ordered suite's green for those tests was execution-order luck all
+    along, the same species as the seed-lucky corroborations.)
+
+    Fixed here by creating the schema ONCE, up front, on the shared file — via a throwaway SYNC engine
+    so there is no event-loop/global-engine coupling. Migration/db tests are UNAFFECTED: they repoint
+    `LEDGERFRAME_DATA_DIR` at their own `tmp_path` and run Alembic there, so the shared file's baseline
+    is irrelevant to them. This is fixture plumbing only — it changes no product behaviour."""
+    from sqlalchemy import create_engine
+
+    from app.core.config import get_settings
+    from app.db.base import Base
+
+    settings = get_settings()
+    if settings.is_sqlite:
+        settings.db_path.parent.mkdir(parents=True, exist_ok=True)
+    engine = create_engine(settings.sync_db_url)
+    Base.metadata.create_all(engine)
+    engine.dispose()
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_process_globals():
+    """R-54 F-10 Class B — reset in-process module globals at the SETUP of every test.
+
+    The reset list is the census-derived registry in `tests/isolation.py` (the single source of truth
+    the census guard also reads). Lifts the resets `app_client` already did — `reset_provider`,
+    `fx.clear_cache`, `ratelimit.reset`, `metrics.reset` — and adds the ones it never covered
+    (`ecb_fx.clear`, `grounding.reset_rate_limit`, `reset_ai_provider`, the backfill-task set), so a
+    `session`-only or unit test can no longer inherit a global another test left dirty."""
+    from tests.isolation import reset_process_globals
+
+    reset_process_globals()
+    yield
+
+
 @pytest.fixture
 async def session():
     """A fresh in-isolation async session backed by a temp SQLite file."""

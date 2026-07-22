@@ -42,6 +42,15 @@ FALLBACK_SIGNAL = "AI answer didn't pass grounding checks — showing facts dire
 _request_times: list[float] = []
 
 
+def reset_rate_limit() -> None:
+    """Clear the in-process AI request-timestamp window (`_request_times`).
+
+    The public reset the test-isolation autouse fixture calls (R-54 F-10 Class B): without it a test
+    that drives the AI path leaves timestamps resident, so a later test can be spuriously rate-limited
+    by requests it never made — the in-process limiter is the same shape as the fx/ecb caches."""
+    _request_times.clear()
+
+
 def _rate_limited() -> bool:
     now = time.monotonic()
     cutoff = now - 60
