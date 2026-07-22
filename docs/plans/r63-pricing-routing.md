@@ -249,6 +249,26 @@ decision (copy hygiene: name a fact, never an endpoint).
 - [ ] **AC-14** The doctor **would have caught this bug** — a lane returning 200-with-data that
   parses empty reports **FAIL (parse)**, not PASS. *Red when:* a parse-empty lane reports healthy.
 
+**Instrument-identity guard (I-6, §9-i ADDENDUM — Phase 3.5).**
+- [ ] **AC-19** New-dupe prevention is **absolute at the code layer**: a single identity resolver
+  is used by **all** instrument-create paths (the two former keys — `market._get_or_create_instrument`
+  `symbol.upper()`+optional-exchange, and `csv_import`'s bare non-uppercased `symbol` — collapse to
+  one). *Red when:* a create path resolves identity by any other key, or a second `(TSLA, NULL)` /
+  case-variant row is creatable through the real path. (Fail-first through the **real** get-or-create,
+  not a synthetic uniqueness test — §9-i ADDENDUM rider 4.)
+- [ ] **AC-20** The DB uniqueness gap is closed where data permits: a functional guard treats
+  `exchange=NULL` and a set exchange under the same symbol as **one** identity bucket (NULL is no
+  longer distinct). *Red when:* two rows with the same `upper(symbol)` and equivalent exchange
+  (NULL≡NULL) coexist on a clean DB.
+- [ ] **AC-21** The migration is **dupe-tolerant** (hard rider 3): on a DB that already contains
+  duplicates it **does not fail/brick** — it binds fully where data permits and **surfaces** the
+  existing duplicates instead. *Red when:* the migration raises on pre-existing duplicate data
+  (migration-chain test on a seeded-dupe DB).
+- [ ] **AC-22** Existing duplicates are **surfaced** ("duplicate instruments — resolve on Holdings",
+  copy PROPOSED, GLOSSARY-first) so the owner can clean them via the UI; the guard makes recurrence
+  impossible thereafter. *Red when:* a pre-existing duplicate is neither blocked-at-source nor
+  surfaced (silent).
+
 **Standing.**
 - [ ] **AC-15** **Blindness pins** on every new guard (a guard that protects nothing fails loudly).
 - [ ] **AC-16** Help Currency Law: Pricing Health + Settings routing copy deltas shipped, or
@@ -275,6 +295,15 @@ decision (copy hygiene: name a fact, never an endpoint).
 - **Phase 3 — free-first ordering + budget (§9-6).** Reorder `DEFAULT_PRIORITY` (free/keyless
   before paid, within capability); refresh budget spends holdings before overview proxies; explicit
   user cell/override wins but keeps the net (AC-10/11/12).
+- **Phase 3.5 — the instrument-identity guard (I-6, §9-i ADDENDUM, folded 2026-07-24).** **Two
+  fixes only** (rider 2): **(a)** unify the get-or-create lookup keys behind **one identity resolver**
+  used by every create path (F6 — two keys for one identity is the defect); **(b)** close the
+  NULL-exchange uniqueness gap (functional index / equivalent). **Dupe-tolerant migration** (rider 3):
+  binds fully where data permits, and on a DB that already holds duplicates it **surfaces** them
+  ("duplicate instruments — resolve on Holdings", PROPOSED copy) instead of failing. Fail-first: the
+  RED reproduces the NULL-exchange dupe through the **real** path (both former key shapes); migration-
+  chain tests cover the dupe-tolerant path; blindness pin. **Lands before Phase 4's pre-pass re-runs**
+  (rider 6); full-suite pair at completion. Discharges ledger I-6 (AC-19..22).
 - **Phase 4 — surface deltas under the RITE (§9-7).** Pricing Health: taxonomy drawer +
   head/priced-by provenance. Settings: recut the routing sentence (`Settings.tsx:1417-1418`) so it
   is **true**, and the "Market data provider" card's meaning shift (single source → preferred head).
@@ -313,7 +342,7 @@ A ledger may not claim CLOSED while any intake row lacks a disposition. Intake f
 | I-3 | §0-B(ii) | Distinct failures collapsed at three layers (adapter / refresh / cache) | **DISCHARGED — Phase 2** (Delta 2.1 `9d54f4f` adapter+refresh · Delta 2.2 backend `34974b6` persistence+row · Delta 2.2 frontend `c882648` drawer). Distinct causes typed adapter → refresh → pricing-health row → drawer; the flat "none" is gone. |
 | I-4 | §0-B(i) | Two-premiums conflation — `av_tier` learns only from INDEX_DATA; Settings "premium" is a coarse config claim | **IN PROGRESS — Phase 2 Delta 2.1 `9d54f4f`** (backend: `quote_entitlement` learned from the envelope, distinct from `av_tier`). Remaining: the Settings verified-tier **display** → Phase 4 (rite). |
 | I-5 | §0-A fan-out rider | 19-call refresh fan-out (overview proxies) vs AV per-sec/daily budget; free-first + holdings-first mitigates | **DISCHARGED — Phase 3 `2a9fa1e`** (holdings-before-proxies budget: `_display_symbols` (`system.py`) orders holdings → watchlist → overview/global proxies **deterministically** — they were previously merged in a set — and the budget walks in order and stops at the time budget, so a holding is never starved of a call by an overview proxy; `test_refresh_budget_order.py` asserts the seeded holding refreshes before any overview-only proxy. Free-first chain ordering (§9-6) keeps keyless lanes carrying load. Full-suite verdict **2135, both orders**.) *Row was mislabelled `OPEN → Phase 3` after Phase 3 shipped; corrected at the 2026-07-24 Phase-4 re-entry ledger↔records reconciliation.* |
-| I-6 | §9-i | Duplicate TSLA instrument (id 22 / id 23) — **invariant question**: did the product permit the duplicate? If so, that is an architectural finding (root-cause it); owner cleans his live data via the UI once the cause is known | **CAUSE FOUND — 2026-07-24 Phase-4 re-entry reconciliation.** The assigned Phase-1 invariant probe **never ran** — Phase 1 closed (`95df927`/`ee07dd1`) without it; caught by the ledger↔records grep at re-entry (recorded here, **not aged silently**). **Root cause — the product DOES permit the duplicate, two compounding reasons:** (1) `uq_instr_symbol_exch = UniqueConstraint("symbol","exchange")` (`app/models/__init__.py:193`) does **not** stop two `(TSLA, NULL)` rows — SQL treats NULL as **distinct** in a UNIQUE constraint, and `exchange` is nullable (`:170`); (2) the two holding-creation get-or-create paths use **inconsistent lookup keys** — `market._get_or_create_instrument` (`app/services/market.py:1442`) matches `symbol.upper()` + exchange-only-if-truthy, while `csv_import` (`app/services/csv_import.py:472`) matches **bare `symbol` (NOT uppercased)**, no exchange filter. So a holding added once with `exchange=NULL` and again with an exchange set (or different casing) yields two independently-priced instruments — the live id-22 (`source_override`) / id-23 symptom, and why one prices while the other shows `(corrected)`. **No dedup/merge pass exists in the create paths.** **Disposition owed — §9-i scope fork surfaced to owner (2026-07-24):** fold a preventive guard into R-63 (data-integrity, R-63's own charter) **vs.** file a post-fence ROADMAP row (§9-10 feature-freeze). **OPEN until ruled;** rides to the 0a report if unresolved. Live-data cleanup remains the owner's via the UI (§9-i). |
+| I-6 | §9-i | Duplicate TSLA instrument (id 22 / id 23) — **invariant question**: did the product permit the duplicate? If so, that is an architectural finding (root-cause it); owner cleans his live data via the UI once the cause is known | **CAUSE FOUND — 2026-07-24 Phase-4 re-entry reconciliation.** The assigned Phase-1 invariant probe **never ran** — Phase 1 closed (`95df927`/`ee07dd1`) without it; caught by the ledger↔records grep at re-entry (recorded here, **not aged silently**). **Root cause — the product DOES permit the duplicate, two compounding reasons:** (1) `uq_instr_symbol_exch = UniqueConstraint("symbol","exchange")` (`app/models/__init__.py:193`) does **not** stop two `(TSLA, NULL)` rows — SQL treats NULL as **distinct** in a UNIQUE constraint, and `exchange` is nullable (`:170`); (2) the two holding-creation get-or-create paths use **inconsistent lookup keys** — `market._get_or_create_instrument` (`app/services/market.py:1442`) matches `symbol.upper()` + exchange-only-if-truthy, while `csv_import` (`app/services/csv_import.py:472`) matches **bare `symbol` (NOT uppercased)**, no exchange filter. So a holding added once with `exchange=NULL` and again with an exchange set (or different casing) yields two independently-priced instruments — the live id-22 (`source_override`) / id-23 symptom, and why one prices while the other shows `(corrected)`. **No dedup/merge pass exists in the create paths.** **RULED — CHAT 2026-07-24 (§9-i ADDENDUM): OPTION 1, FOLDED INTO R-63**, six riders (see §9-i ADDENDUM). Fix = (a) unify get-or-create lookup keys (F6 principle) + (b) close the NULL-exchange gap via a **dupe-tolerant** migration that binds where data permits and **surfaces** existing dupes ("resolve on Holdings") rather than bricking a live upgrade. **Lands at Phase 3.5, before Phase 4's pre-pass re-runs.** **DISCHARGES at Phase 3.5** (fail-first RED through the real get-or-create path, both former key shapes; migration-chain tests for the dupe-tolerant path; blindness pin). Owner's live-data cleanup remains HIS via the UI (§9-i); the 0a report carries it as his action item with the Holdings surface showing the pair. |
 | I-7 | §0-A log 13605 | Genuine transient throttle ("Burst pattern … 5 req/sec") — secondary contributor; surfaces as `throttled` | **DISCHARGED — Phase 2** (`RateLimited`→`THROTTLED` + `last_throttled_at`, real burst text `9d54f4f`; persisted `34974b6`; drawer renders "throttled — … will retry (last at T)" `c882648`, copy PROPOSED). |
 
 ### Accepted-surface RITE — consolidation (recorded explicitly per the owner ruling 2026-07-23)
@@ -444,6 +473,36 @@ cleanup is HIS, via the product UI, guided once the cause is known. Chat ruling 
 one-pass). *Owner:* "Accepted. (Industry best practice: Treating invariant violations (duplicate
 instruments) as critical architectural findings requiring root-cause analysis, while relying on
 standard UI tools for user-side data remediation)."
+
+**§9-i ADDENDUM — CHAT RULING 2026-07-24 (I-6 fix scope, at the Phase-4 re-entry).** The Phase-4
+re-entry reconciliation found the assigned Phase-1 invariant probe had **never run** and root-caused
+I-6 (the product permits the duplicate; see the I-6 ledger row). The scope fork — fold a preventive
+guard into R-63 vs. file a post-fence ROADMAP row — was put to the owner. **RULED: OPTION 1 — FOLDED
+INTO R-63**, six riders (echoed verbatim-intent):
+1. **In-charter, not creep** — §9-10's fence was built against **feature** leverage
+   (news/fundamentals); a data-integrity guard on instrument identity is the charter's core
+   (*"data is the core… once and for all"*), and §9-i already classed invariant violations as
+   critical architectural findings. Phase A found the duplicate **inside** the pricing diagnosis.
+2. **Scope, tight** — exactly **two** fixes: **(a)** unify the inconsistent get-or-create lookup keys
+   (one identity resolution — the F6 principle: two keys for one identity is the whole defect);
+   **(b)** close the NULL-exchange gap in the uniqueness constraint (functional index or equivalent).
+   Nothing else rides.
+3. **The migration MUST be dupe-tolerant (hard rider)** — the owner's live DB contains id-22/23
+   today; a unique index that fails to create on existing data would **brick a live upgrade**.
+   New-dupe prevention is **absolute at the code layer immediately**; the constraint **binds fully
+   where data permits**; where existing duplicates exist, the instance **SURFACES** them
+   (*"duplicate instruments — resolve on Holdings"*) instead of failing. Live cleanup stays the
+   owner's via the UI (§9-i unchanged). After his cleanup + this guard, recurrence is impossible.
+4. **Fail-first + blindness pin** — the RED reproduces the NULL-exchange duplicate through the
+   **real** get-or-create path (both former key shapes), proving the guard blocks the door the dupe
+   actually walked through — not a synthetic uniqueness test. Migration-chain tests cover the
+   dupe-tolerant path.
+5. **I-6 discharges here**; the 0a report notes the owner's pending UI cleanup as his action item,
+   with the Holdings surface showing him the pair.
+6. **Sequencing** — this sub-delta (**Phase 3.5**) lands **before** Phase 4's pre-pass re-runs (so
+   the rite's drives run on guarded code); full-suite pair at its completion per the cadence rule.
+
+*Owner reversal, one-liner:* "I-6 post-fence instead." *(Owner:* CHAT RULING 2026-07-24.)
 
 **Sign-off: §9 CLOSED, no open blocker. Build begins at Phase 0 — the parse-miss RED on the real
 probe-#1 envelope, first.**
