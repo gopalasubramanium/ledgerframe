@@ -129,6 +129,19 @@ states named precisely (throttled/unmapped/errored/empty ≠ one "none"); (c) pe
 (e) cache staleness honesty for forming bars. **Plan-file gate standard.** See `ROADMAP.md` R-63,
 `release-readiness.md` RD-9 Amendment 11.
 
+**⊕ 2026-07-23 — Phase A DONE (read-only live diagnosis); plan file `r63-pricing-routing.md`
+§0→§9 written; STOPPED at §9 for the owner one-pass.** **Root cause found and it is NOT the
+assumed one:** an **entitlement-envelope parse mismatch** — `external.py:124` sends
+`entitlement=delayed` on every AV call, AV then returns the quote under the decorated key
+`"Global Quote - DATA DELAYED BY 15 MINUTES"`, and `external.py:191` reads only `"Global Quote"`
+→ `{}` → `"empty quote"` → UNAVAILABLE, on **every** AV symbol. A 5-call live probe confirmed:
+TSLA/SBICARD.BSE/RELIANCE.BSE all price fine **without** the param; **`.BSE` is exonerated**; not
+quota, not entitlement absence (the key IS entitled to delayed data). Compounding findings: no
+fetch-time fallback net (the priority chain is display-only, never walked — yahoo is never
+called); all failures collapsed into one message; free-first ordering (f) would keep the keyless
+lanes carrying load. **Next: owner rules §9 (r63-pricing-routing.md), then build backend-first,
+fail-first.** AV reference committed to the tree at `docs/reference/` (`b88adbe`).
+
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8** + **9** + **10** + **11**)
 
 The remaining v2.0.0 set, in sequence (**R-54 is CLOSED** — see DONE; the active NEXT above is **R-63**):
