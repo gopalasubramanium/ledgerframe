@@ -768,3 +768,31 @@ stated not silent, per the ruling). **Verification (isolated, spare ports, `.env
 `/portfolio/stats` no longer serves the four buckets; the census guard proves the served per-class weights
 sum to 100 on the 92.1% demo set; the Portfolio allocation card drove clean at 1366×950, **0 console
 errors**, unchanged. **Formal movers-on-camera (the AI answer now pulling per-class figures) owed at 0a-ii.**
+
+## DELTA NOTE — 2026-07-23 (R-54 F-8 · perf-timeout metrics render "—", never a fabricated 0.00% — the owed page-portfolio pre-pass re-run)
+
+**Portfolio is CLOSED/accepted; dated delta note under the guard-REDs-an-accepted-surface rite (owner+architect
+F-8 ruling 2026-07-23) — not a re-opening. The rendered page did NOT change.** The code fix + RED-first guard
+shipped in `7824327` (r54 §-ledger F-8); this note discharges the **page-portfolio pre-pass re-run + dated
+note** the ruling deferred to Phase 3a.
+
+F-8: on a covered-window (`da_computable`) perf-series **timeout**, `key_stats` rendered `1Y return` /
+`1Y volatility` / `Max drawdown (1Y)` as **`0.00%`** because empty `ps` + `ps.get(...) or 0.0` conflated
+MISSING with zero (Guarantee-3); TWR and the ratio already dropped honestly. The fix keeps `None` when a
+metric is absent, so the **established honest shapes** render — the frontend's `metricDisplay` → **`"—"`**
+(`metrics.ts:21`, the same shape TWR already uses), the AI pack **omits** the `None` metric. No new
+rendering was coined. **A genuine `0.0` from a populated `ps` still renders its real zero.**
+
+**Pre-pass re-run (Phase 3a, isolated `:8399`, prod dist same-origin, `.env` snapshot-restore
+hash-verified before AND after — UNCHANGED, both themes):** on the demo seed the 1Y window is
+**uncovered** (short history — the Performance card says *"Not enough history yet"*), so `/portfolio/stats`
+returns `value=None` for `1Y return` · `1Y volatility` · `Return / volatility` · `Max drawdown (1Y)` ·
+`Time-weighted return (TWR)`, and every one **renders `"—"` on the live page — never `0.00%`** (DOM-asserted
+per tile, both themes). The genuine-zero complement is **`Today's change` = `0.00 SGD`** (flat offline
+market — a real zero, rendered as its zero, NOT `"—"`). Camera: `r54-3a-portfolio-keystats-{light,dark}.png`.
+The absent→`"—"` and genuine-0.0→zero shapes are visible together, which is exactly the F-8 distinction.
+*(The uncovered-window path exercises the same honest render as the timeout path; the timeout-specific
+fabrication is what the RED-first `test_covered_window_perf_timeout_nulls_not_fabricated_zeros` guard pins —
+a live perf-timeout cannot be forced on demand.)* **AI-pack sibling** (the Ask panel omits the `None` metric)
+verified in the same pre-pass — "what is XIRR" served TWR as `unavailable` and no fabricated `0.00%`.
+**No code moved this session; contract 141/71 unchanged; the page did NOT change.**
