@@ -85,6 +85,19 @@
     what makes that flag meaningful.* **A pre-pass run without this confirmed is not evidence:**
     it may have been reporting on the wrong machine (08-TECH-DEBT, resolved `4af11f5`).
 
+9c. **UX resilience around refresh & locking (same fix family) — filed R-63 3b, 2026-07-24.** Three
+    related gaps observed on the live walk, one fix family:
+    - **Stale-banner has no inline refresh action** — the "N prices are stale" banner states the problem
+      but offers no way to act on it in place (the only refresh is the page-header button).
+    - **Lock-timeout shows raw errors, and unlock does not refetch until navigate-away** — a session that
+      times out mid-view surfaces raw error text, and re-unlocking leaves the stale view until the user
+      navigates elsewhere and back (no refetch on unlock).
+    - **A long op's status is lost behind the lock** — a net-worth rebuild (or similar long-running op)
+      in flight when the lock engages loses its progress/status; the user can't tell it is still running.
+    *Verified (when taken):* the stale banner carries an inline Refresh; an unlock refetches the current
+    view in place; a long op's status survives (or is honestly re-surfaced after) a lock engage — no raw
+    error strings, no silent stall. **Same fix family — take together.**
+
 10. **Milestones append their own walk items here at close.** Still to ship: Help · Legal ·
     AI-surfaces (D-067/D-068) · R-45 (per-instrument + default news) · R-46 (Home summary
     cards) · chrome-sidebar-refresh (R-39). Each milestone's close ritual **adds its walk

@@ -348,6 +348,7 @@ A ledger may not claim CLOSED while any intake row lacks a disposition. Intake f
 | I-7 | §0-A log 13605 | Genuine transient throttle ("Burst pattern … 5 req/sec") — secondary contributor; surfaces as `throttled` | **DISCHARGED — Phase 2** (`RateLimited`→`THROTTLED` + `last_throttled_at`, real burst text `9d54f4f`; persisted `34974b6`; drawer renders "throttled — … will retry (last at T)" `c882648`, copy PROPOSED). |
 | I-8 | 0a walk finding **F-A** (2026-07-24) | Manual holdings render the code token **`null (head manual)`** on the Pricing Health Source column (§11-I — a raw null on a served surface; the netCaught head-rider on a null `source`) | **DISCHARGED — `05be910`** (owner ruled FIX-IN-R-63). `portfolio.py` serves **`source="manual"`** for a manual holding (`diag is None`), matching its `route_source="manual"` → the Source column renders `manual`, never `null (head manual)`. Backend-only (frontend renders the served `source` verbatim; vitest fixture already used `source:"manual"`). Copy **PROPOSED**. Test `test_pricing_health.py::test_manual_holdings_serve_a_source_word_never_null`. **Frame refreshed at the close's final specimen set** (owner ruling); dated note in `page-pricing-health.md`. |
 | I-9 | 0a walk finding **F-B** (2026-07-24) | Provider error text can **echo the API key into the server log** — AV's error body quotes the submitted key verbatim, and an httpx URL error carries `apikey=<KEY>` (§8 secrets) | **DISCHARGED — `05be910`** (owner ruled FIX-BEFORE-CLOSE). `ExternalMarketDataProvider._redact()` scrubs the configured key from **all five** `log.warning("AV …")` sites (both the error-body echo AND the URL form). `get_quote` never raises (catches → `_no_quote`), so no key-bearing exception escapes to an unredacted logger (doctor included). Tests (log-capture, fake key, blindness pin): `test_av_quote_envelope.py::{test_quote_error_…, test_index_error_… (the observed path), test_urlembedded_apikey_form_…}` — the last asserts the **URL-embedded `apikey=<KEY>`** form specifically resolves to `apikey=***REDACTED***`. |
+| I-10 | 3b live walk finding **F-C** (2026-07-24) | On the owner's LIVE instance **AARK** served **priced-by=`mock`** at **Confidence 100 · high** with **head=`alphavantage`**, and `mock` is **not in the drawer's priority chain** — a fabricated-confidence / phantom-source class (a settled real number was never produced, yet the row reads high-confidence from a source the chain never lists) | **OPEN — FIX IN R-63 (owner ruling 2026-07-24).** Charter for the fresh session: **diagnosis before fix scope; evidence before hypothesis** (the R-63 investigation-first gate). **Detail lives in the fresh session's prompt file**; this row records the finding + the ruling only. Its session also carries the **"Source override" rename** ruling below. |
 
 ### Accepted-surface RITE — consolidation (recorded explicitly per the owner ruling 2026-07-23)
 
@@ -389,6 +390,12 @@ the Settings "Market data provider" card meaning-shift copy is Phase 4, under th
 `test_instrument_identity_guard.py`): **2135 → 2142**. Inner-loop signals already green: new tests
 **7/7** (`-p no:randomly`); rewired-path regression **36 passed** (identity/csv/imports/markets/
 execution-net/routing); PricingHealth vitest **17/17**; `tsc` clean; `ruff` clean.
+
+> **⚠ CORRECTION — 2026-07-24 (never age silently, the I-5 precedent).** This "Expected count **+7** →
+> 2142" was WRONG: Phase 3.5 landed **+8 → 2143** (the extra is the `e2ab16e` hardening test
+> `test_resolver_recovers_from_locked_writer`, filed the same phase). The FINAL verdict table above and
+> the close reconciliation (2135 → 2143, +8) both correctly record **+8**; this in-progress line is left
+> as history with this dated correction so the estimate does not read as the ratified count.
 **Concurrency contention — FOUND and HARDENED (`e2ab16e`).** The identity guard makes a concurrent
 first-create of the SAME new symbol a real serialization point. The **first ordered full-suite run
 on `e7a7e94`** (**2141 passed, 15 skipped, 1 error**) surfaced ONE flaky **spillover**: a losing
@@ -831,3 +838,64 @@ Remaining before close, all **owner-hands / live**: his **TSLA duplicate cleanup
 **entitled verified-tier cell** on his real premium key ("Quotes: delayed / Indices: premium"). After
 his live 3b: the **full close ritual** (§-ledger CLOSED — I-1..I-9 all DISCHARGED; strike-check; Help
 currency; `RATIFICATION.md §6` row; KB-sync). **No 3b executed here. HARD STOP.**
+
+---
+
+## SESSION — 2026-07-24 (3b, PARTIAL) — owner live walk; F-C filed; HANDOFF for the F-C session
+
+### 3b — owner live walk on his real premium instance (PARTIAL, 2026-07-24)
+Walked in chat on the owner's live keyed stack (his own hands — never driven from here):
+- **Purge-with-PIN: PASS** (D-103 fresh-PIN honoured).
+- **Pre-purge evidence ACCEPTED (owner's screenshots) — the R-63 core fix proven live on his real key:**
+  - **TSLA priced `2,523.22`, source `alphavantage (corrected)`** — the entitlement-envelope **parse fix
+    + the execution net are live and pricing his real symptom** (the milestone's origin: TSLA was dark).
+  - a fund priced **`103504` via `amfi_nav`** (the keyless lane serving real NAV).
+  - the **duplicate-instrument banner correct** on his real id-pair.
+- **Portfolio now EMPTY by owner action** (he purged after the evidence — so the remaining live checks
+  run on a fresh book).
+- **OPEN from 3b, both owed BEFORE close ratification:**
+  1. the **verified-tier cell strings on his real key** (the entitled *"Quotes: delayed / Indices:
+     premium"* readout — deferred here throughout, now his to confirm live);
+  2. the **owner's copy verdict on ALL `PROPOSED` strings** (every R-63 served string shipped PROPOSED —
+     doctor copy, failure notes, banner, routing sentences, verified-tier, `not_run`, F-A `manual`).
+- **F-C filed** (ledger I-10) — see below; owner ruled **fix-in-R-63**.
+
+### Ruling — the "Source override" rename (owner, 2026-07-24)
+The instrument **Edit / Identity** label **"Source"** renames to **"Source override"**. Today the single
+word *"Source"* means **override** on the Identity/Edit surface but **priced-by** on the quote/provenance
+badge — **one label, two semantics**. Recorded here; **the fix rides F-C's session** (same surface family).
+
+### Recorded deviations (never silently)
+- **a1793d8 mixed work + records in one commit** — the URL-form F-B test (work) was staged together with
+  the ledger rows + page note (records), against the two-commit rule. **Noted, not rewritten** (history
+  stands; the rule holds for the next session).
+- (The Phase 3.5 **+7 → +8** estimate correction is recorded at its own line above, I-5 precedent.)
+
+---
+
+## FILES-FIRST HANDOFF — successor session (the F-C session), 2026-07-24
+
+**STATE.** R-63 is **code-complete and CLOSE-VERDICT-BACKED** (backend **2154 passed, 15 skipped, BOTH
+orders, solo, seed 6363**; contract **143/71**; frontend green). §-ledger **I-1..I-9 DISCHARGED**;
+**I-10 (F-C) OPEN**. 0a specimens ratified as walked; 3a scripted pre-pass **28/28**; both accepted-surface
+rites discharged (delta notes + pre-pass re-runs, back-linked). 3b **partially** walked live (above).
+HEAD at handoff: this session's records commit.
+
+**OPEN before R-63 can CLOSE:**
+1. **F-C (I-10)** — AARK priced-by=`mock`/Confidence 100·high/head=`alphavantage`, `mock` not in the chain.
+   **Investigation-first** (diagnosis before fix scope; evidence before hypothesis). **Detail belongs in
+   the fresh session's prompt file** — start there.
+2. **"Source override" rename** — rides the F-C session (Identity/Edit label; disambiguates the two
+   "Source" semantics).
+3. **Owner live 3b remainder** — the **verified-tier strings on his real key** + his **copy verdict on all
+   PROPOSED strings**. Both are owner-hands, live, in chat.
+4. **Then the full close ritual** — §-ledger CLOSED (I-1..I-10), strike-check, Help currency
+   (guard-corroborated), `RATIFICATION.md §6` row, KB-sync. Only after 1–3 land.
+
+**NEXT ACTIONS (successor).** Read `CLAUDE.md` · `CURRENT.md` · this plan (esp. this handoff + the I-10
+row + the Source-override ruling) · the F-C **prompt file** (carries the evidence detail). Re-verify state
+by grep (HEAD, tree clean, ledger↔records). Then diagnose F-C read-only first (its own §), scope the fix
+with the owner, ride the rename, gather the owner's live 3b remainder, and close.
+
+**Pre-release backlog + ROADMAP filed this session:** the stale-banner/lock-timeout/long-op UX-resilience
+family → `pre-release-walk.md`; background auto-refresh → `ROADMAP.md` (post-release, egress-gated).

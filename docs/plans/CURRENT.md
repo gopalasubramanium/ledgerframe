@@ -241,6 +241,21 @@ re-run half for F-A. **HARD STOP — the 3b is the owner's, live, in chat** (his
 the entitled verified-tier cell). Then the full close ritual (I-1..I-9 all DISCHARGED, strike-check, Help
 currency, RATIFICATION row).
 
+**⊕ 2026-07-24 (3b PARTIAL) — owner live walk; F-C filed; R-63 stays OPEN → hands off to the F-C session.**
+Owner walked his live premium instance: **purge-with-PIN PASS**; **pre-purge evidence ACCEPTED** on his
+screenshots — **TSLA priced `2,523.22` `alphavantage (corrected)` on his real key** (the parse fix + net
+LIVE), a fund `103504` via `amfi_nav`, the **dup banner correct**; **portfolio now empty by owner action**.
+**F-C filed** (ledger **I-10**, OPEN, owner ruled **fix-in-R-63**): AARK served priced-by=`mock` @
+Confidence 100·high with head=`alphavantage`, `mock` not in the drawer chain — investigation-first
+(detail in the F-C session's prompt file). **Ruling:** Identity/Edit **"Source" → "Source override"**
+(disambiguates override vs priced-by) — rides F-C's session. **OPEN before close:** F-C + the rename + the
+owner's live **verified-tier strings on his real key** + his **copy verdict on all PROPOSED strings**; then
+the full close ritual (I-1..I-10). **Filed:** UX-resilience family (stale-banner inline refresh /
+lock-timeout raw errors + unlock-refetch / long-op status behind lock) → `pre-release-walk.md` 9c;
+background auto-refresh → `ROADMAP.md` **R-66** (post-release, egress-gated, take with R-45 §9). **Recorded
+deviation:** `a1793d8` mixed work+records (noted, not rewritten). **The owner /clears and starts the F-C
+session from its prompt file.**
+
 **⊕ 2026-07-23 — R-65 FILED (owner ruling, chat): "Test-suite runtime — measure, then
 parallelize" (TEST-INFRA, non-blocking).** Phase 1 = cheap survey delta (`pytest --durations`
 census · real-sleep debt census · `pytest-xdist` feasibility vs the F-10 `RESET_REGISTRY` census
