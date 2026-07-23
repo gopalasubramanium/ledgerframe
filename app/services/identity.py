@@ -69,7 +69,7 @@ async def resolve_or_create_instrument(
     concurrent create: if the ``uq_instr_identity_ci`` guard rejects the flush, the winner is
     re-read rather than poisoning the outer transaction. Returns ``(instrument, created)``.
     """
-    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.exc import IntegrityError, OperationalError
 
     from app.core.symbols import country_for_symbol, currency_for_symbol
     from app.models import AssetClass
@@ -104,9 +104,26 @@ async def resolve_or_create_instrument(
         async with session.begin_nested():
             await session.flush()
     except IntegrityError:
+        # Our flush reached the guard and lost the race to a concurrent create — the savepoint
+        # rollback has already detached the losing insert, so re-read the committed winner (the
+        # pre-existing market.py pattern, unchanged).
         instrument = (await session.execute(stmt)).scalars().first()
         assert instrument is not None  # the IntegrityError means a concurrent create won
         return instrument, False
+    except OperationalError:
+        # Under heavy contention our INSERT could not take SQLite's writer lock within busy_timeout
+        # because a still-open winning transaction of the SAME new symbol holds it — the guard made
+        # the create a real serialization point. A WAL read needs no writer lock, so read the
+        # committed winner; absorbing this turns a spurious 500 (and the lock it would strand for
+        # the next test's DDL) into an honest resolution. Unlike the IntegrityError case the insert
+        # never ran, so the pending object survives — expunge it first, else autoflush on the
+        # SELECT would retry the very insert that just failed. If the row is genuinely absent the
+        # lock error was NOT a lost race — re-raise it untouched.
+        session.expunge(instrument)
+        found = (await session.execute(stmt)).scalars().first()
+        if found is not None:
+            return found, False
+        raise
     return instrument, True
 
 

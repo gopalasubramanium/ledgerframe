@@ -27,7 +27,7 @@ import os
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.models import Instrument
 from app.services import market
@@ -126,6 +126,37 @@ async def test_resolver_recovers_on_concurrent_create(session):
     again, created = await resolve_or_create_instrument(session, "nvda", None)
     assert again.id == first[0].id
     assert created is False
+
+
+async def test_resolver_recovers_from_locked_writer(session, monkeypatch):
+    """OperationalError('database is locked') during the create flush is treated as a LOST RACE,
+    not a 500: under heavy contention our INSERT can't take the writer lock while a concurrent
+    winner of the SAME new symbol holds it. The resolver re-reads the committed winner (a WAL read
+    needs no writer lock) instead of erroring and stranding the lock for the next test's DDL — the
+    spillover seen once in the R-63 Phase-3.5 full-suite verdict. Deterministic: the first flush
+    commits the winner via a side session, then raises the lock error."""
+    from app.db.base import get_sessionmaker
+    from app.services import identity
+
+    orig_flush = session.flush
+    state = {"armed": True}
+
+    async def flaky_flush(*a, **k):
+        if state["armed"]:
+            state["armed"] = False
+            async with get_sessionmaker()() as winner:  # a concurrent caller commits the identity
+                winner.add(Instrument(symbol="WMT", exchange=None, name="Walmart", currency="USD"))
+                await winner.commit()
+            raise OperationalError("INSERT INTO instruments …", {}, Exception("database is locked"))
+        return await orig_flush(*a, **k)
+
+    monkeypatch.setattr(session, "flush", flaky_flush)
+    instr, created = await identity.resolve_or_create_instrument(session, "WMT", None)
+    assert created is False, "a locked-writer lost race must resolve to the winner, not create"
+    assert instr.symbol == "WMT"
+    n = (await session.execute(
+        text("SELECT count(*) FROM instruments WHERE upper(symbol)='WMT'"))).scalar()
+    assert n == 1
 
 
 # ------------------------------------------------------------------ rider 3: dupe-tolerant migration
