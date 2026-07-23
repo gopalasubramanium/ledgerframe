@@ -662,3 +662,15 @@ new served string on this page** (existing typed-state copy carries it). **Rite 
 **⊕ R5 RATIFICATION FLIP — 2026-07-24 (owner).** The PROPOSED Pricing Health strings above — the
 head=X/priced-by=Y provenance, the failure-state drawer copies, and the duplicate-instrument banner — are
 **RATIFIED** (rendered confirmation still at the close's final look).
+
+**⊕ RITE RE-RUN — DISCHARGED 2026-07-24 (close step 1, the final 3a scripted pre-pass).** The
+guard-REDs-an-accepted-surface rite's **second obligation (a page pre-pass re-run) is discharged here for
+ALL accumulated Pricing Health deltas** — F-A (I-8) and the Phase-B quote-residue repair. Driven on an
+isolated **live** instance (`:8399`/`:5199`, key overridden to `INVALID-DOCTOR-TEST`, `.env` hash-verified,
+stack torn down), **both themes, 0 non-benign console errors, 13/13 assertions**. On camera: manual rows
+read `manual` (no `null (head manual)`); a **severed-fallback** row (`csv (head alphavantage)`, typed
+`empty`, no mock); the **confidence-law cap** (a `mock` price at **40 · low** with "not from a live source
+(capped)"); the head/priced-by provenance and the duplicate banner. Assets
+`docs/plans/assets/r63-3a-close-{pricing-health,aark-empty,confidence-cap}-{light,dark}.png`. Specimen
+inventory in `r63-pricing-routing.md` (CLOSE STEP 1). *(A close-report flag alone is NOT sufficient —
+CLAUDE.md; this is the on-page record.)*

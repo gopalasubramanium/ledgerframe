@@ -1367,3 +1367,15 @@ its "· verified" date is the owner's 3b on his real key), F-A precedent — rec
 recut Routing-matrix sentence, the "Market data provider" preferred-head card, and the verified-tier
 truthful state — are **RATIFIED** (rendered confirmation still at the close's final look). The **R3/R4
 strings above stay PROPOSED** (they postdate the ratified list).
+
+**⊕ RITE RE-RUN — DISCHARGED 2026-07-24 (close step 1, the final 3a scripted pre-pass).** The rite's
+**page pre-pass re-run is discharged here for ALL accumulated Settings → Data-feeds deltas** — the recut
+routing sentence + preferred-head card (Phase 4) and the R3 verified-tier "· verified \<date\>" cell + the
+R4 "Select provider…" placeholder (Phase B). Driven on an isolated **live** instance (both themes, 0
+non-benign console errors, 13/13 assertions; key overridden, `.env` hash-verified, torn down). On camera:
+verified-tier **"Quotes: not yet verified / Indices: free · verified 24 Jul"** (the R3 durable timestamp);
+the preferred-head card; the free-first routing sentence; and the routing-matrix picker reading **"Select
+provider…"** (R4 — applied to the REAL `RoutingMatrixCard`, `0e7b6b5`, after the pre-pass caught it had
+first landed only on the KitchenSink mockup). Assets `docs/plans/assets/r63-3a-close-settings-datafeeds-
+{light,dark}.png`. The **entitled** two-product cell ("Quotes: delayed / Indices: premium") remains the
+owner's 3b on his real premium key. Specimen inventory in `r63-pricing-routing.md` (CLOSE STEP 1).

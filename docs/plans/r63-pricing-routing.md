@@ -1103,3 +1103,47 @@ contract, per R-61 discipline).
 specimen set (the F-A manual frame + the severed-fallback typed states + the new verified-tier cell) →
 the owner's final look → the full close ritual (I-1..I-11 all DISCHARGED, strike-check, Help currency,
 `RATIFICATION.md §6`, KB-sync).
+
+---
+
+## CLOSE STEP 1 — FINAL 3a SCRIPTED PRE-PASS (2026-07-24) → HARD STOP for the owner's look
+
+Full scripted pre-pass on an **isolated** stack, real backend output, no stubs. **13/13 assertions
+passed, both themes, 0 non-benign console errors.** This run **discharges every accumulated
+accepted-surface re-run half** on Pricing Health and Settings: **F-A** (I-8, manual rows) **and the
+Phase-B recuts** (the quote-residue repair's effect on Pricing Health; the verified-tier "· verified"
+cell + the R4 placeholder on Settings). Recorded explicitly here and in both page files.
+
+### Isolation (owner's live stack / real key NEVER used) — proven
+Backend `uvicorn :8399` (temp `LEDGERFRAME_DATA_DIR`, demo seed) run as a **live instance**
+(`LEDGERFRAME_MARKET_PROVIDER=alphavantage`) with the key **OS-overridden to `INVALID-DOCTOR-TEST`** —
+the owner's real key was never used. Vite dev `:5199` (throwaway `vite.prepass.config.ts`) → `:8399`;
+driver `pp-driver.mjs` inside `frontend/`. **Both deleted before staging** (verified absent). Repo-root
+`.env` snapshotted and **hash-verified identical** before/after (`460a2da0…afae6`). **Teardown proven by
+probe:** ports 8399/5199 free. *Egress note (recorded, not hidden):* the instance made public egress
+with **no owner credential** — a fake-key AV probe (returned "not entitled to index data" → learned
+`av_tier=free`, honest) and public Yahoo quote/news on the instrument page; same egress class as prior
+0a runs, no real key, no owner data, his stack untouched.
+
+### Seeding (deterministic DB state on the isolated instance — real surfaces read it, no stubs)
+A live `alphavantage` instance (repair active), then: AAPL quote `source=yahoo` (net-catch provenance);
+AARK (new held ETF) quote `source=csv` + `last_failure_state=empty` (severed fallback); a mock quote on
+VOO+MSFT then **marker cleared → pricing-health load fired the real repair** (audit event proof), then
+MSFT re-seeded mock post-marker (the confidence-cap backstop); NVDA `source_override=alphavantage`
+(Identity specimen); a raw second `(TSLA,NULL)` (dup banner); the demo `routing_matrix` noise cleared.
+
+### Specimen inventory — file → ledger row / AC / ruling (all `docs/plans/assets/`, both themes)
+| Specimen (file `…-{light,dark}.png`) | On camera | Maps to |
+| --- | --- | --- |
+| `r63-3a-close-pricing-health-*` | **F-A** manual rows read `manual` (no `null (head manual)`); **AARK** `csv (head alphavantage)` (severed fallback, no mock); **MSFT** `mock (head alphavantage)` at **40 · low** (was the 100/high defect — capped); **AAPL** `yahoo (head alphavantage)`; **dup banner** (TSLA) | I-8 (F-A) · I-10 Option 1/2 · R5 provenance + banner |
+| `r63-3a-close-aark-empty-*` | AARK **diagnostics: typed `empty`** ("no data from csv"), chain `1 yahoo · 2 alphavantage · 3 eodhd(no key) · 4 csv · 5 manual` — **mock not in it**, no mock | I-10 **Option 1** (AC — severed fallback = typed no-price, not mock) · R5 drawer |
+| `r63-3a-close-confidence-cap-*` | MSFT **diagnostics: Source `mock` · Confidence `40 · low`**, "Why this confidence: **demo/synthetic price — not from a live source (capped)**" | I-10 **Option 2** (the confidence law, the backstop on camera) |
+| `r63-3a-close-settings-datafeeds-*` | verified-tier **"Quotes: not yet verified / Indices: free · verified 24 Jul"** (R3 durable stamp); recut **preferred-head** card; the free-first routing sentence; matrix picker **"Select provider…"** | I-11 **R3** · R4 · R5 routing sentence |
+| `r63-3a-close-source-override-*` | NVDA Identity **"Source override: AlphaVantage"** distinct from the quote badge **"Source: yahoo"** | **§4** (the rename; disambiguates the two "Source" semantics) |
+
+**Migration-repair audit evidence (backend, not a screenshot):** `audit_events` row
+`repair_quote_demo_residue — "removed 2 demo/synthetic quote row(s) on a live instance (F-C/I-10)"`
+(captured after a marker-clear + pricing-health load). The rider fires and records honestly.
+
+**HARD STOP — the owner's final look follows in chat** (his live entitled verified-tier on his real key;
+his copy verdict on the R3/R4 PROPOSED strings). No close ritual yet.

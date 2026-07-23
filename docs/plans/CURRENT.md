@@ -295,6 +295,21 @@ dated notes appended to `page-pricing-health.md` + `page-settings.md`; re-run ha
 new verified-tier cell) → owner's final look (his live entitled verified-tier + copy verdict) → full close
 ritual (I-1..I-11 all DISCHARGED, strike-check, Help currency, RATIFICATION §6, KB-sync).
 
+**⊕ 2026-07-24 (close step 1) — FINAL 3a SCRIPTED PRE-PASS DONE → HARD STOP for the owner's look.** Full
+scripted pre-pass on an isolated **live** instance (real backend, no stubs), **both themes, 0 non-benign
+console errors, 13/13 assertions**. **Discharges every accumulated accepted-surface re-run half** (F-A +
+the Phase-B recuts) on Pricing Health + Settings — dated notes in both page files. On camera: F-A manual
+rows (`manual`, no `null (head manual)`); the **severed-fallback** typed `empty` (`csv (head alphavantage)`,
+no mock); the **confidence-law cap** (a `mock` price at **40 · low**, "not from a live source (capped)" —
+the exact defect, now honestly scored, was 100/high); head/priced-by provenance + dup banner; the R3
+verified-tier **"· verified 24 Jul"** durable stamp; the R4 **"Select provider…"** placeholder; the §4
+**"Source override"** Identity label. **Migration-repair audit evidence** captured (backend:
+`repair_quote_demo_residue removed 2 …`). **R4 correction (`0e7b6b5`):** the pre-pass caught the placeholder
+had landed only on the KitchenSink mockup — applied to the REAL `RoutingMatrixCard`. **Isolation proven:**
+owner's key/stack never used (key overridden), `.env` hash-verified `460a2da0…afae6`, ports torn down,
+throwaways deleted. 10 assets `docs/plans/assets/r63-3a-close-*`. **NEXT: owner's final look (his live
+entitled verified-tier + copy verdict on R3/R4 PROPOSED strings) → the full close ritual.** HARD STOP.
+
 **⊕ 2026-07-23 — R-65 FILED (owner ruling, chat): "Test-suite runtime — measure, then
 parallelize" (TEST-INFRA, non-blocking).** Phase 1 = cheap survey delta (`pytest --durations`
 census · real-sleep debt census · `pytest-xdist` feasibility vs the F-10 `RESET_REGISTRY` census
