@@ -762,6 +762,17 @@ async def _refresh_via_net(
             last_state = q.failure_state or FailureState.EMPTY
             continue
         priced_by = q.source or name
+        # R-63 F-C Option 3 (owner ruling 2026-07-24, R1) — STANDING GUARD: the net NEVER persists a
+        # demo/synthetic price on a LIVE instance. Defense-in-depth behind Option 1: if ANY lane ever
+        # returns a mock/demo-sourced quote outside demo mode (a provider's internal fallback, a future
+        # lane), refuse it and walk on — a fabricated number must never reach valuation/confidence (the
+        # AARK defect). Demo mode (the active provider IS mock) is legitimate and untouched.
+        if priced_by in _DEMO_SOURCES and active_name not in _DEMO_SOURCES:
+            last_reason = f"{name}: refused a demo/synthetic price on a live instance"
+            last_state = FailureState.EMPTY
+            log.warning("net: refused a demo-sourced price for %s from lane %s (live instance)",
+                        instrument.symbol, name)
+            continue
         values = {
             "instrument_id": instrument.id, "price": q.price,
             "previous_close": q.previous_close, "currency": q.currency,
@@ -928,6 +939,40 @@ async def repair_history_demo_residue(session: AsyncSession) -> dict:
     log.info("§14dr-25 history demo-residue repair: purged %d demo candle(s) across %d instrument(s)",
              purged, len(instruments))
     return {"purged": purged, "instruments": len(instruments)}
+
+
+async def repair_quote_demo_residue(session: AsyncSession) -> dict:
+    """R-63 F-C (I-10, owner ruling 2026-07-24 — the migration rider): a served, idempotent, logged
+    repair that removes stored demo/synthetic QUOTE rows on a LIVE instance. Mirrors
+    :func:`repair_history_demo_residue` for the ``quotes`` table (which had NO such repair — why the
+    owner's AARK ``source='mock'`` row persisted and scored 100/high after the parse fix).
+
+    Dupe-tolerant-migration precedent (§9-i): NEVER brick a live upgrade — best-effort, gated, and it
+    surfaces the outcome honestly. **Gated on the active provider:** in demo mode (the provider IS
+    mock) a ``source='mock'`` quote is legitimate seed data, so this is a no-op — it only fires on a
+    live instance, where a demo-sourced price is a fabrication. Deleting the row is the honest repair:
+    valuation falls to cost (ESTIMATED_VALUE) and Pricing Health then shows the holding's true
+    unpriced/typed state rather than a phantom high-confidence number. A second run finds nothing."""
+    active_name = getattr(get_provider(), "name", "mock")
+    if active_name in _DEMO_SOURCES:
+        return {"purged": 0, "instruments": 0, "skipped": "demo instance"}
+
+    from app.models import AuditEvent
+
+    rows = (await session.execute(
+        select(QuoteRow).where(QuoteRow.source.in_(tuple(_DEMO_SOURCES)))
+    )).scalars().all()
+    purged = 0
+    for r in rows:
+        await session.delete(r)
+        purged += 1
+    if purged:
+        session.add(AuditEvent(
+            category="mutation", action="repair_quote_demo_residue",
+            detail=f"removed {purged} demo/synthetic quote row(s) on a live instance (F-C/I-10)"))
+        await session.flush()
+    log.info("R-63 F-C quote demo-residue repair: removed %d demo/synthetic quote row(s)", purged)
+    return {"purged": purged, "instruments": purged}
 
 
 # W-3 (R-42 3b): US regular trading session (DST-correct via the zone). Intraday is a

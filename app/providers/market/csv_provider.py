@@ -18,6 +18,7 @@ from app.providers.market.mock import MockMarketDataProvider
 from app.schemas.common import (
     Candle,
     EntitlementStatus,
+    FailureState,
     FxRate,
     Instrument,
     MarketStatus,
@@ -64,7 +65,21 @@ class CSVMarketDataProvider:
     async def get_quote(self, symbol: str, exchange: str | None = None) -> Quote:
         candles = self._read(symbol)
         if len(candles) < 1:
-            return await self._mock.get_quote(symbol, exchange)
+            # R-63 F-C Option 1 (owner ruling 2026-07-24, R1): a CSV MISS returns a TYPED no-price,
+            # NEVER a mock substitution. The spec never sanctioned a quote fallback here —
+            # 05-PROVIDERS-AND-ROUTING §A.3 lists the mock fallback for FX/search/news only — yet
+            # `self._mock.get_quote()` returned a fabricated `source="mock"` price (mock's default
+            # base 100 × _walk) that the execution net persisted and confidence scored 100/high on a
+            # live holding (the AARK 109.878669 defect, F-C/I-10). The class IS covered (fetch_chain
+            # only walks csv for equity/etf), so the honest state is EMPTY: this source responded, it
+            # simply has no price for this symbol. The net then walks on / returns a typed no-price.
+            now = datetime.now(UTC)
+            return Quote(
+                symbol=symbol.upper(), exchange=exchange, price=None,
+                currency="USD", source="csv",
+                entitlement=EntitlementStatus.UNAVAILABLE, failure_state=FailureState.EMPTY,
+                received_at=now, is_stale=True,
+            )
         last = candles[-1]
         prev = candles[-2].close if len(candles) > 1 else last.open
         return Quote(

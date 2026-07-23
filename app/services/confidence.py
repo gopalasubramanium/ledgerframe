@@ -30,13 +30,29 @@ _METHOD_NOTE = {
 }
 
 
+# R-63 F-C (I-10): demo/synthetic sources. A price served by these is fabricated, not sourced.
+_DEMO_SOURCES = frozenset({"mock", "demo"})
+
+
 def band_of(score: int) -> str:
     return "high" if score >= 80 else "medium" if score >= 50 else "low"
 
 
-def score_holding(hv, mapping_required: bool = False) -> dict:
+def _is_demo_instance() -> bool:
+    """True when the ACTIVE market provider is the demo/mock provider — in which case a
+    mock-sourced price is legitimate (the whole instance is a demo) and must NOT be penalised."""
+    try:
+        from app.providers.market import get_provider
+
+        return getattr(get_provider(), "name", "") in _DEMO_SOURCES
+    except Exception:  # noqa: BLE001 — confidence is best-effort; default to NOT demo (the safe side)
+        return False
+
+
+def score_holding(hv, mapping_required: bool = False, demo_mode: bool | None = None) -> dict:
     """Confidence for one holding. ``hv`` is a HoldingValue; ``mapping_required`` comes
-    from the router (an unmapped fund/crypto)."""
+    from the router (an unmapped fund/crypto). ``demo_mode`` overrides the active-provider check
+    used by the R-63 F-C mock-price cap (default: derived from the active provider)."""
     method = getattr(hv, "valuation_method", "market_quote")
     score = _BASE.get(method, 60)
     factors: list[str] = []
@@ -52,6 +68,17 @@ def score_holding(hv, mapping_required: bool = False) -> dict:
     if (getattr(hv, "entitlement", None) or "") == "unavailable":
         score -= 15
         factors.append("no source could price it (−15)")
+    # R-63 F-C Option 2 (owner ruling 2026-07-24, R2) — THE CONFIDENCE LAW: a demo/synthetic-sourced
+    # price can NEVER read "high" outside demo mode. Fabricated confidence is the charter's core trust
+    # defect (a mock price scored 100/high on a live holding — F-C/I-10). Defense-in-depth behind the
+    # net guard (Option 3) and the CSV sever (Option 1): even if a mock value is stored, this refuses
+    # to certify it. Capped to the estimated tier so it reads as what it is — not from a live source.
+    if (getattr(hv, "source", None) or "").lower() in _DEMO_SOURCES:
+        if demo_mode is None:
+            demo_mode = _is_demo_instance()
+        if not demo_mode:
+            score = min(score, _BASE["estimated_value"])
+            factors.append("demo/synthetic price — not from a live source (capped)")
     if getattr(hv, "fx_unavailable", False):
         # W-1b: a native price exists but no FX rate to state it in base — the value is
         # not converted (never a fabricated 1.0), so it is heavily penalised and named.
