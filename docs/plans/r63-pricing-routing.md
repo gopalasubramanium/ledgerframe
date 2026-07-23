@@ -249,22 +249,22 @@ decision (copy hygiene: name a fact, never an endpoint).
 - [ ] **AC-14** The doctor **would have caught this bug** — a lane returning 200-with-data that
   parses empty reports **FAIL (parse)**, not PASS. *Red when:* a parse-empty lane reports healthy.
 
-**Instrument-identity guard (I-6, §9-i ADDENDUM — Phase 3.5).**
-- [ ] **AC-19** New-dupe prevention is **absolute at the code layer**: a single identity resolver
+**Instrument-identity guard (I-6, §9-i ADDENDUM — Phase 3.5).** *(All met — `e7a7e94`.)*
+- [x] **AC-19** New-dupe prevention is **absolute at the code layer**: a single identity resolver
   is used by **all** instrument-create paths (the two former keys — `market._get_or_create_instrument`
   `symbol.upper()`+optional-exchange, and `csv_import`'s bare non-uppercased `symbol` — collapse to
   one). *Red when:* a create path resolves identity by any other key, or a second `(TSLA, NULL)` /
   case-variant row is creatable through the real path. (Fail-first through the **real** get-or-create,
   not a synthetic uniqueness test — §9-i ADDENDUM rider 4.)
-- [ ] **AC-20** The DB uniqueness gap is closed where data permits: a functional guard treats
+- [x] **AC-20** The DB uniqueness gap is closed where data permits: a functional guard treats
   `exchange=NULL` and a set exchange under the same symbol as **one** identity bucket (NULL is no
   longer distinct). *Red when:* two rows with the same `upper(symbol)` and equivalent exchange
   (NULL≡NULL) coexist on a clean DB.
-- [ ] **AC-21** The migration is **dupe-tolerant** (hard rider 3): on a DB that already contains
+- [x] **AC-21** The migration is **dupe-tolerant** (hard rider 3): on a DB that already contains
   duplicates it **does not fail/brick** — it binds fully where data permits and **surfaces** the
   existing duplicates instead. *Red when:* the migration raises on pre-existing duplicate data
   (migration-chain test on a seeded-dupe DB).
-- [ ] **AC-22** Existing duplicates are **surfaced** ("duplicate instruments — resolve on Holdings",
+- [x] **AC-22** Existing duplicates are **surfaced** ("duplicate instruments — resolve on Holdings",
   copy PROPOSED, GLOSSARY-first) so the owner can clean them via the UI; the guard makes recurrence
   impossible thereafter. *Red when:* a pre-existing duplicate is neither blocked-at-source nor
   surfaced (silent).
@@ -342,15 +342,15 @@ A ledger may not claim CLOSED while any intake row lacks a disposition. Intake f
 | I-3 | §0-B(ii) | Distinct failures collapsed at three layers (adapter / refresh / cache) | **DISCHARGED — Phase 2** (Delta 2.1 `9d54f4f` adapter+refresh · Delta 2.2 backend `34974b6` persistence+row · Delta 2.2 frontend `c882648` drawer). Distinct causes typed adapter → refresh → pricing-health row → drawer; the flat "none" is gone. |
 | I-4 | §0-B(i) | Two-premiums conflation — `av_tier` learns only from INDEX_DATA; Settings "premium" is a coarse config claim | **IN PROGRESS — Phase 2 Delta 2.1 `9d54f4f`** (backend: `quote_entitlement` learned from the envelope, distinct from `av_tier`). Remaining: the Settings verified-tier **display** → Phase 4 (rite). |
 | I-5 | §0-A fan-out rider | 19-call refresh fan-out (overview proxies) vs AV per-sec/daily budget; free-first + holdings-first mitigates | **DISCHARGED — Phase 3 `2a9fa1e`** (holdings-before-proxies budget: `_display_symbols` (`system.py`) orders holdings → watchlist → overview/global proxies **deterministically** — they were previously merged in a set — and the budget walks in order and stops at the time budget, so a holding is never starved of a call by an overview proxy; `test_refresh_budget_order.py` asserts the seeded holding refreshes before any overview-only proxy. Free-first chain ordering (§9-6) keeps keyless lanes carrying load. Full-suite verdict **2135, both orders**.) *Row was mislabelled `OPEN → Phase 3` after Phase 3 shipped; corrected at the 2026-07-24 Phase-4 re-entry ledger↔records reconciliation.* |
-| I-6 | §9-i | Duplicate TSLA instrument (id 22 / id 23) — **invariant question**: did the product permit the duplicate? If so, that is an architectural finding (root-cause it); owner cleans his live data via the UI once the cause is known | **CAUSE FOUND — 2026-07-24 Phase-4 re-entry reconciliation.** The assigned Phase-1 invariant probe **never ran** — Phase 1 closed (`95df927`/`ee07dd1`) without it; caught by the ledger↔records grep at re-entry (recorded here, **not aged silently**). **Root cause — the product DOES permit the duplicate, two compounding reasons:** (1) `uq_instr_symbol_exch = UniqueConstraint("symbol","exchange")` (`app/models/__init__.py:193`) does **not** stop two `(TSLA, NULL)` rows — SQL treats NULL as **distinct** in a UNIQUE constraint, and `exchange` is nullable (`:170`); (2) the two holding-creation get-or-create paths use **inconsistent lookup keys** — `market._get_or_create_instrument` (`app/services/market.py:1442`) matches `symbol.upper()` + exchange-only-if-truthy, while `csv_import` (`app/services/csv_import.py:472`) matches **bare `symbol` (NOT uppercased)**, no exchange filter. So a holding added once with `exchange=NULL` and again with an exchange set (or different casing) yields two independently-priced instruments — the live id-22 (`source_override`) / id-23 symptom, and why one prices while the other shows `(corrected)`. **No dedup/merge pass exists in the create paths.** **RULED — CHAT 2026-07-24 (§9-i ADDENDUM): OPTION 1, FOLDED INTO R-63**, six riders (see §9-i ADDENDUM). Fix = (a) unify get-or-create lookup keys (F6 principle) + (b) close the NULL-exchange gap via a **dupe-tolerant** migration that binds where data permits and **surfaces** existing dupes ("resolve on Holdings") rather than bricking a live upgrade. **Lands at Phase 3.5, before Phase 4's pre-pass re-runs.** **DISCHARGES at Phase 3.5** (fail-first RED through the real get-or-create path, both former key shapes; migration-chain tests for the dupe-tolerant path; blindness pin). Owner's live-data cleanup remains HIS via the UI (§9-i); the 0a report carries it as his action item with the Holdings surface showing the pair. |
+| I-6 | §9-i | Duplicate TSLA instrument (id 22 / id 23) — **invariant question**: did the product permit the duplicate? If so, that is an architectural finding (root-cause it); owner cleans his live data via the UI once the cause is known | **CAUSE FOUND — 2026-07-24 Phase-4 re-entry reconciliation.** The assigned Phase-1 invariant probe **never ran** — Phase 1 closed (`95df927`/`ee07dd1`) without it; caught by the ledger↔records grep at re-entry (recorded here, **not aged silently**). **Root cause — the product DOES permit the duplicate, two compounding reasons:** (1) `uq_instr_symbol_exch = UniqueConstraint("symbol","exchange")` (`app/models/__init__.py:193`) does **not** stop two `(TSLA, NULL)` rows — SQL treats NULL as **distinct** in a UNIQUE constraint, and `exchange` is nullable (`:170`); (2) the two holding-creation get-or-create paths use **inconsistent lookup keys** — `market._get_or_create_instrument` (`app/services/market.py:1442`) matches `symbol.upper()` + exchange-only-if-truthy, while `csv_import` (`app/services/csv_import.py:472`) matches **bare `symbol` (NOT uppercased)**, no exchange filter. So a holding added once with `exchange=NULL` and again with an exchange set (or different casing) yields two independently-priced instruments — the live id-22 (`source_override`) / id-23 symptom, and why one prices while the other shows `(corrected)`. **No dedup/merge pass exists in the create paths.** **RULED — CHAT 2026-07-24 (§9-i ADDENDUM): OPTION 1, FOLDED INTO R-63**, six riders (see §9-i ADDENDUM). Fix = (a) unify get-or-create lookup keys (F6 principle) + (b) close the NULL-exchange gap via a **dupe-tolerant** migration that binds where data permits and **surfaces** existing dupes ("resolve on Holdings") rather than bricking a live upgrade. **DISCHARGED — Phase 3.5 `e7a7e94`.** Fix (a): `app.services.identity.resolve_or_create_instrument` — one identity resolution (lookup key = DB uniqueness key: `upper(symbol)`+exchange, NULL≡NULL); every create path routes through it (`market._get_or_create_instrument` delegates; `csv_import`, watchlists ×2, markets overview call it). Fix (b): functional UNIQUE index `uq_instr_identity_ci` on `(upper(symbol), coalesce(exchange,''))` — create_all on fresh DBs + a **dupe-tolerant** best-effort migration (`a1e6c3f92d47`, mirrors ratified `f8c2a1b3d704`) that does NOT brick a live DB holding the dupe; `GET /system/instrument-duplicates` + a **Pricing Health banner** ("Resolve on Holdings", PROPOSED) surface any pre-existing pair. Fail-first through the real path (`test_instrument_identity_guard.py`: guard-off reproduces the two-`(TSLA,NULL)`-rows bug + surface; guard-on blocks the NULL/case twin; both former keys resolve to ONE row; migration dupe-tolerance; blindness pin asserts the index exists). Owner's live-data cleanup remains HIS via the UI (§9-i); the 0a report carries it as his action item with the Holdings/Pricing-Health surface showing the pair. **Note:** the guard makes concurrent first-creates of a NEW symbol a real serialization point, which raises the back-to-back flake rate of the inherently-flaky F-10 test `test_concurrent_first_load_does_not_race_on_repair_markers` (clean HEAD ~50% back-to-back; passes in file/suite context) — recorded in the verdict section, re-run per project F-10 practice. |
 | I-7 | §0-A log 13605 | Genuine transient throttle ("Burst pattern … 5 req/sec") — secondary contributor; surfaces as `throttled` | **DISCHARGED — Phase 2** (`RateLimited`→`THROTTLED` + `last_throttled_at`, real burst text `9d54f4f`; persisted `34974b6`; drawer renders "throttled — … will retry (last at T)" `c882648`, copy PROPOSED). |
 
 ### Accepted-surface RITE — consolidation (recorded explicitly per the owner ruling 2026-07-23)
 
 R-63 changes two accepted surfaces across several deltas: **Pricing Health** (Phase 2 Delta 2.2 —
-typed failure state + throttle-retry surface; Phase 5 — provider doctor) and **Settings → Data
-feeds** (Phase 3 — free-first meaning shift; Phase 4 — verified-tier label + the recut routing
-sentence). **Ruling (owner, 2026-07-23):** the guard-REDs-an-accepted-surface **rite obligations
+typed failure state + throttle-retry surface; **Phase 3.5 — the duplicate-instrument banner, I-6**;
+Phase 5 — provider doctor) and **Settings → Data feeds** (Phase 3 — free-first meaning shift;
+Phase 4 — verified-tier label + the recut routing sentence). **Ruling (owner, 2026-07-23):** the guard-REDs-an-accepted-surface **rite obligations
 (a dated delta note + a page pre-pass re-run) are discharged ONCE, at Phase 4, covering ALL R-63
 deltas on each page** — provided (i) this consolidation is recorded now (it is), and (ii) any served
 copy or visible-state change made ahead of Phase 4 is held **PROPOSED** and ratified at the 0a look.
@@ -367,12 +367,27 @@ backend suite passes ordered AND randomized (declared seeds)**; the close requir
 | **1 — execution net** (`95df927`) | **2121 passed, 15 skipped** (22:37) | **2121 passed, 15 skipped** (21:52) |
 | **2 — failure taxonomy** (`9d54f4f`·`34974b6`·`c882648`) | **2130 passed, 15 skipped** (18:01, `--durations=30`) | **2130 passed, 15 skipped** (18:17) |
 | **3 — free-first + budget** (`2a9fa1e`) | **2135 passed, 15 skipped** (17:16) | **2135 passed, 15 skipped** (17:09) |
+| **3.5 — instrument-identity guard** (`e7a7e94`) | *(running — solo)* | *(owed after ordered)* |
 
 **Phase 1 · 2 · 3 all COMPLETE** — each on the full-suite verdict (both orders), not a subset.
 Reconciliation: 2121 → 2130 (+9, Phase 2) → **2135 (+5, Phase 3:** 3 free-first ordering + 1
 budget counted-calls + 1 override-wins-keeps-net). Backend **2135 solo, ordered AND randomized**.
 Help currency: **no impact, guard-corroborated** (Phase 3 is internal chain policy + refresh order;
 the Settings "Market data provider" card meaning-shift copy is Phase 4, under the rite).
+
+**Phase 3.5 (I-6 guard, `e7a7e94`) — verdict IN PROGRESS.** Expected count +7 (the new
+`test_instrument_identity_guard.py`): **2135 → 2142**. Inner-loop signals already green: new tests
+**7/7** (`-p no:randomly`); rewired-path regression **36 passed** (identity/csv/imports/markets/
+execution-net/routing); PricingHealth vitest **17/17**; `tsc` clean; `ruff` clean.
+**⚠ Known-flaky watch:** the identity guard makes concurrent first-creates of a NEW symbol a real
+serialization point. This raises the *back-to-back* flake rate of the inherently-flaky F-10 test
+`test_history_cache_race::test_concurrent_first_load_does_not_race_on_repair_markers` — measured
+**clean HEAD ~50%** pass back-to-back (2/4), **with the guard ~20%** (1/5) back-to-back — **but it
+passed 3/3 in file/suite context**, which is how the 2135 verdicts run. Per project F-10 practice
+(memory `gate-runs-must-be-solo`; this test is not new-flaky), if the solo full-suite verdict trips
+on THIS test only, re-run; a systematic trip (fails across re-runs) is a real regression to mitigate.
+**Not** a get_history_cached transaction restructure — that is a third fix outside the §9-i ADDENDUM
+"exactly two fixes" mandate and an R-65 (test-infra) concern.
 
 **Suite-count reconciliation:** **2121 → 2130 (+9)**, all attributable to R-63 Phase 2 tests:
 Delta 2.1 — 6 taxonomy tests in `test_av_quote_envelope.py` (priced-no-state · empty · parse_error ·
@@ -381,13 +396,17 @@ Delta 2.2 — 1 in `test_execution_net.py` (persist-then-clear) + 1 in `test_pri
 carries typed fields). Frontend tests (vitest `PricingHealth.test.tsx`, +1 drawer test) are not in
 the backend count. Backend: **2130 solo, ordered AND randomized**.
 
-**Contract line:** **141 paths / 71 schemas — unchanged** (`scripts/check_api_contract.py` clean).
-`GET /portfolio/pricing-health` is declared **`-> dict` (UNTYPED)**, so the new
-`failure_state`/`failure_at`/`failure_note` fields are **NOT contract-pinned** (0 occurrences in
-`API-CONTRACT.json`) — the R-61/§3b discipline applies. The **served-shape pin** covering them is
-`tests/integration/test_pricing_health.py::test_pricing_health_carries_typed_failure_state` (asserts
-every row carries the fields and any state has a note) **plus** the frontend `PricingHealthDetail`
-type + its vitest drawer test. ("api-contract current" alone is not the sentence — the pin is named.)
+**Contract line (through Phase 3.5):** **142 paths / 71 schemas** — was 141/71; **+1 path**
+(`GET /system/instrument-duplicates`, Phase 3.5), regenerated `API-CONTRACT.json` + `docs/openapi.json`
+in the same delta (`e7a7e94`). **0 new schemas** — the endpoint is declared **`-> dict` (UNTYPED)**,
+mirroring `/system/identifier-duplicates` and `/portfolio/pricing-health`, so its shape is **NOT
+contract-pinned** (R-61/§3b discipline). Its **served-shape pins** are the backend
+`test_instrument_identity_guard.py::test_guard_off_reproduces_the_duplicate` (asserts the
+`duplicate_instruments` shape: `symbol`/`exchange`/`instrument_count`/`instruments[]`) **plus** the
+frontend `InstrumentDuplicatesResp` type + its PricingHealth vitest banner test. Earlier: the Phase-2
+`GET /portfolio/pricing-health` is also `-> dict`, its `failure_state`/`failure_at`/`failure_note`
+pinned by `test_pricing_health.py::test_pricing_health_carries_typed_failure_state` + the frontend
+`PricingHealthDetail` type. ("api-contract current" alone is not the sentence — the pins are named.)
 
 ---
 
