@@ -614,3 +614,20 @@ here is **PROPOSED** and is ratified only at the owner's 0a look.
 every delta above **including the doctor** — Pricing Health on an isolated demo instance, **both
 themes**, 0 non-benign console errors, screenshots looked at. Recorded in the R-63 Phase-5 / 0a report
 and back-linked here on completion. *(A close-report flag is explicitly NOT sufficient — CLAUDE.md.)*
+
+**✅ PRE-PASS RE-RUN — DONE 2026-07-24.** Driven on an isolated demo instance (temp `LEDGERFRAME_DATA_DIR`,
+Vite dev :5199 → backend :8399, the owner's live stack and his AV key never touched — the key was
+**overridden to `INVALID-DOCTOR-TEST`** so his credential was never used; repo-root `.env` snapshotted
+and **hash-verified identical** after, throwaway driver + config deleted). **Both themes, 0 non-benign
+console errors** each. Every R-63 delta on this page walked and **screenshots looked at**: the
+typed-failure drawer (throttled with "last at T", empty, parse_error, no_key, unsupported, unmapped),
+the free-first priority chain (leads `yahoo`, `eodhd (no key)` muted), the duplicate-instrument banner
+(TSLA pair), head=X/priced-by=Y provenance (`yahoo (head alphavantage)`, `yahoo (head mock)`), and the
+provider doctor in **both** postures (no-egress → 0 calls / all `skipped_no_egress`; egress-on with the
+invalid key → **3 live calls, `alphavantage` FAIL, redacted, key never on screen** — AC-13/14 confirmed
+on camera). Assets `docs/plans/assets/r63-prepass-pricing-health-{light,dark}.png` + the `r63-0a-pricing-*`
+/ `r63-0a-doctor-*` / `r63-0a-dup-banner-*` specimens. **Two findings** raised for the owner's 0a look
+(see the R-63 0a report / `r63-pricing-routing.md` §-ledger): (i) manual holdings render `null (head
+manual)` in the Source column (the netCaught branch on a null `source`); (ii) the AV adapter logs AV's
+error text verbatim, which can echo the submitted key into the server log on the index-fetch path
+(the doctor *response* is redacted; this is a separate adapter behavior).

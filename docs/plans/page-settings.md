@@ -1327,3 +1327,17 @@ copy is ratified; any GLOSSARY addition for the verified-tier vocabulary is PROP
 instance (spare ports, `.env` hash-verified restore), **both themes**, 0 non-benign console errors,
 screenshots looked at — run with the Pricing Health drive as one consolidated pass after Phase 5.
 Recorded in the R-63 Phase-5 / 0a report and back-linked here on completion.
+
+**✅ PRE-PASS RE-RUN — DONE 2026-07-24.** Driven with the Pricing Health drive as one consolidated pass
+on the isolated instance (Vite dev :5199 → backend :8399, temp data dir; the owner's live stack and his
+AV key never touched — his key **overridden to `INVALID-DOCTOR-TEST`**; repo-root `.env` snapshotted and
+**hash-verified identical** after; throwaway driver + config deleted). **Both themes, 0 non-benign
+console errors** each. On `/settings?tab=data-feeds`, all three Phase-4 deltas walked and **screenshots
+looked at**: the **recut Routing-matrix sentence** (renders verbatim as recorded), the **"Market data
+provider" preferred-head card** (*"Your preferred head lane. Prices fall through the free-first chain
+when the head can't price a holding."*), and the **verified-tier cell PER PRODUCT** — on the isolated
+stack it reads the honest **"Quotes: not yet verified / Indices: free"** (nothing verified this process
+on a non-entitled test key). **The entitled two-product readout ("Quotes: delayed / Indices: premium")
+requires the owner's real premium AV key and is DEFERRED to his 3b live walk** — not stubbed at 0a.
+Assets `docs/plans/assets/r63-prepass-settings-datafeeds-{light,dark}.png` +
+`r63-0a-settings-{routing,provider-head,verified-tier}-{light,dark}.png`.

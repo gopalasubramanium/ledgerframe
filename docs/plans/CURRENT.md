@@ -195,6 +195,20 @@ doctor path); frontend green. **REMAINING for R-63** (see the SESSION-END HANDOF
 needing seeded failure states; not attempted this run ("clean partial beats degraded full"). **R-65
 Phase 2 dropped this run** (droppable overflow), still slotted after the R-63 close.
 
+**⊕ 2026-07-24 (focused) — PRE-PASS RE-RUNS + 0a SPECIMEN CUT DONE → HARD STOP for the owner's look.**
+Both accepted-surface pre-pass re-runs (Pricing Health + Settings, **both themes, 0 non-benign console
+errors**) driven on an isolated stack and **back-linked into the two 2026-07-24 delta notes** (AC-17 ✓).
+All **seven 0a specimen groups** cut, both themes, 32 assets in `docs/plans/assets/r63-*.png` (specimen
+table in the R-63 plan's tail SESSION section). The **three specimen rulings applied**: verified-tier
+NO STUB (honest "not yet verified / free"; entitled cell → 3b), doctor FAIL **produced for real** (invalid
+key `INVALID-DOCTOR-TEST`, 3 live calls, AV FAIL, **redacted**), duplicate raw-SQL legacy repro (TSLA).
+**Isolation:** owner's live stack + real AV key **never used** (key overridden; `.env` hash-verified
+identical; stack torn down, ports free, throwaway files deleted). **Two findings for the 0a look
+(recorded, NOT fixed):** F-A manual rows render `null (head manual)`; F-B AV adapter logs AV's
+key-echoing error text (could leak a real key to the server log; doctor *response* is redacted). **NEXT
+after the owner's look: 3a scripted pre-pass → 3b owner walk on his LIVE symptoms → close.** Also
+deferred to 3b: the entitled verified-tier cell, his live duplicate cleanup, his live Refresh.
+
 **⊕ 2026-07-23 — R-65 FILED (owner ruling, chat): "Test-suite runtime — measure, then
 parallelize" (TEST-INFRA, non-blocking).** Phase 1 = cheap survey delta (`pytest --durations`
 census · real-sleep debt census · `pytest-xdist` feasibility vs the F-10 `RESET_REGISTRY` census

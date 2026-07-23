@@ -273,8 +273,10 @@ decision (copy hygiene: name a fact, never an endpoint).
 - [ ] **AC-15** **Blindness pins** on every new guard (a guard that protects nothing fails loudly).
 - [ ] **AC-16** Help Currency Law: Pricing Health + Settings routing copy deltas shipped, or
   guard-corroborated "no impact".
-- [ ] **AC-17** Accepted-surface **rite** discharged for **Pricing Health** and **Settings**
-  (dated delta note + pre-pass re-run each — §9-7).
+- [x] **AC-17** Accepted-surface **rite** discharged for **Pricing Health** and **Settings**
+  (dated delta note + pre-pass re-run each — §9-7). Delta notes written 2026-07-24; **pre-pass re-runs
+  DONE 2026-07-24** (both pages, both themes, 0 non-benign console errors, screenshots looked at,
+  back-linked into both delta notes). See the SESSION record at the tail.
 - [ ] **AC-18** Both suite verdicts (ordered AND randomized, declared seeds); UTF-8-safe edits.
 
 ## 8. BUILD PHASES (authored from the §9 one-pass — backend-first, fail-first each)
@@ -596,3 +598,83 @@ free-first chain leads yahoo).
 Then: the specimen table (file ↔ on camera ↔ ruling) in the report; **STOP for the owner's look. Do
 NOT proceed to 3a.** **R-65 Phase 2 (queue item 5) was dropped this run** (the work order's droppable
 overflow), still slotted after the R-63 close.
+
+---
+
+## SESSION — 2026-07-24 (focused) — PRE-PASS RE-RUNS + 0a SPECIMEN CUT — DONE → HARD STOP
+
+The rite's second obligation and the 0a specimen cut, browser-driven on an isolated stack. **No product
+code changed** (records + assets only). Re-entry state: HEAD `b329027`, tree clean, ledger↔records
+reconciled by grep (I-1..I-7 all DISCHARGED). Next after the owner's look: **3a scripted pre-pass →
+3b owner walk on his LIVE symptoms → close**. **Not started this session (HARD STOP).**
+
+### Isolation harness (confirmed torn down)
+Temp `LEDGERFRAME_DATA_DIR`; backend `uvicorn :8399`; Vite dev `:5199` (throwaway `vite.prepass.config.ts`)
+→ backend; driver `.mjs` inside `frontend/`. **The owner's live stack (:8321/:5173/`~/.ledgerframe-data`)
+and his AlphaVantage key were never used** — his key was **overridden to `INVALID-DOCTOR-TEST`** via OS
+env (the repo-root `.env` carries his real key; OS-env override kept it out of the run). Repo-root `.env`
+snapshotted and **hash-verified identical** (`460a2da0…afae6`) before and after. **Teardown verified by
+probe:** ports 8399/5199 free; throwaway driver + `vite.prepass.config.ts` deleted; owner ports never
+bound. **Both themes; 0 non-benign console errors** on every drive.
+
+> **⚠ Isolation note, recorded (not hidden):** the FIRST Config-A boot inadvertently **inherited the
+> owner's real AV key from `.env`** (only DATA_DIR/DEMO_SEED/SECRET_KEY were OS-overridden), and one
+> `markets/global` index fetch ran with it (learned `av_tier=premium` — read-only market data, his temp
+> DB never mutated, same egress class as Phase A's deliberate probe). Caught at the verified-tier
+> specimen (it showed his entitled *"Indices: premium"*). **The stack was torn down and the entire run
+> re-driven with the key overridden to `INVALID-DOCTOR-TEST`** so his credential is never used and the
+> entitled readout is correctly **deferred to his 3b** (ruling #1). All committed specimens are from the
+> clean re-drive.
+
+### The three specimen rulings (chat 2026-07-24) — applied, echoed
+1. **Verified tier — NO STUB.** Captured the honest isolated state **"Quotes: not yet verified /
+   Indices: free"** (nothing verified this process on a non-entitled test key). The **entitled
+   two-product cell** (*"Quotes: delayed / Indices: premium"*) needs his real premium key → **DEFERRED
+   to 3b** (recorded here + in `page-settings.md`). *(Handoff premise "both-null → not yet verified" was
+   corrected on camera: both-null renders an em dash `—`; "not yet verified" needs a truthy index tier,
+   which the invalid test key supplies as `free`.)*
+2. **Doctor FAIL — PRODUCED FOR REAL.** Seeded `INVALID-DOCTOR-TEST`; ran the doctor with egress on →
+   **3 live calls, `alphavantage` verdict=FAIL (calls=1)**, `yahoo`/`eodhd` FAIL "reached, parsed empty"
+   (AC-14 on camera), `kite` no_key, proposed lanes. **Redacted — the key is absent from the doctor
+   response** (verified: `INVALID-DOCTOR-TEST ∉ response JSON`). Also captured the honest **no-egress**
+   panel (0 calls, all `skipped_no_egress`).
+3. **Duplicate — raw-SQL LEGITIMATE.** Dropped `uq_instr_identity_ci`, raw-inserted a second `(TSLA,
+   NULL)` row — reproducing the **pre-guard legacy state** the owner's live DB holds (his id-22/23); here
+   id-6 + id-39. The guard blocks NEW dupes while history enters through this raw path — exactly what the
+   banner surfaces. Rationale recorded.
+
+### Specimen table (file ↔ on camera ↔ ruling ratified) — all in `docs/plans/assets/`, both themes
+| # | File(s) `…-{light,dark}.png` | On camera | Ratifies |
+| --- | --- | --- | --- |
+| — | `r63-prepass-pricing-health-*`, `r63-prepass-settings-datafeeds-*` | full-page rite re-walk; 0 console errors | **AC-17 rite** |
+| 1 | `r63-0a-settings-routing-*`, `r63-0a-settings-provider-head-*` | recut Routing-matrix sentence (verbatim); "preferred head lane / free-first chain" card | §9-1 + §9-6 |
+| 2 | `r63-0a-settings-verified-tier-*` | "Quotes: not yet verified / Indices: free" (honest; entitled cell → 3b) | I-4 / AC-9 (ruling 1) |
+| 3 | `r63-0a-pricing-chain-*` | AAPL Details: chain **leads `1. yahoo`**, `eodhd (no key)` muted | §9-6 |
+| 4 | `r63-0a-pricing-headpricedby-*` (+ prepass PH) | Source col **`yahoo (head alphavantage)`**, `yahoo (head mock)` (matrix), `coingecko` | §9-1 / AC-5 |
+| 5 | `r63-0a-pricing-failstate-{throttled,empty,parse_error,no_key,unsupported,unmapped}-*` | typed drawer per state + served note; **throttled "will retry (last at T)"** | §9-2 + §9-9 |
+| 6 | `r63-0a-doctor-fail-*`, `r63-0a-doctor-noegress-*` | egress-on **3 calls / AV FAIL / redacted**; no-egress **0 calls / all skipped** | §9-4 / AC-13 / AC-14 (ruling 2) |
+| 7 | `r63-0a-dup-banner-*` | "1 duplicate instrument — TSLA … new duplicates can no longer be created" | I-6 / §9-i (ruling 3) |
+
+### Deferred to the owner's 3b (his LIVE keyed instance) — explicit
+- **The verified-tier ENTITLED two-product cell** — *"Quotes: delayed / Indices: premium"* — needs his
+  real premium AV key (ruling 1). 0a shows only the honest not-verified state.
+- **His live duplicate cleanup** — resolving his own TSLA id-22/23 via the Holdings UI (§9-i unchanged);
+  the guard makes recurrence impossible thereafter.
+- **His live Refresh on his real symptoms** (TSLA / SBICARD.BSE / AARK) — proving the parse-fix + the
+  execution net actually price them on his instance (the milestone's origin).
+
+### Findings raised for the 0a look (recorded, NOT fixed this session — owner rules disposition)
+- **F-A — manual holdings render `null (head manual)` in the Source column.** A manual holding has a null
+  `source`; the R-63 Phase-4 netCaught branch (`route_source !== source` → `"Y (head X)"`) appends
+  `(head manual)` and renders the null as the literal string `"null"`. Cosmetic, on the PROPOSED
+  head/priced-by copy. Candidate fix: suppress the head-rider (or the whole cell) when `source` is
+  null/manual. *Seen on `r63-prepass-pricing-health-*` (the manual rows).*
+- **F-B — the AV adapter logs AlphaVantage's error text verbatim, which can echo the submitted key.** On
+  an index fetch with a bad key, AV returns *"We have detected your API key as <KEY> …"* and
+  `app.providers.market.external` logs it at WARNING → a **real key could land in
+  `~/.ledgerframe-data/logs/`**. The provider-doctor **response** is redacted (AC-13 holds — verified);
+  this is a **separate, pre-existing adapter logging behavior** surfaced by this run. Candidate: redact
+  `apikey`/key-shaped tokens from provider error strings before logging. *(Filed for the owner —
+  disposition his: fold a redaction into R-63, or file to R-58/R-64.)*
+
+**HARD STOP for the owner's look, walked in chat. Do NOT proceed to 3a. Expect 1–3 revision loops.**
