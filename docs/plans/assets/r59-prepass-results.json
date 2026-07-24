@@ -1,0 +1,122 @@
+[
+  {
+    "name": "[light] deep link opens the dialog cold",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[light] opens at the tile picker (classification step 1)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[light] no Save until a class is chosen (cannot bypass classification)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[light] ?add= composes with ?account= (dialog open while scoped)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[light] account scope chip present alongside the open dialog",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[light] close cleared ?add= (no residue)",
+    "ok": true,
+    "detail": "http://127.0.0.1:5199/#/holdings?account=3"
+  },
+  {
+    "name": "[light] close preserved ?account=",
+    "ok": true,
+    "detail": "http://127.0.0.1:5199/#/holdings?account=3"
+  },
+  {
+    "name": "[light] crypto add → asset_class=crypto",
+    "ok": true,
+    "detail": "\"crypto\""
+  },
+  {
+    "name": "[light] crypto add → asset_subclass=crypto",
+    "ok": true,
+    "detail": "\"crypto\""
+  },
+  {
+    "name": "[light] crypto add → listing_country null (borderless, no born-US)",
+    "ok": true,
+    "detail": "null"
+  },
+  {
+    "name": "[light] crypto add → country null (no bare-ticker US leak)",
+    "ok": true,
+    "detail": "null"
+  },
+  {
+    "name": "[light] zero non-benign console errors",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] deep link opens the dialog cold",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] opens at the tile picker (classification step 1)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] no Save until a class is chosen (cannot bypass classification)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] ?add= composes with ?account= (dialog open while scoped)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] account scope chip present alongside the open dialog",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "[dark] close cleared ?add= (no residue)",
+    "ok": true,
+    "detail": "http://127.0.0.1:5199/#/holdings?account=3"
+  },
+  {
+    "name": "[dark] close preserved ?account=",
+    "ok": true,
+    "detail": "http://127.0.0.1:5199/#/holdings?account=3"
+  },
+  {
+    "name": "[dark] crypto add → asset_class=crypto",
+    "ok": true,
+    "detail": "\"crypto\""
+  },
+  {
+    "name": "[dark] crypto add → asset_subclass=crypto",
+    "ok": true,
+    "detail": "\"crypto\""
+  },
+  {
+    "name": "[dark] crypto add → listing_country null (borderless, no born-US)",
+    "ok": true,
+    "detail": "null"
+  },
+  {
+    "name": "[dark] crypto add → country null (no bare-ticker US leak)",
+    "ok": true,
+    "detail": "null"
+  },
+  {
+    "name": "[dark] zero non-benign console errors",
+    "ok": true,
+    "detail": ""
+  }
+]

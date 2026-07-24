@@ -160,6 +160,28 @@ no `?add=`), I-2 (tier-1(b) serves `page:/holdings`, two guards pin it), and —
 — **I-3 is already implemented and pinned on both sides** (the form sends `asset_class` via the D-089
 tile, `Holdings.tsx:880`; backend classifies crypto → crypto/crypto/—; `test_fg_crypto_identity.py`
 + `Holdings.test.tsx:217` green, 4/4). The charter's "missing piece is the form" premise does not
-hold — the same finding R12 recorded for the sibling path. **No code changed this step.** On the
-ruling: I-1 build (RED-first on the round-trip) → I-2/I-2a registry flip + ordering guard → verdicts
-(SOLO pair, attributed) → closed-page pre-pass on camera → close.
+hold — the same finding R12 recorded for the sibling path. **No code changed this step.**
+
+**⊕ 2026-07-24 — BUILD + VERDICTS + PRE-PASS DONE (owner ruled Option 1) → HARD STOP for the owner's
+look at the PROPOSED set.** All four intake items shipped RED-first (§-ledger DONE):
+- **I-1** `?add=1` drives the dialog (sibling-preserving updater; open pushes history so Back closes;
+  composes with `?account=`; no residue; opens at the tile picker). **I-2** tier-1(b) flips to
+  `page:/holdings?add=1` (`_holdings_add_intent`); `askLinkLabel`→"Add a holding". **I-2a** the
+  bidirectional ordering guard (served `?add=` key must be a param the route reads; blindness-pinned).
+  **I-3** deep-link-lands-on-picker guard.
+- **Verdicts.** Frontend `npm run check` PASS — **vitest 444/444** (42 files), **Playwright 361**;
+  delta **+5 = R-59's own** (4 Holdings URL/picker + 1 askLinks round-trip). Backend **SOLO, both
+  orders, seed 6363: ordered 2182/16 (18:23), randomized 2182/16 (17:37), exit 0** — uncontended.
+  Reconciliation **2180 → 2182 (+2 = R-59's own** backend tests: `test_holdings_add_intent…` +
+  `test_the_add_holding_deep_link_param_is_a_param_the_route_reads`); **skips unchanged at 16**.
+- **Pre-pass** (closed-page rite) **24/24, both themes, 0 non-benign console errors**, isolated stack
+  (owner's key/stack never used, `.env` hash `460a2da0…afae6` unchanged, ports torn down). On camera:
+  deep link opens cold at the picker (no Save until classified) · `?add=`/`?account=` round-trip, no
+  residue · classified crypto add reads crypto/crypto/—. Back-linked into `page-holdings.md` §59;
+  6 assets `docs/plans/assets/r59-*.png`.
+- **Help currency:** no Help impact, **guard-corroborated** (the Help Currency Suite is part of the
+  backend suite, green in the verdict; no control/tab-rename/count/Help-tracked vocabulary changed).
+- **PROPOSED set for the owner's look:** the param `?add=1` (presence-is-open, opens the tile picker) ·
+  the served form ID `page:/holdings?add=1` · the pointer label **"Add a holding"**. On the conveyed
+  verdict: ratify the PROPOSED set → close records (RATIFICATION §6) → CURRENT advances to **R-58**.
+  **No push** (owner pushes).

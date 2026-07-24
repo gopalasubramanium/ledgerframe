@@ -769,6 +769,15 @@ route existed. **All strings/shapes below are PROPOSED until the owner looks.**
   charter input (I-5 never-age-it-silently precedent).
 - **Fence:** the general entity-dialog pattern (import/purge/tags/edit-txn, `Holdings.tsx:108-111`)
   stays **POST-RELEASE** (ROADMAP R-59). Phase 1 is the add-holding dialog alone.
-- **Pre-pass re-run (closed-page rite):** driven on an isolated instance, both themes, on camera —
-  the deep link opening the form cold, the `?add=` ↔ `?account=` round-trip, and a classified crypto
-  add reading crypto/crypto/—. Back-linked into this note at the pre-pass step.
+- **Pre-pass re-run (closed-page rite) — DONE 2026-07-24, 24/24, both themes, 0 non-benign console
+  errors.** Driven on an **isolated** live stack (backend `:8399` temp data dir + demo seed, vite dev
+  `:5199`; owner's `:8321`/`:5173`/`~/.ledgerframe-data` and his real market key **never used** —
+  `LEDGERFRAME_MARKET_API_KEY` OS-overridden empty, `.env` hash-verified identical
+  `460a2da0…afae6` before/after, ports torn down). On camera: (i) `#/holdings?add=1` opens the dialog
+  **cold at the tile picker** with **no Save until a class is chosen** — a deep link cannot bypass
+  classification (`r59-deeplink-picker-{light,dark}.png`); (ii) `?add=` composes with `?account=`
+  and Cancel clears `add` while `?account=` survives — no residue (`r59-compose-account-{light,dark}.png`);
+  (iii) a **classified crypto add reads crypto/crypto/—** (Identity: Class Crypto · Subclass Crypto ·
+  Country — · Currency USD, `r59-crypto-identity-{light,dark}.png`) — the born-equity leak does NOT
+  happen via the form, confirmed live. Assets in `docs/plans/assets/r59-*.png`;
+  `r59-prepass-results.json`.
