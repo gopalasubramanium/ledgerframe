@@ -1463,3 +1463,31 @@ equity** (MSFT's cached quote aged 2 days → `stale_count=1` of `holdings_count
 
 These frames join the close's final specimen set. **New strings remain PROPOSED → the owner's final look is
 IN CHAT** (architect runs it). **HARD STOP** here, before the §7 close ritual.
+
+### OWNER VERDICT + final rulings (2026-07-24) — PASSED
+
+- **Owner's final look — PASSED ("All fine").** ALL R-63 PROPOSED strings are **RATIFIED**: the orphan
+  banner (*"…One copy is unused (no holdings) and can be removed here; the copy your holdings use is
+  untouched."*), **[Remove unused copy]**, the removal confirmation (*"Removed the unused copy of AAPL."*),
+  the scope-labelled card clause (*"N of M holdings have a stale price — the same count the Stale banner
+  shows"*), and the universe-naming toast (*"Refreshed R of T refresh targets (holdings, watchlist &
+  indices) … still stale"*). **The R-63 PROPOSED set is now EMPTY** — no R-63 copy remains unratified.
+- **R10 (owner 2026-07-24) — F-G is filed as its OWN pre-release fix item, NOT folded into R-63.**
+  Rationale (recorded): the close-verdict pair (2174/15) is on final code and the owner's look has passed;
+  F-G arrived via a **new lane (crypto)** entering the portfolio *after* the final look. A closed milestone
+  + an immediately-slotted successor is cleaner records at the same fix speed. **R-63 stops absorbing
+  findings here.**
+- **F-G item charter (pre-release fix list; diagnose-first; slotted after the R-63 close alongside the
+  R-65/R-59 sequencing).** A **coingecko-lane crypto** holding's quote stays stale through *"Refresh all
+  market data"* and updates only via **Settings → Data feeds → Sync now** (owner evidence: BTC, 12:41
+  screenshot). The refresh explainer's carve-out covers **instrument masters**, not **holding quotes** —
+  routing defect or undocumented design: **diagnose, then rule.** *Riders:* crypto **Identity shows
+  Subclass "Equity" and Country "US" for BTC** (taxonomy defaults leaking into a Crypto-class instrument);
+  the **"crypto detail" card title** → capitalized per DESIGN-SYSTEM conventions.
+- **Pre-release backlog — page-load performance profiling pass.** Portfolio worst (owner evidence: 12:49
+  skeleton-state screenshot); Home/Holdings sluggish. **Severity assessed at the pre-release walk.**
+- **ROADMAP R-64 charter input (owner verbatim, recorded):** *"surface the wider AlphaVantage catalog per
+  instrument in a well designed way which does [not] clutter the page … may be in a tabbed way, also if
+  this mean a lot of fetch, just give a click which only retrieves when use wants to see it."* Architect
+  note: the **click-to-fetch-only** framing is what keeps R-64 budget-compatible with the free tier —
+  nothing fetches unasked. **Post-release, unchanged slot.**
