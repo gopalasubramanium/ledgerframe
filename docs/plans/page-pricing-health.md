@@ -684,3 +684,41 @@ drawer, and the **provider-doctor** panel are **NOT re-cut here** and do not nee
 read is mock-scoped (the confidence cap is guarded `if source in {mock,demo}`; the residue repair deletes
 only mock/demo rows — never a throttled/unsupported/doctor row). Those three surfaces keep their 28/28
 coverage by byte-identity. Reconciliation table in `r63-pricing-routing.md` (CLOSE STEP 1).
+
+---
+
+## DELTA NOTE — 2026-07-24 (R-63 closing session — F-E/F-F, the guard-REDs-an-accepted-surface rite)
+
+**Pricing Health is CLOSED/accepted; this dated note records the two R-63 closing-session deltas on this
+page (F-E and F-F), per the guard-REDs-an-accepted-surface rite (CLAUDE.md). Copy is PROPOSED → the owner's
+final look; the pre-pass re-run rides this session's final pre-pass (§6).**
+
+**F-E — the duplicate-instrument banner now resolves the ORPHAN case here (ledger I-12, owner ruling R8,
+`38f50f9`).** A holdings/transactions purge is a soft-delete, so a legacy duplicate INSTRUMENT pair can
+survive and a re-add can strand one copy with zero live references. Holdings is derived from transactions,
+so an orphan has no Holdings row — the old *"Resolve on Holdings"* copy was a dead-end for it. The banner now
+distinguishes the case: an orphaned duplicate reads *"[SYMBOL] appears more than once. One copy is unused (no
+holdings) and can be removed here; the copy your holdings use is untouched."* with a **[Remove unused copy]**
+action (ui/Button) wired to `POST /system/instrument-duplicates/{id}/remove`; an all-in-use duplicate keeps
+the *"Resolve on Holdings"* copy. The removal refuses a non-orphan (409) and a lone non-duplicate — it can
+never delete a legitimate zero-holding instrument (e.g. a watchlist-only row). **New served strings on this
+page (PROPOSED):** the orphan banner sentence + the *"Remove unused copy"* / *"Removed the unused copy of
+[SYMBOL]."* toast. GLOSSARY: no new **defined** term ("duplicate instrument" ships descriptively, R7; "unused
+(no holdings)" is descriptive copy).
+
+**F-F — the confidence card's stale clause is scope-labelled and can no longer flicker against the banner
+(ledger I-13, owner ruling R9, `537b79f`).** The card rendered its stale numerator from the shared store but
+its denominator from a separate pricing-health fetch, so a refresh could show a transient banner/card
+mismatch. The denominator now comes from the SAME shared reader (`/portfolio/summary.holdings_count` →
+`useStaleCount().total`), so numerator and denominator move together — banner and card cannot disagree even
+transiently. **Changed served string (PROPOSED):** the card clause is now *"{n} of {m} holdings have a stale
+price — the same count the Stale banner shows"* (scope word "holdings" distinguishes it from the refresh
+toast). The refresh toast (specced in `frontend/src/api/pricing-health.ts` `refreshAllMarketData`, lane
+"Quotes & indices") now names its universe: *"Refreshed {r} of {t} refresh targets (holdings, watchlist &
+indices)… · {s} still stale"*. The AppShell StaleBanner copy (*"…price is stale"*, holdings) is **unchanged**.
+
+**Verdicts (inner-loop, this session):** PricingHealth vitest **21/21** (+2 across F-E/F-F); backend F-E
+`test_orphan_duplicate_cleanup.py` **6/6** + F-F `test_summary_serves_holdings_count_as_the_stale_denominator`;
+tsc/eslint/ruff clean. Full-suite verdict (both orders, seed 6363) captured at the close. **Pre-pass re-run:
+DISCHARGED at the closing session's final pre-pass** (§6 of `r63-pricing-routing.md`) — back-linked here when
+cut. *(A close-report flag alone is NOT sufficient — CLAUDE.md; this is the on-page record.)*
