@@ -114,20 +114,47 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — R-58 (settings.key check-then-insert race — the four filed sites)
+## NEXT — R-57 (AI model management, Settings › AI)
 
-**⊕ 2026-07-24 — R-59 CLOSED (owner "R-59 copy fine", via architect; RATIFICATION §6).** The release
-train advances to **R-58**.
-- **R-58 — the `settings.key` check-then-insert race at the FOUR filed sites outside
-  `get_history_cached`** (RD-9 Amendment 9, from the F10 census). **`briefing.py:201-207` first** (a
-  generic helper — widest blast radius), then `feeds.py:72-78`, `settings.py:131-135`,
-  `system.py:617-621`; `seed/demo.py:327` is an **adjacent variant**, not a fifth site. **Not
-  release-train blocking** — none sits on a guaranteed-concurrent path — but the fix is F10's
-  already-tested `_claim_marker` primitive. **Fail-first with a blindness pin is mandatory.**
+**⊕ 2026-07-24 — R-58 CLOSED (architect, standing delegation; RATIFICATION §6).** The release train
+advances to **R-57**.
+
+- **⚑ FIRST ITEM OF R-57 — BEFORE ANY R-57 VERDICT (architect directive at the R-58 close):** fix the
+  **pre-existing `test_fc_mock_price_leak.py` import-sort lint failure** (ruff `I001`, an **R-63-era
+  hygiene rider** — it fails on `c7c1efd`, was correctly left out of R-58 so the verdict ran on final
+  code). Fixing it post-verdict would have broken verdict-on-final-code; it belongs at the head of the
+  next session, recorded as R-63-era hygiene, fixed before R-57's own gates run.
+- **R-57 — AI model management (Settings › AI)** (RD-9 Amendment 8): endpoint URL + write-only key +
+  kind selection. **After R-54, before R-55** (R-54's posture-copy amendment lands first). See
+  `ROADMAP.md` R-57 + `release-readiness.md` Amendment 8. Carries R-54 walk item 2 (posture under a
+  live model) as an acceptance item.
+
+**⚑ CARRIED FORWARD (visible):** the **18 hardcoded-port smoke specs** must fail closed
+(`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. **Pre-release backlog:** page-load perf
 
 **⚑ CARRIED FORWARD (visible):** the **18 hardcoded-port smoke specs** must fail closed
 (`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. **Pre-release backlog:** page-load perf
 profiling (pre-release-walk 9f).
+
+## DONE — R-58 (settings.key check-then-insert race — the filed sites) — CLOSED 2026-07-24 (RATIFICATION §6)
+
+**⊕ 2026-07-24 — R-58 CLOSED (architect, standing delegation; backend-only, no owner copy look).** F10's
+savepoint-claim primitive PROMOTED to `app/db/claim.py::claim_setting`; the **five** `settings.key` writers
+now share one shape (`market._claim_marker` a thin wrapper → **F10 tests pass UNMODIFIED**; the four filed
+sites — `briefing._set` first, `feeds.set_feed_urls`, `settings` PUT loop, `system` reset — delegate their
+absent-INSERT). **`demo.py:327` does NOT join** (I-6): boot-only, `demo_seed`-gated, a raced collision
+caught by `main.py`'s startup try/except — the harm is structurally unreachable. **⊕ F-1 (folded per
+architect ruling, reversible):** the completeness sweep found a **fifth** site the F10 census could not have
+seen — `market._upsert_setting`, where **R-63 `d0a1c81` reintroduced the swept-for shape post-census**;
+HIGHER severity (`persist_av_tiers_safe` swallows without rollback → session poisoning → the concurrent
+quote-refresh 500s at commit). **⊕ F-2 (ratified):** a standing AST guard reds on any new raw
+`session.add(Setting(...))` outside the sanctioned sites — it would have caught F-1's introduction (CLAUDE.md
+"a hard rule without a guard is a request"). Backend **SOLO both orders, seed 580058 (declared): 2191/16,
++9 own**; frontend untouched; Help currency no-impact guard-corroborated. Full record:
+`r58-settings-key-claim-race.md` §-ledger (I-1..I-8 + F-1/F-2) + RATIFICATION §6. Build `c4bafc8` (promotion
++ 4 sites) · `6ebec02` (F-1 + F-2).
+
+---
 
 ## DONE — R-59 (URL-addressable add-holding form, phase 1) — CLOSED 2026-07-24 (RATIFICATION §6)
 
