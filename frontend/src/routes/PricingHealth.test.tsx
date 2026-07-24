@@ -349,13 +349,16 @@ test("no-egress disables Refresh all with an honest state (ND-3)", async () => {
   expect(await screen.findByText(/Refresh unavailable — no-egress is on/)).toBeTruthy();
 });
 
-// --- §14dr-17 — Refresh all market data (honest scope, per-lane summary) --------------------
-test("Refresh all market data reports a per-lane summary and names the excluded masters", async () => {
+// --- §14dr-17 + F-G Option 1 (R11) — Refresh all market data (honest scope, per-lane summary) ----
+test("Refresh all market data reports a per-lane summary and names the cache-publish lane exclusion", async () => {
   const user = userEvent.setup();
   renderPage();
   await screen.findByText("Per-holding diagnostics");
-  // The honest scope caption names the masters exclusion + links to the Masters card.
-  const scopeLink = await screen.findByRole("link", { name: /sync them in Settings/ });
+  // F-G Option 1: the honest scope caption names the cache-publish lanes (crypto/mutual-fund prices
+  // refresh from their own lane's Sync), NOT a vague "masters" exclusion, and links to Data feeds.
+  const scope = await screen.findByText(/Crypto and mutual-fund prices come from their own lanes/);
+  expect(scope).toBeTruthy();
+  const scopeLink = await screen.findByRole("link", { name: /Sync that lane in Settings/ });
   expect(scopeLink.getAttribute("href")).toBe("#/settings?tab=data-feeds");
   // Clicking refresh shows a per-lane result summary (quotes+indices · FX · news).
   const btn = await screen.findByRole("button", { name: /Refresh all market data/ });

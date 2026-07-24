@@ -43,6 +43,12 @@ import { formatMoney, formatSignedMoney } from "../format/number";
 function chipVal(v: string | null | undefined | false) {
   return v ? <span className="lf-chip">{v}</span> : "—";
 }
+// R13 (F-G Rider B): Sentence-case a card title (DESIGN-SYSTEM §5.2) — uppercase the first char
+// only, so a composed lowercase title ("crypto detail") reads "Crypto detail" and matches the
+// ratified siblings ("Identity", "Price history"). NOT text-transform: capitalize (Title-Cases each word).
+function sentenceCase(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
 const PERIODS = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "Max"];
 // The default daily range the page falls back to when a carried-over intraday range is
 // served-disabled on the instrument now being viewed (period-carryover fallback, Phase 1).
@@ -273,7 +279,10 @@ export function InstrumentDetail() {
           {/* Class-conditional provider detail (never fabricated — only if linked). */}
           {detailPanel && (
             <section className="idp__section lf-card">
-              <h2 className="idp__h2">{detailPanel[0].replace(/_/g, " ")} detail</h2>
+              {/* R13 (F-G Rider B): Sentence-case the composed title (DESIGN-SYSTEM §5.2) — the
+                  asset_detail key is lowercase ("crypto"/"mutual_fund"), so uppercase the FIRST char
+                  only ("Crypto detail"), never text-transform: capitalize (that Title-Cases each word). */}
+              <h2 className="idp__h2">{sentenceCase(`${detailPanel[0].replace(/_/g, " ")} detail`)}</h2>
               <div className="lf-card__body">
                 <MetaStrip
                   items={Object.entries(detailPanel[1]).map(([k, v]) => ({

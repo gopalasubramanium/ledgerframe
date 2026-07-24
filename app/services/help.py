@@ -516,7 +516,9 @@ HELP: list[dict] = [
              "is unavailable while no-egress is on.",
      "keywords": "pricing health source route freshness stale confidence refresh mapping api key "
                  "provider doctor duplicate unused copy priced-by provenance failure throttled",
-     "inputs": ["**Refresh all market data** — quotes, world indices, exchange rates and news",
+     "inputs": ["**Refresh all market data** — active-provider quotes, world indices, exchange rates "
+                "and news (crypto & mutual-fund prices refresh from their own lane's Sync in "
+                "Settings → Data feeds, not this button)",
                 "**Refresh** — on a single holding",
                 "**Correct source** — force one instrument to be priced by a chosen provider",
                 "**Run provider doctor** — test each provider lane once, on demand, and read a redacted result",
@@ -534,9 +536,11 @@ HELP: list[dict] = [
                   "list each deduction so you can see which.\n"
                   "- Correcting a source affects that one instrument only and changes nothing "
                   "about how anything else is priced.\n"
-                  "- Refreshing covers market data, not the instrument master lists, which are "
-                  "synced from Settings — the page states the difference rather than letting you "
-                  "assume one button does both.\n"
+                  "- Refreshing covers your active provider's quotes plus world indices, exchange "
+                  "rates and news. Crypto and mutual-fund prices come from their own lanes "
+                  "(CoinGecko, AMFI) and refresh when you Sync that lane in Settings → Data feeds — "
+                  "the page states the difference rather than letting you assume one button does "
+                  "everything.\n"
                   "- While no-egress is on, refresh makes no network call at all and says so; "
                   "prices go stale honestly instead of being filled in.\n"
                   "- When a holding has no live price, the page names the specific reason — "

@@ -81,6 +81,21 @@ test("R-63 F-C rename: the Identity card labels an override 'Source override', n
   await waitFor(() => expect(screen.getByText("Source override")).toBeInTheDocument());
 });
 
+test("R13 (F-G Rider B): the class-detail card title is Sentence case, not the lowercase key", async () => {
+  // The heading is composed from the lowercase asset_detail key + "detail"; DESIGN-SYSTEM §5.2 says
+  // card titles are Sentence case. Pins "Crypto detail" (not "crypto detail"), so the lowercase leak
+  // — the exact F-G Rider B defect — cannot return, and confirms it's NOT text-transform: capitalize.
+  vi.mocked(api.getInstrument).mockResolvedValue({
+    ok: true,
+    data: { ...DETAIL, instrument: { ...DETAIL.instrument, symbol: "BTC", name: "Bitcoin",
+      asset_class: "crypto", asset_subclass: "crypto", listing_country: null, country: null,
+      asset_detail: { crypto: { market_cap: "2.3T" } } } },
+  });
+  renderAt("BTC");
+  await waitFor(() => expect(screen.getByRole("heading", { name: "Crypto detail" })).toBeInTheDocument());
+  expect(screen.queryByRole("heading", { name: "crypto detail" })).toBeNull();
+});
+
 test("unpriced instrument shows '—' with an honest reason, never a number", async () => {
   vi.mocked(api.getInstrument).mockResolvedValue({
     ok: true,

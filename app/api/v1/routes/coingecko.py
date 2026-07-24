@@ -100,6 +100,11 @@ async def map_coingecko(symbol: str, payload: MapCoinIn,
     instr.asset_category = "crypto"
     instr.liquidity_profile = "listed"
     instr.valuation_method = "market_quote"
+    # R12 (F-G Rider A, 2026-07-24): crypto is borderless — clear any listing country the creation
+    # heuristic leaked (BTC born as an equity → country="US", then mapped here). MASTER-DATA §4:
+    # crypto has no listing_country, rendered "—". Symmetric to the identity-layer create fix.
+    instr.listing_country = None
+    instr.country = None
     if not instr.pricing_currency:
         instr.pricing_currency = "USD"
     session.add(AuditEvent(category="mutation", action="map_coingecko",

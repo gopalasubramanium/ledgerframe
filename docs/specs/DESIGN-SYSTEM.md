@@ -848,6 +848,19 @@ fallback ugly-but-working was not the same as making it right.*
 
 ---
 
+## §5.2 AMENDMENT — Card / section titles are Sentence case (RATIFIED 2026-07-24, F-G Rider B / R13)
+
+**A card or section title is written in Sentence case** — capitalise the first word (and any proper
+noun), lowercase the rest. It was already the de-facto convention across every ratified `.idp__h2`
+title on Instrument Detail — **"Identity", "Price history", "Your position", "Explain this
+instrument"** — but had **no written rule**, so a *composed* title leaked its source casing:
+`InstrumentDetail.tsx` built the class-detail heading from the lowercase `asset_detail` key
+(`{key} detail`) and rendered **"crypto detail"** — the lone violator (F-G Rider B, owner R13).
+The fix uppercases the **first character only** (→ "Crypto detail") — **never** CSS
+`text-transform: capitalize`, which Title-Cases *every* word ("Mutual Fund Detail") and breaks the
+Sentence-case rule. A composed/dynamic title must be Sentence-cased in code; a vitest pins the
+rendered heading so the lowercase leak cannot return.
+
 ## §5.2 AMENDMENT — Base-currency indication on money summary surfaces (RATIFIED 2026-07-16, owner walk batch 2 §14in-7; first proposed §14in-5)
 
 **A money SUMMARY tile/strip showing a base-currency aggregate carries a small muted currency-code

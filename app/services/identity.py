@@ -90,10 +90,20 @@ async def resolve_or_create_instrument(
 
     ac = asset_class if asset_class is not None else AssetClass.EQUITY
     ccy = currency or currency_for_symbol(symbol, exchange) or "USD"
+    ac_val = ac.value if hasattr(ac, "value") else str(ac)
     # ``country`` is authoritative when the caller passes it (even as None — csv_import
     # deliberately leaves a non-equity's country unknown, §14dr-27b); only the _UNSET default
     # falls back to the bare-ticker heuristic (the pre-existing market.py behaviour).
-    ctry = country if country is not _UNSET else country_for_symbol(symbol, exchange, ccy)
+    # R12 (F-G Rider A, 2026-07-24): CRYPTO is borderless — it has no listing country, so it never
+    # takes the bare-ticker "US" heuristic; its country stays unknown (rendered ``—``). This is the
+    # §14dr-27(b) principle applied to the crypto class specifically (MASTER-DATA §4). Both
+    # ``listing_country`` (never set at create) and the legacy ``country`` stay NULL.
+    if country is not _UNSET:
+        ctry = country
+    elif ac_val == "crypto":
+        ctry = None
+    else:
+        ctry = country_for_symbol(symbol, exchange, ccy)
     fields: dict = dict(
         symbol=sym, exchange=exchange, name=name or sym, currency=ccy,
         country=ctry,

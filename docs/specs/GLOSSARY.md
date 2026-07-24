@@ -74,7 +74,7 @@ Liabilities    = Σ (LIABILITY-class holdings, counted negative)
 
 | Term | Canonical definition |
 |------|----------------------|
-| **Instrument** | A tradable/valuable security identified by symbol + exchange, with taxonomy (asset class/subclass, `listing_country`, sector) and linked identifiers (ISIN/AMFI/CoinGecko/Kite/…). Model `Instrument`. **Classification (D-085):** `asset_class` describes economic **exposure**; `asset_subclass` describes the **wrapper** — e.g. a listed REIT is `asset_class = property` with `asset_subclass = reit`. |
+| **Instrument** | A tradable/valuable security identified by symbol + exchange, with taxonomy (asset class/subclass, `listing_country`, sector) and linked identifiers (ISIN/AMFI/CoinGecko/Kite/…). Model `Instrument`. **Classification (D-085):** `asset_class` describes economic **exposure**; `asset_subclass` describes the **wrapper** — e.g. a listed REIT is `asset_class = property` with `asset_subclass = reit`. **Crypto has no `listing_country`** — it is borderless, so Country renders `—` (R12, F-G Rider A; MASTER-DATA §4). |
 | **Identifier** | A normalized key mapping an instrument to the outside world (`id_type`, `value`): ISIN, CUSIP, FIGI, SEDOL, amfi_code, kite_token, coingecko_id, provider_symbol. High-confidence ids are globally unique. |
 | **Holding** | The row: a quantity of one instrument in one account. **Derived** from the transaction ledger via FIFO (rebuilt on every mutation) — except **manual holdings**, which survive rebuilds. |
 | **Position** | The quantity count within a holding. (Use **Position** for the count, **Holding** for the row.) |

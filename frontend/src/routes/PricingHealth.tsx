@@ -321,7 +321,7 @@ export function PricingHealth() {
             disabled={refreshing || noEgress} aria-busy={refreshing} aria-label="Refresh all market data"
             title={noEgress ? "No-egress is on — refresh makes no network calls"
               : refreshing ? "Refreshing…"
-              : "Refresh all market data — quotes, world indices, FX and news. Instrument masters are not included."}>
+              : "Refresh all market data — active-provider quotes, world indices, FX and news. Crypto & mutual-fund prices refresh from their own lane's Sync in Settings → Data feeds."}>
             {/* §14dr-8 — perceptible pending: the icon SPINS while refreshing (the owner clicked
                 4× when the only signal was an imperceptible disabled flash). */}
             <RotateCw aria-hidden="true" className={refreshing ? "ph__spin" : undefined} />
@@ -336,10 +336,13 @@ export function PricingHealth() {
       {noEgress && (
         <p className="ph__egress" role="status">Refresh unavailable — no-egress is on; prices degrade to honest stale (Commitment 5).</p>
       )}
-      {/* §14dr-17 — the button's scope is stated honestly so the masters exclusion is visible. */}
+      {/* §14dr-17 + F-G Option 1 (R11, 2026-07-24) — the scope is stated honestly: the un-refreshed
+          thing is the cache-publish-lane QUOTE, not "masters". Crypto/fund prices come from CoinGecko/
+          AMFI and refresh via that lane's Sync, never this button (diagnosed pre-release-walk 9e). */}
       <p className="ph__refreshscope" role="note">
-        “Refresh all market data” refreshes quotes, world indices, FX and news. Instrument masters
-        (mutual funds, coins) aren’t included — <a href="#/settings?tab=data-feeds">sync them in Settings → Data feeds</a>.
+        “Refresh all market data” refreshes quotes priced by your active provider, plus world indices,
+        FX and news. Crypto and mutual-fund prices come from their own lanes (CoinGecko, AMFI) and
+        refresh when you <a href="#/settings?tab=data-feeds">Sync that lane in Settings → Data feeds</a> — not from this button.
       </p>
 
       {/* R-38 §9-8: the honest Alpha-Vantage tier string, served (never a fabricated real-index label).

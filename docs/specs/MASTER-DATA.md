@@ -284,6 +284,18 @@ country field.** Dropped: `instruments.country` (free text) and
   authored (D-083) and may be extended by amending this table (a code +
   migration change, not a user action — region is derived, not stored).
 
+  **Crypto has NO `listing_country` — it is unknown, rendered `—` (R12, F-G Rider A,
+  2026-07-24).** `listing_country` is a *listing* concept (the ISO country a security is
+  listed in); a cryptocurrency is borderless and has no listing venue, so its
+  `listing_country` (and the legacy free-text `country`) stay **NULL** and the Identity
+  strip renders `—`. This is the standing application of **§14dr-27(b)** (a non-equity's
+  country is deliberately left unknown, never guessed) to the crypto class specifically:
+  the bare-ticker "US" heuristic (`app/core/symbols.py`, `bare_ticker_default="US"`) must
+  **not** apply to crypto. Crypto's `asset_class`/`asset_subclass` are both `crypto`
+  (§2 + DEF-2); only the country is unknown. *(The earlier BTC leak — `country="US"` from
+  the creation heuristic, uncorrected by the CoinGecko mapping — is repaired on live
+  installs by an audited, idempotent boot repair. Cross-ref: `pre-release-walk.md` 9e R12.)*
+
 **ROADMAP (R-3, D-007):** re-introduce a domicile field for fund-tax display.
 
 ---

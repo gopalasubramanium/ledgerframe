@@ -742,3 +742,43 @@ the browser default weight — a real cosmetic defect the standing guard flags. 
 the same delta. Per CLAUDE.md (*"a new guard that reds an accepted surface is a delta on that surface, not a
 footnote"* — the same handling the Help close used for `var(--radius-2)` in `NetWorth.css`): this is the dated
 on-page record; `check:tokens` is now green (89 tokens, all defined); the pre-pass re-run rides §6.
+
+---
+
+## DELTA NOTE — 2026-07-24 (F-G Option 1 — the "Refresh all" scope copy told a masters half-truth)
+
+**Pricing Health is CLOSED/accepted; this is the dated delta note the guard-REDs-an-accepted-surface rite
+requires. Owner ruling R11 (F-G, `pre-release-walk.md` 9e): Option 3 (hybrid) — ship the copy-honesty fix
+now (R-52 class: a page describing itself falsely is the release bar), file the deeper wiring to the
+R-66/R-45 egress cluster.**
+
+**The defect (diagnosed, not assumed — instrumented on an isolated repro, 9e).** The "Refresh all market
+data" explainer said *"refreshes quotes … **Instrument masters** (mutual funds, coins) aren't included — sync
+them in Settings → Data feeds."* That attributes the exclusion to **masters** (the coin/fund *lists*), but the
+thing "Refresh all" does **not** refresh is the cache-publish-lane **QUOTE**: CoinGecko/AMFI are cache-publish
+adapters, deliberately excluded from the active-provider execution net (`market.py:681`), and an on-route quote
+is not refetched by design (`market.py:588-589`, budget discipline, pinned by
+`test_route_mismatch_refetch.py`). So a user with a correctly-mapped BTC (master already synced) read "masters
+not included, quotes are" and expected the price to update — it didn't. The routing is correct; the **copy**
+contradicted it.
+
+**The corrected copy (PROPOSED 2026-07-24 → owner look via architect; RATIFIED flip recorded at close).**
+Two served surfaces on `PricingHealth.tsx` + the Help catalogue (`help.py`, §19-J findability):
+
+> **Explainer note (`PricingHealth.tsx:341-342`):** "Refresh all market data" refreshes quotes priced by
+> your active provider, plus world indices, FX and news. **Crypto and mutual-fund prices come from their own
+> lanes (CoinGecko, AMFI) and refresh when you Sync that lane in Settings → Data feeds — not from this
+> button.**
+
+> **Button tooltip (`PricingHealth.tsx:324`):** "Refresh all market data — active-provider quotes, world
+> indices, FX and news. Crypto & mutual-fund prices refresh from their own lane's Sync in Settings → Data
+> feeds."
+
+> **Help (`help.py` page-pricing-health, `inputs` + `interpret`):** the Refresh-all input line and the
+> "Refreshing covers market data, not the instrument master lists" bullet are reworded to name the
+> cache-publish lanes and where their quotes refresh — no longer framing the gap as "masters".
+
+**Backend untouched** (Option 2 — wiring Refresh-all to publish the cache-publish lanes — is filed to
+R-66/R-45). Pinning test `PricingHealth.test.tsx` ("names the excluded masters") updated to assert the honest
+lane-scoped copy. **Pre-pass re-run:** rides §6 (isolated stack). Strike-check + RATIFICATION flip at the 9e
+close.

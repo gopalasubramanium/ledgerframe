@@ -13,7 +13,7 @@ from decimal import Decimal
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -979,6 +979,39 @@ async def repair_quote_demo_residue(session: AsyncSession) -> dict:
     return {"purged": purged, "instruments": purged}
 
 
+async def repair_crypto_country(session: AsyncSession) -> dict:
+    """R12 (F-G Rider A, 2026-07-24): a served, idempotent, audited repair that clears a leaked
+    listing country from CRYPTO instruments. Crypto is borderless — it has no listing_country
+    (MASTER-DATA §4, rendered ``—``) — but a crypto born via the create heuristic (BTC added as an
+    equity → ``country="US"``, later mapped to CoinGecko, which converted class/subclass but never
+    touched country) kept the stale ``US``. This sets ``listing_country`` and the legacy ``country``
+    back to NULL for every crypto that still carries one.
+
+    Repair-family precedent (§9-i, dupe-tolerant): marker-gated to run at most once per install,
+    idempotent (a second run finds nothing), and ``AuditEvent``-logged when it changes anything.
+    A fresh create_all DB (or one already correct) is a cheap no-op."""
+    from app.models import AssetClass, AuditEvent, Instrument
+
+    rows = (await session.execute(
+        select(Instrument).where(
+            Instrument.asset_class == AssetClass.CRYPTO,
+            or_(Instrument.listing_country.isnot(None), Instrument.country.isnot(None)),
+        )
+    )).scalars().all()
+    fixed = 0
+    for instr in rows:
+        instr.listing_country = None
+        instr.country = None
+        fixed += 1
+    if fixed:
+        session.add(AuditEvent(
+            category="mutation", action="repair_crypto_country",
+            detail=f"cleared leaked listing country on {fixed} crypto instrument(s) (F-G Rider A/R12)"))
+        await session.flush()
+    log.info("R12 crypto-country repair: cleared leaked country on %d crypto instrument(s)", fixed)
+    return {"fixed": fixed}
+
+
 # R-63 R3(a) / I-11 — persist AlphaVantage's LEARNED capability tiers so they survive restart.
 # quote_entitlement (GLOBAL_QUOTE product) and av_tier (Index Data product) were per-process instance
 # state on the provider singleton, so a restart or a settings change wiped them — and post-purge (zero
@@ -1222,6 +1255,12 @@ async def get_history_cached(
     # no such rows, so this is a cheap no-op there; it is the belt to the class-aware capability gate.
     await _repair_once_per_install(
         session, "hist_wrong_class_candles_purged_v1", repair_wrong_class_candles)
+
+    # R12 (F-G Rider A): one-time served clearing of a leaked listing country on crypto instruments
+    # (idempotent, marker-gated). A fresh/correct DB is a cheap no-op; it repairs the owner's BTC row
+    # (country="US" from the create heuristic, never cleared by the CoinGecko mapping) on live upgrade.
+    await _repair_once_per_install(
+        session, "crypto_country_cleared_v1", repair_crypto_country)
 
     instrument = await _get_or_create_instrument(session, symbol, None)
     # §14dr-24: the mock/demo provider is deterministic and free, so its PriceHistory cache

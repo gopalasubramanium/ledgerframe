@@ -202,6 +202,36 @@
 
     ---
 
+    **⟶ OWNER RULINGS R11/R12/R13 (2026-07-24, via architect):**
+    - **R11 (F-G core) — Option 3 (hybrid).** Ship **Option 1 (copy honesty)** now as the pre-release fix
+      (R-52 class: a page describing itself falsely is the release bar; the routing is already
+      correct-by-design). **Option 2 (wire "Refresh all" to publish the cache-publish lanes) is FILED to
+      the R-66/R-45 outbound-network cluster** — one egress policy decides auto-refresh, news, and
+      cache-publish-lane wiring together (cross-referenced in both ROADMAP rows). Option 1 is spec-first:
+      the corrected sentence lands in `page-pricing-health.md`; closed-page rite (dated delta + pre-pass);
+      new strings **PROPOSED** to the owner.
+    - **R12 (Rider A) — fix the taxonomy leak.** (a) crypto identity resolves to `crypto`/`crypto`;
+      (b) **spec-first**: MASTER-DATA/GLOSSARY ratify **"crypto → `listing_country` unknown, rendered —"**
+      before code; (c) correct the owner's existing BTC row via the **audited repair-family**
+      (`_repair_once_per_install`, marker-gated, idempotent, `AuditEvent`-logged). RED-first on the exact
+      leak repro. **The form-side `asset_class` propagation (`portfolio.py:689-697`) is R-59's surface —
+      flagged in R-59's charter inputs, NOT fixed here.**
+      **⟶ PREMISE CORRECTION at implementation (verify-don't-assume, R-63 lesson):** the **add-a-crypto
+      path was ALREADY correct** — `csv_import._ensure_instrument:466-469` applies §14dr-27(b)
+      (non-equity classes take `bare_ticker_default=None`), so a crypto added *with* its class already
+      read country `—`; the RED-first on that path did NOT reproduce. The genuine, owner-visible leak was
+      the **CoinGecko MAP path** (`coingecko.py` converted class/subclass but left `country="US"`) and the
+      **already-persisted BTC row** — both fixed (map now nulls country; the boot repair clears existing
+      rows), both RED-first proven. The identity.py change is retained as a **chokepoint hardening** of the
+      shared resolver (R-63 I-6) with its own direct unit test, so any *future* create path through the
+      bare resolver stays crypto-correct. The class/subclass=`equity` leak at `identity.py:91/:46` fires
+      only when `asset_class` is OMITTED — the form (R-59), out of scope here.
+    - **R13 (Rider B) — Sentence-case card titles.** `InstrumentDetail.tsx:276` first-char fix (not
+      `text-transform`); **written rule added to DESIGN-SYSTEM** (card titles are Sentence case, ratified
+      siblings cited); a vitest pin on the rendered title; string **PROPOSED**.
+
+    ---
+
 9f. **Page-load performance profiling pass (filed R-63 close, owner, 2026-07-24).** Owner evidence:
     **Portfolio worst** (12:49 skeleton-state screenshot), **Home/Holdings sluggish**. A profiling pass —
     where the load time goes per page — with **severity assessed at the pre-release walk** (may fold into
