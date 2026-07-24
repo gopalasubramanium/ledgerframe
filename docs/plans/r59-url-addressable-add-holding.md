@@ -228,3 +228,7 @@ verdict; no control/tab-rename/count/Help-vocabulary changed).
 
 **Accepted in `RATIFICATION.md §6`.** CURRENT advances to **R-58** (settings.key check-then-insert race,
 4 filed sites, `briefing.py:201-207` first). **No push** (owner pushes).
+
+**Close commit:** `056b56e` (RATIFICATION §6 flip + strike-check + CURRENT→R-58). Two-commit records
+convention — this citation lands in the follow-on records-only commit because a commit cannot contain
+its own hash (TEMPLATE §8, F10 precedent).
