@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { ToastProvider } from "../components/ui";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { DisplayProvider } from "../theme/DisplayProvider";
@@ -54,14 +54,26 @@ function row(over: Partial<HoldingRow> = {}): HoldingRow {
   };
 }
 
+// R-59 §59-1: a probe that surfaces the live URL search so a test can assert the ?add= round-trip.
+function LocationProbe() {
+  const loc = useLocation();
+  return <div data-testid="loc-search">{loc.search}</div>;
+}
+
 function renderPage() {
+  return renderPageAt(["/holdings"]);
+}
+
+// R-59: render Holdings at a chosen URL so the ?add= deep-link contract is exercised.
+function renderPageAt(initialEntries: string[]) {
   return render(
     <ThemeProvider>
       <DisplayProvider>
         <ToastProvider>
           <RefdataProvider>
-            <MemoryRouter>
+            <MemoryRouter initialEntries={initialEntries}>
               <Holdings />
+              <LocationProbe />
             </MemoryRouter>
           </RefdataProvider>
         </ToastProvider>
@@ -230,6 +242,40 @@ test("a Listed tile classifies the new instrument by type (D-089: crypto → cry
   expect(vi.mocked(api.addTransaction)).toHaveBeenCalledWith(
     expect.objectContaining({ asset_class: "crypto", symbol: "BTC", quantity: 0.75 }),
   );
+});
+
+// ── R-59 §59-1: the add-holding dialog is URL-addressable via ?add= ────────────────────────────
+
+test("R-59: a ?add=1 deep link opens the add dialog cold at the tile picker", async () => {
+  renderPageAt(["/holdings?add=1"]);
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  // Opens at the D-089 tile picker (classification step 1) — a deep link cannot bypass class choice.
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("What are you adding?")).toBeInTheDocument();
+  expect(within(dialog).getByText("Crypto")).toBeInTheDocument();
+});
+
+test("R-59: the Add button addresses the dialog via ?add=1 (openable by URL)", async () => {
+  const user = userEvent.setup();
+  renderPageAt(["/holdings"]);
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByTestId("loc-search").textContent).toBe("?add=1");
+});
+
+test("R-59: closing the add dialog clears ?add= and preserves ?account= (no residue)", async () => {
+  const user = userEvent.setup();
+  renderPageAt(["/holdings?account=3&add=1"]);
+  await waitFor(() => expect(screen.getByText("AAPL")).toBeInTheDocument());
+  const dialog = await screen.findByRole("dialog");
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  // ?add= is gone; the sibling ?account= survives (sibling-preserving updater, §9-D).
+  const search = screen.getByTestId("loc-search").textContent ?? "";
+  expect(new URLSearchParams(search).get("add")).toBeNull();
+  expect(new URLSearchParams(search).get("account")).toBe("3");
 });
 
 test("§14dr-16 adding from a master suggestion persists the master's NAME, not just the code", async () => {

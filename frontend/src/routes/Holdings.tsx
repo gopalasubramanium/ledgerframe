@@ -104,7 +104,6 @@ export function Holdings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [tagsFor, setTagsFor] = useState<HoldingRow | null>(null);
@@ -125,6 +124,31 @@ export function Holdings() {
       (prev) => {
         const next = new URLSearchParams(prev);
         next.delete("account");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
+  // R-59 §59-1: the add-holding dialog is URL-addressable via `?add=1` (a HashRouter search param,
+  // presence-is-open). It composes with `?account=` as an independent sibling — each param survives
+  // the other's open/close via the sibling-preserving functional updater (§9-D; the
+  // `clearAccountFilter` precedent). Opening PUSHES a history entry so Back closes the dialog;
+  // every close path deletes `add` (replace) → no param residue, `?account=` intact. Completes
+  // R-54's tier-1(b) deep link (r54 §0-F dead affordance 1), which was unbuildable until this route.
+  const addOpen = searchParams.get("add") === "1";
+  const openAdd = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("add", "1");
+      return next;
+    }); // push (default) so the browser Back button closes the dialog
+  }, [setSearchParams]);
+  const closeAdd = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("add");
         return next;
       },
       { replace: true },
@@ -384,7 +408,7 @@ export function Holdings() {
     <div className="lf-page hold">
 
       <PageHeaderHoldings
-        onAdd={() => setAddOpen(true)}
+        onAdd={openAdd}
         onImport={() => setImportOpen(true)}
         onExport={() => apiDownload("/portfolio/holdings.csv")}
       />
@@ -441,7 +465,7 @@ export function Holdings() {
             message="No holdings yet"
             reason="Add a holding or import a broker CSV to populate this table."
             action={
-              <button type="button" className="lf-btn lf-btn--primary" onClick={() => setAddOpen(true)}>
+              <button type="button" className="lf-btn lf-btn--primary" onClick={openAdd}>
                 Add holding
               </button>
             }
@@ -528,9 +552,9 @@ export function Holdings() {
         <AddDialog
           accounts={accounts}
           baseCcy={baseCcy}
-          onClose={() => setAddOpen(false)}
+          onClose={closeAdd}
           onDone={async ({ recordedTransaction }) => {
-            setAddOpen(false);
+            closeAdd();
             if (recordedTransaction) {
               // §14dr-21: reveal the just-recorded transaction — a back-dated buy (common
               // for mutual funds) would otherwise sink below the most-recent-first window,
