@@ -726,13 +726,15 @@ ratification look before Phase 1 assembly.
     separate honesty follow-through, out of this finding's core scope. Holdings pre-pass
     re-run per class stated in the report.
 
-## DELTA NOTE — 2026-07-24 (R-59 — the add-holding dialog becomes URL-addressable) — PROPOSED
+## DELTA NOTE — 2026-07-24 (R-59 — the add-holding dialog becomes URL-addressable) — CLOSED/RATIFIED
 
 **Closed-page rite (CLAUDE.md "a new guard that reds an accepted surface…"; ROADMAP R-59):** Holdings
 is a ratified page, so this delta ships a dated note here **+ a Holdings pre-pass re-run in the same
 delta**. Full milestone record: `r59-url-addressable-add-holding.md`. Completes R-54's tier-1(b)
 example (`r54-deterministic-answers.md` §0-F dead affordance 1), which was unbuildable until this
-route existed. **All strings/shapes below are PROPOSED until the owner looks.**
+route existed. **⊕ CLOSE 2026-07-24 — owner "R-59 copy fine" (via architect): all §59 strings/shapes
+RATIFIED** (param `?add=1` · served form ID `page:/holdings?add=1` · pointer label "Add a holding").
+Full record + strike-check: `r59-url-addressable-add-holding.md` §-CLOSE; `RATIFICATION.md §6`.
 
 - **§59-1 — the `?add=` param (I-1).** The add-holding dialog (`Holdings.tsx:107` `useState`
   `addOpen`, rendered `:527`) becomes **URL-addressable on `/holdings`** via a HashRouter search

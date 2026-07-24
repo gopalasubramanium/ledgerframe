@@ -185,3 +185,46 @@ look at the PROPOSED set.** All four intake items shipped RED-first (§-ledger D
   the served form ID `page:/holdings?add=1` · the pointer label **"Add a holding"**. On the conveyed
   verdict: ratify the PROPOSED set → close records (RATIFICATION §6) → CURRENT advances to **R-58**.
   **No push** (owner pushes).
+
+---
+
+## §-CLOSE — R-59 CLOSED 2026-07-24 (owner "R-59 copy fine", via architect)
+
+**Owner verdict 2026-07-24:** the PROPOSED set is **RATIFIED** — param `?add=1`, served form ID
+`page:/holdings?add=1`, pointer label **"Add a holding"**. The registry flip is recorded.
+
+**§-LEDGER ENUMERATION (§19-K — a CLOSED claim enumerates every intake row's disposition):**
+- **I-1** — URL-addressable `?add=` dialog. **DONE** (`Holdings.tsx` `addOpen`←`searchParams.get("add")`,
+  `openAdd`/`closeAdd`; RED-first 3 tests; Holdings suite 31/31). `c506e1c`.
+- **I-2** — link-registry flip tier-1(b) → `page:/holdings?add=1` + label "Add a holding". **DONE**
+  (`_holdings_add_intent`, `askLinkLabel`; two guards flipped; served-link 18/18, askLinks 14/14). `50822e3`.
+- **I-2a** — bidirectional ordering guard (served `?add=` key is a param the route reads,
+  blindness-pinned). **DONE** (RED against the bare page link, green after). `50822e3`.
+- **I-3** — form classifies + passes `asset_class`. **DONE — disposed Option (a)** (owner+architect):
+  already-implemented-and-pinned (`Holdings.tsx:880`, `identity.py:97-104`; `test_fg_crypto_identity.py`
+  + `Holdings.test.tsx:217`); residual **deep-link-lands-on-picker guard** shipped (`f5efb43`). Premise
+  correction recorded on the ROADMAP R-59 charter input (I-5). `identity.py:91` hardening (Option 2)
+  **NOT taken**, available as its own ruled delta.
+
+**STRIKE-CHECK (every claim ↔ the actual diff `0962dc6..HEAD`):**
+- I-1 ✓ — `searchParams.get("add")`, `openAdd`, `closeAdd`, all four call sites wired (`Holdings.tsx`).
+- I-2 ✓ — `_holdings_add_intent`, `return f"page:{route}?add=1"` (`tools.py`); `return "Add a holding"`
+  (`askLinks.ts`); the two guard assertions flipped (`test_served_link_ids.py`), tier-1 scope test
+  updated (`test_tier1_action_nav_scope.py`).
+- I-2a ✓ — `_holdings_search_params_read` + `test_the_add_holding_deep_link_param_is_a_param_the_route_reads`
+  (`test_served_link_ids.py`).
+- I-3 ✓ — the R-59 I-3 picker guard (`Holdings.test.tsx`); the existing asset_class pins untouched and green.
+- Records ✓ — ROADMAP premise note, `page-holdings.md` §59 delta + close note, this ledger, RATIFICATION §6 row.
+
+**VERDICTS.** Frontend `npm run check` PASS — vitest **444/444** (42 files), Playwright **361** (+5 own).
+Backend **SOLO, both orders, seed 6363: 2182/16 ordered + 2182/16 randomized, exit 0**; reconciliation
+**2180 → 2182 (+2 = R-59's own** backend tests); skips unchanged at 16.
+
+**PRE-PASS (closed-page rite) 24/24, both themes, 0 non-benign console errors**, isolated stack (owner's
+key/stack never used; `.env` hash `460a2da0…afae6` unchanged; ports torn down). `docs/plans/assets/r59-*.png`.
+
+**HELP CURRENCY: no Help impact, guard-corroborated** (Help Currency Suite ⊂ backend suite, green in the
+verdict; no control/tab-rename/count/Help-vocabulary changed).
+
+**Accepted in `RATIFICATION.md §6`.** CURRENT advances to **R-58** (settings.key check-then-insert race,
+4 filed sites, `briefing.py:201-207` first). **No push** (owner pushes).

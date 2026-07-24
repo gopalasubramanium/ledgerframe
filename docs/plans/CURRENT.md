@@ -114,27 +114,38 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — R-59 (URL-addressable add-holding form)
+## NEXT — R-58 (settings.key check-then-insert race — the four filed sites)
 
-**⊕ 2026-07-24 — R-65 Phase 2 DONE (`740bac6`) and F-G DONE/CLOSED (`8282436` fix + `74a9c61` verdict;
-owner "F-G copy fine").** The release train advances to **R-59**.
-- **R-65 Phase 2:** pytest-xdist per-worker DB isolation, INNER LOOP (`make test-fast` = `pytest -n 8`,
-  ≈3.5× vs solo); verdicts stay SOLO ordered+randomized. Full record: `ROADMAP.md` R-65 + `r65-test-runtime.md`.
-- **F-G (pre-release-walk 9e) — CLOSED 2026-07-24.** NOT a routing defect (correct-by-design, test-pinned);
-  shipped **R11** copy honesty (the "Refresh all" explainer no longer misattributes the exclusion to
-  "masters"), **R12** crypto taxonomy (crypto→country `—`, map-path fix + audited boot repair for the owner's
-  BTC), **R13** Sentence-case card titles (DESIGN-SYSTEM §5.2). Backend SOLO **2180/16 both orders seed 6363**;
-  frontend green. Option 2 + **stale-only refresh** filed to the R-66/R-45 outbound-network cluster (one
-  ruling). Form-side `asset_class` propagation carried to R-59's charter (below). Full record: 9e + `page-pricing-health.md`.
-
-- **R-59 — URL-addressable add-holding form, phase 1** (RD-9 Amendment 10). Completes R-54's tier-1(b)
-  example (unbuildable until the route exists); ships under the guard-REDs-an-accepted-surface rite
-  (dated note in `page-holdings.md` + that page's pre-pass re-run). **The R-54 link registry gains the
-  form ID its guard has been waiting for.**
+**⊕ 2026-07-24 — R-59 CLOSED (owner "R-59 copy fine", via architect; RATIFICATION §6).** The release
+train advances to **R-58**.
+- **R-58 — the `settings.key` check-then-insert race at the FOUR filed sites outside
+  `get_history_cached`** (RD-9 Amendment 9, from the F10 census). **`briefing.py:201-207` first** (a
+  generic helper — widest blast radius), then `feeds.py:72-78`, `settings.py:131-135`,
+  `system.py:617-621`; `seed/demo.py:327` is an **adjacent variant**, not a fifth site. **Not
+  release-train blocking** — none sits on a guaranteed-concurrent path — but the fix is F10's
+  already-tested `_claim_marker` primitive. **Fail-first with a blindness pin is mandatory.**
 
 **⚑ CARRIED FORWARD (visible):** the **18 hardcoded-port smoke specs** must fail closed
 (`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. **Pre-release backlog:** page-load perf
-profiling (pre-release-walk 9f). **F-G — DONE/CLOSED 2026-07-24** (see NEXT summary above).
+profiling (pre-release-walk 9f).
+
+## DONE — R-59 (URL-addressable add-holding form, phase 1) — CLOSED 2026-07-24 (RATIFICATION §6)
+
+**⊕ 2026-07-24 — R-59 CLOSED (owner "R-59 copy fine", via architect).** The add-holding dialog became
+**URL-addressable** on `/holdings` via **`?add=1`** (presence-is-open; opens the D-089 tile picker so a
+deep link cannot bypass classification; composes with `?account=`; open pushes history so Back closes;
+no residue). **The R-54 link registry gained the form ID** — tier-1(b) *"how do I add a holding"* flips
+`page:/holdings` → **`page:/holdings?add=1`** (label "Add a holding"), with the **bidirectional ordering
+guard** (I-2a) making the R-54→R-59 ordering mechanical (a form ID with an unhonored param reds).
+⚠ **The `asset_class` charter item (I-3) was ALREADY DONE** — §0 verify-don't-assume disproved the
+"the form omits the class" premise with pinned evidence (the D-089 tile sends `asset_class`,
+`Holdings.tsx:880`; backend crypto → crypto/crypto/—; `test_fg_crypto_identity.py` + `Holdings.test.tsx:217`
+green). Owner+architect ruled **Option 1** (already-implemented-and-pinned + deep-link-lands-on-picker
+guard; `identity.py:91` hardening NOT taken); the premise correction is a **dated note on the ROADMAP
+R-59 charter input** (I-5). Backend **SOLO 2182/16 both orders seed 6363** (+2 own); frontend **vitest
+444/444**, Playwright 361 (+5 own); pre-pass **24/24 both themes, 0 console errors** (isolated, owner's
+key/stack never used). **Help currency: no impact, guard-corroborated.** The general entity-dialog
+pattern stays **POST-RELEASE**. Full record: `r59-url-addressable-add-holding.md` + `page-holdings.md` §59.
 
 ---
 
@@ -377,14 +388,13 @@ needs a paired-run equivalence baseline + a separate chat ruling (doubt → slow
 
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8** + **9** + **10** + **11**)
 
-The remaining v2.0.0 set, in sequence (**R-54 and R-63 are CLOSED** — see DONE; the active NEXT above is
-**R-65 Phase 2 → R-59**):
+The remaining v2.0.0 set, in sequence (**R-54, R-63 and R-59 are CLOSED** — see DONE; the active NEXT
+above is **R-58**):
 
-> **R-65 Phase 2 (inner-loop) → R-59 → R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
-> *(R-54 CLOSED 2026-07-23; **R-63 CLOSED 2026-07-24**; RD-9 Amendment 8/9/10/11. R-65 Phase 2 is xdist
-> inner-loop only — gate/close verdicts stay solo; **F-G** (crypto stale-refresh) rides pre-release
-> diagnose-first alongside; the **⚑ 18 hardcoded-port smoke specs** slot before R-39. Architect
-> sequencing under delegation, reversible.)*
+> **R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
+> *(R-54 CLOSED 2026-07-23; **R-63 CLOSED 2026-07-24**; **R-65 Phase 2 DONE + R-59 CLOSED 2026-07-24**;
+> RD-9 Amendment 8/9/10/11. F-G CLOSED (pre-release-walk 9e); the **⚑ 18 hardcoded-port smoke specs**
+> slot before R-39. Architect sequencing under delegation, reversible.)*
 
 **⊕ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — the set GREW by two**, both raised by the owner
 **using the shipped Ask panel** at the 0a walk: **R-54** (deterministic answer intelligence — the
@@ -410,11 +420,11 @@ strings rather than moving ones** (architect sequencing under delegation, **reve
 5a. ~~**R-63** — **Pricing routing reliability**~~ — **CLOSED 2026-07-24** (owner-accepted; RATIFICATION §6;
    full record `r63-pricing-routing.md` §7). ⚡ pre-release, investigation-first; fix-once-and-for-all,
    delivered — incl. catching and killing a fabricated price its own provenance work made visible (I-10).
-6. **R-59** — **URL-addressable add-holding form, phase 1** (RD-9 **Amendment 10**, from R-54's
-   §0-F dead-affordance finding). Completes the owner's tier-1(b) example, which is **unbuildable
-   until this route exists**. Delta-scale; Holdings is closed, so it ships under the
-   **guard-REDs-an-accepted-surface rite** (dated delta note in `page-holdings.md` + that page's
-   pre-pass re-run, same delta). The general entity-dialog pattern stays **post-release**.
+6. ~~**R-59** — **URL-addressable add-holding form, phase 1**~~ — **CLOSED 2026-07-24** (owner "R-59
+   copy fine"; see DONE above). Completed R-54's tier-1(b) example (`?add=1` → `page:/holdings?add=1`,
+   label "Add a holding"); the `asset_class` charter item (I-3) was found already-implemented-and-pinned
+   (verify-don't-assume — Option 1 ruling). `RATIFICATION.md §6` row appended. General entity-dialog
+   pattern stays **post-release**.
 7. **R-58** — the `settings.key` check-then-insert race at the **four filed sites outside
    `get_history_cached`** (RD-9 **Amendment 9**, from the F10 census). `briefing.py:201–207` **first**
    (a generic helper — widest blast radius), then `feeds.py:72–78`, `settings.py:131–135`,
