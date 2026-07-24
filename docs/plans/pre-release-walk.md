@@ -105,6 +105,23 @@
     cosmetic label inconsistency across the provider-name surfaces. *Verified (when taken):* one canonical
     display form for the provider name across picker / chip / Settings. Cosmetic — pre-release polish.
 
+9e. **F-G — a coingecko crypto holding stays stale through "Refresh all market data" (filed R-63 close,
+    owner R10, 2026-07-24). ⚑ PRE-RELEASE FIX ITEM — its own, diagnose-first, NOT folded into R-63.**
+    Owner evidence: **BTC, 12:41 screenshot** — the crypto holding's quote stays stale after *"Refresh all
+    market data"* and updates only via **Settings → Data feeds → Sync now**. The refresh explainer's
+    carve-out covers **instrument masters**, not **holding quotes** — so this is either a **routing defect**
+    (the coingecko lane isn't in the refresh universe / isn't fetched by refresh-data) or **undocumented
+    design**: **diagnose first, then rule.** *Riders (same item):* (i) crypto **Identity shows Subclass
+    "Equity" and Country "US" for BTC** — taxonomy defaults leaking into a Crypto-class instrument;
+    (ii) the **"crypto detail" card title** → capitalized per DESIGN-SYSTEM conventions. Slotted after the
+    R-63 close alongside the R-65-Phase-2/R-59 sequencing. Cross-ref: `r63-pricing-routing.md` (OWNER
+    VERDICT, R10).
+
+9f. **Page-load performance profiling pass (filed R-63 close, owner, 2026-07-24).** Owner evidence:
+    **Portfolio worst** (12:49 skeleton-state screenshot), **Home/Holdings sluggish**. A profiling pass —
+    where the load time goes per page — with **severity assessed at the pre-release walk** (may fold into
+    R-46 Home cards / R-39 chrome work if adjacent). Not release-blocking until measured.
+
 10. **Milestones append their own walk items here at close.** Still to ship: Help · Legal ·
     AI-surfaces (D-067/D-068) · R-45 (per-instrument + default news) · R-46 (Home summary
     cards) · chrome-sidebar-refresh (R-39). Each milestone's close ritual **adds its walk

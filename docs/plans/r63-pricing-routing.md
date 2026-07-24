@@ -1491,3 +1491,84 @@ IN CHAT** (architect runs it). **HARD STOP** here, before the §7 close ritual.
   this mean a lot of fetch, just give a click which only retrieves when use wants to see it."* Architect
   note: the **click-to-fetch-only** framing is what keeps R-64 budget-compatible with the free tier —
   nothing fetches unasked. **Post-release, unchanged slot.**
+
+---
+
+## §7 — THE CLOSE RITUAL (2026-07-24) — R-63 CLOSED
+
+### 7-1. §-LEDGER CLOSED — the completeness enumeration (ai-surfaces §19-K)
+
+A ledger may not claim CLOSED while any intake row lacks a disposition. **Enumerated, every row of
+I-1..I-13 DISCHARGED with its commit — no undispositioned row remains. This is the completeness claim.**
+
+| Row | Finding | DISCHARGED — commit(s) |
+| --- | --- | --- |
+| I-1 | AV entitlement-envelope parse-miss (root cause) | Phase 0 `e3dd4e7` |
+| I-2 | No fetch-time fallback net (chain display-only) | Phase 1 `95df927` |
+| I-3 | Distinct failures collapsed at three layers | Phase 2 `9d54f4f`·`34974b6`·`c882648` |
+| I-4 | Two-premiums conflation (verified-tier per product) | Phase 2 `9d54f4f` + Phase 4 `7ef6f15` |
+| I-5 | 19-call fan-out vs budget (holdings-first) | Phase 3 `2a9fa1e` |
+| I-6 | Duplicate-instrument invariant (identity guard) | Phase 3.5 `e7a7e94` + `e2ab16e` |
+| I-7 | Genuine transient throttle → `throttled` state | Phase 2 `9d54f4f`·`34974b6`·`c882648` |
+| I-8 | F-A `null (head manual)` on manual rows | `05be910` |
+| I-9 | F-B provider error echoes the API key to logs | `a1793d8` |
+| I-10 | F-C CSV lane launders `mock` into the net (phantom 100/high) | Phase B `275852f` |
+| I-11 | F-D verified-tier probe-asymmetry (persist learned tiers) | `d0a1c81` |
+| I-12 | **F-E** purge-then-re-add orphan duplicate; banner a dead-end | closing `38f50f9` + hardening `1d1bbb9` |
+| I-13 | **F-F** three disagreeing stale counts (two scopes) | closing `537b79f` |
+
+**§19-K claim:** I-1..I-13 is the full intake set; each carries a DISCHARGED disposition and a commit;
+there is **no OPEN row**. R-63's charter — opened because *"data is the core of this platform, can't
+leave it so loose"* — is answered: the milestone **caught and killed a fabricated price its own
+provenance work made visible** (I-10, the `mock`-at-100/high AARK row), and closed the identity,
+scope, and honesty gaps around it.
+
+### 7-2. Strike-check — no live dangling markers
+
+The **copy set is CLOSED**: R5/R7 ratified the build/Phase-B strings, and the owner's final look
+(2026-07-24) ratified the F-E/F-F strings — **the R-63 PROPOSED set is now empty** (recorded above).
+Every `PROPOSED`/`OPEN`/`OWED` token that remains in this file sits inside a **past SESSION/handoff
+section** and records the state *at that moment* (a loop's hand-off, a phase's pre-ratification copy) —
+they are **history, deliberately not rewritten** (rewriting them would falsify what that session
+actually said). No marker denotes a **live** unresolved item: every finding I-1..I-13 is DISCHARGED,
+both suite verdicts are captured (§5), and the accepted-surface rite is discharged (delta notes +
+pre-pass re-run, §6). The §9 NEEDS-DECISION set closed 2026-07-23; §9-i ADDENDUM closed 2026-07-24.
+
+### 7-3. Help currency sweep — DISCHARGED (`77947cc`)
+
+The Help Currency Law delta owed since the charter: the `page-pricing-health` Help entry now documents
+the R-63 user-facing capability — the **provider doctor** and the **[Remove unused copy]** orphan
+cleanup (both as `inputs`, affordance labels matching shipped UI verbatim), the **typed failure
+reasons** (throttled/unmapped/empty/unsupported vs a flat "no data"), the **head/priced-by fallback
+provenance**, and the **holdings-vs-refresh-universe stale scope** (F-F). Keywords widened for §19-J
+findability. **Guard-corroborated:** HELP CURRENCY SUITE (`test_help_content_accuracy.py` +
+`test_help.py`) **254/254** + AI grounding corpus/reachability/subcent/intent/tier1 **43/43** — served
+content, count-neutral (no test-count or schema change). *(The `page-settings` verified-tier /
+"Source override" wording shipped under the earlier Phase-4/F-C rites; unchanged here.)*
+
+### 7-4. Lessons mechanised
+
+Four lessons generalize; folded where they belong, cited not duplicated:
+1. **The fixture-blindness family, extended (F-C).** A green-tested *silent fallback* (CSV→mock) is the
+   same class as the entitlement parse-miss: a control that WORKS but produces the wrong PROVENANCE, invisible to any correctness gate. Lives in TEMPLATE-page-build.md's capability-vs-property lesson;
+   R-63's I-10 is now a named specimen of it.
+2. **Enumeration/scope airtightness (13-vs-28).** A delta-focused specimen subset is legitimate only
+   when the un-re-cut surfaces are proven UNCHANGED by **byte-identity** (`git diff`), stated as the
+   completeness claim it is — not asserted. Already recorded as the CLOSE STEP 1 convention; §6 reuses it.
+3. **Soft-delete-vs-reset purge asymmetry (F-E).** A "purge all" that soft-deletes holdings/transactions
+   leaves `instruments` intact, so an integrity artefact (a duplicate) survives a purge that *looks*
+   total. A cleanup surface must resolve the artefact where the finding LIVES, not point at a derived
+   page that cannot show it (Holdings ← transactions).
+4. **Scope-adjacent-numbers copy law (F-F).** Two internally-correct counts of *different scopes*, placed
+   adjacent with no scope label, read as a contradiction. Either make them one snapshot (so they cannot
+   disagree) **and/or** name each number's scope in its copy; never let an identity claim span two scopes.
+
+These are **milestone-specific enough to live in this retrospective**; lessons 1–2 already have standing
+homes (TEMPLATE), and 3–4 are recorded here as R-63's named cases rather than re-stated as new global
+rules (no CLAUDE.md/TEMPLATE hard-rule change is warranted — each is an application of an existing rule).
+
+### 7-5. Close — R-63 is CLOSED
+
+Backend **2174/15 both orders SOLO seed 6363**; contract **144/71**; frontend green (vitest 438/438);
+Help currency discharged; accepted-surface rite discharged; §-ledger I-1..I-13 CLOSED; PROPOSED set
+empty. **RATIFICATION.md §6 row appended; CURRENT.md flipped (NEXT = R-65 Phase 2 → R-59).** Owner pushes.

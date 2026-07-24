@@ -114,9 +114,45 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — R-63 (Pricing routing reliability) — **⚡ PRE-RELEASE, RD-9 Amendment 11**
+## NEXT — R-65 Phase 2 (xdist, inner-loop) → R-59 (URL-addressable add-holding form)
 
-**⊕ 2026-07-23 — R-54 is CLOSED (owner-accepted; see DONE below); the release train moves to R-63.**
+**⊕ 2026-07-24 — R-63 is CLOSED (owner final look PASSED; see the R-63 record below + RATIFICATION §6);
+the release train moves on.** NEXT = **R-65 Phase 2, then R-59** (owner sequencing, restated):
+
+- **R-65 Phase 2 — pytest-xdist, INNER-LOOP ONLY.** Parallelism is a developer inner-loop speed-up;
+  **gate and close verdicts STAY SOLO, ordered AND randomized (declared seeds)** — promoting parallel
+  runs to verdict status needs a paired-run equivalence baseline + a **separate chat ruling** (doubt →
+  slow path). Quality-invariant by construction (clock-mock incidental time only); xdist needs per-worker
+  DB isolation (the F-10 `RESET_REGISTRY` census). See `ROADMAP.md` R-65.
+- **R-59 — URL-addressable add-holding form, phase 1** (RD-9 Amendment 10). Completes R-54's tier-1(b)
+  example (unbuildable until the route exists); ships under the guard-REDs-an-accepted-surface rite
+  (dated note in `page-holdings.md` + that page's pre-pass re-run). **The R-54 link registry gains the
+  form ID its guard has been waiting for.**
+
+**⚑ CARRIED FORWARD (visible):** the **18 hardcoded-port smoke specs** must fail closed
+(`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. Also filed at the R-63 close: **F-G** (a
+coingecko crypto holding stays stale through Refresh-all — diagnose-first, its own **pre-release** fix item,
+alongside this sequence, NOT folded into R-63); **pre-release backlog** page-load perf profiling.
+
+---
+
+## DONE — R-63 (Pricing routing reliability) — CLOSED 2026-07-24 (RATIFICATION §6)
+
+**⊕ 2026-07-24 — R-63 CLOSED (owner final look PASSED, "All fine").** The fix-once-and-for-all
+pricing-routing milestone: the entitlement-envelope **parse-miss** root cause killed (the price was in the
+response the whole time); the **execution net made real** (pin-head-keep-net, head/priced-by provenance);
+the **seven-state failure taxonomy**; **verified-tier per product** (persisted, no new probes); **free-first
++ holdings-first budget**; the **instrument-identity guard** (dupe-tolerant migration); the **provider
+doctor**; and — its charter moment — **a fabricated `mock`-at-100/high price its own provenance work made
+visible, caught and killed** (F-C/I-10, the CSV lane laundering mock into the net). Closing pair **F-E**
+(orphan-duplicate cleanup makes the banner's promise true — [Remove unused copy], lossless) + **F-F**
+(scope-labelled stale counts; card draws one shared snapshot so banner and card cannot disagree). §-ledger
+**I-1..I-13 CLOSED**; backend **2174/15 both orders seed 6363**; contract **144/71**; frontend green (vitest
+438/438); **Help currency discharged**; a pre-existing `check:tokens` RED fixed under the NetWorth precedent.
+Full record: `r63-pricing-routing.md` §7 + RATIFICATION §6. **The historical progress log for R-63 follows
+(files-first; retained as milestone history).**
+
+**⊕ 2026-07-23 — R-54 is CLOSED (owner-accepted; see DONE below); the release train moved to R-63.**
 
 **⊕ 2026-07-23 — R-63 FILED (owner ruling at the R-54 close, RD-9 Amendment 11).** *"data is the core
 of this platform, can't leave it so loose" / "needs to be fixed once and for all."* Pricing routing can
@@ -339,11 +375,14 @@ needs a paired-run equivalence baseline + a separate chat ruling (doubt → slow
 
 ## THEN — the road to v2.0.0 (RD-9 Amendment 4 + 5 + 6 + **7** + **8** + **9** + **10** + **11**)
 
-The remaining v2.0.0 set, in sequence (**R-54 is CLOSED** — see DONE; the active NEXT above is **R-63**):
+The remaining v2.0.0 set, in sequence (**R-54 and R-63 are CLOSED** — see DONE; the active NEXT above is
+**R-65 Phase 2 → R-59**):
 
-> **R-63 → R-59 → R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
-> *(R-54 CLOSED 2026-07-23; RD-9 Amendment 8/9/10, extended by **Amendment 11** — R-63 leads the
-> post-R-54 set, owner-ruled fix-once-and-for-all; architect sequencing under delegation, reversible.)*
+> **R-65 Phase 2 (inner-loop) → R-59 → R-58 → R-57 → R-55 → R-45 → R-46 → R-39 → pre-release walk → Gates C→F → tag v2.0.0**
+> *(R-54 CLOSED 2026-07-23; **R-63 CLOSED 2026-07-24**; RD-9 Amendment 8/9/10/11. R-65 Phase 2 is xdist
+> inner-loop only — gate/close verdicts stay solo; **F-G** (crypto stale-refresh) rides pre-release
+> diagnose-first alongside; the **⚑ 18 hardcoded-port smoke specs** slot before R-39. Architect
+> sequencing under delegation, reversible.)*
 
 **⊕ RD-9 SCOPE AMENDMENT 7 (owner, 2026-07-20) — the set GREW by two**, both raised by the owner
 **using the shipped Ask panel** at the 0a walk: **R-54** (deterministic answer intelligence — the
@@ -366,9 +405,9 @@ strings rather than moving ones** (architect sequencing under delegation, **reve
 5. ~~**R-54**~~ — deterministic answer intelligence, the two-tier Ask panel — **CLOSED 2026-07-23**
    (owner-accepted; see DONE above). §-ledger CLOSED (I-1..I-3, F-1..F-11); F-9→R-62, F-11 fixed
    (`07ffd97`). `RATIFICATION.md §6` row appended.
-5a. **R-63** — **Pricing routing reliability** (RD-9 **Amendment 11**, owner ruling at the R-54 close).
-   ⚡ pre-release, **investigation-first** (read-only live diagnosis before code); data-integrity is the
-   platform's core, ruled fix-once-and-for-all. **Leads the post-R-54 set.** See `ROADMAP.md` R-63.
+5a. ~~**R-63** — **Pricing routing reliability**~~ — **CLOSED 2026-07-24** (owner-accepted; RATIFICATION §6;
+   full record `r63-pricing-routing.md` §7). ⚡ pre-release, investigation-first; fix-once-and-for-all,
+   delivered — incl. catching and killing a fabricated price its own provenance work made visible (I-10).
 6. **R-59** — **URL-addressable add-holding form, phase 1** (RD-9 **Amendment 10**, from R-54's
    §0-F dead-affordance finding). Completes the owner's tier-1(b) example, which is **unbuildable
    until this route exists**. Delta-scale; Holdings is closed, so it ships under the
