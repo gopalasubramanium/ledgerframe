@@ -782,3 +782,12 @@ Two served surfaces on `PricingHealth.tsx` + the Help catalogue (`help.py`, §19
 R-66/R-45). Pinning test `PricingHealth.test.tsx` ("names the excluded masters") updated to assert the honest
 lane-scoped copy. **Pre-pass re-run:** rides §6 (isolated stack). Strike-check + RATIFICATION flip at the 9e
 close.
+
+**⊕ VERDICTS — 2026-07-24 (F-G fix `8282436` work; records `<records-hash>`).** Backend **SOLO pair, both
+orders, seed 6363:** ordered **2180 passed / 16 skipped / 0 fail** (18m01s) + randomized **2180/16/0**
+(17m53s) — baseline **2176/16 (R-65 close) + 4** new backend tests in `test_fg_crypto_identity.py` (resolver
+RED-first · add-path regression pin · map RED-first · repair idempotent+audited), reconciled and attributed.
+Frontend: **tsc OK · eslint clean · vitest** (PricingHealth 21 + InstrumentDetail 14, +1 Rider-B title pin) ·
+**`npm run check` green** (tokens/copy/smoke-isolation/primitives/ask-boundary; e2e 361). **PROPOSED set
+(explainer sentence · the "—" country cell · "Crypto detail" title) is at the owner's look via the architect —
+9e is NOT closed; strike-check + RATIFICATION flip + CURRENT→R-59 follow the conveyed verdict.**
