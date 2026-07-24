@@ -35,12 +35,13 @@ async def _facts_event(app_client, question: str) -> list[dict]:
 
 
 async def test_action_answer_is_scoped_to_the_single_page_hit(app_client):
-    """"how do I add a holding" → exactly one fact, Help · Holdings, pointing at the page."""
+    """"how do I add a holding" → exactly one fact, Help · Holdings, pointing at the add-form deep
+    link (R-59 §59-2: the pointer goes where the action happens — the `?add=1` dialog, not the page)."""
     facts = await _facts_event(app_client, "how do I add a holding")
     labels = [f["label"] for f in facts]
     assert labels == ["Help · Holdings"], f"action answer not scoped to the top page hit: {labels}"
     assert not (_HEADLINE & set(labels)), "an action/nav tier-1 answer must carry NO headline figures"
-    assert facts[0]["link_id"] == "page:/holdings"
+    assert facts[0]["link_id"] == "page:/holdings?add=1"
 
 
 async def test_nav_answer_promotes_settings_over_a_fuzzy_match_and_scopes(app_client):
