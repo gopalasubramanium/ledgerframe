@@ -762,7 +762,7 @@ is not refetched by design (`market.py:588-589`, budget discipline, pinned by
 not included, quotes are" and expected the price to update — it didn't. The routing is correct; the **copy**
 contradicted it.
 
-**The corrected copy (PROPOSED 2026-07-24 → owner look via architect; RATIFIED flip recorded at close).**
+**The corrected copy — ✅ RATIFIED 2026-07-24 (owner verdict via architect, verbatim: "F-G copy fine").**
 Two served surfaces on `PricingHealth.tsx` + the Help catalogue (`help.py`, §19-J findability):
 
 > **Explainer note (`PricingHealth.tsx:341-342`):** "Refresh all market data" refreshes quotes priced by
@@ -783,11 +783,11 @@ R-66/R-45). Pinning test `PricingHealth.test.tsx` ("names the excluded masters")
 lane-scoped copy. **Pre-pass re-run:** rides §6 (isolated stack). Strike-check + RATIFICATION flip at the 9e
 close.
 
-**⊕ VERDICTS — 2026-07-24 (F-G fix `8282436` work; records `<records-hash>`).** Backend **SOLO pair, both
+**⊕ VERDICTS — 2026-07-24 (F-G fix `8282436` work; records `74a9c61`).** Backend **SOLO pair, both
 orders, seed 6363:** ordered **2180 passed / 16 skipped / 0 fail** (18m01s) + randomized **2180/16/0**
 (17m53s) — baseline **2176/16 (R-65 close) + 4** new backend tests in `test_fg_crypto_identity.py` (resolver
 RED-first · add-path regression pin · map RED-first · repair idempotent+audited), reconciled and attributed.
 Frontend: **tsc OK · eslint clean · vitest** (PricingHealth 21 + InstrumentDetail 14, +1 Rider-B title pin) ·
-**`npm run check` green** (tokens/copy/smoke-isolation/primitives/ask-boundary; e2e 361). **PROPOSED set
-(explainer sentence · the "—" country cell · "Crypto detail" title) is at the owner's look via the architect —
-9e is NOT closed; strike-check + RATIFICATION flip + CURRENT→R-59 follow the conveyed verdict.**
+**`npm run check` green** (tokens/copy/smoke-isolation/primitives/ask-boundary; e2e 361). **✅ RATIFIED
+2026-07-24 (owner, "F-G copy fine"):** the PROPOSED set (explainer sentence · tooltip · the "—" country
+cell · "Crypto detail" title) is accepted; 9e CLOSED (strike-check + disposition + CURRENT→R-59).

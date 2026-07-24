@@ -209,7 +209,7 @@
       the R-66/R-45 outbound-network cluster** — one egress policy decides auto-refresh, news, and
       cache-publish-lane wiring together (cross-referenced in both ROADMAP rows). Option 1 is spec-first:
       the corrected sentence lands in `page-pricing-health.md`; closed-page rite (dated delta + pre-pass);
-      new strings **PROPOSED** to the owner.
+      new strings **✅ RATIFIED 2026-07-24** (owner, "F-G copy fine").
     - **R12 (Rider A) — fix the taxonomy leak.** (a) crypto identity resolves to `crypto`/`crypto`;
       (b) **spec-first**: MASTER-DATA/GLOSSARY ratify **"crypto → `listing_country` unknown, rendered —"**
       before code; (c) correct the owner's existing BTC row via the **audited repair-family**
@@ -228,7 +228,25 @@
       only when `asset_class` is OMITTED — the form (R-59), out of scope here.
     - **R13 (Rider B) — Sentence-case card titles.** `InstrumentDetail.tsx:276` first-char fix (not
       `text-transform`); **written rule added to DESIGN-SYSTEM** (card titles are Sentence case, ratified
-      siblings cited); a vitest pin on the rendered title; string **PROPOSED**.
+      siblings cited); a vitest pin on the rendered title; string **✅ RATIFIED 2026-07-24** (owner, "F-G copy fine").
+
+    ---
+
+    **⟶ 9e CLOSED 2026-07-24 (owner verdict "F-G copy fine" — all three riders discharged).**
+    - **STRIKE-CHECK of the 9e riders** — every named surface fixed + verified, none left open:
+      - **F-G core (R11):** copy honesty shipped (`PricingHealth.tsx:324,341-342` + `help.py`); the deeper
+        wiring (Option 2) FILED to R-66/R-45. The routing itself was correct-by-design (not touched).
+      - **Rider A (R12):** map path nulls country (`coingecko.py`); audited boot repair clears existing rows
+        (`repair_crypto_country`, marker `crypto_country_cleared_v1`); shared resolver hardened
+        (`identity.py`); MASTER-DATA §4 + GLOSSARY ratify crypto→country `—`. Owner's BTC repaired on next
+        boot. Form-side propagation carried to R-59's charter.
+      - **Rider B (R13):** `InstrumentDetail.tsx:276` Sentence-cased; DESIGN-SYSTEM §5.2 rule written; vitest pin.
+    - **VERDICTS (on `8282436`):** backend SOLO pair, both orders, seed 6363 — **2180/16/0 both orders**
+      (baseline 2176/16 + 4 new tests, attributed); frontend tsc/eslint/vitest/`npm run check` green (e2e 361).
+    - **RATIFICATION:** the PROPOSED set (explainer · tooltip · "—" country cell · "Crypto detail") accepted
+      by the owner verbatim ("F-G copy fine"). Records: `8282436` (work) + `74a9c61` (verdict) + this close.
+    - **Disposition:** F-G **DONE/CLOSED**; the release train advances — **CURRENT → R-59**. Remaining
+      pre-release-walk items: **9f** (page-load perf profiling), the **18 hardcoded-port smoke specs**.
 
     ---
 
