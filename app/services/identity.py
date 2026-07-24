@@ -263,14 +263,42 @@ async def remove_orphan_instrument(session: AsyncSession, instrument_id: int) ->
         )
 
     symbol = instr.symbol
-    # Purge dangling dependents BEFORE the instrument row (no FK-cascade is declared on these; a
-    # left-behind row would point at a deleted id). The active-reference gate already guarantees any
-    # holdings/transactions on this row are soft-deleted, so deleting them here loses nothing live.
+    # The surviving canonical twin (lowest OTHER id in the identity group) inherits the references
+    # that carry USER INTENT — watchlist membership and merger back-refs — so the cleanup loses
+    # nothing the user chose; a duplicate IS the same logical instrument, so re-pointing them is not
+    # a "guess" (unlike a value merge, which we never do). Gate 2 guarantees a survivor exists.
+    survivor_id = (await session.execute(
+        select(Instrument.id).where(
+            func.upper(Instrument.symbol) == instr.symbol.upper(),
+            func.coalesce(Instrument.exchange, "") == (instr.exchange or ""),
+            Instrument.id != instrument_id,
+        ).order_by(Instrument.id)
+    )).scalars().first()
+    # Re-point watchlist membership to the survivor, de-duplicating within each watchlist (no unique
+    # constraint on (watchlist_id, instrument_id), so we drop the orphan's row where the survivor is
+    # already listed rather than create a visible double entry).
+    for item in (await session.execute(
+        select(WatchlistItem).where(WatchlistItem.instrument_id == instrument_id))).scalars().all():
+        already = (await session.execute(
+            select(WatchlistItem).where(
+                WatchlistItem.watchlist_id == item.watchlist_id,
+                WatchlistItem.instrument_id == survivor_id,
+            ))).scalars().first()
+        if already is not None:
+            await session.delete(item)
+        else:
+            item.instrument_id = survivor_id
+    # Merger back-references (schema-only today) follow the survivor, not null — the merger target is
+    # the same logical instrument.
     await session.execute(update(Transaction)
                           .where(Transaction.related_instrument_id == instrument_id)
-                          .values(related_instrument_id=None))
+                          .values(related_instrument_id=survivor_id))
+    # Purge the orphan's OWN pure-cache / own-metadata dependents BEFORE the instrument row (no
+    # FK-cascade is declared, so a left-behind row would point at a deleted id). The active-reference
+    # gate guarantees any holdings/transactions on this row are soft-deleted — deleting them loses
+    # nothing live; the orphan's identifiers/quotes/history are its own and regenerable.
     for model in (Quote, PriceHistory, InstrumentIdentifier, InstrumentAcquisition,
-                  WatchlistItem, Holding, Transaction):
+                  Holding, Transaction):
         await session.execute(delete(model).where(model.instrument_id == instrument_id))
     await session.delete(instr)
     session.add(AuditEvent(

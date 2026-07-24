@@ -30,6 +30,8 @@ from app.models import (
     Quote,
     Transaction,
     TxnType,
+    Watchlist,
+    WatchlistItem,
 )
 from app.services.identity import (
     OrphanRemovalError,
@@ -171,6 +173,26 @@ async def test_removal_purges_dangling_dependents(session):
             text(f"SELECT count(*) FROM {tbl} WHERE instrument_id=:i"), {"i": hi})).scalar()
         assert n == 0, f"{tbl} still references the removed orphan"
     assert (await session.get(Instrument, lo)) is not None
+
+
+async def test_watchlisted_orphan_is_repointed_not_dropped(session):
+    """A duplicate IS the same logical instrument, so removing the orphan must NOT silently drop the
+    user's watchlist entry — it is RE-POINTED to the surviving canonical twin (lossless cleanup)."""
+    lo, hi = await _legacy_pair(session)
+    acc = await _account(session)
+    await _link_active(session, acc.id, lo)  # lo = live twin; hi = orphan, but watchlisted
+    wl = Watchlist(name="Watch")
+    session.add(wl)
+    await session.flush()
+    session.add(WatchlistItem(watchlist_id=wl.id, instrument_id=hi))
+    await session.flush()
+
+    await remove_orphan_instrument(session, hi)
+
+    # The watchlist entry survives, now pointing at the live twin — not deleted, not dangling.
+    items = (await session.execute(
+        select(WatchlistItem).where(WatchlistItem.watchlist_id == wl.id))).scalars().all()
+    assert len(items) == 1 and items[0].instrument_id == lo
 
 
 # ------------------------------------------------------------------------ HTTP wiring + 409 path
