@@ -725,3 +725,50 @@ ratification look before Phase 1 assembly.
     CoinGecko cache and the provider call swallows outages to `[]` (`markets.py:214-215`) — a
     separate honesty follow-through, out of this finding's core scope. Holdings pre-pass
     re-run per class stated in the report.
+
+## DELTA NOTE — 2026-07-24 (R-59 — the add-holding dialog becomes URL-addressable) — PROPOSED
+
+**Closed-page rite (CLAUDE.md "a new guard that reds an accepted surface…"; ROADMAP R-59):** Holdings
+is a ratified page, so this delta ships a dated note here **+ a Holdings pre-pass re-run in the same
+delta**. Full milestone record: `r59-url-addressable-add-holding.md`. Completes R-54's tier-1(b)
+example (`r54-deterministic-answers.md` §0-F dead affordance 1), which was unbuildable until this
+route existed. **All strings/shapes below are PROPOSED until the owner looks.**
+
+- **§59-1 — the `?add=` param (I-1).** The add-holding dialog (`Holdings.tsx:107` `useState`
+  `addOpen`, rendered `:527`) becomes **URL-addressable on `/holdings`** via a HashRouter search
+  param, honouring the post-§9-D `setParams` sibling-param conventions (`r54` §9-D; the
+  `clearAccountFilter` functional-updater precedent already on this page, `:123-132`).
+  - **Param:** `add` on `/holdings`; **value `1`** (presence-is-open — `#/holdings?add=1`). A
+    query-only param, **no new route** (the dialog stays a modal over the accepted worklist page;
+    IA §2 unchanged).
+  - **Opens at the tile picker.** `?add=1` opens the AddDialog at its **"What are you adding?"**
+    step — never a pre-classified branch. Classification is preserved **by construction** (the
+    D-089 type-first tile is step 1), so a deep-linked add cannot bypass class selection
+    (`asset_class` on submit, `Holdings.tsx:880`; §59-3).
+  - **Composes with `?account=` (Amendment G).** Independent siblings: opening Add while
+    account-scoped keeps the chip; each param survives the other's open/close via the
+    sibling-preserving updater. No param residue on close.
+  - **Round-trip semantics.** Open sets `add=1` with `{replace:false}` (a history entry) → **Back
+    closes the dialog**; every close path (Cancel / Save / Esc / backdrop) **deletes `add`** via the
+    sibling-preserving updater → `?account=` intact, no residue.
+- **§59-2 — the served form ID / link-registry flip (I-2, `r54` §9-D).** Tier-1(b) *"how do I add a
+  holding"* flips from `page:/holdings` to **`page:/holdings?add=1`** (the form deep link). The
+  frontend resolver already accepts a `page:/holdings?<query>` (path-validated, query preserved
+  verbatim — the delta-4b `?tab=` precedent); the pointer label reads **"Add a holding"**. The
+  two `test_served_link_ids.py` guards flip with it. **A new bidirectional ordering guard (§59-2a)**
+  asserts the served `?add=` param is a param `Holdings.tsx` actually reads — so the form ID cannot
+  be registered while its param is a silent no-op (dead-affordance-3 class; the R-54→R-59 ordering,
+  mechanical).
+- **§59-3 — `asset_class` on submit: VERIFIED already-correct (I-3, F-G Rider A / R12).** The
+  charter's "the form must classify and pass `asset_class`" was found **already implemented** at
+  §0 intake: the D-089 tile sends `asset_class` on a listed submit (`Holdings.tsx:880`), the backend
+  resolves crypto → `crypto/crypto/country-null` (`identity.py:97-104`), both **pinned green**
+  (`test_fg_crypto_identity.py` + `Holdings.test.tsx:217`). R-59 adds only the
+  **deep-link-lands-on-picker** guard (§59-1) — no new mechanism. Owner+architect ruled this
+  disposition (Option 1) 2026-07-24; recorded as a dated premise correction on the ROADMAP R-59
+  charter input (I-5 never-age-it-silently precedent).
+- **Fence:** the general entity-dialog pattern (import/purge/tags/edit-txn, `Holdings.tsx:108-111`)
+  stays **POST-RELEASE** (ROADMAP R-59). Phase 1 is the add-holding dialog alone.
+- **Pre-pass re-run (closed-page rite):** driven on an isolated instance, both themes, on camera —
+  the deep link opening the form cold, the `?add=` ↔ `?account=` round-trip, and a classified crypto
+  add reading crypto/crypto/—. Back-linked into this note at the pre-pass step.
