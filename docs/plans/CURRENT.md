@@ -114,28 +114,27 @@ The product shell + every built page + the platform milestones, owner-accepted:
 
 ---
 
-## NEXT — F-G diagnosis (pre-release-walk 9e) → R-59 (URL-addressable add-holding form)
+## NEXT — R-59 (URL-addressable add-holding form)
 
-**⊕ 2026-07-24 — R-65 Phase 2 is DONE (`740bac6`; full record in `ROADMAP.md` R-65 + `docs/plans/r65-test-runtime.md`).**
-pytest-xdist per-worker DB isolation for the INNER LOOP (`make test-fast` = `pytest -n 8`, ≈3.5× vs
-solo); gate/close verdicts stay SOLO ordered+randomized (2176/16 both orders, seed 6363). The release
-train moves on. NEXT = **F-G diagnosis, then R-59** (architect sequencing 2026-07-24, reversible):
+**⊕ 2026-07-24 — R-65 Phase 2 DONE (`740bac6`) and F-G DONE/CLOSED (`8282436` fix + `74a9c61` verdict;
+owner "F-G copy fine").** The release train advances to **R-59**.
+- **R-65 Phase 2:** pytest-xdist per-worker DB isolation, INNER LOOP (`make test-fast` = `pytest -n 8`,
+  ≈3.5× vs solo); verdicts stay SOLO ordered+randomized. Full record: `ROADMAP.md` R-65 + `r65-test-runtime.md`.
+- **F-G (pre-release-walk 9e) — CLOSED 2026-07-24.** NOT a routing defect (correct-by-design, test-pinned);
+  shipped **R11** copy honesty (the "Refresh all" explainer no longer misattributes the exclusion to
+  "masters"), **R12** crypto taxonomy (crypto→country `—`, map-path fix + audited boot repair for the owner's
+  BTC), **R13** Sentence-case card titles (DESIGN-SYSTEM §5.2). Backend SOLO **2180/16 both orders seed 6363**;
+  frontend green. Option 2 + **stale-only refresh** filed to the R-66/R-45 outbound-network cluster (one
+  ruling). Form-side `asset_class` propagation carried to R-59's charter (below). Full record: 9e + `page-pricing-health.md`.
 
-- **F-G — coingecko crypto holding stays stale through Refresh-all** (pre-release-walk 9e). Filed at
-  the R-63 close; its own **pre-release** fix item (diagnose-first), NOT folded into R-63.
-  **⟶ DIAGNOSED 2026-07-24 (diagnose-only, HARD STOP): NOT a routing defect — routing is correct-by-design
-  and test-pinned; the defects are (1) an explainer that contradicts the design and (2) a refresh-all gap.
-  Option sheet (copy-only / wire-lane-sync / hybrid-RECOMMENDED) + Riders A (taxonomy default-leak,
-  `identity.py:91/46/96`) & B (title casing, `InstrumentDetail.tsx:276`) in `pre-release-walk.md` 9e —
-  awaiting owner ruling before any fix.**
 - **R-59 — URL-addressable add-holding form, phase 1** (RD-9 Amendment 10). Completes R-54's tier-1(b)
   example (unbuildable until the route exists); ships under the guard-REDs-an-accepted-surface rite
   (dated note in `page-holdings.md` + that page's pre-pass re-run). **The R-54 link registry gains the
   form ID its guard has been waiting for.**
 
 **⚑ CARRIED FORWARD (visible):** the **18 hardcoded-port smoke specs** must fail closed
-(`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. **F-G** is now promoted into NEXT (above).
-**Pre-release backlog:** page-load perf profiling.
+(`08-TECH-DEBT.md`) — recommendation: **slot before R-39**. **Pre-release backlog:** page-load perf
+profiling (pre-release-walk 9f). **F-G — DONE/CLOSED 2026-07-24** (see NEXT summary above).
 
 ---
 
