@@ -38,6 +38,19 @@ async def test_pricing_health_stale_flag_reconciles_with_summary_count(app_clien
     assert marked == summary["stale_count"]
 
 
+async def test_summary_serves_holdings_count_as_the_stale_denominator(app_client):
+    """R-63 F-F/I-13 (R9): /portfolio/summary serves `holdings_count` — the DENOMINATOR the stale
+    count ranges over — from the SAME snapshot as `stale_count`. The Pricing Health card renders
+    both count AND total from this one shared reader, so the banner and card can't disagree even
+    transiently. Pin: holdings_count equals the pricing-health holdings length (same scope), and
+    stale_count never exceeds it."""
+    summary = (await app_client.get("/api/v1/portfolio/summary")).json()
+    ph = (await app_client.get("/api/v1/portfolio/pricing-health")).json()
+    assert "holdings_count" in summary
+    assert summary["holdings_count"] == len(ph["holdings"])
+    assert summary["stale_count"] <= summary["holdings_count"]
+
+
 async def test_pricing_health_carries_typed_failure_state(app_client):
     """R-63 §9-2 Delta 2.2: every row carries the typed failure fields; when a state is present it
     is one of the taxonomy values and it has a served (PROPOSED) note — never a bare 'none'."""

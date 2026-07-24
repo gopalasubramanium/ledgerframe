@@ -105,7 +105,7 @@ export function PricingHealth() {
   const [noEgress, setNoEgress] = useState(false);
   // The stale count is the ONE shared query the StaleBanner also reads (§12ph1-1) — the footnote
   // renders THIS value, so "matches the Stale banner" is true by construction.
-  const { count: staleCount } = useStaleCount();
+  const { count: staleCount, total: staleTotal } = useStaleCount();
 
   const [refreshing, setRefreshing] = useState(false);
   // §14dr-3 — null = the stale-first default order; a header click sets an explicit column sort.
@@ -435,11 +435,15 @@ export function PricingHealth() {
                     <StatusChip key={status} label={status} tone={statusTone(status)} count={n} />
                   ))}
                 </div>
-                {/* ND-1 (§12ph1-1): render the SHARED stale count the Stale banner also reads — so
-                    the claim is true by construction (never a stale, independently-fetched number). */}
+                {/* ND-1 (§12ph1-1) + R-63 F-F/I-13 (R9): render BOTH the count AND the total from the
+                    SHARED stale reader the Stale banner also reads — so the "same count" claim is true
+                    by construction AND the pair can't self-contradict during a refresh (the numerator
+                    and denominator move together, never a separately-fetched holdings length). The
+                    clause is scope-labelled ("holdings") so it never reads as the toast's wider
+                    refresh-universe count. */}
                 <p className="ph__stale">
-                  <span data-testid="ph-stale-count">{staleCount}</span> of {d.holdings.length} prices stale — the
-                  same count the Stale banner shows (one shared reader).
+                  <span data-testid="ph-stale-count">{staleCount}</span> of {staleTotal} holdings have a
+                  stale price — the same count the Stale banner shows.
                 </p>
               </div>
             )}

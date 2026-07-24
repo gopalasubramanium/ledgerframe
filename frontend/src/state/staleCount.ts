@@ -11,11 +11,15 @@ const POLL_MS = 60_000;
 
 interface StaleState {
   count: number;
+  // R-63 F-F/I-13: the holdings total the count ranges over, carried in the SAME snapshot so the
+  // Pricing Health card renders "N of M" entirely from this shared value — never M from a separate
+  // fetch — and the banner and card cannot disagree even transiently during a refresh.
+  total: number;
   loaded: boolean;
 }
 // A stable reference between changes (useSyncExternalStore requires getSnapshot to be referentially
 // stable when nothing changed).
-let snapshot: StaleState = { count: 0, loaded: false };
+let snapshot: StaleState = { count: 0, total: 0, loaded: false };
 const listeners = new Set<() => void>();
 let timer: ReturnType<typeof setInterval> | null = null;
 let inFlight = false;
@@ -25,8 +29,8 @@ async function load(): Promise<void> {
   inFlight = true;
   try {
     const s = await fetchStaleSummary();
-    if (s.stale_count !== snapshot.count || !snapshot.loaded) {
-      snapshot = { count: s.stale_count, loaded: true };
+    if (s.stale_count !== snapshot.count || s.holdings_count !== snapshot.total || !snapshot.loaded) {
+      snapshot = { count: s.stale_count, total: s.holdings_count, loaded: true };
       listeners.forEach((l) => l());
     }
   } finally {

@@ -19,12 +19,21 @@ interface SettingsResponse {
 export interface StaleSummary {
   has_stale: boolean;
   stale_count: number;
+  // R-63 F-F/I-13: the holdings total the stale count ranges over, from the SAME snapshot, so a
+  // reader can render "N of M" entirely from one shared value (banner + card can't disagree).
+  holdings_count: number;
 }
 
 export async function fetchStaleSummary(): Promise<StaleSummary> {
-  const r = await apiGet<{ has_stale?: boolean; stale_count?: number }>("/portfolio/summary");
-  if (!r.ok) return { has_stale: false, stale_count: 0 };
-  return { has_stale: !!r.data.has_stale, stale_count: r.data.stale_count ?? 0 };
+  const r = await apiGet<{ has_stale?: boolean; stale_count?: number; holdings_count?: number }>(
+    "/portfolio/summary",
+  );
+  if (!r.ok) return { has_stale: false, stale_count: 0, holdings_count: 0 };
+  return {
+    has_stale: !!r.data.has_stale,
+    stale_count: r.data.stale_count ?? 0,
+    holdings_count: r.data.holdings_count ?? 0,
+  };
 }
 
 // Global ticker footer (D-047 amendment, §11-17): the user's holdings + world indices.

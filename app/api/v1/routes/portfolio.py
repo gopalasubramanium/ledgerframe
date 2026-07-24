@@ -151,6 +151,11 @@ async def portfolio_summary(entity_id: int | None = Query(default=None),
         "total_return_pct": to_display(val.total_return_pct),
         "has_stale": val.has_stale,
         "stale_count": sum(1 for h in val.holdings if h.is_stale),
+        # R-63 F-F/I-13: the DENOMINATOR the stale count ranges over, served from the SAME snapshot
+        # as stale_count. The Pricing Health confidence card renders BOTH count and total from this
+        # one shared reader (never a separately-fetched holdings length), so the banner and the card
+        # cannot disagree even transiently during a refresh (the async-invalidation flicker, R9).
+        "holdings_count": len(val.holdings),
         "allocation_by_class": {k: to_display(v) for k, v in val.allocation("asset_class").items()},
         "allocation_by_currency": {k: to_display(v) for k, v in val.allocation("native_currency").items()},
         "allocation_by_sector": {k: to_display(v) for k, v in val.sector_allocation().items()},

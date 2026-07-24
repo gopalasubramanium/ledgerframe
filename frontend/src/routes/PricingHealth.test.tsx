@@ -76,7 +76,10 @@ vi.mock("../api/client", async (orig) => ({
 // distinct from the holdings' own is_stale count so the test proves the footnote renders the shared
 // value, never an independently-computed one.
 vi.mock("../state/staleCount", () => ({
-  useStaleCount: () => ({ count: 3, loaded: true }),
+  // R-63 F-F/I-13: the shared store carries BOTH count and total. `total: 9` deliberately differs
+  // from the mocked payload's holdings.length (4) so a test can prove the card's denominator comes
+  // from the shared snapshot, not the pricing-health payload (the single-snapshot invariant).
+  useStaleCount: () => ({ count: 3, total: 9, loaded: true }),
   invalidateStaleCount: vi.fn(),
 }));
 
@@ -127,6 +130,20 @@ test("footnote renders the SHARED stale count, not its own (§12ph1-1)", async (
   // itself, so it can't claim "matches the Stale banner" while displaying a different number.
   const el = await screen.findByTestId("ph-stale-count");
   expect(el.textContent).toBe("3");
+});
+
+test("card numerator AND denominator both come from the shared store — the single-snapshot invariant (R-63 F-F/I-13)", async () => {
+  // R9 closes the banner/card transient by sourcing the card's "N of M" entirely from useStaleCount
+  // (the same store the banner reads), never the separately-fetched pricing-health payload. The
+  // store returns total:9 while the mocked payload holds 4 holdings — so if the denominator read the
+  // payload it would show 4. Asserting "9" proves the pair moves together and cannot self-contradict.
+  const { getByText } = renderPage();
+  const el = await screen.findByTestId("ph-stale-count");
+  expect(el.textContent).toBe("3");
+  const line = el.closest("p") as HTMLElement;
+  expect(line.textContent).toMatch(/3 of 9 holdings have a stale price/);
+  // The scope word "holdings" distinguishes it from the toast's wider refresh-universe count.
+  expect(getByText(/holdings have a stale price/)).toBeTruthy();
 });
 
 test("§14dr-3 — stale rows are MARKED and PINNED to the top (identifiable at the destination)", async () => {

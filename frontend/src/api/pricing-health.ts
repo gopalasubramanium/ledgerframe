@@ -166,7 +166,12 @@ export async function refreshAllMarketData(): Promise<LaneResult[]> {
       ? {
           lane: "Quotes & indices",
           ok: q.data.failed.length === 0 && (q.data.still_stale?.length ?? 0) === 0,
-          detail: `Refreshed ${q.data.refreshed} of ${q.data.total}${
+          // R-63 F-F/I-13 (R9): NAME the refresh universe. This lane refreshes ~25 targets —
+          // holdings, watchlist AND index/FX proxies — so a "still stale" here can be a proxy, NOT a
+          // holding. Labelling the scope stops "2 still stale" from reading as the same fact as the
+          // Stale banner's holdings-only count. The proxy-stale signal (§18-R2/F-7b) is preserved,
+          // now scope-named. Copy PROPOSED (owner's look).
+          detail: `Refreshed ${q.data.refreshed} of ${q.data.total} refresh targets (holdings, watchlist & indices)${
             q.data.failed.length ? ` · ${q.data.failed.length} not refreshed` : ""
           }${q.data.skipped ? ` · ${q.data.skipped} skipped` : ""}${
             q.data.still_stale?.length ? ` · ${q.data.still_stale.length} still stale` : ""
