@@ -1183,11 +1183,23 @@ his copy verdict on the R3/R4 PROPOSED strings). No close ritual yet.
 ## PRE-CLOSE — R6/R7 rulings + F-E/F-F/Q3 diagnosis (2026-07-24) → HARD STOP for the fix ruling
 
 ### Rulings recorded (dated)
-- **R6 (owner, live 3b, 2026-07-24) — the R-63 core is ACCEPTED on his real instance.** The owner's live
-  look (08:36–08:51 screenshots) confirmed the fixes on his real premium key — the entitled verified-tier
-  cell (*"Quotes: delayed / Indices: premium"*) rendering on his key, and the live pricing/provenance.
-  Closes the live-3b remainder that the prior handoff owed. *(If the architect intended R6 to carry a
-  different clause, correct here — recorded from the work-order framing.)*
+- **⚠ R6 CORRECTION (2026-07-24, closing session — never age a mislabel silently, the I-5 precedent).**
+  The line below originally recorded R6 as *"the R-63 core is ACCEPTED on his real instance"* — and it
+  self-flagged the hedge *"(if the architect intended R6 to carry a different clause, correct here)."* The
+  **actual R6 ruling (owner 2026-07-24) was: FOLD F-E + F-F diagnosis into the R-63 pre-close.** That is
+  what R6 authorised (and this pre-close section is its product). The live-3b acceptance is TRUE and stands
+  — it is recorded as its **own** dated entry immediately below, not as R6. The mislabel is corrected here,
+  in place, not overwritten-and-hidden.
+- **R6 (owner, 2026-07-24) — the ruling: FOLD F-E + F-F diagnosis into the R-63 pre-close.** The owner, on
+  seeing F-E (the purge-then-re-add duplicate banner) and F-F (three stale counts) on his live 08:51
+  instance, ruled that both be **diagnosed inside the R-63 pre-close** (diagnose-only, options for his
+  ruling) rather than deferred — the fixes then follow at his F-E/F-F rulings (R8/R9 below). This section
+  IS that folded diagnosis.
+- **Live-3b core acceptance (owner, live 3b, 2026-07-24) — TRUE, STANDS (recorded as its own entry, not
+  R6).** The owner's live look (08:36–08:51 screenshot set) accepted the R-63 core on his **real premium
+  key**: the entitled verified-tier cell (*"Quotes: delayed / Indices: premium"*) rendering on his key,
+  live pricing with no mock, honest Estimated for RAYMOND.BSE, and the §4 / R4 strings live. This closes
+  the live-3b core remainder the prior handoff owed; F-E/F-F are the residual pre-close items it surfaced.
 - **R7 (owner, 2026-07-24) — the PROPOSED set is CLOSED: ALL R-63 copy is RATIFIED (R5 + R7).** Final
   rendered confirmation done on the owner's live screenshots (08:36–08:51 set). This ratifies the strings
   that postdated R5 — the R3 verified-tier "· verified \<date\>", the R4 "Select provider…", and every
@@ -1309,3 +1321,92 @@ optimization → **post-release ROADMAP candidate** (not release-blocking). Neit
 
 **HARD STOP — the F-E/F-F fix-option sheets and Q3 answers are above. Close step 2 (the full close ritual)
 is cut after the owner rules the F-E/F-F options.** No fix code this session.
+
+---
+
+## CLOSING SESSION — F-E/F-F fixes (owner rulings R8/R9) + Q3 filings (2026-07-24)
+
+### Rulings recorded (dated)
+- **R8 (owner, 2026-07-24) — F-E fix = option ② + honest copy.** Orphan cleanup that makes the banner's
+  promise TRUE, with copy that distinguishes the orphaned-duplicate case. NOT option ① (silence the count)
+  — the orphan is a real data-integrity artefact and the surface must be able to resolve it, not hide it.
+- **R9 (owner, 2026-07-24) — F-F fix = option ③ (scope-labelled copy + close the transient).** The proxy/
+  index-stale signal in the toast is **real information** — so this is NOT option ① (scope-align the toast
+  down to holdings, which would lose the "a proxy is still stale" honesty, §18-R2/F-7b). Instead: label the
+  toast's scope (its ~25-symbol refresh universe) AND close the banner/card transient so those two never
+  disagree even for a frame.
+- **Q3 filings (owner intent, recorded 2026-07-24):**
+  - **Incremental history build** (fetch only uncovered instruments) → **ROADMAP, post-release.** Rationale:
+    a cold build's per-instrument fetch cost is *inherent* (throttled/heavy lanes), the cache already exists,
+    and re-evaluating coverage each build is an optimization, not a defect. Not release-blocking.
+  - **App-wide build-progress indicator** → **pre-release polish list.** The build already survives
+    navigation as a backend task (`portfolio.py:1093-1104`, status-polled); the missing half is *progress
+    visibility* off the Net-worth page — the remedy to the owner's observed ~10-minute blind wait. UX polish,
+    not a survival fix (Q3(b) does NOT file to 9c).
+
+### F-E — the fix (ledger I-12, ruling R8) — make the banner's promise true
+**Surface choice (stated honestly, per the work order):** the cleanup action lives on the **Pricing Health
+banner**, NOT Holdings. Holdings is derived from transactions (`rebuild_holdings_from_transactions`,
+portfolio.py:690) so an orphan instrument — 0 active transactions — has **no Holdings row to act on**; the
+finding (a duplicate INSTRUMENT row) lives where the banner already surfaces it, so the action belongs there.
+
+**Backend.**
+- `identity.duplicate_instruments` now carries per-row **orphan status** — `active_holdings`,
+  `active_transactions` (both `deleted_at IS NULL`) and a derived `orphan` bool per instrument, plus a
+  group-level `orphan_count`. The counter is no longer blind to orphan status (fixes finding (b)); the
+  banner can distinguish the orphan case.
+- New service `identity.remove_orphan_instrument(session, instrument_id)`:
+  - **Refuses a non-orphan** — any active holding/transaction ⇒ `OrphanRemovalError` (safety gate; the
+    blindness-pinned refusal path).
+  - **Refuses a non-duplicate** — the instrument must share its identity (`upper(symbol)` + `coalesce(
+    exchange,'')`) with ≥1 other row; a lone instrument (e.g. a watchlist-only entry with no holdings) is
+    NOT removable through this path. This is what stops the cleanup from deleting a legitimate zero-holding
+    instrument.
+  - **Removes the orphan INSTRUMENT row only**, purging its dangling dependents so nothing is left pointing
+    at a deleted id: quotes, price_history, instrument_identifiers, instrument_acquisitions, watchlist_items,
+    already-soft-deleted holdings/transactions on that orphan, and any `transactions.related_instrument_id`
+    back-reference (nulled). Audit-evented (`category="mutation", action="remove_orphan_instrument"`).
+- New endpoint `POST /system/instrument-duplicates/{instrument_id}/remove` (`require_auth` — matches the
+  instrument-mutation family: PATCH `/instruments/{symbol}`, the `map-*` endpoints, `refresh-data`;
+  `reset-data`'s `require_pin` is for a *bulk* wipe, not a single guarded orphan row). `OrphanRemovalError`
+  → HTTP 409.
+
+**Copy (PROPOSED — the owner's final look).** The banner distinguishes the orphan case: an orphaned
+duplicate reads *"1 duplicate instrument — TSLA. One copy is unused (no holdings) and can be removed here."*
+with a **[Remove unused copy]** action (ui/Button); a non-orphan duplicate (both rows in use) keeps the
+existing *"Resolve on Holdings"* copy. GLOSSARY check: no new **defined** term is coined — "duplicate
+instrument" already ships descriptively (R7-ratified) and "unused (no holdings)" is descriptive copy, held
+PROPOSED for the owner's look.
+
+**Fail-first + blindness pin:** `test_orphan_duplicate_cleanup.py` reproduces the diagnosis shape through
+the REAL path — a raw `(TSLA,NULL)` pair (the guard-off legacy dupe) survives a soft-delete purge → re-add
+links one twin → the other is an orphan → `duplicate_instruments` marks it `orphan=True` → `remove_orphan_
+instrument` clears it and the count → the live twin + its holding survive. The **refusal path is
+blindness-pinned**: removing a non-orphan (active holding) and removing a non-duplicate lone instrument both
+raise and delete nothing — so a guard that stopped checking would fail loudly.
+
+**Rite:** dated delta note in `page-pricing-health.md`; the pre-pass re-run rides this session's final pre-pass.
+
+### F-F — the fix (ledger I-13, ruling R9) — three numbers, honestly scoped
+**Close the transient (structural, not a claim tweak).** The banner and the confidence card must not be able
+to disagree even for a frame. Today the card renders `{staleCount}` (shared store, over `/portfolio/summary`)
+`of {d.holdings.length}` (a SEPARATE fetch, `/portfolio/pricing-health`) — two snapshots, so a refresh moves
+the denominator before the shared numerator settles. **Fix:** move the denominator into the SAME shared
+snapshot — `/portfolio/summary` now serves `holdings_count` (= `len(val.holdings)`, the exact scope
+`stale_count` ranges over), the `staleCount` store carries `total`, and the card renders **both** count and
+total from `useStaleCount()`. Banner and card now read one store → they cannot disagree, even transiently
+(single invalidation path). *(A deterministic sub-second-race repro is impractical; the invariant is pinned
+instead — the card's numerator AND denominator come from the shared store, never from the pricing-health
+payload — per the work order's "pin the single-path invariant" allowance.)*
+
+**Scope-labelled copy (PROPOSED).**
+- **Card:** the "same count the Stale banner shows" clause is now TRUE by construction (both read the store)
+  AND gains its scope — *"{n} of {m} holdings have a stale price — the same count the Stale banner shows."*
+  No identity claim spans two scopes.
+- **Toast** (`pricing-health.ts` `refreshAllMarketData`, lane "Quotes & indices"): names its universe —
+  *"Refreshed {r} of {t} refresh targets (holdings, watchlist & indices)… · {s} still stale"* — so a "2
+  still stale" that counts index/FX proxies never reads as the same fact as the banner's "1 stale holding".
+  The §18-R2/F-7b honesty (a proxy still stale after the pass is reported) is preserved, now scope-named.
+
+**Rite:** dated delta note in `page-pricing-health.md` (card clause + the toast copy home). The AppShell
+StaleBanner copy (*"1 price is stale"* = holdings) is **unchanged** — chrome, not touched.
