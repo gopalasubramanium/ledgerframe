@@ -69,6 +69,20 @@
 .ph__dupbanner strong {
   color: var(--text-primary);
 }
+/* R-63 F-E/I-12: one row per duplicate group; the orphan case carries an inline Remove action. */
+.ph__dupbanner-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.ph__dupbanner-row + .ph__dupbanner-row {
+  margin-top: var(--space-2);
+}
+.ph__dupbanner-note {
+  margin-top: var(--space-2);
+  color: var(--text-tertiary);
+}
 
 /* Chips migrated to the ratified StatusChip (page-policy §9-15) — no page-local copy remains. */
 

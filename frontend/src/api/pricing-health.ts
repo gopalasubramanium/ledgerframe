@@ -90,16 +90,35 @@ export interface DuplicatesResp {
 // R-63 I-6: instruments that share one identity (same upper(symbol) + equivalent exchange,
 // NULL≡NULL) split across more than one row — the duplicate-instrument surface. Resolved on
 // Holdings; LedgerFrame never guesses which row is canonical.
+// R-63 F-E / I-12: each row now carries its active-reference counts and an `orphan` flag (0 active
+// holdings AND 0 active transactions), plus a group `orphan_count` — so an *unused* duplicate (a
+// purge-then-re-add can strand one) reads distinctly and is removable here (Holdings, derived from
+// transactions, can never show an orphan row).
+export interface InstrumentDuplicateRow {
+  id: number;
+  symbol: string;
+  name: string | null;
+  exchange: string | null;
+  active_holdings: number;
+  active_transactions: number;
+  orphan: boolean;
+}
 export interface InstrumentDuplicateGroup {
   symbol: string;
   exchange: string | null;
   instrument_count: number;
-  instruments: { id: number; symbol: string; name: string | null; exchange: string | null }[];
+  orphan_count: number;
+  instruments: InstrumentDuplicateRow[];
 }
 export interface InstrumentDuplicatesResp {
   duplicates: InstrumentDuplicateGroup[];
   count: number;
 }
+// R-63 F-E / I-12 (owner ruling R8): remove one ORPHANED duplicate instrument (0 live references),
+// making the banner's promise true. The backend refuses (409) a row still in use or not a duplicate.
+export const removeOrphanInstrument = (instrumentId: number) =>
+  apiSend<{ removed: number; symbol: string }>(
+    `/system/instrument-duplicates/${instrumentId}/remove`, "POST");
 
 // Bulk refresh (D-069 [S]-gated). Long-running (40s + 8s/symbol); reports updated/failed/skipped.
 export interface RefreshSummary {

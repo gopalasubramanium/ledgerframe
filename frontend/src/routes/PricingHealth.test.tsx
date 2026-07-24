@@ -63,6 +63,8 @@ vi.mock("../api/pricing-health", () => ({
     ok: true,
     data: { no_egress: false, total_calls: 0, note: null, lanes: [] },
   })),
+  // R-63 F-E / I-12 — orphan-duplicate cleanup.
+  removeOrphanInstrument: vi.fn(async () => ({ ok: true, data: { removed: 23, symbol: "TSLA" } })),
 }));
 
 vi.mock("../api/client", async (orig) => ({
@@ -85,6 +87,7 @@ import {
   getInstrumentDuplicates,
   getNoEgress,
   getPricingHealth,
+  removeOrphanInstrument,
   runProviderDoctor,
 } from "../api/pricing-health";
 
@@ -235,7 +238,7 @@ test("identifier-duplicate banner is omitted at zero, shown when count > 0", asy
   await waitFor(() => expect(c2.querySelector(".ph__dupbanner")).not.toBeNull());
 });
 
-test("duplicate-instrument banner surfaces the pair and points to Holdings (R-63 I-6)", async () => {
+test("duplicate-instrument banner points to Holdings when both copies are in use (R-63 I-6)", async () => {
   const { container, unmount } = renderPage();
   await screen.findByText("Per-holding diagnostics");
   await waitFor(() => expect(container.querySelector(".ph__dupbanner")).toBeNull());
@@ -249,9 +252,10 @@ test("duplicate-instrument banner surfaces the pair and points to Holdings (R-63
           symbol: "TSLA",
           exchange: null,
           instrument_count: 2,
+          orphan_count: 0,
           instruments: [
-            { id: 22, symbol: "TSLA", name: "Tesla", exchange: null },
-            { id: 23, symbol: "TSLA", name: "Tesla", exchange: null },
+            { id: 22, symbol: "TSLA", name: "Tesla", exchange: null, active_holdings: 1, active_transactions: 1, orphan: false },
+            { id: 23, symbol: "TSLA", name: "Tesla", exchange: null, active_holdings: 1, active_transactions: 1, orphan: false },
           ],
         },
       ],
@@ -262,6 +266,41 @@ test("duplicate-instrument banner surfaces the pair and points to Holdings (R-63
   expect(c2.textContent).toMatch(/TSLA/);
   const link = getByText("Resolve on Holdings") as HTMLAnchorElement;
   expect(link.getAttribute("href")).toBe("#/holdings");
+});
+
+test("duplicate-instrument banner offers orphan cleanup for the unused copy (R-63 F-E/I-12)", async () => {
+  const { container, unmount } = renderPage();
+  await screen.findByText("Per-holding diagnostics");
+  await waitFor(() => expect(container.querySelector(".ph__dupbanner")).toBeNull());
+  unmount();
+  vi.mocked(getInstrumentDuplicates).mockResolvedValue({
+    ok: true,
+    data: {
+      count: 1,
+      duplicates: [
+        {
+          symbol: "TSLA",
+          exchange: null,
+          instrument_count: 2,
+          orphan_count: 1,
+          instruments: [
+            { id: 22, symbol: "TSLA", name: "Tesla", exchange: null, active_holdings: 1, active_transactions: 1, orphan: false },
+            { id: 23, symbol: "TSLA", name: "Tesla", exchange: null, active_holdings: 0, active_transactions: 0, orphan: true },
+          ],
+        },
+      ],
+    },
+  });
+  const { container: c2, getByRole, queryByText } = renderPage();
+  await waitFor(() => expect(c2.querySelector(".ph__dupbanner")).not.toBeNull());
+  // The orphan case reads "unused (no holdings)" — NOT the Holdings dead-end — and offers a remove
+  // action right where the finding is (the banner), per the owner ruling R8.
+  expect(c2.textContent).toMatch(/unused \(no holdings\)/);
+  expect(queryByText("Resolve on Holdings")).toBeNull();
+  const btn = getByRole("button", { name: /remove unused copy/i });
+  await userEvent.click(btn);
+  await waitFor(() => expect(vi.mocked(removeOrphanInstrument)).toHaveBeenCalledWith(23));
+  vi.mocked(getInstrumentDuplicates).mockResolvedValue({ ok: true, data: { count: 0, duplicates: [] } });
 });
 
 test("Source column shows priced-by=Y with the route head=X when the net caught (R-63 AC-5)", async () => {

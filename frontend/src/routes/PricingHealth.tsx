@@ -31,6 +31,7 @@ import {
   getPricingHealth,
   refreshAllMarketData,
   refreshHolding,
+  removeOrphanInstrument,
   runProviderDoctor,
 } from "../api/pricing-health";
 import type {
@@ -124,6 +125,9 @@ export function PricingHealth() {
   const [doctor, setDoctor] = useState<ProviderDoctorResult | null>(null);
   const [doctoring, setDoctoring] = useState(false);
 
+  // R-63 F-E / I-12: removing an orphaned duplicate instrument (guards a re-click while in flight).
+  const [removingOrphan, setRemovingOrphan] = useState<number | null>(null);
+
   const reload = useCallback(() => {
     setData(undefined);
     setDups(undefined);
@@ -202,6 +206,27 @@ export function PricingHealth() {
       setDoctoring(false);
     }
   }, [doctoring, toast]);
+
+  // R-63 F-E / I-12 (owner ruling R8): remove one ORPHANED duplicate instrument. The backend
+  // refuses (409) a row still in use or not actually a duplicate — the toast surfaces that honestly.
+  const onRemoveOrphan = useCallback(
+    async (instrumentId: number, symbol: string) => {
+      if (removingOrphan !== null) return;
+      setRemovingOrphan(instrumentId);
+      try {
+        const r = await removeOrphanInstrument(instrumentId);
+        if (r.ok) {
+          toast.show({ message: `Removed the unused copy of ${symbol}.` });
+          reload();
+        } else {
+          toast.show({ message: `Couldn't remove: ${r.error}`, tone: "warning" });
+        }
+      } finally {
+        setRemovingOrphan(null);
+      }
+    },
+    [removingOrphan, toast, reload],
+  );
 
   const onCommitSource = useCallback(async () => {
     if (!correcting?.symbol || savingSource) return;
@@ -338,19 +363,47 @@ export function PricingHealth() {
         }
       </CardBody>
 
-      {/* R-63 I-6: duplicate-instrument banner (shown only when count > 0). New duplicates are now
-          impossible (one identity resolution); this surfaces any that pre-date the guard so the
-          user can resolve them on Holdings. We never guess which row is canonical. PROPOSED copy —
-          ratified at the 0a look. */}
+      {/* R-63 I-6 + F-E/I-12: duplicate-instrument banner (shown only when count > 0). New duplicates
+          are now impossible (one identity resolution); this surfaces any that pre-date the guard. A
+          purge-then-re-add can leave one copy UNUSED (0 holdings) — Holdings, derived from
+          transactions, can never show an orphan row, so the cleanup for the unused copy lives HERE
+          (owner ruling R8). A duplicate whose rows are all in use still resolves on Holdings. We never
+          guess which row is canonical. PROPOSED copy — ratified at the owner's look. */}
       <CardBody data={instrDups} lines={1} onRetry={reload}>
         {(d) =>
           d.count > 0 ? (
             <div className="ph__dupbanner" role="status">
-              <strong>{d.count}</strong> duplicate instrument{d.count === 1 ? "" : "s"} —{" "}
-              {d.duplicates.map((g) => g.symbol).join(", ")} appear{d.count === 1 ? "s" : ""} more than once.
-              Each row prices on its own, which can read as “(corrected)”.{" "}
-              <a href="#/holdings">Resolve on Holdings</a> by removing the extra row; new duplicates
-              can no longer be created.
+              {d.duplicates.map((g) => {
+                const orphans = g.instruments.filter((i) => i.orphan);
+                return (
+                  <div key={`${g.symbol}:${g.exchange ?? ""}`} className="ph__dupbanner-row">
+                    {orphans.length > 0 ? (
+                      <>
+                        <strong>{g.symbol}</strong> appears more than once. One copy is unused (no
+                        holdings) and can be removed here; the copy your holdings use is untouched.{" "}
+                        {orphans.map((o) => (
+                          <Button
+                            key={o.id}
+                            variant="default"
+                            onClick={() => onRemoveOrphan(o.id, o.symbol)}
+                            loading={removingOrphan === o.id}
+                            disabled={removingOrphan !== null}
+                          >
+                            Remove unused copy
+                          </Button>
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        <strong>{g.symbol}</strong> appears more than once and each copy is in use.
+                        Each row prices on its own, which can read as “(corrected)”.{" "}
+                        <a href="#/holdings">Resolve on Holdings</a> by removing the extra row.
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+              <p className="ph__dupbanner-note">New duplicates can no longer be created.</p>
             </div>
           ) : null
         }

@@ -20,6 +20,12 @@ class DuplicateIdentifierError(ValueError):
     """A high-confidence identifier is already mapped to a different instrument."""
 
 
+class OrphanRemovalError(ValueError):
+    """A duplicate-instrument cleanup was refused: the row is either still in use (an active
+    holding/transaction references it) or is NOT part of a duplicate group (so removing it would
+    delete a legitimate lone instrument, e.g. a watchlist-only entry). R-63 F-E / I-12."""
+
+
 # Sentinel so ``resolve_or_create_instrument`` can tell "caller omitted country → compute a
 # default" from "caller passed country=None → leave it unknown" (§14dr-27b).
 _UNSET: object = object()
@@ -127,13 +133,43 @@ async def resolve_or_create_instrument(
     return instrument, True
 
 
+async def _active_reference_counts(session: AsyncSession, instrument_ids: list[int]) -> dict:
+    """For each instrument id, the count of ACTIVE (``deleted_at IS NULL``) holdings and
+    transactions that reference it — the orphan test (R-63 F-E / I-12). An instrument with zero of
+    both is an *orphan*: nothing live points at it, so a purge-then-re-add left it stranded."""
+    from app.models import Holding, Transaction
+
+    counts = {i: {"holdings": 0, "transactions": 0} for i in instrument_ids}
+    if not instrument_ids:
+        return counts
+    for iid, n in (await session.execute(
+        select(Holding.instrument_id, func.count())
+        .where(Holding.instrument_id.in_(instrument_ids), Holding.deleted_at.is_(None))
+        .group_by(Holding.instrument_id)
+    )).all():
+        counts[iid]["holdings"] = n
+    for iid, n in (await session.execute(
+        select(Transaction.instrument_id, func.count())
+        .where(Transaction.instrument_id.in_(instrument_ids), Transaction.deleted_at.is_(None))
+        .group_by(Transaction.instrument_id)
+    )).all():
+        counts[iid]["transactions"] = n
+    return counts
+
+
 async def duplicate_instruments(session: AsyncSession) -> list[dict]:
     """Instruments that share one identity — same ``upper(symbol)`` and equivalent exchange
     (NULL≡NULL) — split across more than one row. A data-quality problem the user resolves on
     Holdings; we report, never auto-merge (we never guess which row is canonical). Mirrors
     ``duplicate_identifiers``. This is the honest face of the dupe-tolerant identity migration:
     where the ``uq_instr_identity_ci`` index could not bind (a DB that already held duplicates),
-    this surfaces exactly which rows to reconcile."""
+    this surfaces exactly which rows to reconcile.
+
+    R-63 F-E / I-12: each instrument now carries its ACTIVE-reference counts and a derived
+    ``orphan`` flag (0 active holdings AND 0 active transactions), plus a group-level
+    ``orphan_count`` — so the surface can distinguish "both rows are in use (resolve on Holdings)"
+    from "one copy is unused and can be removed here" (the finding was that the counter was blind to
+    orphan status, and Holdings — derived from transactions — can never show an orphan row)."""
     key_symbol = func.upper(Instrument.symbol)
     key_exch = func.coalesce(Instrument.exchange, "")
     groups = (
@@ -152,13 +188,96 @@ async def duplicate_instruments(session: AsyncSession) -> list[dict]:
                 .order_by(Instrument.id)
             )
         ).all()
+        refs = await _active_reference_counts(session, [i for i, *_ in rows])
+        instruments = []
+        orphan_count = 0
+        for i, s, nm, ex in rows:
+            ah, at = refs[i]["holdings"], refs[i]["transactions"]
+            orphan = ah == 0 and at == 0
+            orphan_count += 1 if orphan else 0
+            instruments.append({
+                "id": i, "symbol": s, "name": nm, "exchange": ex,
+                "active_holdings": ah, "active_transactions": at, "orphan": orphan,
+            })
         out.append({
             "symbol": sym, "exchange": exch or None, "instrument_count": n,
-            "instruments": [
-                {"id": i, "symbol": s, "name": nm, "exchange": ex} for i, s, nm, ex in rows
-            ],
+            "orphan_count": orphan_count, "instruments": instruments,
         })
     return out
+
+
+async def remove_orphan_instrument(session: AsyncSession, instrument_id: int) -> dict:
+    """Remove one ORPHANED duplicate instrument row — the cleanup that makes the Pricing Health
+    duplicate banner's promise TRUE (R-63 F-E / I-12, owner ruling R8 2026-07-24).
+
+    Two safety gates, both refuse loudly (``OrphanRemovalError``) rather than delete the wrong row:
+      1. **Non-orphan** — any ACTIVE holding/transaction references the row. The user's live data is
+         on the surviving twin; a row still in use is never removable.
+      2. **Non-duplicate** — the row does not share its identity (``upper(symbol)`` + equivalent
+         exchange, NULL≡NULL) with at least one OTHER row. A lone instrument (e.g. a watchlist-only
+         entry with no holdings) is *orphan-shaped* but is NOT a duplicate, so removing it would
+         delete legitimate data — refused. This also guarantees at least one row for the identity
+         always survives.
+
+    Removes the orphan INSTRUMENT row only, first purging rows that would otherwise dangle at its id
+    (quotes, price_history, identifiers, acquisitions, watchlist_items, and its own already-soft-
+    deleted holdings/transactions), and nulling any ``transactions.related_instrument_id`` back-
+    reference. Audit-evented. Returns ``{"removed": id, "symbol": …}``."""
+    from sqlalchemy import delete, update
+
+    from app.models import (
+        AuditEvent,
+        Holding,
+        InstrumentAcquisition,
+        InstrumentIdentifier,
+        PriceHistory,
+        Quote,
+        Transaction,
+        WatchlistItem,
+    )
+
+    instr = await session.get(Instrument, instrument_id)
+    if instr is None:
+        raise OrphanRemovalError(f"instrument #{instrument_id} not found")
+
+    # Gate 1: refuse a row still in use.
+    refs = (await _active_reference_counts(session, [instrument_id]))[instrument_id]
+    if refs["holdings"] or refs["transactions"]:
+        raise OrphanRemovalError(
+            f"{instr.symbol} #{instrument_id} is in use "
+            f"({refs['holdings']} holding(s), {refs['transactions']} transaction(s)) — not an orphan"
+        )
+
+    # Gate 2: refuse a row that is not part of a duplicate group (never delete a lone instrument).
+    # The identity key is upper(symbol) + equivalent exchange (NULL≡''), matching the DB guard.
+    twins = (await session.execute(
+        select(func.count()).select_from(Instrument).where(
+            func.upper(Instrument.symbol) == instr.symbol.upper(),
+            func.coalesce(Instrument.exchange, "") == (instr.exchange or ""),
+            Instrument.id != instrument_id,
+        )
+    )).scalar()
+    if not twins:
+        raise OrphanRemovalError(
+            f"{instr.symbol} #{instrument_id} is not a duplicate — nothing to clean up"
+        )
+
+    symbol = instr.symbol
+    # Purge dangling dependents BEFORE the instrument row (no FK-cascade is declared on these; a
+    # left-behind row would point at a deleted id). The active-reference gate already guarantees any
+    # holdings/transactions on this row are soft-deleted, so deleting them here loses nothing live.
+    await session.execute(update(Transaction)
+                          .where(Transaction.related_instrument_id == instrument_id)
+                          .values(related_instrument_id=None))
+    for model in (Quote, PriceHistory, InstrumentIdentifier, InstrumentAcquisition,
+                  WatchlistItem, Holding, Transaction):
+        await session.execute(delete(model).where(model.instrument_id == instrument_id))
+    await session.delete(instr)
+    session.add(AuditEvent(
+        category="mutation", action="remove_orphan_instrument",
+        detail=f"removed orphaned duplicate instrument {symbol} #{instrument_id} (F-E/I-12)"))
+    await session.flush()
+    return {"removed": instrument_id, "symbol": symbol}
 
 
 async def find_instrument_by_identifier(

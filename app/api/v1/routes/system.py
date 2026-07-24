@@ -123,6 +123,28 @@ async def instrument_duplicates(session: AsyncSession = Depends(get_db)) -> dict
     return {"duplicates": dups, "count": len(dups)}
 
 
+@router.post("/system/instrument-duplicates/{instrument_id}/remove",
+             dependencies=[Depends(require_auth)])
+async def remove_instrument_duplicate(
+    instrument_id: int, session: AsyncSession = Depends(get_db)
+) -> dict:
+    """Remove one ORPHANED duplicate instrument (R-63 F-E / I-12, owner ruling R8). Makes the
+    Pricing Health duplicate banner's promise TRUE for the orphan case: a purge-then-re-add can
+    strand a legacy duplicate instrument with zero live references, and Holdings — derived from
+    transactions — can never show it, so the cleanup lives on the surface where the finding is.
+
+    ``require_auth`` matches the instrument-mutation family (PATCH ``/instruments/{symbol}``, the
+    ``map-*`` endpoints, ``refresh-data``); ``reset-data``'s ``require_pin`` guards a *bulk* wipe,
+    not a single row already proven to have no live references. The service refuses (409) a row
+    that is still in use or is not actually a duplicate — never deleting the wrong row."""
+    from app.services.identity import OrphanRemovalError, remove_orphan_instrument
+
+    try:
+        return await remove_orphan_instrument(session, instrument_id)
+    except OrphanRemovalError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 @router.get("/system/data-source")
 async def get_data_source(session: AsyncSession = Depends(get_db)) -> dict:
     from app.core.envfile import read_env
