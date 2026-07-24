@@ -206,3 +206,44 @@ async def test_reset_reaches_the_seed_flag_insert(app_client):
     assert await _get_setting(SEED_FLAG_KEY) is not None, (
         "the reset never reached the seed-flag insert — it would be vacuously green"
     )
+
+
+# --------------------------------------------------------------------------------------------------
+# F-1 — the 5th site the completeness sweep found: market._upsert_setting (R-63 AV tier learning)
+# --------------------------------------------------------------------------------------------------
+async def test_concurrent_av_tier_learn_does_not_poison_the_session(app_client):
+    """R-58 F-1 — ``market._upsert_setting``, added by R-63 (``d0a1c81``) AFTER the F10 census, so the
+    census could not have seen it; found by the R-58 completeness sweep.
+
+    It is a HIGHER-severity variant than the four filed sites: ``persist_av_tiers_safe`` swallows the
+    raced ``IntegrityError`` WITHOUT rolling back, so pre-fix it poisoned the shared session and the
+    caller's quote-refresh then 500'd at COMMIT — the "non-fatal" promise was false — and it sits on
+    the genuinely-concurrent quote-refresh path (``market.py`` get_quote), not a rare one. Through
+    ``claim_setting`` the collision is absorbed in a savepoint and the session stays committable."""
+    from app.db.base import get_sessionmaker
+    from app.services.market import persist_av_tiers_safe
+
+    class _Learned:  # a provider that has verified its entitlements this process (test_data_source shape)
+        quote_entitlement = "delayed"
+        av_tier = "premium"
+
+    # Absent posture: the entitlement keys are being learned for the FIRST time (the insert branch).
+    for k in ("av_quote_entitlement", "av_quote_entitlement_at", "av_index_tier", "av_index_tier_at"):
+        await _clear_setting(k)
+
+    sm = get_sessionmaker()
+
+    async def _learn_and_commit():
+        async with sm() as s:
+            await persist_av_tiers_safe(s, _Learned())
+            await s.commit()  # pre-fix: PendingRollbackError here if the race poisoned the session
+
+    results = await asyncio.gather(*(_learn_and_commit() for _ in range(_N)), return_exceptions=True)
+    poisoned = [r for r in results if isinstance(r, BaseException)]
+    assert not poisoned, f"a concurrent entitlement-learn poisoned the session: {poisoned}"
+
+    # Blindness pin: the mock provider learns nothing, so a test without a learning stub would be
+    # VACUOUSLY green (F10 site-4's exact trap). Prove the run actually reached the entitlement insert.
+    assert await _get_setting("av_quote_entitlement") is not None, (
+        "the run never reached the entitlement insert — it would be vacuously green"
+    )

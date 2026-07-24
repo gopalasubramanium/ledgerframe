@@ -1025,12 +1025,19 @@ _AV_TIER_SETTINGS = {
 
 
 async def _upsert_setting(session: AsyncSession, key: str, value: str) -> None:
+    from app.db.claim import claim_setting
     from app.models import Setting
 
     existing = (await session.execute(
         select(Setting).where(Setting.key == key))).scalars().first()
     if existing is None:
-        session.add(Setting(key=key, value=value))
+        # R-58 F-1: the absent-INSERT is the same check-then-insert race as the four filed sites,
+        # and here it is WORSE — `persist_av_tiers_safe` swallows the raced IntegrityError WITHOUT
+        # rolling back, so it poisons the shared session and the caller's quote-refresh then 500s at
+        # commit (the "non-fatal" promise is false). The SAVEPOINT claim keeps that promise true.
+        # (This site post-dates the F10 census — added by R-63 `d0a1c81` — so the census missed it;
+        # found by the R-58 completeness sweep. The standing guard below reds on the next one.)
+        await claim_setting(session, key, value)
     else:
         existing.value = value
 
